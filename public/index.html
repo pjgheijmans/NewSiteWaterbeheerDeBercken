@@ -1,0 +1,1397 @@
+<!DOCTYPE html>
+<html lang="nl">
+
+<head>
+    <meta charset="UTF-8">
+    <title>Digitale Dagstaat - Zwembad</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1050px;
+            margin: 0 auto;
+            background: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .header-box {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+
+        h1 {
+            margin: 0;
+            color: #0056b3;
+        }
+
+        /* Login Scherm */
+        .login-box {
+            max-width: 400px;
+            margin: 80px auto;
+            padding: 30px;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+            text-align: center;
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        .login-box button {
+            width: 100%;
+            padding: 12px;
+            background: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        /* Navigatie */
+        .hoofd-nav {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            background: #343a40;
+            padding: 10px;
+            border-radius: 6px;
+        }
+
+        .hoofd-nav button {
+            padding: 10px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 4px;
+            background: #495057;
+            color: #fff;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .hoofd-nav button.actief {
+            background: #28a745;
+        }
+
+        .logout-btn {
+            background: #dc3545 !important;
+            margin-left: auto;
+        }
+
+        .menu-tabs {
+            display: flex;
+            gap: 5px;
+            margin-bottom: 20px;
+            border-bottom: 2px solid #007BFF;
+        }
+
+        .tab-btn {
+            padding: 12px 25px;
+            font-size: 15px;
+            font-weight: bold;
+            border: none;
+            background: #e9ecef;
+            color: #495057;
+            border-radius: 5px 5px 0 0;
+            cursor: pointer;
+        }
+
+        .tab-btn.actief {
+            background: #007BFF;
+            color: white;
+        }
+
+        .datum-navigatie {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 25px;
+            background: #e9ecef;
+            padding: 10px 15px;
+            border-radius: 5px;
+        }
+
+        .datum-navigatie button {
+            padding: 10px 20px;
+            font-weight: bold;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        .datum-navigatie input[type="date"] {
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+        }
+
+        th,
+        td {
+            padding: 12px;
+            border: 1px solid #dee2e6;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        th {
+            background-color: #007BFF;
+            color: white;
+            font-weight: 600;
+        }
+
+        td input[type="number"],
+        td input[type="text"],
+        td select {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .actie-container {
+            display: flex;
+            justify-content: flex-end;
+            margin-top: 15px;
+            border-top: 1px solid #eee;
+            padding-top: 15px;
+        }
+
+        .btn-centraal-opslaan {
+            padding: 12px 30px;
+            background-color: #28a745;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+        }
+
+        .categorie-box {
+            border: 1px solid #dee2e6;
+            border-radius: 8px;
+            background: #fbfcfd;
+            padding: 18px;
+            margin-bottom: 20px;
+        }
+
+        .categorie-box h3 {
+            margin-top: 0;
+            margin-bottom: 14px;
+            color: #0056b3;
+            font-size: 20px;
+        }
+
+        .categorie-tabel {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 0;
+        }
+
+        .categorie-tabel th,
+        .categorie-tabel td {
+            border: 1px solid #dee2e6;
+            padding: 12px;
+            text-align: left;
+            vertical-align: middle;
+        }
+
+        .veld-grid {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(180px, 1fr));
+            gap: 16px;
+        }
+
+        .veld-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .veld-item label {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .veld-item input,
+        .veld-item select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .checkbox-grid {
+            display: grid;
+            grid-template-columns: repeat(4, minmax(180px, 1fr));
+            gap: 12px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #ffffff;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+        }
+
+        .checkbox-item input {
+            width: auto;
+            margin: 0;
+        }
+
+        /* Gevaar / Database wissen knop */
+        .btn-wissen-gevaar {
+            padding: 10px 20px;
+            background-color: #dc3545;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+
+        .btn-wissen-gevaar:hover {
+            background-color: #bd2130;
+        }
+
+        .buiten-limiet {
+            background-color: #ffcccc !important;
+            border-color: #dc3545 !important;
+        }
+
+        #acties-paneel {
+            background: linear-gradient(135deg, #ffe5e5 0%, #fff3cd 100%);
+            border-left: 5px solid #ff6b6b !important;
+            box-shadow: 0 2px 8px rgba(255, 107, 107, 0.2);
+        }
+
+        #acties-paneel h3 {
+            color: #c92a2a;
+            margin: 0;
+        }
+
+        #acties-tabel tbody tr:hover {
+            background: #ffe0e0 !important;
+        }
+
+        #acties-tabel input[type="checkbox"]:checked {
+            accent-color: #28a745;
+        }
+
+        .status-melding {
+            text-align: center;
+            font-weight: bold;
+            margin-top: 15px;
+            min-height: 20px;
+        }
+
+        .succes {
+            color: #28a745;
+        }
+
+        .fout {
+            color: #dc3545;
+        }
+    </style>
+</head>
+
+<body>
+
+    <!-- Login Formulier -->
+    <div id="scherm-login" class="login-box" style="display: none;">
+        <h2>Inloggen Dagstaat</h2>
+        <div id="login-fout" class="fout" style="margin-bottom:10px;"></div>
+        <input type="text" id="loginUsername" placeholder="Inlognaam" required>
+        <input type="password" id="loginPassword" placeholder="Wachtwoord" required>
+        <button onclick="verwerkLogin()">Inloggen</button>
+    </div>
+
+    <!-- Applicatie Dashboard -->
+    <div id="scherm-dashboard" class="container" style="display: none;">
+        <div class="header-box">
+            <h1>Zwembad Dashboard</h1>
+            <span id="welkom-tekst" style="font-weight:bold;"></span>
+        </div>
+
+        <div class="hoofd-nav">
+            <button id="btn-rol-waterbeheer" onclick="wisselRol('waterbeheer')">Waterbeheer</button>
+            <button id="btn-rol-coordinatoren" onclick="wisselRol('coordinatoren')">Coördinatoren</button>
+            <button id="btn-rol-limieten" onclick="wisselRol('limieten')">Limieten</button>
+            <button id="btn-rol-gebruikers" onclick="wisselRol('gebruikers')">Gebruikers Beheer</button>
+            <button id="btn-rol-database" onclick="wisselRol('database')">Database Beheer</button>
+            <button class="logout-btn" onclick="verwerkLogout()">Uitloggen</button>
+        </div>
+
+        <!-- Dagstaten Sectie -->
+        <div id="sectie-dagstaat">
+            <div class="datum-navigatie">
+                <button onclick="veranderDatum(-1)">◀ Vorige Dag</button>
+                <input type="date" id="centraleDatum" onchange="laadMetingen()">
+                <button onclick="veranderDatum(1)">Volgende Dag ▶</button>
+            </div>
+
+            <!-- Acties Paneel -->
+            <div id="acties-paneel" style="display: none; background: #fff3cd; border: 2px solid #ff6b6b; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    <span style="background: #ff6b6b; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 10px;">⚠</span>
+                    <h3 style="margin: 0; color: #333;">Acties nodig</h3>
+                </div>
+                <table id="acties-tabel" style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                    <thead style="background: #ff8787; color: white;">
+                        <tr>
+                            <th style="padding: 8px; text-align: left;">Bad</th>
+                            <th style="padding: 8px; text-align: left;">Actie</th>
+                            <th style="padding: 8px; text-align: center;">Voltooid</th>
+                        </tr>
+                    </thead>
+                    <tbody id="acties-tbody"></tbody>
+                </table>
+            </div>
+
+            <div class="menu-tabs" id="waterbeheer-tabs">
+                <button class="tab-btn actief" id="tab-grote-baden" onclick="wisselBadPagina('grote-baden')">Diep / Ondiep</button>
+                <button class="tab-btn" id="tab-peuterbad" onclick="wisselBadPagina('peuterbad')">Peuterbad</button>
+            </div>
+
+            <div id="waterbeheer-grote-baden-content" style="display: none;">
+                <div class="categorie-box" id="categorie-opname-meetwaarden">
+                    <h3>Opname meetwaarden</h3>
+                    <table class="categorie-tabel">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Diep</th>
+                                <th>Ondiep</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>pH</td>
+                                <td><input type="number" id="ph-diep" step="0.01" data-param="ph_waarde" oninput="valideerVeld(this, 'ph_waarde')"></td>
+                                <td><input type="number" id="ph-ondiep" step="0.01" data-param="ph_waarde" oninput="valideerVeld(this, 'ph_waarde')"></td>
+                            </tr>
+                            <tr>
+                                <td>Chloor</td>
+                                <td><input type="number" id="chloor-diep" step="0.01" data-param="chloor_waarde" oninput="valideerVeld(this, 'chloor_waarde')"></td>
+                                <td><input type="number" id="chloor-ondiep" step="0.01" data-param="chloor_waarde" oninput="valideerVeld(this, 'chloor_waarde')"></td>
+                            </tr>
+                            <tr>
+                                <td>Temperatuur</td>
+                                <td><input type="number" id="temp-diep" step="0.1" data-param="watertemperatuur" oninput="valideerVeld(this, 'watertemperatuur')"></td>
+                                <td><input type="number" id="temp-ondiep" step="0.1" data-param="watertemperatuur" oninput="valideerVeld(this, 'watertemperatuur')"></td>
+                            </tr>
+                            <tr>
+                                <td>Flow</td>
+                                <td><input type="number" id="flow-diep" data-param="flow_diep" oninput="valideerVeld(this, 'flow_diep')"></td>
+                                <td><input type="number" id="flow-ondiep" data-param="flow_ondiep" oninput="valideerVeld(this, 'flow_ondiep')"></td>
+                            </tr>
+                            <tr>
+                                <td>Filterdruk In</td>
+                                <td><input type="number" id="filter-in-diep" step="0.01" data-param="filter_druk_in" oninput="valideerVeld(this, 'filter_druk_in')"></td>
+                                <td><input type="number" id="filter-in-ondiep" step="0.01" data-param="filter_druk_in" oninput="valideerVeld(this, 'filter_druk_in')"></td>
+                            </tr>
+                            <tr>
+                                <td>Filterdruk Uit</td>
+                                <td><input type="number" id="filter-uit-diep" step="0.01" data-param="filter_druk_uit" oninput="valideerVeld(this, 'filter_druk_uit')"></td>
+                                <td><input type="number" id="filter-uit-ondiep" step="0.01" data-param="filter_druk_uit" oninput="valideerVeld(this, 'filter_druk_uit')"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="categorie-box" id="categorie-water">
+                    <h3>Water</h3>
+                    <div class="veld-grid">
+                        <div class="veld-item">
+                            <label for="water-ondiep">Ondiep</label>
+                            <input type="text" id="water-ondiep">
+                        </div>
+                        <div class="veld-item">
+                            <label for="water-diep">Diep</label>
+                            <input type="text" id="water-diep">
+                        </div>
+                        <div class="veld-item">
+                            <label for="water-totaal">Totaal</label>
+                            <input type="text" id="water-totaal">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="categorie-box" id="categorie-elektriciteit-gas">
+                    <h3>Elektriciteit en gas</h3>
+                    <div class="veld-grid">
+                        <div class="veld-item">
+                            <label for="elektriciteit-nacht">Elektriciteit Nacht</label>
+                            <input type="number" id="elektriciteit-nacht" data-param="elektriciteit_nacht" oninput="valideerVeld(this, 'elektriciteit_nacht')">
+                        </div>
+                        <div class="veld-item">
+                            <label for="elektriciteit-dag">Elektriciteit Dag</label>
+                            <input type="number" id="elektriciteit-dag" data-param="elektriciteit_dag" oninput="valideerVeld(this, 'elektriciteit_dag')">
+                        </div>
+                        <div class="veld-item">
+                            <label for="gas">Gas</label>
+                            <input type="number" id="gas" data-param="gas" oninput="valideerVeld(this, 'gas')">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="categorie-box" id="categorie-verwarmingssysteem">
+                    <h3>Verwarmingssysteem</h3>
+                    <div class="checkbox-grid">
+                        <label class="checkbox-item"><input type="checkbox" id="systeem-status-1"> Systeem 1 status ok</label>
+                        <label class="checkbox-item"><input type="checkbox" id="systeem-status-2"> Systeem 2 status ok</label>
+                        <label class="checkbox-item"><input type="checkbox" id="systeem-status-3"> Systeem 3 status ok</label>
+                        <label class="checkbox-item"><input type="checkbox" id="systeem-status-4"> Systeem 4 status ok</label>
+                        <label class="checkbox-item"><input type="checkbox" id="systeem-druk-ok"> Systeem druk ok</label>
+                        <label class="checkbox-item"><input type="checkbox" id="visuele-inspectie"> Visuele inspectie</label>
+                    </div>
+                </div>
+
+                <div class="categorie-box" id="categorie-chemicalien">
+                    <h3>Chemicaliën</h3>
+                    <div class="veld-grid">
+                        <div class="veld-item">
+                            <label for="floculant">Floculant</label>
+                            <input type="text" id="floculant">
+                        </div>
+                        <div class="veld-item">
+                            <label for="chemicalien-chloor">Chloor</label>
+                            <input type="text" id="chemicalien-chloor">
+                        </div>
+                        <div class="veld-item">
+                            <label for="chemicalien-zwavelzuur">Zwavelzuur</label>
+                            <input type="text" id="chemicalien-zwavelzuur">
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <div id="waterbeheer-peuterbad-content" style="display: none;">
+                <div class="categorie-box">
+                    <h3>Opname meetwaarden</h3>
+                    <table class="categorie-tabel">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Waarde</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>pH</td>
+                                <td><input type="number" id="peuterbad-ph" step="0.01" data-param="ph_waarde" oninput="valideerVeld(this, 'ph_waarde')"></td>
+                            </tr>
+                            <tr>
+                                <td>Chloor</td>
+                                <td><input type="number" id="peuterbad-chloor" step="0.01" data-param="chloor_waarde" oninput="valideerVeld(this, 'chloor_waarde')"></td>
+                            </tr>
+                            <tr>
+                                <td>Filter druk</td>
+                                <td><input type="number" id="peuterbad-filterdruk" step="0.01" data-param="filter_druk_peuterbad" oninput="valideerVeld(this, 'filter_druk_peuterbad')"></td>
+                            </tr>
+                            <tr>
+                                <td>Flow</td>
+                                <td><input type="number" id="peuterbad-flow" data-param="flow_peuterbad" oninput="valideerVeld(this, 'flow_peuterbad')"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="categorie-box">
+                    <h3>Water</h3>
+                    <div class="veld-grid">
+                        <div class="veld-item">
+                            <label for="peuterbad-water">Water</label>
+                            <input type="text" id="peuterbad-water">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="categorie-box">
+                    <h3>Chemicaliën</h3>
+                    <div class="veld-grid">
+                        <div class="veld-item">
+                            <label for="peuterbad-chemicalien-chloor">Chloor</label>
+                            <input type="text" id="peuterbad-chemicalien-chloor">
+                        </div>
+                        <div class="veld-item">
+                            <label for="peuterbad-chemicalien-zwavelzuur">Zwavelzuur</label>
+                            <input type="text" id="peuterbad-chemicalien-zwavelzuur">
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tables-content" style="display: none;">
+                <table>
+                    <thead id="tabelKop"></thead>
+                    <tbody id="dagstaatTbody"></tbody>
+                </table>
+            </div>
+
+            <div class="actie-container">
+                <button class="btn-centraal-opslaan" onclick="verwerkCentraleOpslaan()">Opslaan</button>
+            </div>
+        </div>
+
+        <!-- Limieten Sectie -->
+        <div id="sectie-limieten" style="display: none;">
+            <h2>Centrale Richtwaarden & Limieten</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Minimum Waarde</th>
+                        <th>Maximum Waarde</th>
+                    </tr>
+                </thead>
+                <tbody id="limietenTbody"></tbody>
+            </table>
+            <div class="actie-container">
+                <button class="btn-centraal-opslaan" onclick="verwerkCentraleLimietenOpslaan()">Opslaan</button>
+            </div>
+        </div>
+
+        <!-- Gebruikersbeheer Sectie -->
+        <div id="sectie-gebruikers" style="display: none;">
+            <h2>Gebruikersbeheer</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Voornaam</th>
+                        <th>Achternaam</th>
+                        <th>Inlognaam</th>
+                        <th>Wachtwoord</th>
+                        <th>Taak</th>
+                        <th>Acties</th>
+                    </tr>
+                </thead>
+                <tbody id="gebruikersTbody"></tbody>
+                <tr style="background:#e9ecef;">
+                    <td><input type="text" id="g-voornaam" placeholder="Voornaam"></td>
+                    <td><input type="text" id="g-achternaam" placeholder="Achternaam"></td>
+                    <td><input type="text" id="g-inlognaam" placeholder="Inlognaam"></td>
+                    <td><input type="text" id="g-wachtwoord" placeholder="Wachtwoord"></td>
+                    <td><select id="g-taak">
+                            <option value="waterbeheerder">Waterbeheerder</option>
+                            <option value="coordinator">Coördinator</option>
+                            <option value="Administrator">Administrator</option>
+                        </select></td>
+                    <td><button class="btn-centraal-opslaan" style="padding:6px 12px; font-size:14px;"
+                            onclick="voegGebruikerToe()">Toevoegen</button></td>
+                </tr>
+            </table>
+        </div>
+
+        <!-- Database Beheer Sectie -->
+        <div id="sectie-database" style="display: none;">
+            <h2>Database Opschonen & Beheer</h2>
+            <p style="color:#666;"><strong>Let op:</strong> Het leegmaken van een tabel wist alle historische opgeslagen
+                gegevens permanent. Dit kan niet ongedaan worden gemaakt.</p>
+            <table style="max-width: 950px;">
+                <thead>
+                    <tr>
+                        <th>Tabelnaam</th>
+                        <th>Omschrijving</th>
+                        <th>Back-up</th>
+                        <th>Herstellen</th>
+                        <th>Opschonen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><b>Metingen (Waterbeheer)</b></td>
+                        <td>Bevat pH, chloor, flow en druk per dag.</td>
+                        <td><button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px;"
+                                onclick="exporteerTabel('metingen')">CSV Exporteren</button></td>
+                        <td>
+                            <button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px; background-color:#17a2b8;"
+                                onclick="triggerImportBladeren('metingen')">CSV Importeren</button>
+                            <input type="file" id="import-file-metingen" accept=".csv" style="display:none;"
+                                onchange="verwerkCsvUpload(this, 'metingen')">
+                        </td>
+                        <td><button class="btn-wissen-gevaar" onclick="leegmakenTabel('metingen')">Tabel Leegmaken</button></td>
+                    </tr>
+                    <tr>
+                        <td><b>Metingen Coördinatoren</b></td>
+                        <td>Bevat pH, chloor, temperatuur en helderheid per dag.</td>
+                        <td><button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px;"
+                                onclick="exporteerTabel('metingen_coordinatoren')">CSV Exporteren</button></td>
+                        <td>
+                            <button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px; background-color:#17a2b8;"
+                                onclick="triggerImportBladeren('metingen_coordinatoren')">CSV Importeren</button>
+                            <input type="file" id="import-file-metingen_coordinatoren" accept=".csv" style="display:none;"
+                                onchange="verwerkCsvUpload(this, 'metingen_coordinatoren')">
+                        </td>
+                        <td><button class="btn-wissen-gevaar" onclick="leegmakenTabel('metingen_coordinatoren')">Tabel
+                                Leegmaken</button></td>
+                    </tr>
+                    <tr>
+                        <td><b>Limieten</b></td>
+                        <td>Bevat de centrale min/max richtwaarden.</td>
+                        <td><button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px;"
+                                onclick="exporteerTabel('limieten')">CSV Exporteren</button></td>
+                        <td>
+                            <button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px; background-color:#17a2b8;"
+                                onclick="triggerImportBladeren('limieten')">CSV Importeren</button>
+                            <input type="file" id="import-file-limieten" accept=".csv" style="display:none;"
+                                onchange="verwerkCsvUpload(this, 'limieten')">
+                        </td>
+                        <td><button class="btn-wissen-gevaar" onclick="leegmakenTabel('limieten')">Tabel Leegmaken</button></td>
+                    </tr>
+                    <tr>
+                        <td><b>Gebruikers</b></td>
+                        <td>Bevat alle inlogaccounts van het personeel.</td>
+                        <td><button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px;"
+                                onclick="exporteerTabel('gebruikers')">CSV Exporteren</button></td>
+                        <td>
+                            <button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px; background-color:#17a2b8;"
+                                onclick="triggerImportBladeren('gebruikers')">CSV Importeren</button>
+                            <input type="file" id="import-file-gebruikers" accept=".csv" style="display:none;"
+                                onchange="verwerkCsvUpload(this, 'gebruikers')">
+                        </td>
+                        <td><button class="btn-wissen-gevaar" onclick="leegmakenTabel('gebruikers')">Tabel Leegmaken</button></td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+
+        <div id="statusBericht" class="status-melding"></div>
+    </div>
+
+<script>
+    // Stel de datum standaard in op vandaag via de lokale tijdzone van de computer
+    const vandaagLocal = new Date();
+    document.getElementById('centraleDatum').value = `${vandaagLocal.getFullYear()}-${String(vandaagLocal.getMonth() + 1).padStart(2, '0')}-${String(vandaagLocal.getDate()).padStart(2, '0')}`;
+
+    let huidigeRol = 'waterbeheer';
+    let huidigeBadPagina = 'grote-baden';
+    let gecachteData = [];
+    let actieveLimieten = {};
+    let ingelogdeGebruiker = null;
+    let berichtTimer = null;
+
+    function toonBericht(tekst, type) {
+        const element = document.getElementById('statusBericht');
+        if (!element) return;
+
+        if (berichtTimer) clearTimeout(berichtTimer);
+        element.style.color = '';
+        element.innerText = tekst;
+        element.className = 'status-melding ' + type;
+
+        if (type === 'fout') {
+            element.style.color = '#ff9800'; // Oranje waarschuwing
+            berichtTimer = setTimeout(() => { resetBerichtBox(element); }, 5000);
+        } else if (type === 'succes') {
+            berichtTimer = setTimeout(() => { resetBerichtBox(element); }, 5000);
+        } else if (tekst !== '') {
+            element.style.color = '#dc3545'; // Rode kritieke fout (geen timer)
+        }
+    }
+
+    function resetBerichtBox(element) {
+        element.innerText = '';
+        element.className = 'status-melding';
+        element.style.color = '';
+    }
+
+    async function startApplicatie() {
+        try {
+            const res = await fetch('/api/ingelogd');
+            const data = await res.json();
+            if (data.ingelogd) { activeerDashboard(data.gebruiker); }
+            else {
+                document.getElementById('scherm-login').style.display = 'block';
+                document.getElementById('scherm-dashboard').style.display = 'none';
+            }
+        } catch (f) { console.error("Starten mislukt", f); }
+    }
+
+    async function verwerkLogin() {
+        const u = document.getElementById('loginUsername').value;
+        const p = document.getElementById('loginPassword').value;
+        document.getElementById('login-fout').innerText = '';
+
+        try {
+            const res = await fetch('/api/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: u, password: p })
+            });
+            const data = await res.json();
+            if (res.ok) { activeerDashboard(data.gebruiker); }
+            else { document.getElementById('login-fout').innerText = data.error; }
+        } catch (f) { document.getElementById('login-fout').innerText = 'Verbindingsfout.'; }
+    }
+
+    function activeerDashboard(gebruiker) {
+        ingelogdeGebruiker = gebruiker;
+        document.getElementById('scherm-login').style.display = 'none';
+        document.getElementById('scherm-dashboard').style.display = 'block';
+        document.getElementById('welkom-tekst').innerText = `Ingelogd: ${gebruiker.voornaam} (${gebruiker.taak})`;
+
+        if (gebruiker.taak === 'waterbeheerder') {
+            document.getElementById('btn-rol-waterbeheer').style.display = 'inline-block';
+            document.getElementById('btn-rol-coordinatoren').style.display = 'inline-block';
+            document.getElementById('btn-rol-limieten').style.display = 'inline-block';
+            document.getElementById('btn-rol-gebruikers').style.display = 'inline-block';
+            document.getElementById('btn-rol-database').style.display = 'inline-block';
+            wisselRol('waterbeheer');
+        } else if (gebruiker.taak === 'Administrator') {
+            document.getElementById('btn-rol-waterbeheer').style.display = 'none';
+            document.getElementById('btn-rol-coordinatoren').style.display = 'none';
+            document.getElementById('btn-rol-limieten').style.display = 'inline-block';
+            document.getElementById('btn-rol-gebruikers').style.display = 'inline-block';
+            document.getElementById('btn-rol-database').style.display = 'inline-block';
+            wisselRol('limieten');
+        } else {
+            document.getElementById('btn-rol-waterbeheer').style.display = 'none';
+            document.getElementById('btn-rol-coordinatoren').style.display = 'inline-block';
+            document.getElementById('btn-rol-limieten').style.display = 'none';
+            document.getElementById('btn-rol-gebruikers').style.display = 'none';
+            document.getElementById('btn-rol-database').style.display = 'none';
+            wisselRol('coordinatoren');
+        }
+    }
+
+    async function verwerkLogout() {
+        await fetch('/api/logout', { method: 'POST' });
+        ingelogdeGebruiker = null;
+        startApplicatie();
+    }
+
+    async function laadLimietenVanServer() {
+        try {
+            const response = await fetch('/api/limieten');
+            const limieten = await response.json();
+            actieveLimieten = normaliseerLimieten(limieten);
+            bouwLimietenBeheerTabel();
+        } catch (fout) { console.error("Kon limieten niet laden", fout); }
+    }
+
+    function normaliseerLimieten(limieten) {
+        const genormaliseerd = { ...limieten };
+        if (!genormaliseerd.watertemperatuur && genormaliseerd.temperatuur) {
+            genormaliseerd.watertemperatuur = genormaliseerd.temperatuur;
+        }
+        if (genormaliseerd.flow) {
+            if (!genormaliseerd.flow_diep) genormaliseerd.flow_diep = genormaliseerd.flow;
+            if (!genormaliseerd.flow_ondiep) genormaliseerd.flow_ondiep = genormaliseerd.flow;
+            if (!genormaliseerd.flow_peuterbad) genormaliseerd.flow_peuterbad = genormaliseerd.flow;
+        }
+        if (genormaliseerd.filter_druk) {
+            if (!genormaliseerd.filter_druk_in) genormaliseerd.filter_druk_in = genormaliseerd.filter_druk;
+            if (!genormaliseerd.filter_druk_uit) genormaliseerd.filter_druk_uit = genormaliseerd.filter_druk;
+            if (!genormaliseerd.filter_druk_peuterbad) genormaliseerd.filter_druk_peuterbad = genormaliseerd.filter_druk;
+        }
+        delete genormaliseerd.temperatuur;
+        delete genormaliseerd.flow;
+        delete genormaliseerd.filter_druk;
+        return genormaliseerd;
+    }
+
+    const waterbeheerStatePrefix = 'waterbeheerState_';
+
+    function getWaterbeheerStorageKey(datum) {
+        return waterbeheerStatePrefix + datum;
+    }
+
+    function laadWaterbeheerVelden() {
+        const datum = document.getElementById('centraleDatum').value;
+        const opgeslagenData = JSON.parse(localStorage.getItem(getWaterbeheerStorageKey(datum)) || '{}');
+        const veldIds = [
+            'floculant', 'water-ondiep', 'water-diep', 'water-totaal',
+            'elektriciteit-nacht', 'elektriciteit-dag', 'gas',
+            'chemicalien-chloor', 'chemicalien-zwavelzuur',
+            'systeem-status-1', 'systeem-status-2', 'systeem-status-3', 'systeem-status-4',
+            'systeem-druk-ok', 'visuele-inspectie',
+            'peuterbad-ph', 'peuterbad-chloor', 'peuterbad-filterdruk', 'peuterbad-flow',
+            'peuterbad-water', 'peuterbad-chemicalien-chloor', 'peuterbad-chemicalien-zwavelzuur'
+        ];
+
+        veldIds.forEach(id => {
+            const element = document.getElementById(id);
+            if (!element) return;
+            const waarde = opgeslagenData[id];
+            if (element.type === 'checkbox') {
+                element.checked = waarde === true;
+            } else {
+                element.value = waarde !== undefined ? waarde : '';
+            }
+        });
+    }
+
+    function slaWaterbeheerVeldenOp() {
+        const datum = document.getElementById('centraleDatum').value;
+        const data = {
+            floculant: document.getElementById('floculant').value,
+            'water-ondiep': document.getElementById('water-ondiep').value,
+            'water-diep': document.getElementById('water-diep').value,
+            'water-totaal': document.getElementById('water-totaal').value,
+            'elektriciteit-nacht': document.getElementById('elektriciteit-nacht').value,
+            'elektriciteit-dag': document.getElementById('elektriciteit-dag').value,
+            gas: document.getElementById('gas').value,
+            'chemicalien-chloor': document.getElementById('chemicalien-chloor').value,
+            'chemicalien-zwavelzuur': document.getElementById('chemicalien-zwavelzuur').value,
+            'systeem-status-1': document.getElementById('systeem-status-1').checked,
+            'systeem-status-2': document.getElementById('systeem-status-2').checked,
+            'systeem-status-3': document.getElementById('systeem-status-3').checked,
+            'systeem-status-4': document.getElementById('systeem-status-4').checked,
+            'systeem-druk-ok': document.getElementById('systeem-druk-ok').checked,
+            'visuele-inspectie': document.getElementById('visuele-inspectie').checked,
+            'peuterbad-ph': document.getElementById('peuterbad-ph').value,
+            'peuterbad-chloor': document.getElementById('peuterbad-chloor').value,
+            'peuterbad-filterdruk': document.getElementById('peuterbad-filterdruk').value,
+            'peuterbad-flow': document.getElementById('peuterbad-flow').value,
+            'peuterbad-water': document.getElementById('peuterbad-water').value,
+            'peuterbad-chemicalien-chloor': document.getElementById('peuterbad-chemicalien-chloor').value,
+            'peuterbad-chemicalien-zwavelzuur': document.getElementById('peuterbad-chemicalien-zwavelzuur').value
+        };
+        localStorage.setItem(getWaterbeheerStorageKey(datum), JSON.stringify(data));
+    }
+
+    function zetInputValue(id, waarde) {
+        const element = document.getElementById(id);
+        if (!element) return;
+        element.value = waarde !== undefined && waarde !== null ? waarde : '';
+        const parameterNaam = element.getAttribute('data-param');
+        if (parameterNaam) {
+            valideerVeld(element, parameterNaam);
+        }
+    }
+
+    function parseNumberValue(id) {
+        const element = document.getElementById(id);
+        if (!element) return null;
+        const rawValue = element.value;
+        if (rawValue === undefined || rawValue === null || rawValue === '') return null;
+        const normalized = rawValue.toString().replace(',', '.');
+        const parsed = parseFloat(normalized);
+        return Number.isNaN(parsed) ? null : parsed;
+    }
+
+    function wisselRol(rowName) {
+        toonBericht('', '');
+        huidigeRol = rowName;
+        document.getElementById('btn-rol-waterbeheer').classList.toggle('actief', rowName === 'waterbeheer');
+        document.getElementById('btn-rol-coordinatoren').classList.toggle('actief', rowName === 'coordinatoren');
+        document.getElementById('btn-rol-limieten').classList.toggle('actief', rowName === 'limieten');
+        document.getElementById('btn-rol-gebruikers').classList.toggle('actief', rowName === 'gebruikers');
+        document.getElementById('btn-rol-database').classList.toggle('actief', rowName === 'database');
+
+        document.getElementById('sectie-dagstaat').style.display = (rowName === 'waterbeheer' || rowName === 'coordinatoren') ? 'block' : 'none';
+        document.getElementById('sectie-limieten').style.display = (rowName === 'limieten') ? 'block' : 'none';
+        document.getElementById('sectie-gebruikers').style.display = (rowName === 'gebruikers') ? 'block' : 'none';
+        document.getElementById('sectie-database').style.display = (rowName === 'database') ? 'block' : 'none';
+
+        document.getElementById('waterbeheer-tabs').style.display = (rowName === 'waterbeheer') ? 'flex' : 'none';
+        if (rowName === 'waterbeheer') {
+            document.getElementById('waterbeheer-grote-baden-content').style.display = (huidigeBadPagina === 'grote-baden') ? 'block' : 'none';
+            document.getElementById('waterbeheer-peuterbad-content').style.display = (huidigeBadPagina === 'peuterbad') ? 'block' : 'none';
+            document.getElementById('tables-content').style.display = 'none';
+        } else if (rowName === 'coordinatoren') {
+            document.getElementById('waterbeheer-grote-baden-content').style.display = 'none';
+            document.getElementById('waterbeheer-peuterbad-content').style.display = 'none';
+            document.getElementById('tables-content').style.display = 'block';
+        }
+
+        if (rowName === 'waterbeheer' || rowName === 'coordinatoren') {
+            laadLimietenVanServer().then(() => laadMetingen());
+        } else if (rowName === 'gebruikers') { laadGebruikers(); }
+        else if (rowName === 'limieten') { laadLimietenVanServer(); }
+    }
+
+    function wisselBadPagina(pagina) {
+        huidigeBadPagina = pagina;
+        document.getElementById('tab-grote-baden').classList.toggle('actief', pagina === 'grote-baden');
+        document.getElementById('tab-peuterbad').classList.toggle('actief', pagina === 'peuterbad');
+
+        document.getElementById('waterbeheer-grote-baden-content').style.display = (pagina === 'grote-baden') ? 'block' : 'none';
+        document.getElementById('waterbeheer-peuterbad-content').style.display = (pagina === 'peuterbad') ? 'block' : 'none';
+        document.getElementById('tables-content').style.display = 'none';
+        laadMetingen();
+    }
+
+    async function laadMetingen() {
+        const datum = document.getElementById('centraleDatum').value;
+        if (!datum) return;
+        const endpoint = (huidigeRol === 'waterbeheer') ? '/api/metingen' : '/api/coordinatoren';
+
+        try {
+            const response = await fetch(`${endpoint}?datum=${datum}`);
+            gecachteData = await response.json();
+            bouwTabelOp(gecachteData);
+            
+            if (huidigeRol === 'waterbeheer') {
+                laadActies(datum);
+            }
+        } catch (fout) { toonBericht('Fout bij het ophalen van de gegevens.', 'fout'); }
+    }
+
+    async function laadActies(datum) {
+        try {
+            const response = await fetch(`/api/acties?datum=${datum}`);
+            const acties = await response.json();
+            if (acties.length > 0) {
+                document.getElementById('acties-paneel').style.display = 'block';
+                const tbody = document.getElementById('acties-tbody');
+                tbody.innerHTML = acties.map(actie => `
+                    <tr style="background: white; border-bottom: 1px solid #ddd;">
+                        <td style="padding: 10px;">${actie.bad_naam}</td>
+                        <td style="padding: 10px;">${actie.beschrijving}</td>
+                        <td style="padding: 10px; text-align: center;">
+                            <input type="checkbox" onchange="losActieOp(${actie.id}, this.checked)" style="width: 18px; height: 18px; cursor: pointer;">
+                        </td>
+                    </tr>
+                `).join('');
+            } else {
+                document.getElementById('acties-paneel').style.display = 'none';
+            }
+        } catch (fout) { console.error('Fout bij laden acties:', fout); }
+    }
+
+    async function losActieOp(actieId, opgelost) {
+        if (!opgelost) return;
+        try {
+            const response = await fetch(`/api/acties/${actieId}/resolve`, { method: 'POST' });
+            if (response.ok) {
+                const datum = document.getElementById('centraleDatum').value;
+                laadActies(datum);
+                toonBericht('Actie gemarkeerd als opgelost!', 'succes');
+            }
+        } catch (fout) { console.error('Fout bij oplossen actie:', fout); }
+    }
+
+    function valideerVeld(inputElement, parameterNaam) {
+        const waarde = parseFloat(inputElement.value);
+        const limiet = actieveLimieten[parameterNaam];
+        if (!isNaN(waarde) && limiet) {
+            if (waarde < limiet.min || waarde > limiet.max) { inputElement.classList.add('buiten-limiet'); }
+            else { inputElement.classList.remove('buiten-limiet'); }
+        } else { inputElement.classList.remove('buiten-limiet'); }
+    }
+
+    function bouwTabelOp(data) {
+        const categorieContent = document.getElementById('waterbeheer-grote-baden-content');
+        const tabelContent = document.getElementById('tables-content');
+        const tKop = document.getElementById('tabelKop');
+        const tBody = document.getElementById('dagstaatTbody');
+        tKop.innerHTML = ''; tBody.innerHTML = '';
+
+        if (huidigeRol === 'waterbeheer' && huidigeBadPagina === 'grote-baden') {
+            categorieContent.style.display = 'block';
+            document.getElementById('waterbeheer-peuterbad-content').style.display = 'none';
+            tabelContent.style.display = 'none';
+
+            ['Diep', 'Ondiep'].forEach(bad => {
+                const meting = Array.isArray(data) ? data.find(m => m.bad_naam === bad) : null;
+                const lowerBad = bad.toLowerCase();
+                zetInputValue(`ph-${lowerBad}`, meting?.ph_waarde ?? '');
+                zetInputValue(`chloor-${lowerBad}`, meting?.chloor_waarde ?? '');
+                zetInputValue(`temp-${lowerBad}`, meting?.temperatuur ?? '');
+                zetInputValue(`flow-${lowerBad}`, meting?.flow ?? '');
+                zetInputValue(`filter-in-${lowerBad}`, meting?.filter_druk_in ?? '');
+                zetInputValue(`filter-uit-${lowerBad}`, meting?.filter_druk_uit ?? '');
+            });
+            laadWaterbeheerVelden();
+            return;
+        }
+
+        if (huidigeRol === 'waterbeheer' && huidigeBadPagina === 'peuterbad') {
+            categorieContent.style.display = 'none';
+            document.getElementById('waterbeheer-peuterbad-content').style.display = 'block';
+            tabelContent.style.display = 'none';
+
+            const meting = Array.isArray(data) ? data.find(m => m.bad_naam === 'Peuterbad') : null;
+            zetInputValue('peuterbad-ph', meting?.ph_waarde ?? '');
+            zetInputValue('peuterbad-chloor', meting?.chloor_waarde ?? '');
+            zetInputValue('peuterbad-filterdruk', meting?.filter_druk ?? '');
+            zetInputValue('peuterbad-flow', meting?.flow ?? '');
+            zetInputValue('peuterbad-water', meting?.water ?? '');
+            zetInputValue('peuterbad-chemicalien-chloor', meting?.chemicalien_chloor ?? '');
+            zetInputValue('peuterbad-chemicalien-zwavelzuur', meting?.chemicalien_zwavelzuur ?? '');
+            laadWaterbeheerVelden();
+            return;
+        }
+
+        categorieContent.style.display = 'none';
+        document.getElementById('waterbeheer-peuterbad-content').style.display = 'none';
+        tabelContent.style.display = 'block';
+
+        if (huidigeRol === 'waterbeheer') {
+            if (huidigeBadPagina === 'grote-baden') {
+                tKop.innerHTML = `<tr><th>Bad</th><th>pH</th><th>Chloor (mg/l)</th><th>Flow (m³/h)</th><th>Filterdruk (bar)</th></tr>`;
+                ['Diep', 'Ondiep'].forEach(bad => {
+                    const meting = Array.isArray(data) ? data.find(m => m.bad_naam === bad) : null;
+                    tBody.innerHTML += genereerRijWaterbeheer(bad, meting || {}, false);
+                });
+            } else {
+                tKop.innerHTML = `<tr><th>Bad</th><th>pH</th><th>Chloor (mg/l)</th></tr>`;
+                const meting = Array.isArray(data) ? data.find(m => m.bad_naam === 'Peuterbad') : null;
+                tBody.innerHTML += genereerRijWaterbeheer('Peuterbad', meting || {}, true);
+            }
+        } else if (huidigeRol === 'coordinatoren') {
+            tKop.innerHTML = `<tr><th>Bad</th><th>pH</th><th>Chloor (mg/l)</th><th>Temp (°C)</th><th>Helderheid</th></tr>`;
+            ['Diep', 'Ondiep', 'Peuterbad'].forEach(bad => {
+                const meting = Array.isArray(data) ? data.find(m => m.bad_naam === bad) : null;
+                tBody.innerHTML += genereerRijCoordinatoren(bad, meting || {});
+            });
+        }
+
+        document.querySelectorAll('#dagstaatTbody input[type="number"]').forEach(input => {
+            const param = input.getAttribute('data-param');
+            if (param) valideerVeld(input, param);
+        });
+    }
+
+    function genereerRijWaterbeheer(badNaam, meting, isPeuterbad) {
+        const ph = meting.ph_waarde ?? ''; const chloor = meting.chloor_waarde ?? '';
+        if (isPeuterbad) {
+            return `<tr id="rij-${badNaam}" data-bad="${badNaam}"><td><b>${badNaam}</b></td>
+                <td><input type="number" class="v-ph" step="0.01" value="${ph}" data-param="ph_waarde" oninput="valideerVeld(this, 'ph_waarde')"></td>
+                <td><input type="number" class="v-chloor" step="0.01" value="${chloor}" data-param="chloor_waarde" oninput="valideerVeld(this, 'chloor_waarde')"></td></tr>`;
+        } else {
+            const flow = meting.flow ?? ''; const druk = meting.filter_druk ?? '';
+            const flowParam = badNaam === 'Diep' ? 'flow_diep' : 'flow_ondiep';
+            return `<tr id="rij-${badNaam}" data-bad="${badNaam}"><td><b>${badNaam}</b></td>
+                <td><input type="number" class="v-ph" step="0.01" value="${ph}" data-param="ph_waarde" oninput="valideerVeld(this, 'ph_waarde')"></td>
+                <td><input type="number" class="v-chloor" step="0.01" value="${chloor}" data-param="chloor_waarde" oninput="valideerVeld(this, 'chloor_waarde')"></td>
+                <td><input type="number" class="v-flow" value="${flow}" data-param="${flowParam}" oninput="valideerVeld(this, '${flowParam}')"></td>
+                <td><input type="number" class="v-druk" step="0.01" value="${druk}" data-param="filter_druk" oninput="valideerVeld(this, 'filter_druk')"></td></tr>`;
+        }
+    }
+
+    function genereerRijCoordinatoren(badNaam, meting) {
+        const ph = meting.ph_waarde ?? ''; const chloor = meting.chloor_waarde ?? '';
+        const temp = meting.watertemperatuur ?? ''; const helderheid = meting.helderheid ?? 'Helder';
+        return `<tr id="rij-${badNaam}" data-bad="${badNaam}"><td><b>${badNaam}</b></td>
+            <td><input type="number" class="c-ph" step="0.01" value="${ph}" data-param="ph_waarde" oninput="valideerVeld(this, 'ph_waarde')"></td>
+            <td><input type="number" class="c-chloor" step="0.01" value="${chloor}" data-param="chloor_waarde" oninput="valideerVeld(this, 'chloor_waarde')"></td>
+            <td><input type="number" class="c-temp" step="0.1" value="${temp}" data-param="watertemperatuur" oninput="valideerVeld(this, 'watertemperatuur')"></td>
+            <td><select class="c-helder"><option value="Helder" ${helderheid === 'Helder' ? 'selected' : ''}>Helder</option><option value="Licht troebel" ${helderheid === 'Licht troebel' ? 'selected' : ''}>Licht troebel</option><option value="Troebel" ${helderheid === 'Troebel' ? 'selected' : ''}>Troebel</option></select></td></tr>`;
+    }
+
+    async function verwerkCentraleOpslaan() {
+        toonBericht('Gegevens verwerken...', '');
+        const datum = document.getElementById('centraleDatum').value;
+
+        if (huidigeRol === 'waterbeheer' && huidigeBadPagina === 'grote-baden') {
+            const baden = ['Diep', 'Ondiep'];
+            let succesTeller = 0;
+            let legeVelden = false;
+            let foutberichten = [];
+
+            for (const bad of baden) {
+                const lowerBad = bad.toLowerCase();
+                const phEl = document.getElementById(`ph-${lowerBad}`);
+                const chloorEl = document.getElementById(`chloor-${lowerBad}`);
+                const payload = {
+                    datum: datum,
+                    bad_naam: bad,
+                    ph_waarde: parseNumberValue(`ph-${lowerBad}`),
+                    chloor_waarde: parseNumberValue(`chloor-${lowerBad}`),
+                    temperatuur: parseNumberValue(`temp-${lowerBad}`),
+                    flow: parseNumberValue(`flow-${lowerBad}`),
+                    filter_druk_in: parseNumberValue(`filter-in-${lowerBad}`),
+                    filter_druk_uit: parseNumberValue(`filter-uit-${lowerBad}`)
+                };
+                payload.filter_druk = payload.filter_druk_in ?? payload.filter_druk_uit ?? 0;
+
+                if (!phEl.value || !chloorEl.value) { legeVelden = true; }
+
+                try {
+                    const response = await fetch('/api/metingen', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (response.ok) {
+                        succesTeller++;
+                    } else {
+                        const errorData = await response.json().catch(() => null);
+                        foutberichten.push(`${bad}: ${errorData?.error || response.statusText}`);
+                    }
+                } catch (fout) {
+                    console.error(fout);
+                    foutberichten.push(`${bad}: ${fout.message || 'Netwerkfout'}`);
+                }
+            }
+
+            slaWaterbeheerVeldenOp();
+            if (succesTeller === baden.length) {
+                if (legeVelden) { toonBericht('Opgeslagen met waarschuwing: Niet alle velden waren ingevuld.', 'fout'); }
+                else { toonBericht('Waterbeheer gegevens succesvol opgeslagen!', 'succes'); }
+                laadMetingen();
+            } else {
+                const boodschap = foutberichten.length > 0 ? foutberichten.join(' | ') : 'Niet alle gegevens konden worden opgeslagen.';
+                toonBericht(boodschap, 'fout');
+            }
+            return;
+        }
+
+        if (huidigeRol === 'waterbeheer' && huidigeBadPagina === 'peuterbad') {
+            const phEl = document.getElementById('peuterbad-ph');
+            const chloorEl = document.getElementById('peuterbad-chloor');
+            const payload = {
+                datum: datum,
+                bad_naam: 'Peuterbad',
+                ph_waarde: parseNumberValue('peuterbad-ph'),
+                chloor_waarde: parseNumberValue('peuterbad-chloor'),
+                flow: parseNumberValue('peuterbad-flow'),
+                filter_druk: parseNumberValue('peuterbad-filterdruk'),
+                water: document.getElementById('peuterbad-water').value,
+                chemicalien_chloor: document.getElementById('peuterbad-chemicalien-chloor').value,
+                chemicalien_zwavelzuur: document.getElementById('peuterbad-chemicalien-zwavelzuur').value
+            };
+
+            let legeVelden = false;
+            if (!phEl.value || !chloorEl.value) { legeVelden = true; }
+
+            try {
+                const response = await fetch('/api/metingen', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(payload)
+                });
+                if (response.ok) {
+                    slaWaterbeheerVeldenOp();
+                    if (legeVelden) { toonBericht('Opgeslagen met waarschuwing: Niet alle velden waren ingevuld.', 'fout'); }
+                    else { toonBericht('Waterbeheer gegevens succesvol opgeslagen!', 'succes'); }
+                    laadMetingen();
+                } else {
+                    const errorData = await response.json().catch(() => null);
+                    toonBericht(errorData?.error || 'Niet alle gegevens konden worden opgeslagen.', 'fout');
+                }
+            } catch (fout) {
+                console.error(fout);
+                toonBericht('Niet alle gegevens konden worden opgeslagen.', 'fout');
+            }
+            return;
+        }
+
+        const rijen = document.querySelectorAll('#dagstaatTbody tr');
+        let succesTeller = 0; let legeVelden = false;
+
+        rijen.forEach(r => { r.querySelectorAll('input[type="number"]').forEach(i => { if (i.value.trim() === '') legeVelden = true; }); });
+
+        for (const rij of rijen) {
+            const badNaam = rij.getAttribute('data-bad');
+            let payload = { datum: datum, bad_naam: badNaam };
+            let url = (huidigeRol === 'waterbeheer') ? '/api/metingen' : '/api/coordinatoren';
+
+            if (huidigeRol === 'waterbeheer') {
+                payload.ph_waarde = rij.querySelector('.v-ph').value ? parseFloat(rij.querySelector('.v-ph').value) : null;
+                payload.chloor_waarde = rij.querySelector('.v-chloor').value ? parseFloat(rij.querySelector('.v-chloor').value) : null;
+                const f = rij.querySelector('.v-flow'); const d = rij.querySelector('.v-druk');
+                payload.flow = f && f.value ? parseInt(f.value) : null;
+                payload.filter_druk = d && d.value ? parseFloat(d.value) : null;
+            } else {
+                payload.ph_waarde = rij.querySelector('.c-ph').value ? parseFloat(rij.querySelector('.c-ph').value) : null;
+                payload.chloor_waarde = rij.querySelector('.c-chloor').value ? parseFloat(rij.querySelector('.c-chloor').value) : null;
+                payload.watertemperatuur = rij.querySelector('.c-temp').value ? parseFloat(rij.querySelector('.c-temp').value) : null;
+                payload.helderheid = rij.querySelector('.c-helder').value;
+            }
+
+            try {
+                const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (response.ok) succesTeller++;
+            } catch (fout) { console.error(fout); }
+        }
+
+        if (succesTeller === rijen.length) {
+            if (legeVelden) { toonBericht('Opgeslagen met waarschuwing: Niet alle velden waren ingevuld.', 'fout'); }
+            else { toonBericht('Gegevens succesvol opgeslagen!', 'succes'); }
+            laadMetingen();
+        } else { toonBericht('Niet alle gegevens konden worden opgeslagen.', 'fout'); }
+    }
+
+    function bouwLimietenBeheerTabel() {
+        const tbody = document.getElementById('limietenTbody');
+        tbody.innerHTML = '';
+        const labels = { ph_waarde: 'pH Waarde', chloor_waarde: 'Chloor (mg/l)', flow_diep: 'Flow Diep (m³/h)', flow_ondiep: 'Flow Ondiep (m³/h)', flow_peuterbad: 'Flow Peuterbad (m³/h)', filter_druk_in: 'Filterdruk In (bar)', filter_druk_uit: 'Filterdruk Uit (bar)', filter_druk_peuterbad: 'Filterdruk Peuterbad (bar)', watertemperatuur: 'Watertemperatuur (°C)', elektriciteit_nacht: 'Elektriciteit Nacht', elektriciteit_dag: 'Elektriciteit Dag', gas: 'Gas' };
+        Object.keys(actieveLimieten).forEach(param => {
+            tbody.innerHTML += `<tr id="limiet-rij-${param}" data-param="${param}">
+                <td><b>${labels[param] || param}</b></td>
+                <td><input type="number" class="l-min" step="0.01" value="${actieveLimieten[param].min}"></td>
+                <td><input type="number" class="l-max" step="0.01" value="${actieveLimieten[param].max}"></td></tr>`;
+        });
+    }
+
+    async function verwerkCentraleLimietenOpslaan() {
+        toonBericht('Limieten verwerken...', '');
+        const rijen = document.querySelectorAll('#limietenTbody tr');
+        let succesTeller = 0;
+        for (const rij of rijen) {
+            const paramNaam = rij.getAttribute('data-param');
+            const payload = { parameter_naam: paramNaam, min_waarde: parseFloat(rij.querySelector('.l-min').value), max_waarde: parseFloat(rij.querySelector('.l-max').value) };
+            try {
+                const response = await fetch('/api/limieten', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (response.ok) { succesTeller++; }
+            } catch (f) { console.error(f); }
+        }
+        if (succesTeller === rijen.length) { toonBericht('Limieten succesvol bijgewerkt!', 'succes'); laadLimietenVanServer(); }
+        else { toonBericht('Fout bij opslaan.', 'fout'); }
+    }
+
+    async function laadGebruikers() {
+        try {
+            const res = await fetch('/api/gebruikers');
+            const gebruikers = await res.json();
+            const tbody = document.getElementById('gebruikersTbody');
+            tbody.innerHTML = '';
+            gebruikers.forEach(g => {
+                tbody.innerHTML += `<tr id="gebruiker-rij-${g.id}">
+                    <td><input type="text" class="g-v" value="${g.voornaam}"></td>
+                    <td><input type="text" class="g-a" value="${g.achternaam}"></td>
+                    <td><input type="text" class="g-i" value="${g.inlognaam}"></td>
+                    <td><input type="text" class="g-w" value="${g.wachtwoord}"></td>
+                    <td><select class="g-t"><option value="waterbeheerder" ${g.taak === 'waterbeheerder' ? 'selected' : ''}>Waterbeheerder</option><option value="coordinator" ${g.taak === 'coordinator' ? 'selected' : ''}>Coördinator</option><option value="Administrator" ${g.taak === 'Administrator' ? 'selected' : ''}>Administrator</option></select></td>
+                    <td><button onclick="wijzigGebruiker(${g.id})" style="background:#007BFF; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">Update</button>
+                        <button onclick="verwijderGebruiker(${g.id})" style="background:#dc3545; color:white; border:none; padding:5px 10px; border-radius:4px; cursor:pointer;">Wissen</button></td></tr>`;
+            });
+        } catch (f) { toonBericht('Fout bij laden gebruikers.', 'fout'); }
+    }
+
+    async function voegGebruikerToe() {
+        const payload = {
+            voornaam: document.getElementById('g-voornaam').value, achternaam: document.getElementById('g-achternaam').value,
+            inlognaam: document.getElementById('g-inlognaam').value, wachtwoord: document.getElementById('g-wachtwoord').value, taak: document.getElementById('g-taak').value
+        };
+        const res = await fetch('/api/gebruikers', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (res.ok) { toonBericht('Gebruiker toegevoegd!', 'succes');['g-voornaam', 'g-achternaam', 'g-inlognaam', 'g-wachtwoord'].forEach(id => document.getElementById(id).value = ''); laadGebruikers(); }
+        else { toonBericht('Inlognaam bestaat waarschijnlijk al.', 'fout'); }
+    }
+
+    async function wijzigGebruiker(id) {
+        const rij = document.getElementById(`gebruiker-rij-${id}`);
+        const payload = {
+            voornaam: rij.querySelector('.g-v').value, achternaam: rij.querySelector('.g-a').value,
+            inlognaam: rij.querySelector('.g-i').value, wachtwoord: rij.querySelector('.g-w').value, taak: rij.querySelector('.g-t').value
+        };
+        const res = await fetch(`/api/gebruikers/${id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+        if (res.ok) { toonBericht('Gebruiker succesvol bijgewerkt!', 'succes'); laadGebruikers(); }
+    }
+
+    async function verwijderGebruiker(id) {
+        if (confirm('Weet u zeker dat u deze gebruiker wilt wissen?')) {
+            const res = await fetch(`/api/gebruikers/${id}`, { method: 'DELETE' });
+            if (res.ok) { toonBericht('Gebruiker gewist.', 'succes'); laadGebruikers(); }
+        }
+    }
+
+    // Activeert het verborgen blader-venster van de computer
+    function triggerImportBladeren(tabelnaam) {
+        document.getElementById(`import-file-${tabelnaam}`).click();
+    }
+
+    // Leest het geselecteerde bestand uit en stuurt de ruwe tekst naar de API
+    async function verwerkCsvUpload(inputElement, tabelnaam) {
+        const bestand = inputElement.files[0];
+        if (!bestand) return;
+
+        toonBericht('CSV-bestand wordt verwerkt...', 'succes');
+
+        const reader = new FileReader();
+        reader.onload = async function (e) {
+            const ruweTekst = e.target.result;
+
+            try {
+                const res = await fetch(`/api/database/import/${tabelnaam}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'text/csv' },
+                    body: ruweTekst
+                });
+                const data = await res.json();
+
+                if (res.ok) {
+                    toonBericht(`CSV succesvol geïmporteerd in '${tabelnaam}'!`, 'succes');
+                } else {
+                    toonBericht(`Import mislukt: ${data.error}`, 'fout');
+                }
+            } catch (f) { toonBericht('Verbindingsfout tijdens import.', 'fout'); }
+
+            // Reset het inputveld zodat hetzelfde bestand direct nogmaals gekozen kan worden
+            inputElement.value = '';
+        };
+
+        reader.readAsText(bestand, 'UTF-8');
+    }
+    
+    async function leegmakenTabel(tabelnaam) {
+        const bevestig = confirm(`🚨 GEVAAR: Weet u 100% zeker dat u de tabel '${tabelnaam}' VOLLEDIG wilt leegmaken?\nAlle data wordt permanent gewist!`);
+        if (!bevestig) return;
+
+        toonBericht('Tabel aan het leegmaken...', '');
+        try {
+            const res = await fetch(`/api/database/truncate/${tabelnaam}`, { method: 'POST' });
+            const data = await res.json();
+            if (res.ok) {
+                toonBericht(`Tabel '${tabelnaam}' is succesvol leeggemaakt.`, 'succes');
+                if (tabelnaam === 'gebruikers') { verwerkLogout(); } // Uitloggen als je jezelf wist
+            } else { toonBericht(`Fout: ${data.error}`, 'fout'); }
+        } catch (f) { toonBericht('Verbindingsfout met server.', 'fout'); }
+    }
+
+    async function exporteerTabel(tabelnaam) {
+            toonBericht('Export wordt voorbereid...', 'succes');
+            try {
+                // Omdat we een bestand downloaden, gebruiken we window.location.href 
+                // De browser handelt de download hiermee automatisch af
+                window.location.href = `/api/database/export/${tabelnaam}`;
+            } catch (f) {
+                toonBericht('Fout tijdens het downloaden van de export.', 'fout');
+            }
+        }
+        
+    function veranderDatum(dagen) {
+        toonBericht('', '');
+        const centraleInput = document.getElementById('centraleDatum');
+        const actueleDatum = new Date(centraleInput.value);
+        actueleDatum.setDate(actueleDatum.getDate() + dagen);
+        centraleInput.value = `${actueleDatum.getFullYear()}-${String(actueleDatum.getMonth() + 1).padStart(2, '0')}-${String(actueleDatum.getDate()).padStart(2, '0')}`;
+        laadMetingen();
+    }
+
+    startApplicatie();
+</script>
+</body>
+
+</html>
