@@ -7,9 +7,9 @@ CREATE TABLE IF NOT EXISTS metingen_coordinatoren (
     id INT AUTO_INCREMENT PRIMARY KEY,
     bad_id INT,
     datum DATE NOT NULL,
-    ph_waarde DECIMAL(3,2) NOT NULL,
-    chloor_waarde DECIMAL(3,2) NOT NULL,
-    watertemperatuur DECIMAL(3,1) NOT NULL,
+    ph_waarde DECIMAL(3,2) NULL,
+    chloor_waarde DECIMAL(3,2) NULL,
+    watertemperatuur DECIMAL(3,1) NULL,
     helderheid VARCHAR(20) NOT NULL, -- Bijv: 'Helder', 'Licht troebel', 'Troebel'
     FOREIGN KEY (bad_id) REFERENCES baden(id),
     UNIQUE KEY unieke_meting_coord (bad_id, datum)
@@ -19,12 +19,13 @@ CREATE TABLE IF NOT EXISTS metingen_grote_baden (
     id INT AUTO_INCREMENT PRIMARY KEY,
     bad_id INT,
     datum DATE NOT NULL,
-    ph_waarde DECIMAL(3,2) NOT NULL,
-    chloor_waarde DECIMAL(3,2) NOT NULL,
+    ph_waarde DECIMAL(3,2) NULL,
+    chloor_waarde DECIMAL(3,2) NULL,
     temperatuur DECIMAL(4,1) NULL,
-    flow INT NOT NULL,
+    flow INT NULL,
     filter_druk_in DECIMAL(4,2) NULL,
     filter_druk_uit DECIMAL(4,2) NULL,
+    water DECIMAL(10,2) NULL,
     FOREIGN KEY (bad_id) REFERENCES baden(id),
     UNIQUE KEY unieke_meting_grote_baden (bad_id, datum)
 );
@@ -33,8 +34,8 @@ CREATE TABLE IF NOT EXISTS metingen_peuterbad (
     id INT AUTO_INCREMENT PRIMARY KEY,
     bad_id INT,
     datum DATE NOT NULL,
-    ph_waarde DECIMAL(3,2) NOT NULL,
-    chloor_waarde DECIMAL(3,2) NOT NULL,
+    ph_waarde DECIMAL(3,2) NULL,
+    chloor_waarde DECIMAL(3,2) NULL,
     flow INT NULL,
     filter_druk_in DECIMAL(4,2) NULL,
     water VARCHAR(100) NULL,
@@ -49,9 +50,9 @@ INSERT IGNORE INTO baden (naam) VALUES ('Diep'), ('Ondiep'), ('Peuterbad');
 -- Tabel voor de centrale limieten
 CREATE TABLE IF NOT EXISTS limieten (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    parameter_naam VARCHAR(50) NOT NULL UNIQUE,
-    min_waarde DECIMAL(5,2) NOT NULL,
-    max_waarde DECIMAL(5,2) NOT NULL
+    parameter_naam VARCHAR(50) NULL UNIQUE,
+    min_waarde DECIMAL(5,2) NULL,
+    max_waarde DECIMAL(5,2) NULL
 );
 
 -- Standaard limieten invoeren bij de eerste start
@@ -86,3 +87,33 @@ CREATE TABLE IF NOT EXISTS acties (
     FOREIGN KEY (bad_id) REFERENCES baden(id),
     UNIQUE KEY unieke_actie (bad_id, datum, actie_type)
 );
+
+-- Tabel voor algemene meetgegevens (water, elektriciteit, gas, chemicalien, verwarmingssysteem)
+CREATE TABLE IF NOT EXISTS metingen_algemeen (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    datum DATE NOT NULL UNIQUE,
+    floculant VARCHAR(100) NULL,
+    water_diep DECIMAL(10,2) NULL,
+    water_ondiep DECIMAL(10,2) NULL,
+    water_totaal DECIMAL(10,2) NULL,
+    elektriciteit_nacht DECIMAL(10,2) NULL,
+    elektriciteit_dag DECIMAL(10,2) NULL,
+    gas DECIMAL(10,2) NULL,
+    chemicalien_chloor VARCHAR(100) NULL,
+    chemicalien_zwavelzuur VARCHAR(100) NULL,
+    verwarming_status_1 BOOLEAN DEFAULT FALSE,
+    verwarming_status_2 BOOLEAN DEFAULT FALSE,
+    verwarming_status_3 BOOLEAN DEFAULT FALSE,
+    verwarming_status_4 BOOLEAN DEFAULT FALSE,
+    verwarming_druk_ok BOOLEAN DEFAULT FALSE,
+    verwarming_visuele_controle BOOLEAN DEFAULT FALSE,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+ALTER TABLE metingen_grote_baden ADD COLUMN IF NOT EXISTS water DECIMAL(10,2) NULL;
+ALTER TABLE metingen_algemeen ADD COLUMN IF NOT EXISTS water_diep DECIMAL(10,2) NULL AFTER floculant;
+ALTER TABLE metingen_algemeen ADD COLUMN IF NOT EXISTS water_ondiep DECIMAL(10,2) NULL AFTER water_diep;
+ALTER TABLE verbruik ADD COLUMN IF NOT EXISTS systeem_status_3 BOOLEAN DEFAULT FALSE AFTER systeem_status_2;
+ALTER TABLE verbruik ADD COLUMN IF NOT EXISTS systeem_status_4 BOOLEAN DEFAULT FALSE AFTER systeem_status_3;
+ALTER TABLE verbruik ADD COLUMN IF NOT EXISTS systeem_druk_ok BOOLEAN DEFAULT FALSE AFTER systeem_status_4;
+ALTER TABLE verbruik ADD COLUMN IF NOT EXISTS visuele_inspectie BOOLEAN DEFAULT FALSE AFTER systeem_druk_ok;

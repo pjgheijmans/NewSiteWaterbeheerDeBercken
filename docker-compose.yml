@@ -20,6 +20,7 @@ services:
     restart: always
     ports:
       - "3000:3000"
+      - "9229:9229" # Debug poort
     environment:
       - DB_HOST=db
       - DB_USER=root
