@@ -76,7 +76,7 @@ app.post('/api/database/truncate/:tabelnaam', checkAuth, async (req, res) => {
         return res.status(403).json({ error: 'Geen toegang' });
     }
 
-    const toegestaneTabellen = ['metingen', 'metingen_coordinatoren', 'limieten', 'gebruikers'];
+    const toegestaneTabellen = ['metingen', 'metingen_coordinatoren', 'metingen_peuterbad', 'metingen_algemeen', 'acties', 'limieten', 'gebruikers'];
     const tabel = req.params.tabelnaam;
 
     if (!toegestaneTabellen.includes(tabel)) {
@@ -352,7 +352,7 @@ app.get('/api/database/export/:tabelnaam', checkAuth, async (req, res) => {
         return res.status(403).json({ error: 'Geen toegang' });
     }
 
-    const toegestaneTabellen = ['metingen', 'metingen_grote_baden', 'metingen_peuterbad', 'metingen_coordinatoren', 'limieten', 'gebruikers'];
+    const toegestaneTabellen = ['metingen', 'metingen_grote_baden', 'metingen_peuterbad', 'metingen_coordinatoren', 'metingen_algemeen', 'acties', 'limieten', 'gebruikers'];
     const tabel = req.params.tabelnaam;
 
     if (!toegestaneTabellen.includes(tabel)) {
@@ -365,12 +365,8 @@ app.get('/api/database/export/:tabelnaam', checkAuth, async (req, res) => {
         
         // Voor de metingen-tabellen is het handiger om de badnaam direct mee te nemen ipv het bad_id
         if (tabel === 'metingen') {
-            query = `SELECT b.naam AS bad_naam, m.datum, m.ph_waarde, m.chloor_waarde, m.temperatuur, m.flow, m.filter_druk_in, m.filter_druk_uit, NULL AS water, NULL AS chemicalien_chloor, NULL AS chemicalien_zwavelzuur
+            query = `SELECT b.naam AS bad_naam, m.datum, m.ph_waarde, m.chloor_waarde, m.temperatuur, m.flow, m.filter_druk_in, m.filter_druk_uit
                      FROM metingen_grote_baden m
-                     JOIN baden b ON m.bad_id = b.id
-                     UNION ALL
-                     SELECT b.naam AS bad_naam, m.datum, m.ph_waarde, m.chloor_waarde, NULL AS temperatuur, m.flow, m.filter_druk_in, NULL AS filter_druk_uit, m.water, m.chemicalien_chloor, m.chemicalien_zwavelzuur
-                     FROM metingen_peuterbad m
                      JOIN baden b ON m.bad_id = b.id
                      ORDER BY datum DESC`;
         } else if (tabel === 'metingen_grote_baden') {
@@ -379,6 +375,12 @@ app.get('/api/database/export/:tabelnaam', checkAuth, async (req, res) => {
             query = `SELECT m.id, b.naam AS bad_naam, m.datum, m.ph_waarde, m.chloor_waarde, m.flow, m.filter_druk_in, m.water, m.chemicalien_chloor, m.chemicalien_zwavelzuur FROM metingen_peuterbad m JOIN baden b ON m.bad_id = b.id ORDER BY m.datum DESC`;
         } else if (tabel === 'metingen_coordinatoren') {
             query = `SELECT mc.id, b.naam AS bad_naam, mc.datum, mc.ph_waarde, mc.chloor_waarde, mc.watertemperatuur, mc.helderheid FROM metingen_coordinatoren mc JOIN baden b ON mc.bad_id = b.id ORDER BY mc.datum DESC`;
+        }
+
+        if (tabel === 'metingen_algemeen') {
+            query = `SELECT datum, floculant, water_diep, water_ondiep, water_totaal, elektriciteit_nacht, elektriciteit_dag, gas, chemicalien_chloor, chemicalien_zwavelzuur, verwarming_status_1, verwarming_status_2, verwarming_status_3, verwarming_status_4, verwarming_druk_ok, verwarming_visuele_controle FROM metingen_algemeen ORDER BY datum DESC`;
+        } else if (tabel === 'acties') {
+            query = `SELECT a.id, b.naam AS bad_naam, a.datum, a.beschrijving, a.actie_type, a.opgelost, a.opgelost_op, a.created_at FROM acties a JOIN baden b ON a.bad_id = b.id ORDER BY a.datum DESC`;
         }
 
         const [rows] = await pool.execute(query);
@@ -425,7 +427,7 @@ app.post('/api/database/import/:tabelnaam', checkAuth, express.text({ type: 'tex
         return res.status(403).json({ error: 'Geen toegang' });
     }
 
-    const toegestaneTabellen = ['metingen', 'metingen_coordinatoren', 'limieten', 'gebruikers'];
+    const toegestaneTabellen = ['metingen', 'metingen_coordinatoren', 'metingen_peuterbad', 'metingen_algemeen', 'limieten', 'gebruikers'];
     const tabel = req.params.tabelnaam;
 
     if (!toegestaneTabellen.includes(tabel)) {
@@ -457,7 +459,7 @@ app.post('/api/database/import/:tabelnaam', checkAuth, express.text({ type: 'tex
                 rijObject[kolom] = waarde === '' ? null : waarde;
             });
 
-            if (tabel === 'metingen' || tabel === 'metingen_coordinatoren') {
+            if (tabel === 'metingen' || tabel === 'metingen_coordinatoren' || tabel === 'metingen_peuterbad') {
                 // Converteer de bad_naam tekst uit de CSV terug naar het numerieke bad_id
                 const [badRows] = await pool.execute('SELECT id FROM baden WHERE naam = ?', [rijObject['bad_naam']]);
                 if (badRows.length > 0) {
@@ -472,7 +474,8 @@ app.post('/api/database/import/:tabelnaam', checkAuth, express.text({ type: 'tex
             const sqlParametersText = actieveKolommen.map(() => '?').join(', ');
             const sqlUpdateText = actieveKolommen.map(k => `${k} = VALUES(${k})`).join(', ');
 
-            const query = `INSERT INTO ${tabel} (${sqlKolommenText}) VALUES (${sqlParametersText}) ON DUPLICATE KEY UPDATE ${sqlUpdateText}`;
+            const actualTabel = tabel === 'metingen' ? 'metingen_grote_baden' : tabel;
+            const query = `INSERT INTO ${actualTabel} (${sqlKolommenText}) VALUES (${sqlParametersText}) ON DUPLICATE KEY UPDATE ${sqlUpdateText}`;
             const queryParameters = actieveKolommen.map(k => rijObject[k]);
 
             await pool.execute(query, queryParameters);
@@ -486,6 +489,47 @@ app.post('/api/database/import/:tabelnaam', checkAuth, express.text({ type: 'tex
         console.error(err);
         res.status(500).json({ error: err.message });
     }
+});
+
+// ==========================================
+// API ENDPOINTS: TRENDANALYSE
+// ==========================================
+app.get('/api/trend/metingen', checkAuth, async (req, res) => {
+    if (!isWaterbeheerder(req.session.gebruiker.taak)) return res.status(403).json({ error: 'Geen toegang' });
+    try {
+        const { van, tot } = req.query;
+        const [rows] = await pool.execute(
+            `SELECT mg.datum, b.naam AS bad_naam, mg.ph_waarde, mg.chloor_waarde, mg.temperatuur, mg.flow, mg.filter_druk_in, mg.filter_druk_uit
+             FROM metingen_grote_baden mg JOIN baden b ON mg.bad_id = b.id
+             WHERE mg.datum BETWEEN ? AND ?
+             UNION ALL
+             SELECT mp.datum, b.naam AS bad_naam, mp.ph_waarde, mp.chloor_waarde, NULL AS temperatuur, mp.flow, mp.filter_druk_in, NULL AS filter_druk_uit
+             FROM metingen_peuterbad mp JOIN baden b ON mp.bad_id = b.id
+             WHERE mp.datum BETWEEN ? AND ?
+             ORDER BY datum ASC, bad_naam ASC`,
+            [van, tot, van, tot]
+        );
+        res.json(rows);
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.get('/api/trend/verbruik', checkAuth, async (req, res) => {
+    if (!isWaterbeheerder(req.session.gebruiker.taak)) return res.status(403).json({ error: 'Geen toegang' });
+    try {
+        const { van, tot } = req.query;
+        const [algemeenRows] = await pool.execute(
+            `SELECT datum, water_diep, water_ondiep, water_totaal, elektriciteit_nacht, elektriciteit_dag, gas, chemicalien_chloor, chemicalien_zwavelzuur
+             FROM metingen_algemeen WHERE datum BETWEEN ? AND ? ORDER BY datum ASC`,
+            [van, tot]
+        );
+        const [peuterbadRows] = await pool.execute(
+            `SELECT mp.datum, mp.water, mp.chemicalien_chloor, mp.chemicalien_zwavelzuur FROM metingen_peuterbad mp
+             JOIN baden b ON mp.bad_id = b.id
+             WHERE b.naam = 'Peuterbad' AND mp.datum BETWEEN ? AND ? ORDER BY mp.datum ASC`,
+            [van, tot]
+        );
+        res.json({ algemeen: algemeenRows, peuterbad: peuterbadRows });
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 app.use(express.static(path.join(__dirname, 'public')));

@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Digitale Dagstaat - Zwembad</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -480,6 +481,7 @@
             <button id="btn-rol-limieten" onclick="wisselRol('limieten')">Limieten</button>
             <button id="btn-rol-gebruikers" onclick="wisselRol('gebruikers')">Gebruikers Beheer</button>
             <button id="btn-rol-database" onclick="wisselRol('database')">Database Beheer</button>
+            <button id="btn-rol-trendanalyse" onclick="wisselRol('trendanalyse')">Trendanalyse</button>
             <button class="logout-btn" onclick="verwerkLogout()">Uitloggen</button>
         </div>
 
@@ -868,6 +870,40 @@
                         <td><button class="btn-wissen-gevaar" onclick="leegmakenTabel('limieten')">Tabel Leegmaken</button></td>
                     </tr>
                     <tr>
+                        <td><b>Metingen Peuterbad</b></td>
+                        <td>Bevat pH, chloor, flow, filterdruk, water en chemicaliën van het peuterbad.</td>
+                        <td><button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px;"
+                                onclick="exporteerTabel('metingen_peuterbad')">CSV Exporteren</button></td>
+                        <td>
+                            <button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px; background-color:#17a2b8;"
+                                onclick="triggerImportBladeren('metingen_peuterbad')">CSV Importeren</button>
+                            <input type="file" id="import-file-metingen_peuterbad" accept=".csv" style="display:none;"
+                                onchange="verwerkCsvUpload(this, 'metingen_peuterbad')">
+                        </td>
+                        <td><button class="btn-wissen-gevaar" onclick="leegmakenTabel('metingen_peuterbad')">Tabel Leegmaken</button></td>
+                    </tr>
+                    <tr>
+                        <td><b>Verbruik (Algemeen)</b></td>
+                        <td>Bevat water, elektriciteit, gas, chemicaliën en verwarmingsstatus per dag.</td>
+                        <td><button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px;"
+                                onclick="exporteerTabel('metingen_algemeen')">CSV Exporteren</button></td>
+                        <td>
+                            <button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px; background-color:#17a2b8;"
+                                onclick="triggerImportBladeren('metingen_algemeen')">CSV Importeren</button>
+                            <input type="file" id="import-file-metingen_algemeen" accept=".csv" style="display:none;"
+                                onchange="verwerkCsvUpload(this, 'metingen_algemeen')">
+                        </td>
+                        <td><button class="btn-wissen-gevaar" onclick="leegmakenTabel('metingen_algemeen')">Tabel Leegmaken</button></td>
+                    </tr>
+                    <tr>
+                        <td><b>Acties</b></td>
+                        <td>Bevat automatisch gegenereerde acties en alarmen.</td>
+                        <td><button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px;"
+                                onclick="exporteerTabel('acties')">CSV Exporteren</button></td>
+                        <td>—</td>
+                        <td><button class="btn-wissen-gevaar" onclick="leegmakenTabel('acties')">Tabel Leegmaken</button></td>
+                    </tr>
+                    <tr>
                         <td><b>Gebruikers</b></td>
                         <td>Bevat alle inlogaccounts van het personeel.</td>
                         <td><button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px;"
@@ -885,6 +921,66 @@
 
         </div>
 
+        <!-- Trendanalyse Sectie -->
+        <div id="sectie-trendanalyse" style="display: none;">
+            <h2>Trendanalyse</h2>
+
+            <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; margin-bottom: 16px; background: #e9ecef; padding: 12px 15px; border-radius: 5px;">
+                <div class="veld-item">
+                    <label for="trend-van" style="font-weight: 600;">Van</label>
+                    <input type="date" id="trend-van">
+                </div>
+                <div class="veld-item">
+                    <label for="trend-tot" style="font-weight: 600;">Tot</label>
+                    <input type="date" id="trend-tot">
+                </div>
+                <button class="btn-centraal-opslaan" style="padding: 10px 24px;" onclick="laadTrendData()">Toon grafiek</button>
+            </div>
+
+            <div class="subtab-nav">
+                <button class="subtab-btn actief" id="trend-tab-meetwaarden" onclick="wisselTrendTab('meetwaarden')">Meetwaarden</button>
+                <button class="subtab-btn" id="trend-tab-verbruik" onclick="wisselTrendTab('verbruik')">Verbruik</button>
+            </div>
+
+            <!-- Meetwaarden charts -->
+            <div id="trend-meetwaarden-content">
+                <h3 style="color: #0056b3; margin-bottom: 12px;">Diep en Ondiep</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 20px; margin-bottom: 28px;">
+                    <div class="categorie-box"><h4>pH</h4><canvas id="chart-ph-groot"></canvas></div>
+                    <div class="categorie-box"><h4>Chloor (mg/l)</h4><canvas id="chart-chloor-groot"></canvas></div>
+                    <div class="categorie-box"><h4>Temperatuur (°C)</h4><canvas id="chart-temp-groot"></canvas></div>
+                    <div class="categorie-box"><h4>Flow (m³/h)</h4><canvas id="chart-flow-groot"></canvas></div>
+                    <div class="categorie-box"><h4>Filterdruk In (bar)</h4><canvas id="chart-filterin-groot"></canvas></div>
+                    <div class="categorie-box"><h4>Filterdruk Uit (bar)</h4><canvas id="chart-filteruit-groot"></canvas></div>
+                </div>
+                <h3 style="color: #0056b3; margin-bottom: 12px;">Peuterbad</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                    <div class="categorie-box"><h4>pH</h4><canvas id="chart-ph-peuter"></canvas></div>
+                    <div class="categorie-box"><h4>Chloor (mg/l)</h4><canvas id="chart-chloor-peuter"></canvas></div>
+                    <div class="categorie-box"><h4>Flow (m³/h)</h4><canvas id="chart-flow-peuter"></canvas></div>
+                    <div class="categorie-box"><h4>Filterdruk In (bar)</h4><canvas id="chart-filterin-peuter"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Verbruik charts -->
+            <div id="trend-verbruik-content" style="display: none;">
+                <h3 style="color: #0056b3; margin-bottom: 12px;">Diep en Ondiep</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 20px; margin-bottom: 28px;">
+                    <div class="categorie-box"><h4>Water (m³)</h4><canvas id="chart-water-groot"></canvas></div>
+                    <div class="categorie-box"><h4>Elektriciteit (kWh)</h4><canvas id="chart-elektriciteit"></canvas></div>
+                    <div class="categorie-box"><h4>Gas (m³)</h4><canvas id="chart-gas"></canvas></div>
+                    <div class="categorie-box"><h4>Chemicaliën Chloor</h4><canvas id="chart-chem-chloor-groot"></canvas></div>
+                    <div class="categorie-box"><h4>Chemicaliën Zwavelzuur</h4><canvas id="chart-chem-zwavel-groot"></canvas></div>
+                </div>
+                <h3 style="color: #0056b3; margin-bottom: 12px;">Peuterbad</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                    <div class="categorie-box"><h4>Water (m³)</h4><canvas id="chart-water-peuter"></canvas></div>
+                    <div class="categorie-box"><h4>Chemicaliën Chloor</h4><canvas id="chart-chem-chloor-peuter"></canvas></div>
+                    <div class="categorie-box"><h4>Chemicaliën Zwavelzuur</h4><canvas id="chart-chem-zwavel-peuter"></canvas></div>
+                </div>
+            </div>
+        </div>
+
         <div id="statusBericht" class="status-melding"></div>
     </div>
 
@@ -896,6 +992,8 @@
     let huidigeRol = 'waterbeheer';
     let huidigeBadPagina = 'grote-baden';
     let huidigeSubtab = 'meetwaarden';
+    let huidigeTrendSubtab = 'meetwaarden';
+    let trendCharts = {};
     let gecachteData = [];
     let actieveLimieten = {};
     let ingelogdeGebruiker = null;
@@ -980,6 +1078,7 @@
             document.getElementById('btn-rol-limieten').style.display = 'inline-block';
             document.getElementById('btn-rol-gebruikers').style.display = 'inline-block';
             document.getElementById('btn-rol-database').style.display = 'inline-block';
+            document.getElementById('btn-rol-trendanalyse').style.display = 'inline-block';
             wisselRol('waterbeheer');
         } else if (gebruiker.taak === 'Administrator') {
             document.getElementById('btn-rol-waterbeheer').style.display = 'none';
@@ -987,6 +1086,7 @@
             document.getElementById('btn-rol-limieten').style.display = 'inline-block';
             document.getElementById('btn-rol-gebruikers').style.display = 'inline-block';
             document.getElementById('btn-rol-database').style.display = 'inline-block';
+            document.getElementById('btn-rol-trendanalyse').style.display = 'inline-block';
             wisselRol('limieten');
         } else {
             document.getElementById('btn-rol-waterbeheer').style.display = 'none';
@@ -994,6 +1094,7 @@
             document.getElementById('btn-rol-limieten').style.display = 'none';
             document.getElementById('btn-rol-gebruikers').style.display = 'none';
             document.getElementById('btn-rol-database').style.display = 'none';
+            document.getElementById('btn-rol-trendanalyse').style.display = 'none';
             wisselRol('coordinatoren');
         }
     }
@@ -1123,7 +1224,7 @@
 
     function wisselRol(rol) {
         huidigeRol = rol;
-        ['waterbeheer', 'coordinatoren', 'limieten', 'gebruikers', 'database'].forEach(r => {
+        ['waterbeheer', 'coordinatoren', 'limieten', 'gebruikers', 'database', 'trendanalyse'].forEach(r => {
             const btn = document.getElementById(`btn-rol-${r}`);
             if (btn) btn.classList.toggle('actief', r === rol);
         });
@@ -1132,6 +1233,7 @@
         document.getElementById('sectie-limieten').style.display = (rol === 'limieten') ? 'block' : 'none';
         document.getElementById('sectie-gebruikers').style.display = (rol === 'gebruikers') ? 'block' : 'none';
         document.getElementById('sectie-database').style.display = (rol === 'database') ? 'block' : 'none';
+        document.getElementById('sectie-trendanalyse').style.display = (rol === 'trendanalyse') ? 'block' : 'none';
         document.getElementById('waterbeheer-tabs').style.display = (rol === 'waterbeheer') ? 'flex' : 'none';
         if (isDagstaat) {
             laadLimietenVanServer().then(() => laadMetingen());
@@ -1139,6 +1241,8 @@
             laadGebruikers();
         } else if (rol === 'limieten') {
             laadLimietenVanServer();
+        } else if (rol === 'trendanalyse') {
+            initTrendDatums();
         }
     }
 
@@ -1668,6 +1772,158 @@
         centraleInput.value = `${actueleDatum.getFullYear()}-${String(actueleDatum.getMonth() + 1).padStart(2, '0')}-${String(actueleDatum.getDate()).padStart(2, '0')}`;
         laadMetingen();
     }
+
+    // ── Trendanalyse ──────────────────────────────────────────────────────
+    function wisselTrendTab(subtab) {
+        huidigeTrendSubtab = subtab;
+        ['meetwaarden', 'verbruik'].forEach(s => {
+            document.getElementById(`trend-tab-${s}`).classList.toggle('actief', s === subtab);
+            document.getElementById(`trend-${s}-content`).style.display = (s === subtab) ? 'block' : 'none';
+        });
+    }
+
+    function initTrendDatums() {
+        const tot = new Date();
+        const van = new Date();
+        van.setDate(van.getDate() - 30);
+        const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+        if (!document.getElementById('trend-van').value) document.getElementById('trend-van').value = fmt(van);
+        if (!document.getElementById('trend-tot').value) document.getElementById('trend-tot').value = fmt(tot);
+    }
+
+    function datumStr(d) {
+        if (!d) return '';
+        if (d instanceof Date) return d.toISOString().split('T')[0];
+        return String(d).split('T')[0];
+    }
+
+    function vernietigChart(id) {
+        if (trendCharts[id]) { trendCharts[id].destroy(); delete trendCharts[id]; }
+    }
+
+    function maakLineChart(canvasId, labels, datasets) {
+        vernietigChart(canvasId);
+        const ctx = document.getElementById(canvasId);
+        if (!ctx) return;
+        trendCharts[canvasId] = new Chart(ctx, {
+            type: 'line',
+            data: { labels, datasets },
+            options: {
+                responsive: true,
+                plugins: { legend: { position: 'top' } },
+                scales: {
+                    x: { ticks: { maxTicksLimit: 12, maxRotation: 45 } },
+                    y: { beginAtZero: false }
+                }
+            }
+        });
+    }
+
+    async function laadTrendData() {
+        const van = document.getElementById('trend-van').value;
+        const tot = document.getElementById('trend-tot').value;
+        if (!van || !tot) { toonBericht('Vul een geldig datumbereik in.', 'fout'); return; }
+        toonBericht('Grafiek laden...', '');
+        if (huidigeTrendSubtab === 'meetwaarden') await laadTrendMetingen(van, tot);
+        else await laadTrendVerbruik(van, tot);
+        toonBericht('', '');
+    }
+
+    async function laadTrendMetingen(van, tot) {
+        try {
+            const res = await apiCall(`/api/trend/metingen?van=${van}&tot=${tot}`);
+            const data = await res.json();
+
+            const diep = data.filter(r => r.bad_naam === 'Diep');
+            const ondiep = data.filter(r => r.bad_naam === 'Ondiep');
+            const peuter = data.filter(r => r.bad_naam === 'Peuterbad');
+
+            const grootLabels = [...new Set([...diep, ...ondiep].map(r => datumStr(r.datum)))].sort();
+            const peuterLabels = peuter.map(r => datumStr(r.datum));
+
+            const haal = (arr, veld, lbls) => lbls.map(d => {
+                const r = arr.find(x => datumStr(x.datum) === d);
+                return r ? r[veld] : null;
+            });
+            const ds = (label, arr, veld, lbls, kleur) => ({
+                label, data: haal(arr, veld, lbls),
+                borderColor: kleur, backgroundColor: kleur + '22',
+                tension: 0.3, spanGaps: true, pointRadius: 3
+            });
+
+            maakLineChart('chart-ph-groot', grootLabels, [
+                ds('Diep', diep, 'ph_waarde', grootLabels, '#007BFF'),
+                ds('Ondiep', ondiep, 'ph_waarde', grootLabels, '#28a745')]);
+            maakLineChart('chart-chloor-groot', grootLabels, [
+                ds('Diep', diep, 'chloor_waarde', grootLabels, '#007BFF'),
+                ds('Ondiep', ondiep, 'chloor_waarde', grootLabels, '#28a745')]);
+            maakLineChart('chart-temp-groot', grootLabels, [
+                ds('Diep', diep, 'temperatuur', grootLabels, '#007BFF'),
+                ds('Ondiep', ondiep, 'temperatuur', grootLabels, '#28a745')]);
+            maakLineChart('chart-flow-groot', grootLabels, [
+                ds('Diep', diep, 'flow', grootLabels, '#007BFF'),
+                ds('Ondiep', ondiep, 'flow', grootLabels, '#28a745')]);
+            maakLineChart('chart-filterin-groot', grootLabels, [
+                ds('Diep', diep, 'filter_druk_in', grootLabels, '#007BFF'),
+                ds('Ondiep', ondiep, 'filter_druk_in', grootLabels, '#28a745')]);
+            maakLineChart('chart-filteruit-groot', grootLabels, [
+                ds('Diep', diep, 'filter_druk_uit', grootLabels, '#007BFF'),
+                ds('Ondiep', ondiep, 'filter_druk_uit', grootLabels, '#28a745')]);
+
+            maakLineChart('chart-ph-peuter', peuterLabels, [
+                ds('Peuterbad', peuter, 'ph_waarde', peuterLabels, '#fd7e14')]);
+            maakLineChart('chart-chloor-peuter', peuterLabels, [
+                ds('Peuterbad', peuter, 'chloor_waarde', peuterLabels, '#fd7e14')]);
+            maakLineChart('chart-flow-peuter', peuterLabels, [
+                ds('Peuterbad', peuter, 'flow', peuterLabels, '#fd7e14')]);
+            maakLineChart('chart-filterin-peuter', peuterLabels, [
+                ds('Peuterbad', peuter, 'filter_druk_in', peuterLabels, '#fd7e14')]);
+
+        } catch (fout) { console.error('Fout trend metingen:', fout); toonBericht('Fout bij laden grafiek.', 'fout'); }
+    }
+
+    async function laadTrendVerbruik(van, tot) {
+        try {
+            const res = await apiCall(`/api/trend/verbruik?van=${van}&tot=${tot}`);
+            const data = await res.json();
+            const alg = data.algemeen || [];
+            const peuter = data.peuterbad || [];
+
+            const labels = alg.map(r => datumStr(r.datum));
+            const peuterLabels = peuter.map(r => datumStr(r.datum));
+            const v = (arr, veld) => arr.map(r => r[veld]);
+
+            maakLineChart('chart-water-groot', labels, [
+                { label: 'Diep (m³)', data: v(alg, 'water_diep'), borderColor: '#007BFF', backgroundColor: '#007BFF22', tension: 0.3, spanGaps: true },
+                { label: 'Ondiep (m³)', data: v(alg, 'water_ondiep'), borderColor: '#28a745', backgroundColor: '#28a74522', tension: 0.3, spanGaps: true },
+                { label: 'Totaal (m³)', data: v(alg, 'water_totaal'), borderColor: '#6c757d', backgroundColor: '#6c757d22', tension: 0.3, spanGaps: true, borderDash: [5,5] }
+            ]);
+            maakLineChart('chart-elektriciteit', labels, [
+                { label: 'Nacht (kWh)', data: v(alg, 'elektriciteit_nacht'), borderColor: '#6f42c1', backgroundColor: '#6f42c122', tension: 0.3, spanGaps: true },
+                { label: 'Dag (kWh)', data: v(alg, 'elektriciteit_dag'), borderColor: '#e83e8c', backgroundColor: '#e83e8c22', tension: 0.3, spanGaps: true }
+            ]);
+            maakLineChart('chart-gas', labels, [
+                { label: 'Gas (m³)', data: v(alg, 'gas'), borderColor: '#fd7e14', backgroundColor: '#fd7e1422', tension: 0.3, spanGaps: true }
+            ]);
+            maakLineChart('chart-water-peuter', peuterLabels, [
+                { label: 'Water (m³)', data: peuter.map(r => r.water), borderColor: '#fd7e14', backgroundColor: '#fd7e1422', tension: 0.3, spanGaps: true }
+            ]);
+            maakLineChart('chart-chem-chloor-groot', labels, [
+                { label: 'Chloor', data: v(alg, 'chemicalien_chloor'), borderColor: '#17a2b8', backgroundColor: '#17a2b822', tension: 0.3, spanGaps: true }
+            ]);
+            maakLineChart('chart-chem-zwavel-groot', labels, [
+                { label: 'Zwavelzuur', data: v(alg, 'chemicalien_zwavelzuur'), borderColor: '#dc3545', backgroundColor: '#dc354522', tension: 0.3, spanGaps: true }
+            ]);
+            maakLineChart('chart-chem-chloor-peuter', peuterLabels, [
+                { label: 'Chloor', data: peuter.map(r => r.chemicalien_chloor), borderColor: '#17a2b8', backgroundColor: '#17a2b822', tension: 0.3, spanGaps: true }
+            ]);
+            maakLineChart('chart-chem-zwavel-peuter', peuterLabels, [
+                { label: 'Zwavelzuur', data: peuter.map(r => r.chemicalien_zwavelzuur), borderColor: '#dc3545', backgroundColor: '#dc354522', tension: 0.3, spanGaps: true }
+            ]);
+
+        } catch (fout) { console.error('Fout trend verbruik:', fout); toonBericht('Fout bij laden grafiek.', 'fout'); }
+    }
+    // ── Einde Trendanalyse ────────────────────────────────────────────────
 
     startApplicatie();
 </script>
