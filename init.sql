@@ -70,7 +70,14 @@ INSERT IGNORE INTO limieten (parameter_naam, min_waarde, max_waarde) VALUES
 ('elektriciteit_dag', 0.00, 500.00), 
 ('gas', 0.00, 500.00);
 
-CREATE TABLE IF NOT EXISTS gebruikers (id INT AUTO_INCREMENT PRIMARY KEY, voornaam VARCHAR(50) NOT NULL, achternaam VARCHAR(50) NOT NULL, inlognaam VARCHAR(50) NOT NULL UNIQUE, wachtwoord VARCHAR(255) NOT NULL, taak ENUM('waterbeheerder', 'coordinator', 'Administrator') NOT NULL);
+CREATE TABLE IF NOT EXISTS gebruikers (
+    id INT AUTO_INCREMENT PRIMARY KEY, 
+    voornaam VARCHAR(50) NOT NULL, 
+    achternaam VARCHAR(50) NOT NULL, 
+    inlognaam VARCHAR(50) NOT NULL UNIQUE, 
+    wachtwoord VARCHAR(255) NOT NULL, 
+    taak ENUM('waterbeheerder', 'coordinator', 'Administrator') NOT NULL);
+    
 INSERT IGNORE INTO gebruikers (voornaam, achternaam, inlognaam, wachtwoord, taak) VALUES ('Admin', '', 'Admin', 'lpphw', 'Administrator');
 INSERT IGNORE INTO gebruikers (voornaam, achternaam, inlognaam, wachtwoord, taak) VALUES ('Paul', 'Heijmans', 'pheijmans', 'Paul', 'waterbeheerder');
 
@@ -88,8 +95,8 @@ CREATE TABLE IF NOT EXISTS acties (
     UNIQUE KEY unieke_actie (bad_id, datum, actie_type)
 );
 
--- Tabel voor algemene meetgegevens (water, elektriciteit, gas, chemicalien, verwarmingssysteem)
-CREATE TABLE IF NOT EXISTS metingen_algemeen (
+-- Verbruik diep/ondiep: water, elektriciteit, gas, chemicaliën
+CREATE TABLE IF NOT EXISTS verbruik_diep_ondiep (
     id INT AUTO_INCREMENT PRIMARY KEY,
     datum DATE NOT NULL UNIQUE,
     floculant VARCHAR(100) NULL,
@@ -101,6 +108,14 @@ CREATE TABLE IF NOT EXISTS metingen_algemeen (
     gas DECIMAL(10,2) NULL,
     chemicalien_chloor VARCHAR(100) NULL,
     chemicalien_zwavelzuur VARCHAR(100) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Verwarmingssysteem: ketelstatus en inspecties
+CREATE TABLE IF NOT EXISTS verwarmings_systeem (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    datum DATE NOT NULL UNIQUE,
     verwarming_status_1 BOOLEAN DEFAULT FALSE,
     verwarming_status_2 BOOLEAN DEFAULT FALSE,
     verwarming_status_3 BOOLEAN DEFAULT FALSE,
@@ -110,10 +125,14 @@ CREATE TABLE IF NOT EXISTS metingen_algemeen (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
-ALTER TABLE metingen_grote_baden ADD COLUMN IF NOT EXISTS water DECIMAL(10,2) NULL;
-ALTER TABLE metingen_algemeen ADD COLUMN IF NOT EXISTS water_diep DECIMAL(10,2) NULL AFTER floculant;
-ALTER TABLE metingen_algemeen ADD COLUMN IF NOT EXISTS water_ondiep DECIMAL(10,2) NULL AFTER water_diep;
-ALTER TABLE verbruik ADD COLUMN IF NOT EXISTS systeem_status_3 BOOLEAN DEFAULT FALSE AFTER systeem_status_2;
-ALTER TABLE verbruik ADD COLUMN IF NOT EXISTS systeem_status_4 BOOLEAN DEFAULT FALSE AFTER systeem_status_3;
-ALTER TABLE verbruik ADD COLUMN IF NOT EXISTS systeem_druk_ok BOOLEAN DEFAULT FALSE AFTER systeem_status_4;
-ALTER TABLE verbruik ADD COLUMN IF NOT EXISTS visuele_inspectie BOOLEAN DEFAULT FALSE AFTER systeem_druk_ok;
+
+-- Migratie van metingen_algemeen naar de twee nieuwe tabellen (veilig bij herstart)
+INSERT IGNORE INTO verbruik_diep_ondiep
+    (datum, floculant, water_diep, water_ondiep, water_totaal, elektriciteit_nacht, elektriciteit_dag, gas, chemicalien_chloor, chemicalien_zwavelzuur, created_at, updated_at)
+SELECT datum, floculant, water_diep, water_ondiep, water_totaal, elektriciteit_nacht, elektriciteit_dag, gas, chemicalien_chloor, chemicalien_zwavelzuur, created_at, updated_at
+FROM metingen_algemeen WHERE 1=1 AND EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'metingen_algemeen');
+
+INSERT IGNORE INTO verwarmings_systeem
+    (datum, verwarming_status_1, verwarming_status_2, verwarming_status_3, verwarming_status_4, verwarming_druk_ok, verwarming_visuele_controle)
+SELECT datum, verwarming_status_1, verwarming_status_2, verwarming_status_3, verwarming_status_4, verwarming_druk_ok, verwarming_visuele_controle
+FROM metingen_algemeen WHERE 1=1 AND EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'metingen_algemeen');

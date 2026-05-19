@@ -883,17 +883,30 @@
                         <td><button class="btn-wissen-gevaar" onclick="leegmakenTabel('metingen_peuterbad')">Tabel Leegmaken</button></td>
                     </tr>
                     <tr>
-                        <td><b>Verbruik (Algemeen)</b></td>
-                        <td>Bevat water, elektriciteit, gas, chemicaliën en verwarmingsstatus per dag.</td>
+                        <td><b>Verbruik diep/ondiep</b></td>
+                        <td>Bevat water, elektriciteit, gas en chemicaliën voor diep en ondiep.</td>
                         <td><button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px;"
-                                onclick="exporteerTabel('metingen_algemeen')">CSV Exporteren</button></td>
+                                onclick="exporteerTabel('verbruik_diep_ondiep')">CSV Exporteren</button></td>
                         <td>
                             <button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px; background-color:#17a2b8;"
-                                onclick="triggerImportBladeren('metingen_algemeen')">CSV Importeren</button>
-                            <input type="file" id="import-file-metingen_algemeen" accept=".csv" style="display:none;"
-                                onchange="verwerkCsvUpload(this, 'metingen_algemeen')">
+                                onclick="triggerImportBladeren('verbruik_diep_ondiep')">CSV Importeren</button>
+                            <input type="file" id="import-file-verbruik_diep_ondiep" accept=".csv" style="display:none;"
+                                onchange="verwerkCsvUpload(this, 'verbruik_diep_ondiep')">
                         </td>
-                        <td><button class="btn-wissen-gevaar" onclick="leegmakenTabel('metingen_algemeen')">Tabel Leegmaken</button></td>
+                        <td><button class="btn-wissen-gevaar" onclick="leegmakenTabel('verbruik_diep_ondiep')">Tabel Leegmaken</button></td>
+                    </tr>
+                    <tr>
+                        <td><b>Verwarmings systeem</b></td>
+                        <td>Bevat verwarmingsstatus en inspecties per dag.</td>
+                        <td><button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px;"
+                                onclick="exporteerTabel('verwarmings_systeem')">CSV Exporteren</button></td>
+                        <td>
+                            <button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px; background-color:#17a2b8;"
+                                onclick="triggerImportBladeren('verwarmings_systeem')">CSV Importeren</button>
+                            <input type="file" id="import-file-verwarmings_systeem" accept=".csv" style="display:none;"
+                                onchange="verwerkCsvUpload(this, 'verwarmings_systeem')">
+                        </td>
+                        <td><button class="btn-wissen-gevaar" onclick="leegmakenTabel('verwarmings_systeem')">Tabel Leegmaken</button></td>
                     </tr>
                     <tr>
                         <td><b>Acties</b></td>
@@ -1144,9 +1157,14 @@
     async function laadWaterbeheerVelden() {
         const datum = document.getElementById('centraleDatum').value;
         try {
-            const response = await apiCall(`/api/metingen-algemeen?datum=${datum}`);
-            const data = await response.json();
-            
+            const [verbruikRes, warmteRes] = await Promise.all([
+                apiCall(`/api/verbruik-diep-ondiep?datum=${datum}`),
+                apiCall(`/api/verwarmings-systeem?datum=${datum}`)
+            ]);
+            const verbruikData = await verbruikRes.json();
+            const warmteData = await warmteRes.json();
+            const data = { ...verbruikData, ...warmteData };
+
             // Laad algemene velden van database — altijd schrijven zodat lege datums velden leegmaken
             document.getElementById('floculant').value = data.floculant || '';
             document.getElementById('water-diep').value = data.water_diep || '';
@@ -1170,7 +1188,7 @@
 
     async function slaAlgemeenGegevensOp() {
         const datum = document.getElementById('centraleDatum').value;
-        const payload = {
+        const verbruikPayload = {
             datum: datum,
             floculant: document.getElementById('floculant').value || null,
             water_diep: parseNumberValue('water-diep'),
@@ -1180,7 +1198,10 @@
             elektriciteit_dag: parseNumberValue('elektriciteit-dag'),
             gas: parseNumberValue('gas'),
             chemicalien_chloor: document.getElementById('chemicalien-chloor').value || null,
-            chemicalien_zwavelzuur: document.getElementById('chemicalien-zwavelzuur').value || null,
+            chemicalien_zwavelzuur: document.getElementById('chemicalien-zwavelzuur').value || null
+        };
+        const verwarmingsPayload = {
+            datum: datum,
             verwarming_status_1: document.getElementById('systeem-status-1').checked,
             verwarming_status_2: document.getElementById('systeem-status-2').checked,
             verwarming_status_3: document.getElementById('systeem-status-3').checked,
@@ -1188,14 +1209,21 @@
             verwarming_druk_ok: document.getElementById('systeem-druk-ok').checked,
             verwarming_visuele_controle: document.getElementById('visuele-inspectie').checked
         };
-        
+
         try {
-            const response = await apiCall('/api/metingen-algemeen', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(payload)
-            });
-            return response.ok;
+            const [resVerbruik, resWarmte] = await Promise.all([
+                apiCall('/api/verbruik-diep-ondiep', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(verbruikPayload)
+                }),
+                apiCall('/api/verwarmings-systeem', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(verwarmingsPayload)
+                })
+            ]);
+            return resVerbruik.ok && resWarmte.ok;
         } catch (fout) {
             console.error('Fout bij opslaan algemene gegevens:', fout);
             return false;
@@ -1453,8 +1481,8 @@
 
         try {
             const [huidigRes, vorigeRes] = await Promise.all([
-                apiCall(`/api/metingen-algemeen?datum=${datum}`),
-                apiCall(`/api/metingen-algemeen-vorige?datum=${datum}`)
+                apiCall(`/api/verbruik-diep-ondiep?datum=${datum}`),
+                apiCall(`/api/verbruik-diep-ondiep-vorige?datum=${datum}`)
             ]);
             const huidig = await huidigRes.json();
             const vorige = await vorigeRes.json();

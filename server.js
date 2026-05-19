@@ -76,7 +76,7 @@ app.post('/api/database/truncate/:tabelnaam', checkAuth, async (req, res) => {
         return res.status(403).json({ error: 'Geen toegang' });
     }
 
-    const toegestaneTabellen = ['metingen', 'metingen_coordinatoren', 'metingen_peuterbad', 'metingen_algemeen', 'acties', 'limieten', 'gebruikers'];
+    const toegestaneTabellen = ['metingen', 'metingen_coordinatoren', 'metingen_peuterbad', 'verbruik_diep_ondiep', 'verwarmings_systeem', 'acties', 'limieten', 'gebruikers'];
     const tabel = req.params.tabelnaam;
 
     if (!toegestaneTabellen.includes(tabel)) {
@@ -222,34 +222,55 @@ app.get('/api/metingen', checkAuth, async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.get('/api/metingen-algemeen', checkAuth, async (req, res) => {
+app.get('/api/verbruik-diep-ondiep', checkAuth, async (req, res) => {
     if (!isWaterbeheerder(req.session.gebruiker.taak)) return res.status(403).json({ error: 'Geen toegang' });
     try {
         const datum = req.query.datum;
-        const [rows] = await pool.execute('SELECT * FROM metingen_algemeen WHERE datum = ?', [datum]);
+        const [rows] = await pool.execute('SELECT * FROM verbruik_diep_ondiep WHERE datum = ?', [datum]);
         res.json(rows[0] || {});
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.get('/api/metingen-algemeen-vorige', checkAuth, async (req, res) => {
+app.get('/api/verwarmings-systeem', checkAuth, async (req, res) => {
+    if (!isWaterbeheerder(req.session.gebruiker.taak)) return res.status(403).json({ error: 'Geen toegang' });
+    try {
+        const datum = req.query.datum;
+        const [rows] = await pool.execute('SELECT * FROM verwarmings_systeem WHERE datum = ?', [datum]);
+        res.json(rows[0] || {});
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.get('/api/verbruik-diep-ondiep-vorige', checkAuth, async (req, res) => {
     if (!isWaterbeheerder(req.session.gebruiker.taak)) return res.status(403).json({ error: 'Geen toegang' });
     try {
         const datum = req.query.datum;
         const vorigeDatum = new Date(datum);
         vorigeDatum.setDate(vorigeDatum.getDate() - 1);
         const vorigeDatumStr = vorigeDatum.toISOString().split('T')[0];
-        const [rows] = await pool.execute('SELECT * FROM metingen_algemeen WHERE datum = ?', [vorigeDatumStr]);
+        const [rows] = await pool.execute('SELECT * FROM verbruik_diep_ondiep WHERE datum = ?', [vorigeDatumStr]);
         res.json(rows[0] || {});
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
-app.post('/api/metingen-algemeen', checkAuth, async (req, res) => {
+app.post('/api/verbruik-diep-ondiep', checkAuth, async (req, res) => {
     if (!isWaterbeheerder(req.session.gebruiker.taak)) return res.status(403).json({ error: 'Geen toegang' });
     try {
-        const { datum, floculant, water_diep, water_ondiep, water_totaal, elektriciteit_nacht, elektriciteit_dag, gas, chemicalien_chloor, chemicalien_zwavelzuur, verwarming_status_1, verwarming_status_2, verwarming_status_3, verwarming_status_4, verwarming_druk_ok, verwarming_visuele_controle } = req.body;
+        const { datum, floculant, water_diep, water_ondiep, water_totaal, elektriciteit_nacht, elektriciteit_dag, gas, chemicalien_chloor, chemicalien_zwavelzuur } = req.body;
         await pool.execute(
-            'INSERT INTO metingen_algemeen (datum, floculant, water_diep, water_ondiep, water_totaal, elektriciteit_nacht, elektriciteit_dag, gas, chemicalien_chloor, chemicalien_zwavelzuur, verwarming_status_1, verwarming_status_2, verwarming_status_3, verwarming_status_4, verwarming_druk_ok, verwarming_visuele_controle) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE floculant = VALUES(floculant), water_diep = VALUES(water_diep), water_ondiep = VALUES(water_ondiep), water_totaal = VALUES(water_totaal), elektriciteit_nacht = VALUES(elektriciteit_nacht), elektriciteit_dag = VALUES(elektriciteit_dag), gas = VALUES(gas), chemicalien_chloor = VALUES(chemicalien_chloor), chemicalien_zwavelzuur = VALUES(chemicalien_zwavelzuur), verwarming_status_1 = VALUES(verwarming_status_1), verwarming_status_2 = VALUES(verwarming_status_2), verwarming_status_3 = VALUES(verwarming_status_3), verwarming_status_4 = VALUES(verwarming_status_4), verwarming_druk_ok = VALUES(verwarming_druk_ok), verwarming_visuele_controle = VALUES(verwarming_visuele_controle)',
-            [datum, floculant, water_diep, water_ondiep, water_totaal, elektriciteit_nacht, elektriciteit_dag, gas, chemicalien_chloor, chemicalien_zwavelzuur, verwarming_status_1, verwarming_status_2, verwarming_status_3, verwarming_status_4, verwarming_druk_ok, verwarming_visuele_controle]
+            'INSERT INTO verbruik_diep_ondiep (datum, floculant, water_diep, water_ondiep, water_totaal, elektriciteit_nacht, elektriciteit_dag, gas, chemicalien_chloor, chemicalien_zwavelzuur) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE floculant = VALUES(floculant), water_diep = VALUES(water_diep), water_ondiep = VALUES(water_ondiep), water_totaal = VALUES(water_totaal), elektriciteit_nacht = VALUES(elektriciteit_nacht), elektriciteit_dag = VALUES(elektriciteit_dag), gas = VALUES(gas), chemicalien_chloor = VALUES(chemicalien_chloor), chemicalien_zwavelzuur = VALUES(chemicalien_zwavelzuur)',
+            [datum, floculant, water_diep, water_ondiep, water_totaal, elektriciteit_nacht, elektriciteit_dag, gas, chemicalien_chloor, chemicalien_zwavelzuur]
+        );
+        res.json({ status: 'success' });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+app.post('/api/verwarmings-systeem', checkAuth, async (req, res) => {
+    if (!isWaterbeheerder(req.session.gebruiker.taak)) return res.status(403).json({ error: 'Geen toegang' });
+    try {
+        const { datum, verwarming_status_1, verwarming_status_2, verwarming_status_3, verwarming_status_4, verwarming_druk_ok, verwarming_visuele_controle } = req.body;
+        await pool.execute(
+            'INSERT INTO verwarmings_systeem (datum, verwarming_status_1, verwarming_status_2, verwarming_status_3, verwarming_status_4, verwarming_druk_ok, verwarming_visuele_controle) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE verwarming_status_1 = VALUES(verwarming_status_1), verwarming_status_2 = VALUES(verwarming_status_2), verwarming_status_3 = VALUES(verwarming_status_3), verwarming_status_4 = VALUES(verwarming_status_4), verwarming_druk_ok = VALUES(verwarming_druk_ok), verwarming_visuele_controle = VALUES(verwarming_visuele_controle)',
+            [datum, verwarming_status_1, verwarming_status_2, verwarming_status_3, verwarming_status_4, verwarming_druk_ok, verwarming_visuele_controle]
         );
         res.json({ status: 'success' });
     } catch (err) { res.status(500).json({ error: err.message }); }
@@ -352,7 +373,7 @@ app.get('/api/database/export/:tabelnaam', checkAuth, async (req, res) => {
         return res.status(403).json({ error: 'Geen toegang' });
     }
 
-    const toegestaneTabellen = ['metingen', 'metingen_grote_baden', 'metingen_peuterbad', 'metingen_coordinatoren', 'metingen_algemeen', 'acties', 'limieten', 'gebruikers'];
+    const toegestaneTabellen = ['metingen', 'metingen_grote_baden', 'metingen_peuterbad', 'metingen_coordinatoren', 'verbruik_diep_ondiep', 'verwarmings_systeem', 'acties', 'limieten', 'gebruikers'];
     const tabel = req.params.tabelnaam;
 
     if (!toegestaneTabellen.includes(tabel)) {
@@ -375,10 +396,10 @@ app.get('/api/database/export/:tabelnaam', checkAuth, async (req, res) => {
             query = `SELECT m.id, b.naam AS bad_naam, m.datum, m.ph_waarde, m.chloor_waarde, m.flow, m.filter_druk_in, m.water, m.chemicalien_chloor, m.chemicalien_zwavelzuur FROM metingen_peuterbad m JOIN baden b ON m.bad_id = b.id ORDER BY m.datum DESC`;
         } else if (tabel === 'metingen_coordinatoren') {
             query = `SELECT mc.id, b.naam AS bad_naam, mc.datum, mc.ph_waarde, mc.chloor_waarde, mc.watertemperatuur, mc.helderheid FROM metingen_coordinatoren mc JOIN baden b ON mc.bad_id = b.id ORDER BY mc.datum DESC`;
-        }
-
-        if (tabel === 'metingen_algemeen') {
-            query = `SELECT datum, floculant, water_diep, water_ondiep, water_totaal, elektriciteit_nacht, elektriciteit_dag, gas, chemicalien_chloor, chemicalien_zwavelzuur, verwarming_status_1, verwarming_status_2, verwarming_status_3, verwarming_status_4, verwarming_druk_ok, verwarming_visuele_controle FROM metingen_algemeen ORDER BY datum DESC`;
+        } else if (tabel === 'verbruik_diep_ondiep') {
+            query = `SELECT datum, floculant, water_diep, water_ondiep, water_totaal, elektriciteit_nacht, elektriciteit_dag, gas, chemicalien_chloor, chemicalien_zwavelzuur FROM verbruik_diep_ondiep ORDER BY datum DESC`;
+        } else if (tabel === 'verwarmings_systeem') {
+            query = `SELECT datum, verwarming_status_1, verwarming_status_2, verwarming_status_3, verwarming_status_4, verwarming_druk_ok, verwarming_visuele_controle FROM verwarmings_systeem ORDER BY datum DESC`;
         } else if (tabel === 'acties') {
             query = `SELECT a.id, b.naam AS bad_naam, a.datum, a.beschrijving, a.actie_type, a.opgelost, a.opgelost_op, a.created_at FROM acties a JOIN baden b ON a.bad_id = b.id ORDER BY a.datum DESC`;
         }
@@ -427,7 +448,7 @@ app.post('/api/database/import/:tabelnaam', checkAuth, express.text({ type: 'tex
         return res.status(403).json({ error: 'Geen toegang' });
     }
 
-    const toegestaneTabellen = ['metingen', 'metingen_coordinatoren', 'metingen_peuterbad', 'metingen_algemeen', 'limieten', 'gebruikers'];
+    const toegestaneTabellen = ['metingen', 'metingen_coordinatoren', 'metingen_peuterbad', 'verbruik_diep_ondiep', 'verwarmings_systeem', 'limieten', 'gebruikers'];
     const tabel = req.params.tabelnaam;
 
     if (!toegestaneTabellen.includes(tabel)) {
@@ -519,7 +540,7 @@ app.get('/api/trend/verbruik', checkAuth, async (req, res) => {
         const { van, tot } = req.query;
         const [algemeenRows] = await pool.execute(
             `SELECT datum, water_diep, water_ondiep, water_totaal, elektriciteit_nacht, elektriciteit_dag, gas, chemicalien_chloor, chemicalien_zwavelzuur
-             FROM metingen_algemeen WHERE datum BETWEEN ? AND ? ORDER BY datum ASC`,
+             FROM verbruik_diep_ondiep WHERE datum BETWEEN ? AND ? ORDER BY datum ASC`,
             [van, tot]
         );
         const [peuterbadRows] = await pool.execute(
