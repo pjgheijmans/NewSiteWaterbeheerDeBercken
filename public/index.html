@@ -3,6 +3,7 @@
 
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Digitale Dagstaat - Zwembad</title>
     <style>
         body {
@@ -203,6 +204,7 @@
             background: #fbfcfd;
             padding: 18px;
             margin-bottom: 20px;
+            overflow-x: auto;
         }
 
         .categorie-box h3 {
@@ -228,7 +230,7 @@
 
         .veld-grid {
             display: grid;
-            grid-template-columns: repeat(2, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
             gap: 16px;
         }
 
@@ -255,7 +257,7 @@
 
         .checkbox-grid {
             display: grid;
-            grid-template-columns: repeat(4, minmax(180px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
             gap: 12px;
         }
 
@@ -376,6 +378,80 @@
 
         .fout {
             color: #dc3545;
+        }
+
+        /* ── Responsive ── */
+        @media (max-width: 900px) {
+            .hoofd-nav {
+                flex-wrap: wrap;
+            }
+            .logout-btn {
+                margin-left: 0 !important;
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 768px) {
+            body {
+                margin: 10px;
+            }
+            .container {
+                padding: 15px;
+                border-radius: 6px;
+            }
+            .header-box {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 6px;
+            }
+            h1 {
+                font-size: 20px;
+            }
+            .hoofd-nav button {
+                padding: 8px 12px;
+                font-size: 14px;
+            }
+            .menu-tabs {
+                flex-wrap: wrap;
+            }
+            .tab-btn {
+                padding: 8px 14px;
+                font-size: 13px;
+            }
+            .subtab-nav {
+                flex-wrap: wrap;
+            }
+            .subtab-btn {
+                padding: 6px 12px;
+                font-size: 13px;
+            }
+            .datum-navigatie {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            .datum-navigatie button {
+                flex: 1;
+                padding: 8px 12px;
+            }
+            .datum-navigatie input[type="date"] {
+                width: 100%;
+            }
+            .btn-centraal-opslaan {
+                width: 100%;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .login-box {
+                margin: 20px auto;
+                padding: 20px;
+            }
+            .categorie-box {
+                padding: 12px;
+            }
+            th, td {
+                padding: 8px;
+            }
         }
     </style>
 </head>
