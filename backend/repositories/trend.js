@@ -1,5 +1,11 @@
-const pool = require('../db');
+/**
+ * Repository for trend data aggregation queries.
+ */
+const pool = require('./db');
 
+/**
+ * Get metingen trend data between two dates.
+ */
 async function getMetingenTrend(van, tot) {
     const [rows] = await pool.execute(
         `SELECT mg.datum, b.naam AS bad_naam, mg.ph_waarde, mg.chloor_waarde, mg.temperatuur, mg.flow, mg.filter_druk_in, mg.filter_druk_uit
@@ -15,6 +21,9 @@ async function getMetingenTrend(van, tot) {
     return rows;
 }
 
+/**
+ * Get historical verbruik data between two dates.
+ */
 async function getVerbruikTrend(van, tot) {
     const [algemeenRows] = await pool.execute(
         `SELECT datum, water_diep, water_ondiep, water_totaal, elektriciteit_nacht, elektriciteit_dag, gas, chemicalien_chloor, chemicalien_zwavelzuur

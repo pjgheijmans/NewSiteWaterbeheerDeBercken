@@ -1,5 +1,11 @@
-const pool = require('../db');
+/**
+ * Repository for limit definitions.
+ */
+const pool = require('./db');
 
+/**
+ * Load all limit definitions and normalize aliases.
+ */
 async function getAll() {
     const [rows] = await pool.execute('SELECT parameter_naam, min_waarde, max_waarde FROM limieten');
     const obj = {};
@@ -26,6 +32,9 @@ async function getAll() {
     return obj;
 }
 
+/**
+ * Save or update a limit definition.
+ */
 async function save({ parameter_naam, min_waarde, max_waarde }) {
     await pool.execute(
         'INSERT INTO limieten (parameter_naam, min_waarde, max_waarde) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE min_waarde = VALUES(min_waarde), max_waarde = VALUES(max_waarde)',

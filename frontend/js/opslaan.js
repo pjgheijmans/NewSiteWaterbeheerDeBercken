@@ -2,6 +2,10 @@
 
 let autoSaveTimer = null;
 
+/**
+ * Update the auto-save status indicator displayed in the UI.
+ * @param {'pending'|'saving'|'saved'|'error'} status - The status keyword to display.
+ */
 function setAutoSaveStatus(status) {
     const el = document.getElementById('autoSaveStatus');
     if (!el) return;
@@ -20,6 +24,10 @@ function setAutoSaveStatus(status) {
     }, 4000);
 }
 
+/**
+ * Schedule a delayed save action after the user stops editing for a short period.
+ * This improves responsiveness and avoids unnecessary immediate save requests.
+ */
 function scheduleAutoSave() {
     if (autoSaveTimer) clearTimeout(autoSaveTimer);
     setAutoSaveStatus('pending');
@@ -31,9 +39,18 @@ function scheduleAutoSave() {
 
 // ── Opslaan ───────────────────────────────────────────────────────────────
 
+/**
+ * Save central application data for the current date.
+ * Handles auto-save behavior, verbruik/verwarmingssysteem subtabs, diep/ondiep measurements, and peuterbad data saving.
+ * @param {boolean} [autoSave=false] - Whether the save was triggered automatically.
+ */
 async function verwerkCentraleOpslaan(autoSave = false) {
     const datum = document.getElementById('centraleDatum').value;
 
+    /**
+     * Handle successful saves by updating the UI depending on auto-save mode.
+     * @param {string} msg - The message to display for manual saves.
+     */
     function opSuccess(msg) {
         if (autoSave) {
             setAutoSaveStatus('saved');
@@ -42,17 +59,27 @@ async function verwerkCentraleOpslaan(autoSave = false) {
         }
     }
 
+    /**
+     * Handle failed saves by setting the status to error and showing a message.
+     * @param {string} msg - The error message to display.
+     */
     function opError(msg) {
         setAutoSaveStatus('error');
         toonBericht(msg, 'fout');
     }
 
+    /**
+     * Handle warnings that should still be shown as error-style feedback.
+     * @param {string} msg - The warning message to display.
+     */
     function opWaarschuwing(msg) {
         setAutoSaveStatus('error');
         toonBericht(msg, 'fout');
     }
 
-    // Only refresh inputs when NOT auto-saving (prevents overwriting in-progress input)
+    /**
+     * Refresh page inputs after save completion without disrupting manual edits.
+     */
     function refreshNaOpslaan() {
         if (!autoSave) laadMetingen();
         else if (huidigeRol === 'waterbeheer') laadEnBerekenVerbruik();

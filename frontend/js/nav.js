@@ -1,3 +1,7 @@
+/**
+ * Move the selected central date forwards or backwards by a number of days.
+ * @param {number} dagen - Positive or negative day offset to apply.
+ */
 function veranderDatum(dagen) {
         toonBericht('', '');
         const centraleInput = document.getElementById('centraleDatum');

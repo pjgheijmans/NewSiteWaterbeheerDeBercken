@@ -1,4 +1,7 @@
-const pool = require('../db');
+/**
+ * Generic repository for database export/import/truncate utilities.
+ */
+const pool = require('./db');
 
 const EXPORT_QUERIES = {
     metingen:              `SELECT b.naam AS bad_naam, m.datum, m.ph_waarde, m.chloor_waarde, m.temperatuur, m.flow, m.filter_druk_in, m.filter_druk_uit FROM metingen_grote_baden m JOIN baden b ON m.bad_id = b.id ORDER BY datum DESC`,
@@ -10,23 +13,35 @@ const EXPORT_QUERIES = {
     acties:                `SELECT a.id, b.naam AS bad_naam, a.datum, a.beschrijving, a.actie_type, a.opgelost, a.opgelost_op, a.created_at FROM acties a JOIN baden b ON a.bad_id = b.id ORDER BY a.datum DESC`,
 };
 
+/**
+ * Export rows from the requested table.
+ */
 async function exportRows(tabel) {
     const query = EXPORT_QUERIES[tabel] || `SELECT * FROM ${tabel}`;
     const [rows] = await pool.execute(query);
     return rows;
 }
 
+/**
+ * Truncate the specified table with foreign key checks disabled.
+ */
 async function truncate(tabel) {
     await pool.execute('SET FOREIGN_KEY_CHECKS = 0');
     await pool.execute(`TRUNCATE TABLE ${tabel}`);
     await pool.execute('SET FOREIGN_KEY_CHECKS = 1');
 }
 
+/**
+ * Resolve a bad_id from its naam for CSV imports.
+ */
 async function getBadId(bad_naam) {
     const [rows] = await pool.execute('SELECT id FROM baden WHERE naam = ?', [bad_naam]);
     return rows.length > 0 ? rows[0].id : null;
 }
 
+/**
+ * Import or update a row in a flexible table during CSV import.
+ */
 async function importRow(actualTabel, columns, values) {
     const cols = columns.join(', ');
     const placeholders = columns.map(() => '?').join(', ');
@@ -37,6 +52,9 @@ async function importRow(actualTabel, columns, values) {
     );
 }
 
+/**
+ * Enable or disable MySQL foreign key checks.
+ */
 async function setForeignKeyChecks(on) {
     await pool.execute(`SET FOREIGN_KEY_CHECKS = ${on ? 1 : 0}`);
 }

@@ -2,6 +2,10 @@ const express = require('express');
 const path = require('path');
 const session = require('express-session');
 
+/**
+ * Configure and start the Express application.
+ * The app exposes JSON APIs, session handling, backend routes and frontend asset delivery.
+ */
 const app = express();
 
 app.use(express.json());

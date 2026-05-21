@@ -1,3 +1,7 @@
+/**
+ * Load general waterbeheer values for the selected date from the server.
+ * Fetches both deep/shallows consumption and heating system values.
+ */
 async function laadWaterbeheerVelden() {
         const datum = document.getElementById('centraleDatum').value;
         try {
@@ -30,6 +34,11 @@ async function laadWaterbeheerVelden() {
         }
     }
 
+/**
+ * Save the general verbruik and verwarmingssysteem values for the current date.
+ * Sends two requests in parallel to the corresponding backend endpoints.
+ * @returns {Promise<boolean>} True when both save requests succeed.
+ */
 async function slaAlgemeenGegevensOp() {
         const datum = document.getElementById('centraleDatum').value;
         const verbruikPayload = {
@@ -74,6 +83,10 @@ async function slaAlgemeenGegevensOp() {
         }
     }
 
+/**
+ * Load current and previous-day consumption values and calculate the usage deltas.
+ * Updates the corresponding consumption input fields on the page.
+ */
 async function laadEnBerekenVerbruik() {
         const datum = document.getElementById('centraleDatum').value;
         if (!datum) return;

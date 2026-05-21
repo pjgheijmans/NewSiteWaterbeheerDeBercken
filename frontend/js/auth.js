@@ -1,3 +1,8 @@
+/**
+ * Initialize the application by checking the current login state.
+ * If the user is already authenticated, activate the dashboard.
+ * Otherwise show the login screen.
+ */
 async function startApplicatie() {
         try {
             const res = await apiCall('/api/ingelogd');
@@ -10,6 +15,10 @@ async function startApplicatie() {
         } catch (f) { console.error("Starten mislukt", f); }
     }
 
+/**
+ * Submit the login form to the server and activate the dashboard on success.
+ * Displays an error message when authentication fails or the request errors.
+ */
 async function verwerkLogin() {
         const u = document.getElementById('loginUsername').value;
         const p = document.getElementById('loginPassword').value;
@@ -27,6 +36,10 @@ async function verwerkLogin() {
         } catch (f) { document.getElementById('login-fout').innerText = 'Verbindingsfout.'; }
     }
 
+/**
+ * Show the dashboard UI for the authenticated user and initialize role-specific content.
+ * @param {Object} gebruiker - The authenticated user object from the server.
+ */
 function activeerDashboard(gebruiker) {
         ingelogdeGebruiker = gebruiker;
         document.getElementById('scherm-login').style.display = 'none';
@@ -60,12 +73,19 @@ function activeerDashboard(gebruiker) {
         }
     }
 
+/**
+ * Log the current user out and restart the application in the anonymous state.
+ */
 async function verwerkLogout() {
         await apiCall('/api/logout', { method: 'POST' });
         ingelogdeGebruiker = null;
         startApplicatie();
     }
 
+/**
+ * Switch the active application role and update visible sections accordingly.
+ * @param {string} rol - The role to activate (waterbeheer, coordinatoren, limieten, gebruikers, database, trendanalyse).
+ */
 function wisselRol(rol) {
         huidigeRol = rol;
         ['waterbeheer', 'coordinatoren', 'limieten', 'gebruikers', 'database', 'trendanalyse'].forEach(r => {

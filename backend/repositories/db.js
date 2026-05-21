@@ -1,3 +1,7 @@
+/**
+ * MySQL connection pool using mysql2 promise wrapper.
+ * The pool is reused across repository modules for query execution.
+ */
 const mysql = require('mysql2');
 
 const pool = mysql.createPool({

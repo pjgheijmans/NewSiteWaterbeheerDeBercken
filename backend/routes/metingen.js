@@ -1,9 +1,15 @@
+/**
+ * Routes for water quality metingen and generated acties.
+ */
 const express = require('express');
 const router = express.Router();
 const metingenRepo = require('../repositories/metingen');
 const actiesRepo = require('../repositories/acties');
 const { checkAuth, isWaterbeheerder } = require('../middleware/auth');
 
+/**
+ * Fetch current metingen for the specified datum.
+ */
 router.get('/metingen', checkAuth, async (req, res) => {
     if (!isWaterbeheerder(req.session.gebruiker.taak))
         return res.status(403).json({ error: 'Geen toegang' });
@@ -11,6 +17,9 @@ router.get('/metingen', checkAuth, async (req, res) => {
     catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+/**
+ * Save a meting and generate any related actie rules.
+ */
 router.post('/metingen', checkAuth, async (req, res) => {
     if (!isWaterbeheerder(req.session.gebruiker.taak))
         return res.status(403).json({ error: 'Geen toegang' });
@@ -31,6 +40,9 @@ router.post('/metingen', checkAuth, async (req, res) => {
     }
 });
 
+/**
+ * Fetch unresolved acties for a given datum.
+ */
 router.get('/acties', checkAuth, async (req, res) => {
     if (!isWaterbeheerder(req.session.gebruiker.taak))
         return res.status(403).json({ error: 'Geen toegang' });
@@ -40,6 +52,9 @@ router.get('/acties', checkAuth, async (req, res) => {
     } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
+/**
+ * Mark a specific actie as resolved.
+ */
 router.post('/acties/:id/resolve', checkAuth, async (req, res) => {
     if (!isWaterbeheerder(req.session.gebruiker.taak))
         return res.status(403).json({ error: 'Geen toegang' });

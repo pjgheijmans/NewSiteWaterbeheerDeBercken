@@ -1,3 +1,6 @@
+/**
+ * Load the full gebruikers list from the backend and render it in the management table.
+ */
 async function laadGebruikers() {
         try {
             const res = await apiCall('/api/gebruikers');
@@ -17,6 +20,9 @@ async function laadGebruikers() {
         } catch (f) { toonBericht('Fout bij laden gebruikers.', 'fout'); }
     }
 
+/**
+ * Create a new user account from the form values and refresh the user list.
+ */
 async function voegGebruikerToe() {
         const payload = {
             voornaam: document.getElementById('g-voornaam').value, achternaam: document.getElementById('g-achternaam').value,
@@ -27,6 +33,10 @@ async function voegGebruikerToe() {
         else { toonBericht('Inlognaam bestaat waarschijnlijk al.', 'fout'); }
     }
 
+/**
+ * Save updated values for an existing user row by id.
+ * @param {number} id - The database id of the user to update.
+ */
 async function wijzigGebruiker(id) {
         const rij = document.getElementById(`gebruiker-rij-${id}`);
         const payload = {
@@ -37,6 +47,10 @@ async function wijzigGebruiker(id) {
         if (res.ok) { toonBericht('Gebruiker succesvol bijgewerkt!', 'succes'); laadGebruikers(); }
     }
 
+/**
+ * Delete a user after confirmation and refresh the list.
+ * @param {number} id - The database id of the user to remove.
+ */
 async function verwijderGebruiker(id) {
         if (confirm('Weet u zeker dat u deze gebruiker wilt wissen?')) {
             const res = await apiCall(`/api/gebruikers/${id}`, { method: 'DELETE' });

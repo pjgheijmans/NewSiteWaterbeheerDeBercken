@@ -18,16 +18,27 @@ const ORDER = [
     'footer',
 ];
 
+/**
+ * List of browser script files injected into the assembled frontend page.
+ */
 const JS_FILES = [
     'state', 'api', 'ui', 'limieten', 'auth',
     'metingen', 'verbruik', 'opslaan',
     'gebruikers', 'database', 'nav', 'trend', 'app',
 ];
 
+/**
+ * Read a frontend partial file from disk.
+ * @param {string} name - Partial name without extension.
+ * @returns {string} HTML fragment.
+ */
 function readPartial(name) {
     return fs.readFileSync(path.join(PARTIALS, name + '.html'), 'utf8');
 }
 
+/**
+ * Assemble the full HTML response from partial fragments and the script list.
+ */
 router.get('/', (req, res) => {
     const scripts = JS_FILES
         .map(f => `<script src="/js/${f}.js"></script>`)

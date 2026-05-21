@@ -1,3 +1,7 @@
+/**
+ * Switch between the large pools and the toddler pool pages.
+ * @param {string} pagina - The target page identifier ('grote-baden' or 'peuterbad').
+ */
 function wisselBadPagina(pagina) {
         huidigeBadPagina = pagina;
         document.getElementById('tab-grote-baden').classList.toggle('actief', pagina === 'grote-baden');
@@ -8,6 +12,11 @@ function wisselBadPagina(pagina) {
         laadMetingen();
     }
 
+/**
+ * Switch the active subtab within the waterbeheer page.
+ * If the user switches to verbruik or verwarmingssysteem, reload the related fields.
+ * @param {string} subtab - The subtab identifier to activate.
+ */
 function wisselSubtab(subtab) {
         huidigeSubtab = subtab;
         ['meetwaarden', 'verbruik', 'verwarmingssysteem'].forEach(s => {
@@ -19,6 +28,10 @@ function wisselSubtab(subtab) {
         }
     }
 
+/**
+ * Load the current measurement dataset for the selected date and render it into the UI.
+ * Also refreshes actions and calculated consumption for waterbeheerder mode.
+ */
 async function laadMetingen() {
         const datum = document.getElementById('centraleDatum').value;
         if (!datum) return;
@@ -36,6 +49,10 @@ async function laadMetingen() {
         } catch (fout) { toonBericht('Fout bij het ophalen van de gegevens.', 'fout'); }
     }
 
+/**
+ * Load the action items for a given date and display them in the action panel.
+ * @param {string} datum - The selected date used for filtering actions.
+ */
 async function laadActies(datum) {
         try {
             const response = await apiCall(`/api/acties?datum=${datum}`);
@@ -58,6 +75,11 @@ async function laadActies(datum) {
         } catch (fout) { console.error('Fout bij laden acties:', fout); }
     }
 
+/**
+ * Mark an action as resolved on the server and refresh the action list.
+ * @param {number} actieId - The id of the action to resolve.
+ * @param {boolean} opgelost - Whether the action checkbox was checked.
+ */
 async function losActieOp(actieId, opgelost) {
         if (!opgelost) return;
         try {
@@ -70,6 +92,10 @@ async function losActieOp(actieId, opgelost) {
         } catch (fout) { console.error('Fout bij oplossen actie:', fout); }
     }
 
+/**
+ * Build and render the central measurement table based on the active role, page, and data.
+ * @param {Array} data - The measurement data array received from the backend.
+ */
 function bouwTabelOp(data) {
         const categorieContent = document.getElementById('waterbeheer-grote-baden-content');
         const tabelContent = document.getElementById('tables-content');
@@ -163,6 +189,13 @@ function bouwTabelOp(data) {
         });
     }
 
+/**
+ * Generate an HTML row for a waterbeheerder measurement entry.
+ * @param {string} badNaam - The pool name, e.g. 'Diep', 'Ondiep' or 'Peuterbad'.
+ * @param {Object} meting - The measurement record for that pool.
+ * @param {boolean} isPeuterbad - Whether the row is for the toddler pool.
+ * @returns {string} The generated HTML row string.
+ */
 function genereerRijWaterbeheer(badNaam, meting, isPeuterbad) {
         const ph = meting.ph_waarde ?? ''; const chloor = meting.chloor_waarde ?? '';
         if (isPeuterbad) {
@@ -180,6 +213,12 @@ function genereerRijWaterbeheer(badNaam, meting, isPeuterbad) {
         }
     }
 
+/**
+ * Generate an HTML row for a coordinator measurement entry.
+ * @param {string} badNaam - The pool name to render.
+ * @param {Object} meting - The coordinator measurement record.
+ * @returns {string} The generated HTML row string.
+ */
 function genereerRijCoordinatoren(badNaam, meting) {
         const ph = meting.ph_waarde ?? ''; const chloor = meting.chloor_waarde ?? '';
         const temp = meting.watertemperatuur ?? ''; const helderheid = meting.helderheid ?? 'Helder';

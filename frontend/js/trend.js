@@ -1,3 +1,7 @@
+/**
+ * Switch the active trend subtab and show its content.
+ * @param {string} subtab - The active trend tab ('meetwaarden' or 'verbruik').
+ */
 function wisselTrendTab(subtab) {
         huidigeTrendSubtab = subtab;
         ['meetwaarden', 'verbruik'].forEach(s => {
@@ -6,6 +10,9 @@ function wisselTrendTab(subtab) {
         });
     }
 
+/**
+ * Initialize the trend date pickers with a default range of the last 30 days.
+ */
 function initTrendDatums() {
         const tot = new Date();
         const van = new Date();
@@ -15,16 +22,31 @@ function initTrendDatums() {
         if (!document.getElementById('trend-tot').value) document.getElementById('trend-tot').value = fmt(tot);
     }
 
+/**
+ * Normalize a date value to a YYYY-MM-DD string.
+ * @param {Date|string|null} d - The input date or date string.
+ * @returns {string}
+ */
 function datumStr(d) {
         if (!d) return '';
         if (d instanceof Date) return d.toISOString().split('T')[0];
         return String(d).split('T')[0];
     }
 
+/**
+ * Destroy a previously created Chart.js chart and clear its reference.
+ * @param {string} id - The canvas id of the chart to destroy.
+ */
 function vernietigChart(id) {
         if (trendCharts[id]) { trendCharts[id].destroy(); delete trendCharts[id]; }
     }
 
+/**
+ * Create or replace a Chart.js line chart for the specified canvas.
+ * @param {string} canvasId - The id of the canvas element.
+ * @param {Array<string>} labels - The labels for the x-axis.
+ * @param {Array<Object>} datasets - The datasets to plot.
+ */
 function maakLineChart(canvasId, labels, datasets) {
         vernietigChart(canvasId);
         const ctx = document.getElementById(canvasId);
@@ -43,6 +65,9 @@ function maakLineChart(canvasId, labels, datasets) {
         });
     }
 
+/**
+ * Load the selected trend data range and render the appropriate charts.
+ */
 async function laadTrendData() {
         const van = document.getElementById('trend-van').value;
         const tot = document.getElementById('trend-tot').value;
@@ -53,6 +78,11 @@ async function laadTrendData() {
         toonBericht('', '');
     }
 
+/**
+ * Load measurement trend data for the selected date range and render charts.
+ * @param {string} van - Start date for the trend range (YYYY-MM-DD).
+ * @param {string} tot - End date for the trend range (YYYY-MM-DD).
+ */
 async function laadTrendMetingen(van, tot) {
         try {
             const res = await apiCall(`/api/trend/metingen?van=${van}&tot=${tot}`);
@@ -106,6 +136,11 @@ async function laadTrendMetingen(van, tot) {
         } catch (fout) { console.error('Fout trend metingen:', fout); toonBericht('Fout bij laden grafiek.', 'fout'); }
     }
 
+/**
+ * Load consumption trend data for the selected date range and render charts.
+ * @param {string} van - Start date for the trend range (YYYY-MM-DD).
+ * @param {string} tot - End date for the trend range (YYYY-MM-DD).
+ */
 async function laadTrendVerbruik(van, tot) {
         try {
             const res = await apiCall(`/api/trend/verbruik?van=${van}&tot=${tot}`);

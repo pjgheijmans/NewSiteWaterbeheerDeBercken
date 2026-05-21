@@ -2,6 +2,9 @@ const express = require('express');
 const router = express.Router();
 const gebruikerRepo = require('../repositories/gebruikers');
 
+/**
+ * Authenticate a user with login credentials and store the user object in session.
+ */
 router.post('/login', async (req, res) => {
     try {
         const gebruiker = await gebruikerRepo.findByLogin(req.body.username, req.body.password);
@@ -11,11 +14,17 @@ router.post('/login', async (req, res) => {
     } catch (err) { console.error(err); res.status(500).json({ error: err.message }); }
 });
 
+/**
+ * Log the current user out by destroying the session.
+ */
 router.post('/logout', (req, res) => {
     req.session.destroy();
     res.json({ status: 'success' });
 });
 
+/**
+ * Return the current authentication state and user object if logged in.
+ */
 router.get('/ingelogd', (req, res) => {
     if (req.session && req.session.gebruiker)
         res.json({ ingelogd: true, gebruiker: req.session.gebruiker });

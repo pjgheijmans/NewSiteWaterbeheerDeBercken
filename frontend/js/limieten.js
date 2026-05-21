@@ -1,3 +1,6 @@
+/**
+ * Load the current limit definitions from the backend and render them in the UI.
+ */
 async function laadLimietenVanServer() {
         try {
             const response = await apiCall('/api/limieten');
@@ -7,6 +10,11 @@ async function laadLimietenVanServer() {
         } catch (fout) { console.error("Kon limieten niet laden", fout); }
     }
 
+/**
+ * Normalize a limits object by copying backward-compatible fields and merging aliases.
+ * @param {Object} limieten - The raw limits object returned by the backend.
+ * @returns {Object} The normalized limits object used by the UI.
+ */
 function normaliseerLimieten(limieten) {
         const genormaliseerd = { ...limieten };
         if (!genormaliseerd.watertemperatuur && genormaliseerd.temperatuur) {
@@ -28,6 +36,9 @@ function normaliseerLimieten(limieten) {
         return genormaliseerd;
     }
 
+/**
+ * Render the current active limit values into the limits management table.
+ */
 function bouwLimietenBeheerTabel() {
         const tbody = document.getElementById('limietenTbody');
         tbody.innerHTML = '';
@@ -40,6 +51,10 @@ function bouwLimietenBeheerTabel() {
         });
     }
 
+/**
+ * Save all edited limit values back to the server in sequence.
+ * If every row is saved successfully, reload the latest limits from the backend.
+ */
 async function verwerkCentraleLimietenOpslaan() {
         toonBericht('Limieten verwerken...', '');
         const rijen = document.querySelectorAll('#limietenTbody tr');
