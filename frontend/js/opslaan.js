@@ -13,6 +13,7 @@ function setAutoSaveStatus(status) {
         pending:  ['Wijzigingen niet opgeslagen...', '#888'],
         saving:   ['Bewaren…',                  '#fd7e14'],
         saved:    ['✓ Opgeslagen',              '#28a745'],
+        warning:  ['⚠ Opgeslagen met waarschuwing', '#fd7e14'],
         error:    ['✗ Fout bij opslaan',        '#dc3545'],
     };
     const [text, color] = states[status] || ['', '#333'];
@@ -73,7 +74,7 @@ async function verwerkCentraleOpslaan(autoSave = false) {
      * @param {string} msg - The warning message to display.
      */
     function opWaarschuwing(msg) {
-        setAutoSaveStatus('error');
+        setAutoSaveStatus('warning');
         toonBericht(msg, 'fout');
     }
 
@@ -192,8 +193,16 @@ async function verwerkCentraleOpslaan(autoSave = false) {
 
         try {
             const res = await apiCall(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-            if (res.ok) ok++;
-        } catch (e) { console.error(e); }
+            if (res.ok) {
+                ok++;
+            } else {
+                const errorData = await res.json().catch(() => ({}));
+                console.error(`Failed to save ${bad_naam}:`, res.status, errorData);
+            }
+        } catch (e) { 
+            console.error(`Error saving ${bad_naam}:`, e);
+        }
+
     }
 
     if (ok === rijen.length) {
