@@ -7,8 +7,8 @@ CREATE TABLE IF NOT EXISTS metingen_coordinatoren (
     id INT AUTO_INCREMENT PRIMARY KEY,
     bad_id INT,
     datum DATE NOT NULL,
-    ph_waarde DECIMAL(3,2) NULL,
-    chloor_waarde DECIMAL(3,2) NULL,
+    ph_waarde DECIMAL(4,2) NULL,
+    chloor_waarde DECIMAL(4,2) NULL,
     watertemperatuur DECIMAL(3,1) NULL,
     helderheid VARCHAR(20) NOT NULL, -- Bijv: 'Helder', 'Licht troebel', 'Troebel'
     FOREIGN KEY (bad_id) REFERENCES baden(id),
@@ -19,8 +19,8 @@ CREATE TABLE IF NOT EXISTS metingen_grote_baden (
     id INT AUTO_INCREMENT PRIMARY KEY,
     bad_id INT,
     datum DATE NOT NULL,
-    ph_waarde DECIMAL(3,2) NULL,
-    chloor_waarde DECIMAL(3,2) NULL,
+    ph_waarde DECIMAL(4,2) NULL,
+    chloor_waarde DECIMAL(4,2) NULL,
     temperatuur DECIMAL(4,1) NULL,
     flow INT NULL,
     filter_druk_in DECIMAL(4,2) NULL,
@@ -34,8 +34,8 @@ CREATE TABLE IF NOT EXISTS metingen_peuterbad (
     id INT AUTO_INCREMENT PRIMARY KEY,
     bad_id INT,
     datum DATE NOT NULL,
-    ph_waarde DECIMAL(3,2) NULL,
-    chloor_waarde DECIMAL(3,2) NULL,
+    ph_waarde DECIMAL(4,2) NULL,
+    chloor_waarde DECIMAL(4,2) NULL,
     flow INT NULL,
     filter_druk_in DECIMAL(4,2) NULL,
     water VARCHAR(100) NULL,
@@ -136,3 +136,11 @@ INSERT IGNORE INTO verwarmings_systeem
     (datum, verwarming_status_1, verwarming_status_2, verwarming_status_3, verwarming_status_4, verwarming_druk_ok, verwarming_visuele_controle)
 SELECT datum, verwarming_status_1, verwarming_status_2, verwarming_status_3, verwarming_status_4, verwarming_druk_ok, verwarming_visuele_controle
 FROM metingen_algemeen WHERE 1=1 AND EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'metingen_algemeen');
+
+-- Vergroot ph_waarde en chloor_waarde zodat waarden tot 99.99 passen (pH-schaal 0-14)
+ALTER TABLE metingen_grote_baden  MODIFY ph_waarde     DECIMAL(4,2) NULL;
+ALTER TABLE metingen_grote_baden  MODIFY chloor_waarde DECIMAL(4,2) NULL;
+ALTER TABLE metingen_peuterbad     MODIFY ph_waarde     DECIMAL(4,2) NULL;
+ALTER TABLE metingen_peuterbad     MODIFY chloor_waarde DECIMAL(4,2) NULL;
+ALTER TABLE metingen_coordinatoren MODIFY ph_waarde     DECIMAL(4,2) NULL;
+ALTER TABLE metingen_coordinatoren MODIFY chloor_waarde DECIMAL(4,2) NULL;

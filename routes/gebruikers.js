@@ -1,46 +1,33 @@
 const express = require('express');
 const router = express.Router();
-const pool = require('../db');
+const repo = require('../repositories/gebruikers');
 const { checkAuth, isAdminOrWaterbeheerder } = require('../middleware/auth');
 
+const guard = (req, res) => !isAdminOrWaterbeheerder(req.session.gebruiker.taak)
+    && res.status(403).json({ error: 'Geen toegang' });
+
 router.get('/', checkAuth, async (req, res) => {
-    if (!isAdminOrWaterbeheerder(req.session.gebruiker.taak)) return res.status(403).json({ error: 'Geen toegang' });
-    try {
-        const [rows] = await pool.execute('SELECT id, voornaam, achternaam, inlognaam, wachtwoord, taak FROM gebruikers');
-        res.json(rows);
-    } catch (err) { res.status(500).json({ error: err.message }); }
+    if (guard(req, res)) return;
+    try { res.json(await repo.getAll()); }
+    catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 router.post('/', checkAuth, async (req, res) => {
-    if (!isAdminOrWaterbeheerder(req.session.gebruiker.taak)) return res.status(403).json({ error: 'Geen toegang' });
-    try {
-        const { voornaam, achternaam, inlognaam, wachtwoord, taak } = req.body;
-        await pool.execute(
-            'INSERT INTO gebruikers (voornaam, achternaam, inlognaam, wachtwoord, taak) VALUES (?, ?, ?, ?, ?)',
-            [voornaam, achternaam, inlognaam, wachtwoord, taak]
-        );
-        res.json({ status: 'success' });
-    } catch (err) { res.status(500).json({ error: err.message }); }
+    if (guard(req, res)) return;
+    try { await repo.create(req.body); res.json({ status: 'success' }); }
+    catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 router.put('/:id', checkAuth, async (req, res) => {
-    if (!isAdminOrWaterbeheerder(req.session.gebruiker.taak)) return res.status(403).json({ error: 'Geen toegang' });
-    try {
-        const { voornaam, achternaam, inlognaam, wachtwoord, taak } = req.body;
-        await pool.execute(
-            'UPDATE gebruikers SET voornaam=?, achternaam=?, inlognaam=?, wachtwoord=?, taak=? WHERE id=?',
-            [voornaam, achternaam, inlognaam, wachtwoord, taak, req.params.id]
-        );
-        res.json({ status: 'success' });
-    } catch (err) { res.status(500).json({ error: err.message }); }
+    if (guard(req, res)) return;
+    try { await repo.update(req.params.id, req.body); res.json({ status: 'success' }); }
+    catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 router.delete('/:id', checkAuth, async (req, res) => {
-    if (!isAdminOrWaterbeheerder(req.session.gebruiker.taak)) return res.status(403).json({ error: 'Geen toegang' });
-    try {
-        await pool.execute('DELETE FROM gebruikers WHERE id = ?', [req.params.id]);
-        res.json({ status: 'success' });
-    } catch (err) { res.status(500).json({ error: err.message }); }
+    if (guard(req, res)) return;
+    try { await repo.remove(req.params.id); res.json({ status: 'success' }); }
+    catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 module.exports = router;
