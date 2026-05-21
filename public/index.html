@@ -1158,8 +1158,8 @@
         const datum = document.getElementById('centraleDatum').value;
         try {
             const [verbruikRes, warmteRes] = await Promise.all([
-                apiCall(`/api/verbruik-diep-ondiep?datum=${datum}`),
-                apiCall(`/api/verwarmings-systeem?datum=${datum}`)
+                apiCall(`/api/verbruik/diep-ondiep?datum=${datum}`),
+                apiCall(`/api/verbruik/verwarmingssysteem?datum=${datum}`)
             ]);
             const verbruikData = await verbruikRes.json();
             const warmteData = await warmteRes.json();
@@ -1212,12 +1212,12 @@
 
         try {
             const [resVerbruik, resWarmte] = await Promise.all([
-                apiCall('/api/verbruik-diep-ondiep', {
+                apiCall('/api/verbruik/diep-ondiep', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(verbruikPayload)
                 }),
-                apiCall('/api/verwarmings-systeem', {
+                apiCall('/api/verbruik/verwarmingssysteem', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(verwarmingsPayload)
@@ -1481,8 +1481,8 @@
 
         try {
             const [huidigRes, vorigeRes] = await Promise.all([
-                apiCall(`/api/verbruik-diep-ondiep?datum=${datum}`),
-                apiCall(`/api/verbruik-diep-ondiep-vorige?datum=${datum}`)
+                apiCall(`/api/verbruik/diep-ondiep?datum=${datum}`),
+                apiCall(`/api/verbruik/diep-ondiep/vorige?datum=${datum}`)
             ]);
             const huidig = await huidigRes.json();
             const vorige = await vorigeRes.json();
