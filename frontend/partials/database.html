@@ -1,0 +1,119 @@
+<div id="sectie-database" style="display: none;">
+            <h2>Database Opschonen & Beheer</h2>
+            <p style="color:#666;"><strong>Let op:</strong> Het leegmaken van een tabel wist alle historische opgeslagen
+                gegevens permanent. Dit kan niet ongedaan worden gemaakt.</p>
+            <table style="max-width: 950px;">
+                <thead>
+                    <tr>
+                        <th>Tabelnaam</th>
+                        <th>Omschrijving</th>
+                        <th>Back-up</th>
+                        <th>Herstellen</th>
+                        <th>Opschonen</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td><b>Metingen (Waterbeheer)</b></td>
+                        <td>Bevat pH, chloor, flow en druk per dag.</td>
+                        <td><button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px;"
+                                onclick="exporteerTabel('metingen')">CSV Exporteren</button></td>
+                        <td>
+                            <button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px; background-color:#17a2b8;"
+                                onclick="triggerImportBladeren('metingen')">CSV Importeren</button>
+                            <input type="file" id="import-file-metingen" accept=".csv" style="display:none;"
+                                onchange="verwerkCsvUpload(this, 'metingen')">
+                        </td>
+                        <td><button class="btn-wissen-gevaar" onclick="leegmakenTabel('metingen')">Tabel Leegmaken</button></td>
+                    </tr>
+                    <tr>
+                        <td><b>Metingen Coördinatoren</b></td>
+                        <td>Bevat pH, chloor, temperatuur en helderheid per dag.</td>
+                        <td><button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px;"
+                                onclick="exporteerTabel('metingen_coordinatoren')">CSV Exporteren</button></td>
+                        <td>
+                            <button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px; background-color:#17a2b8;"
+                                onclick="triggerImportBladeren('metingen_coordinatoren')">CSV Importeren</button>
+                            <input type="file" id="import-file-metingen_coordinatoren" accept=".csv" style="display:none;"
+                                onchange="verwerkCsvUpload(this, 'metingen_coordinatoren')">
+                        </td>
+                        <td><button class="btn-wissen-gevaar" onclick="leegmakenTabel('metingen_coordinatoren')">Tabel
+                                Leegmaken</button></td>
+                    </tr>
+                    <tr>
+                        <td><b>Limieten</b></td>
+                        <td>Bevat de centrale min/max richtwaarden.</td>
+                        <td><button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px;"
+                                onclick="exporteerTabel('limieten')">CSV Exporteren</button></td>
+                        <td>
+                            <button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px; background-color:#17a2b8;"
+                                onclick="triggerImportBladeren('limieten')">CSV Importeren</button>
+                            <input type="file" id="import-file-limieten" accept=".csv" style="display:none;"
+                                onchange="verwerkCsvUpload(this, 'limieten')">
+                        </td>
+                        <td><button class="btn-wissen-gevaar" onclick="leegmakenTabel('limieten')">Tabel Leegmaken</button></td>
+                    </tr>
+                    <tr>
+                        <td><b>Metingen Peuterbad</b></td>
+                        <td>Bevat pH, chloor, flow, filterdruk, water en chemicaliën van het peuterbad.</td>
+                        <td><button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px;"
+                                onclick="exporteerTabel('metingen_peuterbad')">CSV Exporteren</button></td>
+                        <td>
+                            <button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px; background-color:#17a2b8;"
+                                onclick="triggerImportBladeren('metingen_peuterbad')">CSV Importeren</button>
+                            <input type="file" id="import-file-metingen_peuterbad" accept=".csv" style="display:none;"
+                                onchange="verwerkCsvUpload(this, 'metingen_peuterbad')">
+                        </td>
+                        <td><button class="btn-wissen-gevaar" onclick="leegmakenTabel('metingen_peuterbad')">Tabel Leegmaken</button></td>
+                    </tr>
+                    <tr>
+                        <td><b>Verbruik diep/ondiep</b></td>
+                        <td>Bevat water, elektriciteit, gas en chemicaliën voor diep en ondiep.</td>
+                        <td><button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px;"
+                                onclick="exporteerTabel('verbruik_diep_ondiep')">CSV Exporteren</button></td>
+                        <td>
+                            <button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px; background-color:#17a2b8;"
+                                onclick="triggerImportBladeren('verbruik_diep_ondiep')">CSV Importeren</button>
+                            <input type="file" id="import-file-verbruik_diep_ondiep" accept=".csv" style="display:none;"
+                                onchange="verwerkCsvUpload(this, 'verbruik_diep_ondiep')">
+                        </td>
+                        <td><button class="btn-wissen-gevaar" onclick="leegmakenTabel('verbruik_diep_ondiep')">Tabel Leegmaken</button></td>
+                    </tr>
+                    <tr>
+                        <td><b>Verwarmings systeem</b></td>
+                        <td>Bevat verwarmingsstatus en inspecties per dag.</td>
+                        <td><button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px;"
+                                onclick="exporteerTabel('verwarmings_systeem')">CSV Exporteren</button></td>
+                        <td>
+                            <button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px; background-color:#17a2b8;"
+                                onclick="triggerImportBladeren('verwarmings_systeem')">CSV Importeren</button>
+                            <input type="file" id="import-file-verwarmings_systeem" accept=".csv" style="display:none;"
+                                onchange="verwerkCsvUpload(this, 'verwarmings_systeem')">
+                        </td>
+                        <td><button class="btn-wissen-gevaar" onclick="leegmakenTabel('verwarmings_systeem')">Tabel Leegmaken</button></td>
+                    </tr>
+                    <tr>
+                        <td><b>Acties</b></td>
+                        <td>Bevat automatisch gegenereerde acties en alarmen.</td>
+                        <td><button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px;"
+                                onclick="exporteerTabel('acties')">CSV Exporteren</button></td>
+                        <td>—</td>
+                        <td><button class="btn-wissen-gevaar" onclick="leegmakenTabel('acties')">Tabel Leegmaken</button></td>
+                    </tr>
+                    <tr>
+                        <td><b>Gebruikers</b></td>
+                        <td>Bevat alle inlogaccounts van het personeel.</td>
+                        <td><button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px;"
+                                onclick="exporteerTabel('gebruikers')">CSV Exporteren</button></td>
+                        <td>
+                            <button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px; background-color:#17a2b8;"
+                                onclick="triggerImportBladeren('gebruikers')">CSV Importeren</button>
+                            <input type="file" id="import-file-gebruikers" accept=".csv" style="display:none;"
+                                onchange="verwerkCsvUpload(this, 'gebruikers')">
+                        </td>
+                        <td><button class="btn-wissen-gevaar" onclick="leegmakenTabel('gebruikers')">Tabel Leegmaken</button></td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>

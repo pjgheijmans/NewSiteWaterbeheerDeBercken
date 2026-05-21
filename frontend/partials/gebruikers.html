@@ -1,0 +1,29 @@
+<div id="sectie-gebruikers" style="display: none;">
+            <h2>Gebruikersbeheer</h2>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Voornaam</th>
+                        <th>Achternaam</th>
+                        <th>Inlognaam</th>
+                        <th>Wachtwoord</th>
+                        <th>Taak</th>
+                        <th>Acties</th>
+                    </tr>
+                </thead>
+                <tbody id="gebruikersTbody"></tbody>
+                <tr style="background:#e9ecef;">
+                    <td><input type="text" id="g-voornaam" placeholder="Voornaam"></td>
+                    <td><input type="text" id="g-achternaam" placeholder="Achternaam"></td>
+                    <td><input type="text" id="g-inlognaam" placeholder="Inlognaam"></td>
+                    <td><input type="text" id="g-wachtwoord" placeholder="Wachtwoord"></td>
+                    <td><select id="g-taak">
+                            <option value="waterbeheerder">Waterbeheerder</option>
+                            <option value="coordinator">Coördinator</option>
+                            <option value="Administrator">Administrator</option>
+                        </select></td>
+                    <td><button class="btn-centraal-opslaan" style="padding:6px 12px; font-size:14px;"
+                            onclick="voegGebruikerToe()">Toevoegen</button></td>
+                </tr>
+            </table>
+        </div>

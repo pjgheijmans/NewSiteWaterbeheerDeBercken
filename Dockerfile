@@ -6,4 +6,4 @@ RUN npm install -g nodemon --save
 COPY . .
 EXPOSE 3000
 # CMD ["node", "server.js"]
-ENTRYPOINT [ "nodemon", "--inspect=0.0.0.0", "server.js" ]
+ENTRYPOINT [ "nodemon", "--inspect=0.0.0.0", "backend/server.js" ]

@@ -1,0 +1,58 @@
+<div id="sectie-trendanalyse" style="display: none;">
+            <h2>Trendanalyse</h2>
+
+            <div style="display: flex; flex-wrap: wrap; gap: 16px; align-items: flex-end; margin-bottom: 16px; background: #e9ecef; padding: 12px 15px; border-radius: 5px;">
+                <div class="veld-item">
+                    <label for="trend-van" style="font-weight: 600;">Van</label>
+                    <input type="date" id="trend-van">
+                </div>
+                <div class="veld-item">
+                    <label for="trend-tot" style="font-weight: 600;">Tot</label>
+                    <input type="date" id="trend-tot">
+                </div>
+                <button class="btn-centraal-opslaan" style="padding: 10px 24px;" onclick="laadTrendData()">Toon grafiek</button>
+            </div>
+
+            <div class="subtab-nav">
+                <button class="subtab-btn actief" id="trend-tab-meetwaarden" onclick="wisselTrendTab('meetwaarden')">Meetwaarden</button>
+                <button class="subtab-btn" id="trend-tab-verbruik" onclick="wisselTrendTab('verbruik')">Verbruik</button>
+            </div>
+
+            <!-- Meetwaarden charts -->
+            <div id="trend-meetwaarden-content">
+                <h3 style="color: #0056b3; margin-bottom: 12px;">Diep en Ondiep</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 20px; margin-bottom: 28px;">
+                    <div class="categorie-box"><h4>pH</h4><canvas id="chart-ph-groot"></canvas></div>
+                    <div class="categorie-box"><h4>Chloor (mg/l)</h4><canvas id="chart-chloor-groot"></canvas></div>
+                    <div class="categorie-box"><h4>Temperatuur (°C)</h4><canvas id="chart-temp-groot"></canvas></div>
+                    <div class="categorie-box"><h4>Flow (m³/h)</h4><canvas id="chart-flow-groot"></canvas></div>
+                    <div class="categorie-box"><h4>Filterdruk In (bar)</h4><canvas id="chart-filterin-groot"></canvas></div>
+                    <div class="categorie-box"><h4>Filterdruk Uit (bar)</h4><canvas id="chart-filteruit-groot"></canvas></div>
+                </div>
+                <h3 style="color: #0056b3; margin-bottom: 12px;">Peuterbad</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                    <div class="categorie-box"><h4>pH</h4><canvas id="chart-ph-peuter"></canvas></div>
+                    <div class="categorie-box"><h4>Chloor (mg/l)</h4><canvas id="chart-chloor-peuter"></canvas></div>
+                    <div class="categorie-box"><h4>Flow (m³/h)</h4><canvas id="chart-flow-peuter"></canvas></div>
+                    <div class="categorie-box"><h4>Filterdruk In (bar)</h4><canvas id="chart-filterin-peuter"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Verbruik charts -->
+            <div id="trend-verbruik-content" style="display: none;">
+                <h3 style="color: #0056b3; margin-bottom: 12px;">Diep en Ondiep</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 20px; margin-bottom: 28px;">
+                    <div class="categorie-box"><h4>Water (m³)</h4><canvas id="chart-water-groot"></canvas></div>
+                    <div class="categorie-box"><h4>Elektriciteit (kWh)</h4><canvas id="chart-elektriciteit"></canvas></div>
+                    <div class="categorie-box"><h4>Gas (m³)</h4><canvas id="chart-gas"></canvas></div>
+                    <div class="categorie-box"><h4>Chemicaliën Chloor</h4><canvas id="chart-chem-chloor-groot"></canvas></div>
+                    <div class="categorie-box"><h4>Chemicaliën Zwavelzuur</h4><canvas id="chart-chem-zwavel-groot"></canvas></div>
+                </div>
+                <h3 style="color: #0056b3; margin-bottom: 12px;">Peuterbad</h3>
+                <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 20px; margin-bottom: 20px;">
+                    <div class="categorie-box"><h4>Water (m³)</h4><canvas id="chart-water-peuter"></canvas></div>
+                    <div class="categorie-box"><h4>Chemicaliën Chloor</h4><canvas id="chart-chem-chloor-peuter"></canvas></div>
+                    <div class="categorie-box"><h4>Chemicaliën Zwavelzuur</h4><canvas id="chart-chem-zwavel-peuter"></canvas></div>
+                </div>
+            </div>
+        </div>

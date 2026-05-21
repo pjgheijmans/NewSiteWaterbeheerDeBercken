@@ -1,0 +1,277 @@
+<div id="sectie-dagstaat">
+            <div class="datum-navigatie">
+                <button onclick="veranderDatum(-1)">◀ Vorige Dag</button>
+                <input type="date" id="centraleDatum" onchange="laadMetingen()">
+                <button onclick="veranderDatum(1)">Volgende Dag ▶</button>
+            </div>
+
+            <!-- Acties Paneel -->
+            <div id="acties-paneel" style="display: none; background: #fff3cd; border: 2px solid #ff6b6b; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
+                <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    <span style="background: #ff6b6b; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 10px;">⚠</span>
+                    <h3 style="margin: 0; color: #333;">Acties nodig</h3>
+                </div>
+                <table id="acties-tabel" style="width: 100%; border-collapse: collapse; font-size: 14px;">
+                    <thead style="background: #ff8787; color: white;">
+                        <tr>
+                            <th style="padding: 8px; text-align: left;">Bad</th>
+                            <th style="padding: 8px; text-align: left;">Actie</th>
+                            <th style="padding: 8px; text-align: center;">Voltooid</th>
+                        </tr>
+                    </thead>
+                    <tbody id="acties-tbody"></tbody>
+                </table>
+            </div>
+
+            <div class="menu-tabs" id="waterbeheer-tabs">
+                <button class="tab-btn actief" id="tab-grote-baden" onclick="wisselBadPagina('grote-baden')">Diep / Ondiep</button>
+                <button class="tab-btn" id="tab-peuterbad" onclick="wisselBadPagina('peuterbad')">Peuterbad</button>
+            </div>
+
+            <div id="waterbeheer-grote-baden-content" style="display: none;">
+                <div class="subtab-nav">
+                    <button class="subtab-btn actief" id="subtab-meetwaarden" onclick="wisselSubtab('meetwaarden')">Meetwaarden</button>
+                    <button class="subtab-btn" id="subtab-verbruik" onclick="wisselSubtab('verbruik')">Verbruik</button>
+                    <button class="subtab-btn" id="subtab-verwarmingssysteem" onclick="wisselSubtab('verwarmingssysteem')">Verwarmingssysteem</button>
+                </div>
+
+                <div id="subtab-meetwaarden-content">
+                    <div class="categorie-box" id="categorie-opname-meetwaarden">
+                        <h3>Opname meetwaarden</h3>
+                        <table class="categorie-tabel">
+                            <thead>
+                                <tr>
+                                    <th>Parameter</th>
+                                    <th>Diep</th>
+                                    <th>Ondiep</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr>
+                                    <td>pH</td>
+                                    <td><input type="number" id="ph-diep" step="0.01" data-param="ph_waarde" oninput="valideerVeld(this, 'ph_waarde')"></td>
+                                    <td><input type="number" id="ph-ondiep" step="0.01" data-param="ph_waarde" oninput="valideerVeld(this, 'ph_waarde')"></td>
+                                </tr>
+                                <tr>
+                                    <td>Chloor</td>
+                                    <td><input type="number" id="chloor-diep" step="0.01" data-param="chloor_waarde" oninput="valideerVeld(this, 'chloor_waarde')"></td>
+                                    <td><input type="number" id="chloor-ondiep" step="0.01" data-param="chloor_waarde" oninput="valideerVeld(this, 'chloor_waarde')"></td>
+                                </tr>
+                                <tr>
+                                    <td>Temperatuur</td>
+                                    <td><input type="number" id="temp-diep" step="0.1" data-param="watertemperatuur" oninput="valideerVeld(this, 'watertemperatuur')"></td>
+                                    <td><input type="number" id="temp-ondiep" step="0.1" data-param="watertemperatuur" oninput="valideerVeld(this, 'watertemperatuur')"></td>
+                                </tr>
+                                <tr>
+                                    <td>Flow</td>
+                                    <td><input type="number" id="flow-diep" data-param="flow_diep" oninput="valideerVeld(this, 'flow_diep')"></td>
+                                    <td><input type="number" id="flow-ondiep" data-param="flow_ondiep" oninput="valideerVeld(this, 'flow_ondiep')"></td>
+                                </tr>
+                                <tr>
+                                    <td>Filterdruk In</td>
+                                    <td><input type="number" id="filter-in-diep" step="0.01" data-param="filter_druk_in" oninput="valideerVeld(this, 'filter_druk_in')"></td>
+                                    <td><input type="number" id="filter-in-ondiep" step="0.01" data-param="filter_druk_in" oninput="valideerVeld(this, 'filter_druk_in')"></td>
+                                </tr>
+                                <tr>
+                                    <td>Filterdruk Uit</td>
+                                    <td><input type="number" id="filter-uit-diep" step="0.01" data-param="filter_druk_uit" oninput="valideerVeld(this, 'filter_druk_uit')"></td>
+                                    <td><input type="number" id="filter-uit-ondiep" step="0.01" data-param="filter_druk_uit" oninput="valideerVeld(this, 'filter_druk_uit')"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <div id="subtab-verbruik-content" style="display: none;">
+                    <div class="categorie-box" id="categorie-water">
+                        <h3>Water (m³)</h3>
+                        <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start;">
+                            <div class="veld-item">
+                                <label for="water-diep">Diep</label>
+                                <input type="number" step="0.01" id="water-diep">
+                                <label style="font-size: 12px; color: #888; margin-top: 4px;">Verbruik</label>
+                                <input type="text" id="water-diep-verbruik" disabled style="background-color: #f0f0f0; cursor: not-allowed;">
+                            </div>
+                            <div class="veld-item">
+                                <label for="water-ondiep">Ondiep</label>
+                                <input type="number" step="0.01" id="water-ondiep">
+                                <label style="font-size: 12px; color: #888; margin-top: 4px;">Verbruik</label>
+                                <input type="text" id="water-ondiep-verbruik" disabled style="background-color: #f0f0f0; cursor: not-allowed;">
+                            </div>
+                            <div class="veld-item">
+                                <label for="water-totaal">Totaal</label>
+                                <input type="number" step="0.01" id="water-totaal">
+                                <label style="font-size: 12px; color: #888; margin-top: 4px;">Verbruik</label>
+                                <input type="text" id="water-totaal-verbruik" disabled style="background-color: #f0f0f0; cursor: not-allowed;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="categorie-box" id="categorie-elektriciteit-gas">
+                        <h3>Elektriciteit en gas</h3>
+                        <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start;">
+                            <div class="veld-item">
+                                <label for="elektriciteit-nacht">Elektriciteit Nacht</label>
+                                <input type="number" id="elektriciteit-nacht" data-param="elektriciteit_nacht" oninput="valideerVeld(this, 'elektriciteit_nacht')">
+                                <label style="font-size: 12px; color: #888; margin-top: 4px;">Verbruik</label>
+                                <input type="text" id="elektriciteit-nacht-verbruik" disabled style="background-color: #f0f0f0; cursor: not-allowed;">
+                            </div>
+                            <div class="veld-item">
+                                <label for="elektriciteit-dag">Elektriciteit Dag</label>
+                                <input type="number" id="elektriciteit-dag" data-param="elektriciteit_dag" oninput="valideerVeld(this, 'elektriciteit_dag')">
+                                <label style="font-size: 12px; color: #888; margin-top: 4px;">Verbruik</label>
+                                <input type="text" id="elektriciteit-dag-verbruik" disabled style="background-color: #f0f0f0; cursor: not-allowed;">
+                            </div>
+                            <div class="veld-item">
+                                <label for="gas">Gas</label>
+                                <input type="number" id="gas" data-param="gas" oninput="valideerVeld(this, 'gas')">
+                                <label style="font-size: 12px; color: #888; margin-top: 4px;">Verbruik</label>
+                                <input type="text" id="gas-verbruik" disabled style="background-color: #f0f0f0; cursor: not-allowed;">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="categorie-box" id="categorie-chemicalien">
+                        <h3>Chemicaliën</h3>
+                        <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start;">
+                            <div class="veld-item">
+                                <label for="floculant">Floculant</label>
+                                <input type="text" id="floculant">
+                                <label style="font-size: 12px; color: #888; margin-top: 4px;">Verbruik</label>
+                                <input type="text" id="floculant-verbruik" disabled style="background-color: #f0f0f0; cursor: not-allowed;">
+                            </div>
+                            <div class="veld-item">
+                                <label for="chemicalien-chloor">Chloor</label>
+                                <input type="text" id="chemicalien-chloor">
+                                <label style="font-size: 12px; color: #888; margin-top: 4px;">Verbruik</label>
+                                <input type="text" id="chemicalien-chloor-verbruik" disabled style="background-color: #f0f0f0; cursor: not-allowed;">
+                            </div>
+                            <div class="veld-item">
+                                <label for="chemicalien-zwavelzuur">Zwavelzuur</label>
+                                <input type="text" id="chemicalien-zwavelzuur">
+                                <label style="font-size: 12px; color: #888; margin-top: 4px;">Verbruik</label>
+                                <input type="text" id="chemicalien-zwavelzuur-verbruik" disabled style="background-color: #f0f0f0; cursor: not-allowed;">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="subtab-verwarmingssysteem-content" style="display: none;">
+                    <div class="categorie-box" id="categorie-verwarmingssysteem">
+                        <h3>Verwarmingssysteem</h3>
+                        <fieldset style="border: 1px solid #dee2e6; border-radius: 6px; padding: 10px 16px 14px; margin-bottom: 14px; display: inline-block;">
+                            <legend style="font-weight: 600; font-size: 14px; padding: 0 8px; color: #333;">Ketel status</legend>
+                            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                                <label class="checkbox-item"><input type="checkbox" id="systeem-status-1"> Ketel 1 ok</label>
+                                <label class="checkbox-item"><input type="checkbox" id="systeem-status-2"> Ketel 2 ok</label>
+                                <label class="checkbox-item"><input type="checkbox" id="systeem-status-3"> Ketel 3 ok</label>
+                                <label class="checkbox-item"><input type="checkbox" id="systeem-status-4"> Ketel 4 ok</label>
+                            </div>
+                        </fieldset>
+                        <div style="display: flex; flex-direction: column; gap: 8px;">
+                            <label class="checkbox-item"><input type="checkbox" id="systeem-druk-ok"> Systeem druk ok</label>
+                            <label class="checkbox-item"><input type="checkbox" id="visuele-inspectie"> Visuele inspectie</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="waterbeheer-peuterbad-content" style="display: none;">
+                <div class="categorie-box">
+                    <h3>Opname meetwaarden</h3>
+                    <table class="categorie-tabel">
+                        <thead>
+                            <tr>
+                                <th>Parameter</th>
+                                <th>Waarde</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>pH</td>
+                                <td><input type="number" id="peuterbad-ph" step="0.01" data-param="ph_waarde" oninput="valideerVeld(this, 'ph_waarde')"></td>
+                            </tr>
+                            <tr>
+                                <td>Chloor</td>
+                                <td><input type="number" id="peuterbad-chloor" step="0.01" data-param="chloor_waarde" oninput="valideerVeld(this, 'chloor_waarde')"></td>
+                            </tr>
+                            <tr>
+                                <td>Filter druk</td>
+                                <td><input type="number" id="peuterbad-filterdruk" step="0.01" data-param="filter_druk_peuterbad" oninput="valideerVeld(this, 'filter_druk_peuterbad')"></td>
+                            </tr>
+                            <tr>
+                                <td>Flow</td>
+                                <td><input type="number" id="peuterbad-flow" data-param="flow_peuterbad" oninput="valideerVeld(this, 'flow_peuterbad')"></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="categorie-box">
+                    <h3>Water</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div>
+                            <h4 style="margin-top: 0; font-size: 14px; color: #666;">Huidige stand (m³)</h4>
+                            <div class="veld-grid">
+                                <div class="veld-item">
+                                    <label for="peuterbad-water">Water</label>
+                                    <input type="number" step="0.01" id="peuterbad-water">
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 style="margin-top: 0; font-size: 14px; color: #666;">Verbruik sinds vorige opname (m³)</h4>
+                            <div class="veld-grid">
+                                <div class="veld-item">
+                                    <label>Water</label>
+                                    <input type="text" id="peuterbad-water-verbruik" disabled style="background-color: #f0f0f0; cursor: not-allowed;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="categorie-box">
+                    <h3>Chemicaliën</h3>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
+                        <div>
+                            <h4 style="margin-top: 0; font-size: 14px; color: #666;">Huidige stand</h4>
+                            <div class="veld-grid">
+                                <div class="veld-item">
+                                    <label for="peuterbad-chemicalien-chloor">Chloor</label>
+                                    <input type="text" id="peuterbad-chemicalien-chloor">
+                                </div>
+                                <div class="veld-item">
+                                    <label for="peuterbad-chemicalien-zwavelzuur">Zwavelzuur</label>
+                                    <input type="text" id="peuterbad-chemicalien-zwavelzuur">
+                                </div>
+                            </div>
+                        </div>
+                        <div>
+                            <h4 style="margin-top: 0; font-size: 14px; color: #666;">Verbruik sinds vorige opname</h4>
+                            <div class="veld-grid">
+                                <div class="veld-item">
+                                    <label>Chloor</label>
+                                    <input type="text" id="peuterbad-chemicalien-chloor-verbruik" disabled style="background-color: #f0f0f0; cursor: not-allowed;">
+                                </div>
+                                <div class="veld-item">
+                                    <label>Zwavelzuur</label>
+                                    <input type="text" id="peuterbad-chemicalien-zwavelzuur-verbruik" disabled style="background-color: #f0f0f0; cursor: not-allowed;">
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div id="tables-content" style="display: none;">
+                <table>
+                    <thead id="tabelKop"></thead>
+                    <tbody id="dagstaatTbody"></tbody>
+                </table>
+            </div>
+
+            <div class="actie-container">
+                <button class="btn-centraal-opslaan" onclick="verwerkCentraleOpslaan()">Opslaan</button>
+            </div>
+        </div>

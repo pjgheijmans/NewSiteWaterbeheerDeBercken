@@ -22,7 +22,9 @@ app.use('/api/verbruik',      require('./routes/verbruik'));
 app.use('/api/trend',         require('./routes/trend'));
 app.use('/api/database',      require('./routes/database'));
 
-app.use(express.static(path.join(__dirname, 'public')));
+// Frontend: assemble HTML from partials (must come before static so / is handled here)
+app.use('/', require('./routes/frontend'));
+app.use(express.static(path.join(__dirname, '..', 'frontend')));
 
 // ── Start ─────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;

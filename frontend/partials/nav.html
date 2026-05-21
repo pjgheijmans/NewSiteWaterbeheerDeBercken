@@ -1,0 +1,18 @@
+id="scherm-dashboard" class="container" style="display: none;">
+        <div class="header-box">
+            <h1>Zwembad Dashboard</h1>
+            <span id="welkom-tekst" style="font-weight:bold;"></span>
+        </div>
+
+        <div class="hoofd-nav">
+            <button id="btn-rol-waterbeheer" onclick="wisselRol('waterbeheer')">Waterbeheer</button>
+            <button id="btn-rol-coordinatoren" onclick="wisselRol('coordinatoren')">Coördinatoren</button>
+            <button id="btn-rol-limieten" onclick="wisselRol('limieten')">Limieten</button>
+            <button id="btn-rol-gebruikers" onclick="wisselRol('gebruikers')">Gebruikers Beheer</button>
+            <button id="btn-rol-database" onclick="wisselRol('database')">Database Beheer</button>
+            <button id="btn-rol-trendanalyse" onclick="wisselRol('trendanalyse')">Trendanalyse</button>
+            <button class="logout-btn" onclick="verwerkLogout()">Uitloggen</button>
+        </div>
+
+        <!-- Dagstaten Sectie -->
+        <div
