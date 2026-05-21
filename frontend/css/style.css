@@ -1,0 +1,447 @@
+body {
+    font-family: Arial, sans-serif;
+    margin: 20px;
+    background-color: #f4f7f6;
+    color: #333;
+}
+
+.container {
+    max-width: 1050px;
+    margin: 0 auto;
+    background: white;
+    padding: 25px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.header-box {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    border-bottom: 2px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 15px;
+}
+
+h1 {
+    margin: 0;
+    color: #0056b3;
+}
+
+/* Login Scherm */
+.login-box {
+    max-width: 400px;
+    margin: 80px auto;
+    padding: 30px;
+    background: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    text-align: center;
+}
+
+.login-box input {
+    width: 100%;
+    padding: 10px;
+    margin: 10px 0;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-sizing: border-box;
+}
+
+.login-box button {
+    width: 100%;
+    padding: 12px;
+    background: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+/* Navigatie */
+.hoofd-nav {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    background: #343a40;
+    padding: 10px;
+    border-radius: 6px;
+}
+
+.hoofd-nav button {
+    padding: 10px 20px;
+    font-size: 16px;
+    border: none;
+    border-radius: 4px;
+    background: #495057;
+    color: #fff;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.hoofd-nav button.actief {
+    background: #28a745;
+}
+
+.logout-btn {
+    background: #dc3545 !important;
+    margin-left: auto;
+}
+
+.menu-tabs {
+    display: flex;
+    gap: 5px;
+    margin-bottom: 20px;
+    border-bottom: 2px solid #007BFF;
+}
+
+.tab-btn {
+    padding: 12px 25px;
+    font-size: 15px;
+    font-weight: bold;
+    border: none;
+    background: #e9ecef;
+    color: #495057;
+    border-radius: 5px 5px 0 0;
+    cursor: pointer;
+}
+
+.tab-btn.actief {
+    background: #007BFF;
+    color: white;
+}
+
+.datum-navigatie {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 25px;
+    background: #e9ecef;
+    padding: 10px 15px;
+    border-radius: 5px;
+}
+
+.datum-navigatie button {
+    padding: 10px 20px;
+    font-weight: bold;
+    background-color: #007BFF;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.datum-navigatie input[type="date"] {
+    padding: 8px;
+    font-size: 16px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    text-align: center;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 20px;
+}
+
+th,
+td {
+    padding: 12px;
+    border: 1px solid #dee2e6;
+    text-align: left;
+    vertical-align: middle;
+}
+
+th {
+    background-color: #007BFF;
+    color: white;
+    font-weight: 600;
+}
+
+td input[type="number"],
+td input[type="text"],
+td select {
+    width: 100%;
+    padding: 6px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.actie-container {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 15px;
+    border-top: 1px solid #eee;
+    padding-top: 15px;
+}
+
+.btn-centraal-opslaan {
+    padding: 12px 30px;
+    background-color: #28a745;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+.categorie-box {
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    background: #fbfcfd;
+    padding: 18px;
+    margin-bottom: 20px;
+    overflow-x: auto;
+}
+
+.categorie-box h3 {
+    margin-top: 0;
+    margin-bottom: 14px;
+    color: #0056b3;
+    font-size: 20px;
+}
+
+.categorie-tabel {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 0;
+}
+
+.categorie-tabel th,
+.categorie-tabel td {
+    border: 1px solid #dee2e6;
+    padding: 12px;
+    text-align: left;
+    vertical-align: middle;
+}
+
+.veld-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 16px;
+}
+
+.veld-item {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.veld-item label {
+    font-weight: 600;
+    font-size: 14px;
+}
+
+.veld-item input,
+.veld-item select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    font-size: 14px;
+    box-sizing: border-box;
+}
+
+.checkbox-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 12px;
+}
+
+.checkbox-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    background: #ffffff;
+    border: 1px solid #dee2e6;
+    border-radius: 6px;
+}
+
+.checkbox-item input {
+    width: auto;
+    margin: 0;
+}
+
+/* Gevaar / Database wissen knop */
+.btn-wissen-gevaar {
+    padding: 10px 20px;
+    background-color: #dc3545;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+}
+
+.btn-wissen-gevaar:hover {
+    background-color: #bd2130;
+}
+
+.buiten-limiet {
+    background-color: #ffcccc !important;
+    border-color: #dc3545 !important;
+    color: #000 !important;
+}
+
+input[type="number"].buiten-limiet,
+input[type="text"].buiten-limiet {
+    color: #000 !important;
+}
+
+#acties-paneel {
+    background: linear-gradient(135deg, #ffe5e5 0%, #fff3cd 100%);
+    border-left: 5px solid #ff6b6b !important;
+    box-shadow: 0 2px 8px rgba(255, 107, 107, 0.2);
+}
+
+#acties-paneel h3 {
+    color: #c92a2a;
+    margin: 0;
+}
+
+#acties-tabel tbody tr:hover {
+    background: #ffe0e0 !important;
+}
+
+#acties-tabel input[type="checkbox"]:checked {
+    accent-color: #28a745;
+}
+
+.subtab-nav {
+    display: flex;
+    gap: 4px;
+    margin-top: 10px;
+    margin-bottom: 16px;
+    border-bottom: 2px solid #6c757d;
+}
+
+.subtab-btn {
+    padding: 8px 20px;
+    font-size: 14px;
+    font-weight: bold;
+    border: none;
+    background: #e9ecef;
+    color: #6c757d;
+    border-radius: 4px 4px 0 0;
+    cursor: pointer;
+}
+
+.subtab-btn.actief {
+    background: #6c757d;
+    color: white;
+}
+
+#subtab-verbruik-content .veld-item input[type="number"],
+#subtab-verbruik-content .veld-item input[type="text"] {
+    width: 100px;
+}
+
+#subtab-meetwaarden-content .categorie-tabel,
+#waterbeheer-peuterbad-content .categorie-tabel {
+    width: auto;
+}
+
+#subtab-meetwaarden-content .categorie-tabel td input,
+#waterbeheer-peuterbad-content .categorie-tabel td input {
+    width: 80px;
+}
+
+#waterbeheer-peuterbad-content .veld-item input[type="number"],
+#waterbeheer-peuterbad-content .veld-item input[type="text"] {
+    width: 100px;
+}
+
+.status-melding {
+    text-align: center;
+    font-weight: bold;
+    margin-top: 15px;
+    min-height: 20px;
+}
+
+.succes {
+    color: #28a745;
+}
+
+.fout {
+    color: #dc3545;
+}
+
+/* ── Responsive ── */
+@media (max-width: 900px) {
+    .hoofd-nav {
+        flex-wrap: wrap;
+    }
+    .logout-btn {
+        margin-left: 0 !important;
+        width: 100%;
+    }
+}
+
+@media (max-width: 768px) {
+    body {
+        margin: 10px;
+    }
+    .container {
+        padding: 15px;
+        border-radius: 6px;
+    }
+    .header-box {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 6px;
+    }
+    h1 {
+        font-size: 20px;
+    }
+    .hoofd-nav button {
+        padding: 8px 12px;
+        font-size: 14px;
+    }
+    .menu-tabs {
+        flex-wrap: wrap;
+    }
+    .tab-btn {
+        padding: 8px 14px;
+        font-size: 13px;
+    }
+    .subtab-nav {
+        flex-wrap: wrap;
+    }
+    .subtab-btn {
+        padding: 6px 12px;
+        font-size: 13px;
+    }
+    .datum-navigatie {
+        flex-wrap: wrap;
+        gap: 10px;
+    }
+    .datum-navigatie button {
+        flex: 1;
+        padding: 8px 12px;
+    }
+    .datum-navigatie input[type="date"] {
+        width: 100%;
+    }
+    .btn-centraal-opslaan {
+        width: 100%;
+    }
+}
+
+@media (max-width: 480px) {
+    .login-box {
+        margin: 20px auto;
+        padding: 20px;
+    }
+    .categorie-box {
+        padding: 12px;
+    }
+    th, td {
+        padding: 8px;
+    }
+}
