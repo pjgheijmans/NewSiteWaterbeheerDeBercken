@@ -9,10 +9,10 @@ const { checkAuth, isAdminOrWaterbeheerder } = require('../middleware/auth');
 /**
  * Table names allowed for truncate operations.
  */
-const TRUNC_TABLES  = ['metingen','metingen_coordinatoren','metingen_peuterbad','verbruik_diep_ondiep','verwarmings_systeem_grote_baden','acties','limieten','gebruikers'];
-const EXPORT_TABLES = ['metingen','metingen_grote_baden','metingen_peuterbad','metingen_coordinatoren','verbruik_diep_ondiep','verwarmings_systeem_grote_baden','acties','limieten','gebruikers'];
-const IMPORT_TABLES = ['metingen','metingen_coordinatoren','metingen_peuterbad','verbruik_diep_ondiep','verwarmings_systeem_grote_baden','limieten','gebruikers'];
-const NEED_BAD_ID   = ['metingen','metingen_coordinatoren','metingen_peuterbad'];
+const TRUNC_TABLES  = ['metingen_diep_ondiep','metingen_coordinatoren','coordinatoren_checklist','metingen_peuterbad','verbruik_diep_ondiep','verwarmings_systeem_grote_baden','acties','limieten','gebruikers'];
+const EXPORT_TABLES = ['metingen_diep_ondiep','metingen_peuterbad','metingen_coordinatoren','coordinatoren_checklist','verbruik_diep_ondiep','verwarmings_systeem_grote_baden','acties','limieten','gebruikers'];
+const IMPORT_TABLES = ['metingen_diep_ondiep','metingen_coordinatoren','coordinatoren_checklist','metingen_peuterbad','verbruik_diep_ondiep','verwarmings_systeem_grote_baden','limieten','gebruikers'];
+const NEED_BAD_ID   = ['metingen_diep_ondiep','metingen_coordinatoren','metingen_peuterbad'];
 
 /**
  * Truncate a permitted database table after authorization.
@@ -95,7 +95,7 @@ router.post('/import/:tabelnaam', checkAuth, express.text({ type: 'text/csv', li
             }
 
             const cols = Object.keys(rij).filter(k => k !== 'id');
-            const actualTabel = tabel === 'metingen' ? 'metingen_grote_baden' : tabel;
+            const actualTabel = tabel;
             await repo.importRow(actualTabel, cols, cols.map(k => rij[k]));
         }
 
