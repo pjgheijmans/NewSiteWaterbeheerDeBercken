@@ -265,11 +265,32 @@
             </div>
 
             <div class="subtab-nav" id="coordinatoren-subtab-nav" style="display:none;">
-                <button class="subtab-btn actief" id="subtab-coord-metingen" onclick="wisselCoordSubtab('metingen')">Metingen</button>
-                <button class="subtab-btn" id="subtab-coord-checklist" onclick="wisselCoordSubtab('checklist')">Checklijst &amp; Opmerkingen</button>
+                <button class="subtab-btn actief" id="subtab-coord-metingen"    onclick="wisselCoordSubtab('metingen')">Metingen</button>
+                <button class="subtab-btn" id="subtab-coord-checklist"          onclick="wisselCoordSubtab('checklist')">Checklijst &amp; Opmerkingen</button>
+                <button class="subtab-btn" id="subtab-coord-daggegevens"        onclick="wisselCoordSubtab('daggegevens')">Temperatuur &amp; Bezoekers</button>
             </div>
 
             <div id="coordinatoren-blokken-content" style="display: none;"></div>
+
+            <div id="coordinatoren-daggegevens-content" style="display: none;">
+                <div class="categorie-box">
+                    <h3>Temperatuur &amp; Bezoekers</h3>
+                    <div style="display:flex; flex-wrap:wrap; gap:24px; align-items:flex-start;">
+                        <div class="veld-item">
+                            <label for="coord-lucht-temp">Luchttemperatuur (°C)</label>
+                            <input type="number" step="0.1" id="coord-lucht-temp" placeholder="bijv. 18.5">
+                        </div>
+                        <div class="veld-item">
+                            <label for="coord-bezoekers-vandaag">Aantal bezoekers vandaag</label>
+                            <input type="number" id="coord-bezoekers-vandaag" min="0" placeholder="bijv. 120">
+                        </div>
+                        <div class="veld-item">
+                            <label for="coord-bezoekers-spoelbeurt">Totaal bezoekers sinds laatste spoelbeurt</label>
+                            <input type="number" id="coord-bezoekers-spoelbeurt" min="0" placeholder="bijv. 850">
+                        </div>
+                    </div>
+                </div>
+            </div>
 
             <div id="coordinatoren-checklist-content" style="display: none;">
                 <div class="categorie-box">

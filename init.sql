@@ -97,6 +97,16 @@ CREATE TABLE IF NOT EXISTS gebruikers (
 INSERT IGNORE INTO gebruikers (voornaam, achternaam, inlognaam, wachtwoord, taak) VALUES ('Admin', '', 'Admin', 'lpphw', 'Administrator');
 INSERT IGNORE INTO gebruikers (voornaam, achternaam, inlognaam, wachtwoord, taak) VALUES ('Paul', 'Heijmans', 'pheijmans', 'Paul', 'waterbeheerder');
 
+-- Dagelijkse temperatuur en bezoekers voor coördinatoren
+CREATE TABLE IF NOT EXISTS coordinatoren_daggegevens (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    datum DATE NOT NULL UNIQUE,
+    lucht_temperatuur DECIMAL(4,1) NULL,
+    bezoekers_vandaag INT NULL,
+    bezoekers_totaal_spoelbeurt INT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
 -- Dagelijkse checklijst voor coördinatoren
 CREATE TABLE IF NOT EXISTS coordinatoren_checklist (
     id INT AUTO_INCREMENT PRIMARY KEY,

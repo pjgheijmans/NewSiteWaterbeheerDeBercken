@@ -40,6 +40,19 @@
                         <td><button class="btn-wissen-gevaar" onclick="leegmakenTabel('metingen_coordinatoren')">Tabel Leegmaken</button></td>
                     </tr>
                     <tr>
+                        <td><b>Temperatuur &amp; Bezoekers</b></td>
+                        <td>Bevat luchttemperatuur en bezoekersaantallen per dag.</td>
+                        <td><button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px;"
+                                onclick="exporteerTabel('coordinatoren_daggegevens')">CSV Exporteren</button></td>
+                        <td>
+                            <button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px; background-color:#17a2b8;"
+                                onclick="triggerImportBladeren('coordinatoren_daggegevens')">CSV Importeren</button>
+                            <input type="file" id="import-file-coordinatoren_daggegevens" accept=".csv" style="display:none;"
+                                onchange="verwerkCsvUpload(this, 'coordinatoren_daggegevens')">
+                        </td>
+                        <td><button class="btn-wissen-gevaar" onclick="leegmakenTabel('coordinatoren_daggegevens')">Tabel Leegmaken</button></td>
+                    </tr>
+                    <tr>
                         <td><b>Checklijst Coördinatoren</b></td>
                         <td>Bevat proefdraaien-vinkjes en opmerkingen per dag.</td>
                         <td><button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px;"

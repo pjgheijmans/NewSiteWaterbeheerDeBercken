@@ -52,6 +52,26 @@ router.post('/checklist', checkAuth, async (req, res) => {
 });
 
 /**
+ * Return the daggegevens record for the requested date.
+ */
+router.get('/daggegevens', checkAuth, async (req, res) => {
+    if (!isWaterbeheerderOrCoordinator(req.session.gebruiker.taak))
+        return res.status(403).json({ error: 'Geen toegang' });
+    try { res.json(await repo.getDaggegevens(req.query.datum)); }
+    catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+/**
+ * Save the daggegevens record for a date.
+ */
+router.post('/daggegevens', checkAuth, async (req, res) => {
+    if (!isWaterbeheerderOrCoordinator(req.session.gebruiker.taak))
+        return res.status(403).json({ error: 'Geen toegang' });
+    try { await repo.saveDaggegevens(req.body.datum, req.body); res.json({ status: 'success' }); }
+    catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+/**
  * Delete all rows of one coordinator time block.
  * Expects query params: datum and tijdstip.
  */

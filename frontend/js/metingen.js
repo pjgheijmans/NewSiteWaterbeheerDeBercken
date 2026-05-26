@@ -107,6 +107,7 @@ function bouwTabelOp(data) {
         document.getElementById('coordinatoren-subtab-nav').style.display = 'none';
         document.getElementById('coordinatoren-blokken-content').style.display = 'none';
         document.getElementById('coordinatoren-checklist-content').style.display = 'none';
+        document.getElementById('coordinatoren-daggegevens-content').style.display = 'none';
 
         if (huidigeRol === 'waterbeheer' && huidigeBadPagina === 'grote-baden') {
             categorieContent.style.display = 'block';
@@ -285,15 +286,15 @@ let checklistAutoSaveTimer = null;
  */
 function wisselCoordSubtab(subtab) {
     huidigeCoordSubtab = subtab;
-    ['metingen', 'checklist'].forEach(s => {
+    ['metingen', 'checklist', 'daggegevens'].forEach(s => {
         document.getElementById(`subtab-coord-${s}`)?.classList.toggle('actief', s === subtab);
     });
-    document.getElementById('coordinatoren-blokken-content').style.display  = subtab === 'metingen'  ? 'block' : 'none';
-    document.getElementById('coordinatoren-checklist-content').style.display = subtab === 'checklist' ? 'block' : 'none';
-    if (subtab === 'checklist') {
-        const datum = document.getElementById('centraleDatum').value;
-        laadCoordChecklist(datum);
-    }
+    document.getElementById('coordinatoren-blokken-content').style.display    = subtab === 'metingen'    ? 'block' : 'none';
+    document.getElementById('coordinatoren-checklist-content').style.display   = subtab === 'checklist'   ? 'block' : 'none';
+    document.getElementById('coordinatoren-daggegevens-content').style.display = subtab === 'daggegevens' ? 'block' : 'none';
+    const datum = document.getElementById('centraleDatum').value;
+    if (subtab === 'checklist')   laadCoordChecklist(datum);
+    if (subtab === 'daggegevens') laadCoordDaggegevens(datum);
 }
 
 /**
@@ -354,6 +355,58 @@ function scheduleAutoSaveChecklist() {
             });
             setAutoSaveStatus(res.ok ? 'saved' : 'error');
             if (!res.ok) toonBericht('Fout bij opslaan checklist.', 'fout');
+        } catch (e) { console.error(e); setAutoSaveStatus('error'); }
+    }, 1200);
+}
+
+// ── Coördinatoren daggegevens ─────────────────────────────────────────────
+
+let daggegevensAutoSaveTimer = null;
+
+/**
+ * Load daggegevens for a date and populate the form.
+ * @param {string} datum
+ */
+async function laadCoordDaggegevens(datum) {
+    if (!datum) return;
+    try {
+        const res = await apiCall(`/api/coordinatoren/daggegevens?datum=${datum}`);
+        const d = await res.json();
+        document.getElementById('coord-lucht-temp').value          = d.lucht_temperatuur             ?? '';
+        document.getElementById('coord-bezoekers-vandaag').value   = d.bezoekers_vandaag             ?? '';
+        document.getElementById('coord-bezoekers-spoelbeurt').value= d.bezoekers_totaal_spoelbeurt   ?? '';
+    } catch (e) { console.error('Fout bij laden daggegevens:', e); }
+
+    const form = document.getElementById('coordinatoren-daggegevens-content');
+    if (form.dataset.listenersAttached) return;
+    form.dataset.listenersAttached = '1';
+
+    form.querySelectorAll('input').forEach(input => {
+        input.addEventListener('input', e => { e.stopPropagation(); scheduleAutoSaveDaggegevens(); });
+    });
+}
+
+/**
+ * Debounce and save daggegevens.
+ */
+function scheduleAutoSaveDaggegevens() {
+    if (daggegevensAutoSaveTimer) clearTimeout(daggegevensAutoSaveTimer);
+    setAutoSaveStatus('pending');
+    daggegevensAutoSaveTimer = setTimeout(async () => {
+        setAutoSaveStatus('saving');
+        const datum = document.getElementById('centraleDatum').value;
+        const payload = {
+            datum,
+            lucht_temperatuur:           parseFloat(document.getElementById('coord-lucht-temp').value)           || null,
+            bezoekers_vandaag:           parseInt(document.getElementById('coord-bezoekers-vandaag').value)       || null,
+            bezoekers_totaal_spoelbeurt: parseInt(document.getElementById('coord-bezoekers-spoelbeurt').value)    || null,
+        };
+        try {
+            const res = await apiCall('/api/coordinatoren/daggegevens', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+            });
+            setAutoSaveStatus(res.ok ? 'saved' : 'error');
+            if (!res.ok) toonBericht('Fout bij opslaan daggegevens.', 'fout');
         } catch (e) { console.error(e); setAutoSaveStatus('error'); }
     }, 1200);
 }

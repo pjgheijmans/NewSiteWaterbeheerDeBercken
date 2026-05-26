@@ -12,7 +12,7 @@ async function getMetingen(datum) {
     const [rows] = await pool.execute(
         `SELECT b.naam AS bad_naam, mg.ph_waarde, mg.chloor_waarde, mg.temperatuur, mg.flow, mg.filter_druk_in, mg.filter_druk_uit, NULL AS water, NULL AS chemicalien_chloor, NULL AS chemicalien_zwavelzuur
              FROM baden b
-             LEFT JOIN metingen_grote_baden mg ON b.id = mg.bad_id AND mg.datum = ?
+             LEFT JOIN metingen_diep_ondiep mg ON b.id = mg.bad_id AND mg.datum = ?
              WHERE b.naam <> 'Peuterbad'
              UNION ALL
              SELECT b.naam AS bad_naam, mp.ph_waarde, mp.chloor_waarde, NULL AS temperatuur, mp.flow, mp.filter_druk_in, NULL AS filter_druk_uit, mp.water, mp.chemicalien_chloor, mp.chemicalien_zwavelzuur
@@ -50,7 +50,7 @@ async function savePeuterbadMeting(bad_id, { datum, ph_waarde, chloor_waarde, fl
  */
 async function saveGrootBadMeting(bad_id, { datum, ph_waarde, chloor_waarde, temperatuur, flow, filter_druk_in, filter_druk_uit }) {
     await pool.execute(
-        'INSERT INTO metingen_grote_baden (bad_id, datum, ph_waarde, chloor_waarde, temperatuur, flow, filter_druk_in, filter_druk_uit) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE ph_waarde = VALUES(ph_waarde), chloor_waarde = VALUES(chloor_waarde), temperatuur = VALUES(temperatuur), flow = VALUES(flow), filter_druk_in = VALUES(filter_druk_in), filter_druk_uit = VALUES(filter_druk_uit)',
+        'INSERT INTO metingen_diep_ondiep (bad_id, datum, ph_waarde, chloor_waarde, temperatuur, flow, filter_druk_in, filter_druk_uit) VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE ph_waarde = VALUES(ph_waarde), chloor_waarde = VALUES(chloor_waarde), temperatuur = VALUES(temperatuur), flow = VALUES(flow), filter_druk_in = VALUES(filter_druk_in), filter_druk_uit = VALUES(filter_druk_uit)',
         [bad_id, datum, ph_waarde, chloor_waarde, temperatuur, flow, filter_druk_in, filter_druk_uit]
     );
 }

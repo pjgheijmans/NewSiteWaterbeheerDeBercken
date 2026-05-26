@@ -105,4 +105,33 @@ async function saveChecklist(datum, { proef_waterspeel, proef_spraypark, proef_d
     );
 }
 
-module.exports = { getCoordinatoren, getBadId, saveMeting, deleteBlok, getChecklist, saveChecklist };
+/**
+ * Load daggegevens for a date, returning defaults when none exists yet.
+ */
+async function getDaggegevens(datum) {
+    const [rows] = await pool.execute(
+        'SELECT lucht_temperatuur, bezoekers_vandaag, bezoekers_totaal_spoelbeurt FROM coordinatoren_daggegevens WHERE datum = ?',
+        [datum]
+    );
+    return rows[0] || { lucht_temperatuur: null, bezoekers_vandaag: null, bezoekers_totaal_spoelbeurt: null };
+}
+
+/**
+ * Insert or update daggegevens for a date.
+ */
+async function saveDaggegevens(datum, { lucht_temperatuur, bezoekers_vandaag, bezoekers_totaal_spoelbeurt }) {
+    await pool.execute(
+        `INSERT INTO coordinatoren_daggegevens (datum, lucht_temperatuur, bezoekers_vandaag, bezoekers_totaal_spoelbeurt)
+         VALUES (?, ?, ?, ?)
+         ON DUPLICATE KEY UPDATE
+           lucht_temperatuur             = VALUES(lucht_temperatuur),
+           bezoekers_vandaag             = VALUES(bezoekers_vandaag),
+           bezoekers_totaal_spoelbeurt   = VALUES(bezoekers_totaal_spoelbeurt)`,
+        [datum,
+         lucht_temperatuur ?? null,
+         bezoekers_vandaag ?? null,
+         bezoekers_totaal_spoelbeurt ?? null]
+    );
+}
+
+module.exports = { getCoordinatoren, getBadId, saveMeting, deleteBlok, getChecklist, saveChecklist, getDaggegevens, saveDaggegevens };
