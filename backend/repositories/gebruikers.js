@@ -3,6 +3,11 @@
  */
 const pool = require('./db');
 
+const DEFAULT_GEBRUIKERS = [
+    { voornaam: 'Admin',  achternaam: '',         inlognaam: 'Admin',    wachtwoord: 'lpphw', taak: 'Administrator'   },
+    { voornaam: 'Paul',   achternaam: 'Heijmans',  inlognaam: 'pheijmans',wachtwoord: 'Paul',  taak: 'waterbeheerder'  },
+];
+
 /**
  * Find a gebruiker by login credentials.
  * @returns {Promise<Object|null>} The gebruiker or null when not found.
@@ -52,4 +57,16 @@ async function remove(id) {
     await pool.execute('DELETE FROM gebruikers WHERE id = ?', [id]);
 }
 
-module.exports = { findByLogin, getAll, create, update, remove };
+/**
+ * Insert all default gebruikers, skipping any whose inlognaam already exists.
+ */
+async function seedDefaults() {
+    for (const g of DEFAULT_GEBRUIKERS) {
+        await pool.execute(
+            'INSERT IGNORE INTO gebruikers (voornaam, achternaam, inlognaam, wachtwoord, taak) VALUES (?, ?, ?, ?, ?)',
+            [g.voornaam, g.achternaam, g.inlognaam, g.wachtwoord, g.taak]
+        );
+    }
+}
+
+module.exports = { findByLogin, getAll, create, update, remove, seedDefaults };

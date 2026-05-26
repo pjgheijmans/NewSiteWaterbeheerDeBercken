@@ -108,4 +108,32 @@ router.post('/import/:tabelnaam', checkAuth, express.text({ type: 'text/csv', li
     }
 });
 
+/**
+ * Truncate every data table, removing all content permanently.
+ * The caller is logged out server-side by destroying their session.
+ */
+router.post('/verwijder-alles', checkAuth, async (req, res) => {
+    if (!isAdminOrWaterbeheerder(req.session.gebruiker.taak))
+        return res.status(403).json({ error: 'Geen toegang' });
+    try {
+        await repo.truncateAll();
+        req.session.destroy(() => {});
+        res.json({ status: 'success', message: 'Alle data gewist.' });
+    } catch (err) { console.error(err); res.status(500).json({ error: err.message }); }
+});
+
+/**
+ * Truncate every data table then seed default limieten and gebruikers.
+ */
+router.post('/initialiseer', checkAuth, async (req, res) => {
+    if (!isAdminOrWaterbeheerder(req.session.gebruiker.taak))
+        return res.status(403).json({ error: 'Geen toegang' });
+    try {
+        await repo.truncateAll();
+        await repo.seedAllDefaults();
+        req.session.destroy(() => {});
+        res.json({ status: 'success', message: 'Database geïnitialiseerd met standaardwaarden.' });
+    } catch (err) { console.error(err); res.status(500).json({ error: err.message }); }
+});
+
 module.exports = router;

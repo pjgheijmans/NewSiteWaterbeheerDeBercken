@@ -27,38 +27,63 @@ function scheduleAutoSaveLimieten() {
     }, 1200);
 }
 
-const STANDAARD_LIMIETEN = {
-    ph_waarde:             { min: 7.0,  max: 7.6  },
-    chloor_waarde:         { min: 0.5,  max: 1.5  },
-    watertemperatuur:      { min: 24,   max: 29   },
-    flow_diep:             { min: 100,  max: 400  },
-    flow_ondiep:           { min: 50,   max: 200  },
-    flow_peuterbad:        { min: 10,   max: 50   },
-    filter_druk_in:        { min: 0.5,  max: 2.5  },
-    filter_druk_uit:       { min: 0.5,  max: 2.5  },
-    filter_druk_peuterbad: { min: 0.5,  max: 2.5  },
-    elektriciteit_nacht:   { min: 0,    max: 0    },
-    elektriciteit_dag:     { min: 0,    max: 0    },
-    gas:                   { min: 0,    max: 0    },
+
+const LIMIETEN_LABELS = {
+    ph_waarde:             'pH',
+    chloor_waarde:         'Chloor (mg/l)',
+    watertemperatuur:      'Watertemperatuur (°C)',
+    flow_diep:             'Flow Diep (m³/h)',
+    flow_ondiep:           'Flow Ondiep (m³/h)',
+    filter_druk_in:        'Filterdruk In (bar)',
+    filter_druk_uit:       'Filterdruk Uit (bar)',
+    flow_peuterbad:        'Flow (m³/h)',
+    filter_druk_peuterbad: 'Filterdruk (bar)',
+    elektriciteit_nacht:   'Elektriciteit Nacht (kWh)',
+    elektriciteit_dag:     'Elektriciteit Dag (kWh)',
+    gas:                   'Gas (m³)',
+    water_diep:            'Water Diep (m³)',
+    water_ondiep:          'Water Ondiep (m³)',
+    water_totaal:          'Water Totaal (m³)',
+    water_peuterbad:       'Water Peuterbad (m³)',
 };
 
+const LIMIETEN_GROEPEN = [
+    {
+        titel: 'Diep / Ondiep – Meetwaarden',
+        info: 'pH, chloor en temperatuur gelden ook voor het Peuterbad.',
+        params: ['ph_waarde', 'chloor_waarde', 'watertemperatuur', 'flow_diep', 'flow_ondiep', 'filter_druk_in', 'filter_druk_uit'],
+    },
+    {
+        titel: 'Peuterbad – Meetwaarden',
+        params: ['flow_peuterbad', 'filter_druk_peuterbad'],
+    },
+    {
+        titel: 'Verbruik',
+        params: ['elektriciteit_nacht', 'elektriciteit_dag', 'gas', 'water_diep', 'water_ondiep', 'water_totaal', 'water_peuterbad'],
+    },
+];
+
 /**
- * Fill all limit inputs with predefined default values and schedule an autosave.
+ * Fetch default limit values from the backend, fill all inputs, and schedule an autosave.
  */
-function laadStandaardLimieten() {
+async function laadStandaardLimieten() {
     if (!confirm('Standaardwaarden invullen? Dit overschrijft de huidige waarden.')) return;
-    document.querySelectorAll('#limietenTbody tr').forEach(rij => {
-        const param = rij.getAttribute('data-param');
-        const def = STANDAARD_LIMIETEN[param];
-        if (!def) return;
-        rij.querySelector('.l-min').value = def.min;
-        rij.querySelector('.l-max').value = def.max;
-    });
-    scheduleAutoSaveLimieten();
+    try {
+        const res = await apiCall('/api/limieten/defaults');
+        const defaults = await res.json();
+        document.querySelectorAll('[data-limiet-param]').forEach(rij => {
+            const param = rij.getAttribute('data-limiet-param');
+            const def = defaults[param];
+            if (!def) return;
+            rij.querySelector('.l-min').value = def.min;
+            rij.querySelector('.l-max').value = def.max;
+        });
+        scheduleAutoSaveLimieten();
+    } catch (f) { toonBericht('Kon standaardwaarden niet ophalen.', 'fout'); }
 }
 
 /**
- * Load the current limit definitions from the backend and render them in the UI.
+ * Load limit definitions from the server and render the table.
  */
 async function laadLimietenVanServer() {
     try {
@@ -96,21 +121,40 @@ function normaliseerLimieten(limieten) {
 }
 
 /**
- * Render the current active limit values into the limits management table.
+ * Render limit groups as styled boxes into #limietenGroepen.
  * Attaches autosave listeners to each input after rendering.
  */
 function bouwLimietenBeheerTabel() {
-    const tbody = document.getElementById('limietenTbody');
-    tbody.innerHTML = '';
-    const labels = { ph_waarde: 'pH Waarde', chloor_waarde: 'Chloor (mg/l)', flow_diep: 'Flow Diep (m³/h)', flow_ondiep: 'Flow Ondiep (m³/h)', flow_peuterbad: 'Flow Peuterbad (m³/h)', filter_druk_in: 'Filterdruk In (bar)', filter_druk_uit: 'Filterdruk Uit (bar)', filter_druk_peuterbad: 'Filterdruk Peuterbad (bar)', watertemperatuur: 'Watertemperatuur (°C)', elektriciteit_nacht: 'Elektriciteit Nacht', elektriciteit_dag: 'Elektriciteit Dag', gas: 'Gas' };
-    Object.keys(actieveLimieten).forEach(param => {
-        tbody.innerHTML += `<tr id="limiet-rij-${param}" data-param="${param}">
-            <td><b>${labels[param] || param}</b></td>
-            <td><input type="number" class="l-min" step="0.01" value="${actieveLimieten[param].min}"></td>
-            <td><input type="number" class="l-max" step="0.01" value="${actieveLimieten[param].max}"></td></tr>`;
-    });
-    tbody.querySelectorAll('input').forEach(input => {
-        input.addEventListener('input', scheduleAutoSaveLimieten);
+    const container = document.getElementById('limietenGroepen');
+    container.innerHTML = '';
+
+    LIMIETEN_GROEPEN.forEach(groep => {
+        const box = document.createElement('div');
+        box.className = 'categorie-box';
+
+        let html = `<h3>${groep.titel}</h3>`;
+        if (groep.info) html += `<p style="font-size:13px; color:#666; margin: -8px 0 10px;">${groep.info}</p>`;
+        html += `<table class="categorie-tabel">
+            <thead><tr><th>Parameter</th><th>Minimum</th><th>Maximum</th></tr></thead>
+            <tbody>`;
+
+        groep.params.forEach(param => {
+            const val = actieveLimieten[param] || { min: '', max: '' };
+            const label = LIMIETEN_LABELS[param] || param;
+            html += `<tr data-limiet-param="${param}">
+                <td><b>${label}</b></td>
+                <td><input type="number" class="l-min" step="0.01" value="${val.min}"></td>
+                <td><input type="number" class="l-max" step="0.01" value="${val.max}"></td>
+            </tr>`;
+        });
+
+        html += '</tbody></table>';
+        box.innerHTML = html;
+        container.appendChild(box);
+
+        box.querySelectorAll('input').forEach(input => {
+            input.addEventListener('input', scheduleAutoSaveLimieten);
+        });
     });
 }
 
@@ -120,11 +164,15 @@ function bouwLimietenBeheerTabel() {
  */
 async function verwerkCentraleLimietenOpslaan(autoSave = false) {
     if (!autoSave) toonBericht('Limieten verwerken...', '');
-    const rijen = document.querySelectorAll('#limietenTbody tr');
+    const rijen = document.querySelectorAll('[data-limiet-param]');
     let succesTeller = 0;
     for (const rij of rijen) {
-        const paramNaam = rij.getAttribute('data-param');
-        const payload = { parameter_naam: paramNaam, min_waarde: parseFloat(rij.querySelector('.l-min').value), max_waarde: parseFloat(rij.querySelector('.l-max').value) };
+        const paramNaam = rij.getAttribute('data-limiet-param');
+        const payload = {
+            parameter_naam: paramNaam,
+            min_waarde: parseFloat(rij.querySelector('.l-min').value),
+            max_waarde: parseFloat(rij.querySelector('.l-max').value),
+        };
         try {
             const response = await apiCall('/api/limieten', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             if (response.ok) { succesTeller++; }

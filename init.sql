@@ -55,20 +55,28 @@ CREATE TABLE IF NOT EXISTS limieten (
     max_waarde DECIMAL(5,2) NULL
 );
 
+-- Widen limit columns to support large meter readings
+ALTER TABLE limieten MODIFY min_waarde DECIMAL(10,2) NULL;
+ALTER TABLE limieten MODIFY max_waarde DECIMAL(10,2) NULL;
+
 -- Standaard limieten invoeren bij de eerste start
-INSERT IGNORE INTO limieten (parameter_naam, min_waarde, max_waarde) VALUES 
-('ph_waarde', 6.80, 7.60), 
-('chloor_waarde', 0.50, 1.50), 
-('flow_diep', 250.00, 450.00), 
-('flow_ondiep', 50.00, 120.00), 
-('flow_peuterbad', 3.00, 10.00), 
-('filter_druk_in', 0.20, 1.50), 
-('filter_druk_uit', 0.20, 1.50), 
-('filter_druk_peuterbad', 0.20, 1.50), 
-('watertemperatuur', 20.00, 30.00), 
-('elektriciteit_nacht', 0.00, 500.00), 
-('elektriciteit_dag', 0.00, 500.00), 
-('gas', 0.00, 500.00);
+INSERT IGNORE INTO limieten (parameter_naam, min_waarde, max_waarde) VALUES
+('ph_waarde', 6.80, 7.60),
+('chloor_waarde', 0.50, 1.50),
+('flow_diep', 250.00, 450.00),
+('flow_ondiep', 50.00, 120.00),
+('flow_peuterbad', 3.00, 10.00),
+('filter_druk_in', 0.20, 1.50),
+('filter_druk_uit', 0.20, 1.50),
+('filter_druk_peuterbad', 0.20, 1.50),
+('watertemperatuur', 20.00, 30.00),
+('elektriciteit_nacht', 0.00, 500.00),
+('elektriciteit_dag', 0.00, 500.00),
+('gas', 0.00, 500.00),
+('water_diep', 0.00, 99999.00),
+('water_ondiep', 0.00, 99999.00),
+('water_totaal', 0.00, 99999.00),
+('water_peuterbad', 0.00, 99999.00);
 
 CREATE TABLE IF NOT EXISTS gebruikers (
     id INT AUTO_INCREMENT PRIMARY KEY, 

@@ -116,4 +116,23 @@
                 </tbody>
             </table>
 
+            <div style="margin-top: 32px; border: 2px solid #dc3545; border-radius: 8px; padding: 20px;">
+                <h3 style="margin-top:0; color:#dc3545;">Gevaarzone</h3>
+                <p style="color:#666; margin-bottom:16px;">
+                    De onderstaande acties kunnen niet ongedaan worden gemaakt en vereisen een dubbele bevestiging.
+                </p>
+                <div style="display:flex; gap:16px; flex-wrap:wrap;">
+                    <div style="flex:1; min-width:260px; border:1px solid #dee2e6; border-radius:6px; padding:16px;">
+                        <h4 style="margin-top:0;">Verwijder volledige database</h4>
+                        <p style="font-size:13px; color:#666;">Wist alle tabellen volledig — metingen, verbruik, limieten en gebruikers. U wordt hierna uitgelogd.</p>
+                        <button class="btn-wissen-gevaar" onclick="verwijderDatabase()">Verwijder volledige database</button>
+                    </div>
+                    <div style="flex:1; min-width:260px; border:1px solid #dee2e6; border-radius:6px; padding:16px;">
+                        <h4 style="margin-top:0;">Maak nieuwe database aan</h4>
+                        <p style="font-size:13px; color:#666;">Wist alle data en vult de database opnieuw met standaard limieten en standaard gebruikers. Lege tabellen, klaar voor gebruik. U wordt hierna uitgelogd.</p>
+                        <button class="btn-wissen-gevaar" style="background:#fd7e14;" onclick="maakNieuweDatabase()">Maak nieuwe database aan</button>
+                    </div>
+                </div>
+            </div>
+
         </div>

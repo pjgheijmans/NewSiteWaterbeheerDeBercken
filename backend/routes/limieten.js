@@ -15,6 +15,13 @@ router.get('/', async (req, res) => {
 });
 
 /**
+ * Return the hardcoded default limit definitions.
+ */
+router.get('/defaults', async (req, res) => {
+    res.json(repo.getDefaults());
+});
+
+/**
  * Save one limit definition. Requires authenticated admin or waterbeheerder role.
  */
 router.post('/', checkAuth, async (req, res) => {

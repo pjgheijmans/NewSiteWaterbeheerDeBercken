@@ -88,19 +88,19 @@
                         <div style="display: flex; flex-wrap: wrap; gap: 20px; align-items: flex-start;">
                             <div class="veld-item">
                                 <label for="water-diep">Diep</label>
-                                <input type="number" step="0.01" id="water-diep">
+                                    <input type="number" step="0.01" id="water-diep" data-param="water_diep" oninput="valideerVeld(this, 'water_diep')">
                                 <label style="font-size: 12px; color: #888; margin-top: 4px;">Verbruik</label>
                                 <input type="text" id="water-diep-verbruik" disabled style="background-color: #f0f0f0; cursor: not-allowed;">
                             </div>
                             <div class="veld-item">
                                 <label for="water-ondiep">Ondiep</label>
-                                <input type="number" step="0.01" id="water-ondiep">
+                                <input type="number" step="0.01" id="water-ondiep" data-param="water_ondiep" oninput="valideerVeld(this, 'water_ondiep')">
                                 <label style="font-size: 12px; color: #888; margin-top: 4px;">Verbruik</label>
                                 <input type="text" id="water-ondiep-verbruik" disabled style="background-color: #f0f0f0; cursor: not-allowed;">
                             </div>
                             <div class="veld-item">
                                 <label for="water-totaal">Totaal</label>
-                                <input type="number" step="0.01" id="water-totaal">
+                                <input type="number" step="0.01" id="water-totaal" data-param="water_totaal" oninput="valideerVeld(this, 'water_totaal')">
                                 <label style="font-size: 12px; color: #888; margin-top: 4px;">Verbruik</label>
                                 <input type="text" id="water-totaal-verbruik" disabled style="background-color: #f0f0f0; cursor: not-allowed;">
                             </div>
@@ -215,7 +215,7 @@
                             <div class="veld-grid">
                                 <div class="veld-item">
                                     <label for="peuterbad-water">Water</label>
-                                    <input type="number" step="0.01" id="peuterbad-water">
+                                    <input type="number" step="0.01" id="peuterbad-water" data-param="water_peuterbad" oninput="valideerVeld(this, 'water_peuterbad')">
                                 </div>
                             </div>
                         </div>

@@ -2,6 +2,19 @@
  * Generic repository for database export/import/truncate utilities.
  */
 const pool = require('./db');
+const limietenRepo = require('./limieten');
+const gebruikersRepo = require('./gebruikers');
+
+const ALL_DATA_TABLES = [
+    'acties',
+    'metingen_grote_baden',
+    'metingen_coordinatoren',
+    'metingen_peuterbad',
+    'verbruik_diep_ondiep',
+    'verwarmings_systeem',
+    'limieten',
+    'gebruikers',
+];
 
 const EXPORT_QUERIES = {
     metingen:              `SELECT b.naam AS bad_naam, m.datum, m.ph_waarde, m.chloor_waarde, m.temperatuur, m.flow, m.filter_druk_in, m.filter_druk_uit FROM metingen_grote_baden m JOIN baden b ON m.bad_id = b.id ORDER BY datum DESC`,
@@ -59,4 +72,23 @@ async function setForeignKeyChecks(on) {
     await pool.execute(`SET FOREIGN_KEY_CHECKS = ${on ? 1 : 0}`);
 }
 
-module.exports = { exportRows, truncate, getBadId, importRow, setForeignKeyChecks };
+/**
+ * Truncate every data table, wiping all content including limieten and gebruikers.
+ */
+async function truncateAll() {
+    await pool.execute('SET FOREIGN_KEY_CHECKS = 0');
+    for (const tabel of ALL_DATA_TABLES) {
+        await pool.execute(`TRUNCATE TABLE ${tabel}`);
+    }
+    await pool.execute('SET FOREIGN_KEY_CHECKS = 1');
+}
+
+/**
+ * Seed default limieten and gebruikers after a fresh truncate.
+ */
+async function seedAllDefaults() {
+    await limietenRepo.seedDefaults();
+    await gebruikersRepo.seedDefaults();
+}
+
+module.exports = { exportRows, truncate, truncateAll, seedAllDefaults, getBadId, importRow, setForeignKeyChecks };

@@ -63,6 +63,46 @@ async function leegmakenTabel(tabelnaam) {
     }
 
 /**
+ * Wipe every table in the database after double confirmation. Redirects to login.
+ */
+async function verwijderDatabase() {
+    const stap1 = confirm('GEVAAR: Dit wist ALLE data permanent — metingen, gebruikers, limieten, alles.\n\nWeet u dit zeker?');
+    if (!stap1) return;
+    const stap2 = confirm('LAATSTE WAARSCHUWING: Er is geen herstel mogelijk.\n\nDruk op OK om alle data te verwijderen.');
+    if (!stap2) return;
+
+    toonBericht('Database wordt gewist...', '');
+    try {
+        const res = await apiCall('/api/database/verwijder-alles', { method: 'POST' });
+        const data = await res.json();
+        if (res.ok) {
+            alert('Database volledig gewist. U wordt uitgelogd.');
+            window.location.reload();
+        } else { toonBericht(`Fout: ${data.error}`, 'fout'); }
+    } catch (f) { toonBericht('Verbindingsfout met server.', 'fout'); }
+}
+
+/**
+ * Wipe every table then seed default limieten and gebruikers. Redirects to login.
+ */
+async function maakNieuweDatabase() {
+    const stap1 = confirm('Dit wist ALLE data en maakt een lege database aan met standaard limieten en standaard gebruikers.\n\nWeet u dit zeker?');
+    if (!stap1) return;
+    const stap2 = confirm('LAATSTE WAARSCHUWING: Alle huidige metingen en instellingen worden permanent gewist.\n\nDruk op OK om door te gaan.');
+    if (!stap2) return;
+
+    toonBericht('Database wordt geïnitialiseerd...', '');
+    try {
+        const res = await apiCall('/api/database/initialiseer', { method: 'POST' });
+        const data = await res.json();
+        if (res.ok) {
+            alert('Nieuwe database aangemaakt. U wordt uitgelogd.');
+            window.location.reload();
+        } else { toonBericht(`Fout: ${data.error}`, 'fout'); }
+    } catch (f) { toonBericht('Verbindingsfout met server.', 'fout'); }
+}
+
+/**
  * Download the full export CSV for a specified table from the server.
  * @param {string} tabelnaam - The target table name to export.
  */
