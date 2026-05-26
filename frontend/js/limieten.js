@@ -45,6 +45,9 @@ const LIMIETEN_LABELS = {
     water_ondiep:          'Water Ondiep (m³)',
     water_totaal:          'Water Totaal (m³)',
     water_peuterbad:       'Water Peuterbad (m³)',
+    chloor_vrij:           'Chloor Vrij (mg/l)',
+    chloor_totaal:         'Chloor Totaal (mg/l)',
+    chloor_gebonden:       'Chloor Gebonden (mg/l)',
 };
 
 const LIMIETEN_GROEPEN = [
@@ -60,6 +63,11 @@ const LIMIETEN_GROEPEN = [
     {
         titel: 'Verbruik',
         params: ['elektriciteit_nacht', 'elektriciteit_dag', 'gas', 'water_diep', 'water_ondiep', 'water_totaal', 'water_peuterbad'],
+    },
+    {
+        titel: 'Coördinatoren – Chloor',
+        info: 'Chloor Vrij geldt ook als grenswaarde voor de waterbeheer-meting (chloor_waarde).',
+        params: ['chloor_vrij', 'chloor_totaal', 'chloor_gebonden'],
     },
 ];
 

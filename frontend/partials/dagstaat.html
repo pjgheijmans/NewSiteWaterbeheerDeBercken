@@ -264,6 +264,34 @@
                 </div>
             </div>
 
+            <div class="subtab-nav" id="coordinatoren-subtab-nav" style="display:none;">
+                <button class="subtab-btn actief" id="subtab-coord-metingen" onclick="wisselCoordSubtab('metingen')">Metingen</button>
+                <button class="subtab-btn" id="subtab-coord-checklist" onclick="wisselCoordSubtab('checklist')">Checklijst &amp; Opmerkingen</button>
+            </div>
+
+            <div id="coordinatoren-blokken-content" style="display: none;"></div>
+
+            <div id="coordinatoren-checklist-content" style="display: none;">
+                <div class="categorie-box">
+                    <h3>Proefdraaien bij geen gebruik</h3>
+                    <div style="display:flex; flex-direction:column; gap:10px;">
+                        <label class="checkbox-item"><input type="checkbox" id="proef-waterspeel"> Waterspeel toestellen</label>
+                        <label class="checkbox-item"><input type="checkbox" id="proef-spraypark"> Spraypark</label>
+                        <label class="checkbox-item"><input type="checkbox" id="proef-douches"> Bad douches</label>
+                        <label class="checkbox-item"><input type="checkbox" id="proef-glijbaan"> Glijbaan</label>
+                    </div>
+                </div>
+                <div class="categorie-box">
+                    <h3>Opmerkingen</h3>
+                    <textarea id="coord-opmerkingen" maxlength="500" rows="6"
+                        placeholder="Vul hier opmerkingen in..."
+                        style="width:100%; box-sizing:border-box; padding:8px; border:1px solid #dee2e6; border-radius:4px; font-family:inherit; font-size:14px; resize:vertical;"></textarea>
+                    <div style="font-size:12px; color:#888; text-align:right; margin-top:4px;">
+                        <span id="coord-opmerkingen-teller">0</span>/500
+                    </div>
+                </div>
+            </div>
+
             <div id="tables-content" style="display: none;">
                 <table>
                     <thead id="tabelKop"></thead>

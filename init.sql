@@ -7,15 +7,20 @@ CREATE TABLE IF NOT EXISTS metingen_coordinatoren (
     id INT AUTO_INCREMENT PRIMARY KEY,
     bad_id INT,
     datum DATE NOT NULL,
+    tijdstip TIME NOT NULL DEFAULT '00:00:00',
     ph_waarde DECIMAL(4,2) NULL,
     chloor_waarde DECIMAL(4,2) NULL,
+    chloor_vrij DECIMAL(4,2) NULL,
+    chloor_totaal DECIMAL(4,2) NULL,
+    chloor_gebonden DECIMAL(4,2) NULL,
     watertemperatuur DECIMAL(3,1) NULL,
-    helderheid VARCHAR(20) NOT NULL, -- Bijv: 'Helder', 'Licht troebel', 'Troebel'
+    helderheid VARCHAR(20) NULL,
+    bad_gebruikt TINYINT(1) NULL,
     FOREIGN KEY (bad_id) REFERENCES baden(id),
-    UNIQUE KEY unieke_meting_coord (bad_id, datum)
+    UNIQUE KEY unieke_meting_coord (bad_id, datum, tijdstip)
 );
 
-CREATE TABLE IF NOT EXISTS metingen_grote_baden (
+CREATE TABLE IF NOT EXISTS metingen_diep_ondiep (
     id INT AUTO_INCREMENT PRIMARY KEY,
     bad_id INT,
     datum DATE NOT NULL,
@@ -27,7 +32,7 @@ CREATE TABLE IF NOT EXISTS metingen_grote_baden (
     filter_druk_uit DECIMAL(4,2) NULL,
     water DECIMAL(10,2) NULL,
     FOREIGN KEY (bad_id) REFERENCES baden(id),
-    UNIQUE KEY unieke_meting_grote_baden (bad_id, datum)
+    UNIQUE KEY unieke_meting_diep_ondiep (bad_id, datum)
 );
 
 CREATE TABLE IF NOT EXISTS metingen_peuterbad (
@@ -76,7 +81,10 @@ INSERT IGNORE INTO limieten (parameter_naam, min_waarde, max_waarde) VALUES
 ('water_diep', 0.00, 99999.00),
 ('water_ondiep', 0.00, 99999.00),
 ('water_totaal', 0.00, 99999.00),
-('water_peuterbad', 0.00, 99999.00);
+('water_peuterbad', 0.00, 99999.00),
+('chloor_vrij', 0.50, 1.50),
+('chloor_totaal', 0.30, 3.50),
+('chloor_gebonden', 0.30, 3.50);
 
 CREATE TABLE IF NOT EXISTS gebruikers (
     id INT AUTO_INCREMENT PRIMARY KEY, 
@@ -88,6 +96,18 @@ CREATE TABLE IF NOT EXISTS gebruikers (
     
 INSERT IGNORE INTO gebruikers (voornaam, achternaam, inlognaam, wachtwoord, taak) VALUES ('Admin', '', 'Admin', 'lpphw', 'Administrator');
 INSERT IGNORE INTO gebruikers (voornaam, achternaam, inlognaam, wachtwoord, taak) VALUES ('Paul', 'Heijmans', 'pheijmans', 'Paul', 'waterbeheerder');
+
+-- Dagelijkse checklijst voor coördinatoren
+CREATE TABLE IF NOT EXISTS coordinatoren_checklist (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    datum DATE NOT NULL UNIQUE,
+    proef_waterspeel TINYINT(1) NOT NULL DEFAULT 0,
+    proef_spraypark  TINYINT(1) NOT NULL DEFAULT 0,
+    proef_douches    TINYINT(1) NOT NULL DEFAULT 0,
+    proef_glijbaan   TINYINT(1) NOT NULL DEFAULT 0,
+    opmerkingen      TEXT NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
 
 -- Tabel voor acties/alarmen
 CREATE TABLE IF NOT EXISTS acties (
@@ -121,7 +141,7 @@ CREATE TABLE IF NOT EXISTS verbruik_diep_ondiep (
 );
 
 -- Verwarmingssysteem: ketelstatus en inspecties
-CREATE TABLE IF NOT EXISTS verwarmings_systeem (
+CREATE TABLE IF NOT EXISTS verwarmings_systeem_grote_baden (
     id INT AUTO_INCREMENT PRIMARY KEY,
     datum DATE NOT NULL UNIQUE,
     verwarming_status_1 BOOLEAN DEFAULT FALSE,
@@ -133,22 +153,3 @@ CREATE TABLE IF NOT EXISTS verwarmings_systeem (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
-
--- Migratie van metingen_algemeen naar de twee nieuwe tabellen (veilig bij herstart)
-INSERT IGNORE INTO verbruik_diep_ondiep
-    (datum, floculant, water_diep, water_ondiep, water_totaal, elektriciteit_nacht, elektriciteit_dag, gas, chemicalien_chloor, chemicalien_zwavelzuur, created_at, updated_at)
-SELECT datum, floculant, water_diep, water_ondiep, water_totaal, elektriciteit_nacht, elektriciteit_dag, gas, chemicalien_chloor, chemicalien_zwavelzuur, created_at, updated_at
-FROM metingen_algemeen WHERE 1=1 AND EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'metingen_algemeen');
-
-INSERT IGNORE INTO verwarmings_systeem
-    (datum, verwarming_status_1, verwarming_status_2, verwarming_status_3, verwarming_status_4, verwarming_druk_ok, verwarming_visuele_controle)
-SELECT datum, verwarming_status_1, verwarming_status_2, verwarming_status_3, verwarming_status_4, verwarming_druk_ok, verwarming_visuele_controle
-FROM metingen_algemeen WHERE 1=1 AND EXISTS (SELECT 1 FROM information_schema.tables WHERE table_schema = DATABASE() AND table_name = 'metingen_algemeen');
-
--- Vergroot ph_waarde en chloor_waarde zodat waarden tot 99.99 passen (pH-schaal 0-14)
-ALTER TABLE metingen_grote_baden  MODIFY ph_waarde     DECIMAL(4,2) NULL;
-ALTER TABLE metingen_grote_baden  MODIFY chloor_waarde DECIMAL(4,2) NULL;
-ALTER TABLE metingen_peuterbad     MODIFY ph_waarde     DECIMAL(4,2) NULL;
-ALTER TABLE metingen_peuterbad     MODIFY chloor_waarde DECIMAL(4,2) NULL;
-ALTER TABLE metingen_coordinatoren MODIFY ph_waarde     DECIMAL(4,2) NULL;
-ALTER TABLE metingen_coordinatoren MODIFY chloor_waarde DECIMAL(4,2) NULL;

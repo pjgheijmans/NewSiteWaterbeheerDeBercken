@@ -1,6 +1,7 @@
 // ── Auto-save status ──────────────────────────────────────────────────────
 
 let autoSaveTimer = null;
+const blokTimers = {};
 
 /**
  * Update the auto-save status indicator displayed in the UI.
@@ -36,6 +37,59 @@ function scheduleAutoSave() {
         setAutoSaveStatus('saving');
         await verwerkCentraleOpslaan(true);
     }, 1200);
+}
+
+// ── Coördinatoren blok-save ───────────────────────────────────────────────
+
+/**
+ * Schedule a debounced save for a single coordinator measurement block.
+ * @param {string} tijdstip - The block's time key (HH:MM:SS).
+ */
+function scheduleAutoSaveBlok(tijdstip) {
+    if (blokTimers[tijdstip]) clearTimeout(blokTimers[tijdstip]);
+    setAutoSaveStatus('pending');
+    blokTimers[tijdstip] = setTimeout(async () => {
+        setAutoSaveStatus('saving');
+        const ok = await slaCoordinatorenBlokOp(tijdstip);
+        setAutoSaveStatus(ok ? 'saved' : 'error');
+        if (!ok) toonBericht('Fout bij opslaan van blok.', 'fout');
+    }, 1200);
+}
+
+/**
+ * Save all rows of one coordinator block to the backend.
+ * @param {string} tijdstip - The block's time key.
+ * @returns {Promise<boolean>} True when all rows saved successfully.
+ */
+async function slaCoordinatorenBlokOp(tijdstip) {
+    const datum = document.getElementById('centraleDatum').value;
+    const blok  = document.querySelector(`[data-blok-tijdstip="${tijdstip}"]`);
+    if (!blok) return false;
+    const rijen = blok.querySelectorAll('tr[data-bad]');
+    let ok = 0;
+    for (const rij of rijen) {
+        const v = s => s?.value ? parseFloat(s.value) : null;
+        const isPeuterbad = rij.getAttribute('data-bad') === 'Peuterbad';
+        const payload = {
+            datum,
+            tijdstip,
+            bad_naam:         rij.getAttribute('data-bad'),
+            ph_waarde:        v(rij.querySelector('.c-ph')),
+            chloor_vrij:      v(rij.querySelector('.c-chloor-vrij')),
+            chloor_totaal:    v(rij.querySelector('.c-chloor-totaal')),
+            watertemperatuur: v(rij.querySelector('.c-temp')),
+            helderheid:       isPeuterbad ? null : (rij.querySelector('.c-helder')?.value || 'Helder'),
+            bad_gebruikt:     isPeuterbad ? (rij.querySelector('.c-gebruikt')?.checked ? 1 : 0) : null,
+        };
+        try {
+            const res = await apiCall('/api/coordinatoren', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+            });
+            if (res.ok) ok++;
+            else { const e = await res.json().catch(() => null); console.error(`Blok ${tijdstip} - ${payload.bad_naam}:`, e); }
+        } catch (e) { console.error(e); }
+    }
+    return ok === rijen.length;
 }
 
 // ── Opslaan ───────────────────────────────────────────────────────────────
@@ -168,48 +222,18 @@ async function verwerkCentraleOpslaan(autoSave = false) {
         return;
     }
 
-    // ── Coördinatoren / tabelvorm ─────────────────────────────────────────
-    const rijen = document.querySelectorAll('#dagstaatTbody tr');
-    let ok = 0, leeg = false;
-    rijen.forEach(r => { r.querySelectorAll('input[type="number"]').forEach(i => { if (!i.value.trim()) leeg = true; }); });
-
-    const url = huidigeRol === 'waterbeheer' ? '/api/metingen' : '/api/coordinatoren';
-    for (const rij of rijen) {
-        const bad_naam = rij.getAttribute('data-bad');
-        const payload  = { datum, bad_naam };
-
-        if (huidigeRol === 'waterbeheer') {
-            payload.ph_waarde    = rij.querySelector('.v-ph')?.value    ? parseFloat(rij.querySelector('.v-ph').value)    : null;
-            payload.chloor_waarde= rij.querySelector('.v-chloor')?.value? parseFloat(rij.querySelector('.v-chloor').value): null;
-            const f = rij.querySelector('.v-flow'), d = rij.querySelector('.v-druk');
-            payload.flow        = f?.value ? parseInt(f.value)   : null;
-            payload.filter_druk = d?.value ? parseFloat(d.value) : null;
-        } else {
-            payload.ph_waarde      = rij.querySelector('.c-ph')?.value    ? parseFloat(rij.querySelector('.c-ph').value)    : null;
-            payload.chloor_waarde  = rij.querySelector('.c-chloor')?.value ? parseFloat(rij.querySelector('.c-chloor').value): null;
-            payload.watertemperatuur= rij.querySelector('.c-temp')?.value  ? parseFloat(rij.querySelector('.c-temp').value)  : null;
-            payload.helderheid     = rij.querySelector('.c-helder')?.value;
+    // ── Coördinatoren – alle blokken opslaan (alleen op metingen-subtab) ──
+    if (huidigeRol === 'coordinatoren') {
+        if (huidigeCoordSubtab !== 'metingen') return;
+        const blokken = document.querySelectorAll('#coordinatoren-blokken-content [data-blok-tijdstip]');
+        if (blokken.length === 0) { opSuccess('Geen blokken om op te slaan.'); return; }
+        let allOk = true;
+        for (const blok of blokken) {
+            const ok = await slaCoordinatorenBlokOp(blok.getAttribute('data-blok-tijdstip'));
+            if (!ok) allOk = false;
         }
-
-        try {
-            const res = await apiCall(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
-            if (res.ok) {
-                ok++;
-            } else {
-                const errorData = await res.json().catch(() => ({}));
-                console.error(`Failed to save ${bad_naam}:`, res.status, errorData);
-            }
-        } catch (e) { 
-            console.error(`Error saving ${bad_naam}:`, e);
-        }
-
-    }
-
-    if (ok === rijen.length) {
-        if (leeg) opWaarschuwing('Opgeslagen, maar niet alle velden zijn ingevuld.');
-        else      opSuccess('Gegevens opgeslagen!');
-        refreshNaOpslaan();
-    } else {
-        opError('Niet alle gegevens konden worden opgeslagen.');
+        if (allOk) { opSuccess('Alle blokken opgeslagen!'); refreshNaOpslaan(); }
+        else        { opError('Niet alle blokken konden worden opgeslagen.'); }
+        return;
     }
 }

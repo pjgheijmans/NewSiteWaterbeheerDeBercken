@@ -10,6 +10,7 @@
     let huidigeRol = 'waterbeheer';
     let huidigeBadPagina = 'grote-baden';
     let huidigeSubtab = 'meetwaarden';
+    let huidigeCoordSubtab = 'metingen';
     let huidigeTrendSubtab = 'meetwaarden';
     let trendCharts = {};
     let gecachteData = [];

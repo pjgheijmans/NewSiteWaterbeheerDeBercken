@@ -20,6 +20,10 @@ const DEFAULT_LIMIETEN = [
     { parameter_naam: 'water_ondiep',           min_waarde: 0.00,  max_waarde: 99999.00},
     { parameter_naam: 'water_totaal',           min_waarde: 0.00,  max_waarde: 99999.00},
     { parameter_naam: 'water_peuterbad',        min_waarde: 0.00,  max_waarde: 99999.00},
+    // Chloor subtypes (coördinatoren)
+    { parameter_naam: 'chloor_vrij',            min_waarde: 0.50,  max_waarde: 1.50    },
+    { parameter_naam: 'chloor_totaal',          min_waarde: 0.30,  max_waarde: 3.50    },
+    { parameter_naam: 'chloor_gebonden',        min_waarde: 0.30,  max_waarde: 3.50    },
 ];
 
 /**

@@ -1,22 +1,13 @@
-/**
- * Administrative database utilities for export, import, and truncate operations.
- */
 const express = require('express');
 const router = express.Router();
 const repo = require('../repositories/database');
 const { checkAuth, isAdminOrWaterbeheerder } = require('../middleware/auth');
 
-/**
- * Table names allowed for truncate operations.
- */
 const TRUNC_TABLES  = ['metingen','metingen_coordinatoren','metingen_peuterbad','verbruik_diep_ondiep','verwarmings_systeem_grote_baden','acties','limieten','gebruikers'];
 const EXPORT_TABLES = ['metingen','metingen_grote_baden','metingen_peuterbad','metingen_coordinatoren','verbruik_diep_ondiep','verwarmings_systeem_grote_baden','acties','limieten','gebruikers'];
 const IMPORT_TABLES = ['metingen','metingen_coordinatoren','metingen_peuterbad','verbruik_diep_ondiep','verwarmings_systeem_grote_baden','limieten','gebruikers'];
 const NEED_BAD_ID   = ['metingen','metingen_coordinatoren','metingen_peuterbad'];
 
-/**
- * Truncate a permitted database table after authorization.
- */
 router.post('/truncate/:tabelnaam', checkAuth, async (req, res) => {
     if (!isAdminOrWaterbeheerder(req.session.gebruiker.taak))
         return res.status(403).json({ error: 'Geen toegang' });
@@ -29,9 +20,6 @@ router.post('/truncate/:tabelnaam', checkAuth, async (req, res) => {
     } catch (err) { console.error(err); res.status(500).json({ error: err.message }); }
 });
 
-/**
- * Export a permitted table as CSV.
- */
 router.get('/export/:tabelnaam', checkAuth, async (req, res) => {
     if (!isAdminOrWaterbeheerder(req.session.gebruiker.taak))
         return res.status(403).json({ error: 'Geen toegang' });
@@ -60,9 +48,6 @@ router.get('/export/:tabelnaam', checkAuth, async (req, res) => {
     } catch (err) { console.error(err); res.status(500).json({ error: err.message }); }
 });
 
-/**
- * Import a CSV payload into a permitted table after authorization.
- */
 router.post('/import/:tabelnaam', checkAuth, express.text({ type: 'text/csv', limit: '10mb' }), async (req, res) => {
     if (!isAdminOrWaterbeheerder(req.session.gebruiker.taak))
         return res.status(403).json({ error: 'Geen toegang' });
@@ -106,34 +91,6 @@ router.post('/import/:tabelnaam', checkAuth, express.text({ type: 'text/csv', li
         console.error(err);
         res.status(500).json({ error: err.message });
     }
-});
-
-/**
- * Truncate every data table, removing all content permanently.
- * The caller is logged out server-side by destroying their session.
- */
-router.post('/verwijder-alles', checkAuth, async (req, res) => {
-    if (!isAdminOrWaterbeheerder(req.session.gebruiker.taak))
-        return res.status(403).json({ error: 'Geen toegang' });
-    try {
-        await repo.truncateAll();
-        req.session.destroy(() => {});
-        res.json({ status: 'success', message: 'Alle data gewist.' });
-    } catch (err) { console.error(err); res.status(500).json({ error: err.message }); }
-});
-
-/**
- * Truncate every data table then seed default limieten and gebruikers.
- */
-router.post('/initialiseer', checkAuth, async (req, res) => {
-    if (!isAdminOrWaterbeheerder(req.session.gebruiker.taak))
-        return res.status(403).json({ error: 'Geen toegang' });
-    try {
-        await repo.truncateAll();
-        await repo.seedAllDefaults();
-        req.session.destroy(() => {});
-        res.json({ status: 'success', message: 'Database geïnitialiseerd met standaardwaarden.' });
-    } catch (err) { console.error(err); res.status(500).json({ error: err.message }); }
 });
 
 module.exports = router;

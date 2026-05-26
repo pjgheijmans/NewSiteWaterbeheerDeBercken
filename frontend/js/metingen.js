@@ -103,6 +103,11 @@ function bouwTabelOp(data) {
         const tBody = document.getElementById('dagstaatTbody');
         tKop.innerHTML = ''; tBody.innerHTML = '';
 
+        // Always reset coordinator elements regardless of which role/path runs
+        document.getElementById('coordinatoren-subtab-nav').style.display = 'none';
+        document.getElementById('coordinatoren-blokken-content').style.display = 'none';
+        document.getElementById('coordinatoren-checklist-content').style.display = 'none';
+
         if (huidigeRol === 'waterbeheer' && huidigeBadPagina === 'grote-baden') {
             categorieContent.style.display = 'block';
             document.getElementById('waterbeheer-peuterbad-content').style.display = 'none';
@@ -161,8 +166,29 @@ function bouwTabelOp(data) {
 
         categorieContent.style.display = 'none';
         document.getElementById('waterbeheer-peuterbad-content').style.display = 'none';
-        tabelContent.style.display = 'block';
+        tabelContent.style.display = 'none';
 
+        if (huidigeRol === 'coordinatoren') {
+            // Show subtab navigation
+            document.getElementById('coordinatoren-subtab-nav').style.display = '';
+
+            // Always render the measurement blocks (hidden when checklist tab is active)
+            const blokkContainer = document.getElementById('coordinatoren-blokken-content');
+            blokkContainer.innerHTML = '';
+            const blokken = Array.isArray(data) ? data : [];
+            blokken.forEach(blok => blokkContainer.appendChild(maakBlokElement(blok.tijdstip, blok.metingen)));
+            const btnRij = document.createElement('div');
+            btnRij.className = 'actie-container';
+            btnRij.style.marginTop = '12px';
+            btnRij.innerHTML = `<button class="btn-centraal-opslaan" onclick="voegNieuwBlokToe()">+ Nieuw blok toevoegen</button>`;
+            blokkContainer.appendChild(btnRij);
+
+            // Show the correct subtab (also loads checklist data when on checklist tab)
+            wisselCoordSubtab(huidigeCoordSubtab);
+            return;
+        }
+
+        tabelContent.style.display = 'block';
         if (huidigeRol === 'waterbeheer') {
             if (huidigeBadPagina === 'grote-baden') {
                 tKop.innerHTML = `<tr><th>Bad</th><th>pH</th><th>Chloor (mg/l)</th><th>Flow (m³/h)</th><th>Filterdruk (bar)</th></tr>`;
@@ -175,12 +201,6 @@ function bouwTabelOp(data) {
                 const meting = Array.isArray(data) ? data.find(m => m.bad_naam === 'Peuterbad') : null;
                 tBody.innerHTML += genereerRijWaterbeheer('Peuterbad', meting || {}, true);
             }
-        } else if (huidigeRol === 'coordinatoren') {
-            tKop.innerHTML = `<tr><th>Bad</th><th>pH</th><th>Chloor (mg/l)</th><th>Temp (°C)</th><th>Helderheid</th></tr>`;
-            ['Diep', 'Ondiep', 'Peuterbad'].forEach(bad => {
-                const meting = Array.isArray(data) ? data.find(m => m.bad_naam === bad) : null;
-                tBody.innerHTML += genereerRijCoordinatoren(bad, meting || {});
-            });
         }
 
         document.querySelectorAll('#dagstaatTbody input[type="number"]').forEach(input => {
@@ -215,16 +235,269 @@ function genereerRijWaterbeheer(badNaam, meting, isPeuterbad) {
 
 /**
  * Generate an HTML row for a coordinator measurement entry.
+ * Diep/Ondiep get a helderheid select; Peuterbad gets a bad_gebruikt checkbox.
  * @param {string} badNaam - The pool name to render.
- * @param {Object} meting - The coordinator measurement record.
+ * @param {Object} meting  - The coordinator measurement record.
  * @returns {string} The generated HTML row string.
  */
 function genereerRijCoordinatoren(badNaam, meting) {
-        const ph = meting.ph_waarde ?? ''; const chloor = meting.chloor_waarde ?? '';
-        const temp = meting.watertemperatuur ?? ''; const helderheid = meting.helderheid ?? 'Helder';
-        return `<tr id="rij-${badNaam}" data-bad="${badNaam}"><td><b>${badNaam}</b></td>
-            <td><input type="number" class="c-ph" step="0.01" value="${ph}" data-param="ph_waarde" oninput="valideerVeld(this, 'ph_waarde')"></td>
-            <td><input type="number" class="c-chloor" step="0.01" value="${chloor}" data-param="chloor_waarde" oninput="valideerVeld(this, 'chloor_waarde')"></td>
-            <td><input type="number" class="c-temp" step="0.1" value="${temp}" data-param="watertemperatuur" oninput="valideerVeld(this, 'watertemperatuur')"></td>
-            <td><select class="c-helder"><option value="Helder" ${helderheid === 'Helder' ? 'selected' : ''}>Helder</option><option value="Licht troebel" ${helderheid === 'Licht troebel' ? 'selected' : ''}>Licht troebel</option><option value="Troebel" ${helderheid === 'Troebel' ? 'selected' : ''}>Troebel</option></select></td></tr>`;
+    const ph     = meting.ph_waarde      ?? '';
+    const vrij   = meting.chloor_vrij    ?? '';
+    const totaal = meting.chloor_totaal  ?? '';
+    const temp   = meting.watertemperatuur ?? '';
+
+    const vNum = parseFloat(vrij), tNum = parseFloat(totaal);
+    const gebonden = (!isNaN(vNum) && !isNaN(tNum)) ? (tNum - vNum).toFixed(2) : '';
+
+    const chloorCellen = `
+        <td><input type="number" class="c-chloor-vrij"     step="0.01" value="${vrij}"     data-param="chloor_vrij"     oninput="valideerVeld(this, 'chloor_vrij')"></td>
+        <td><input type="number" class="c-chloor-totaal"   step="0.01" value="${totaal}"   data-param="chloor_totaal"   oninput="valideerVeld(this, 'chloor_totaal')"></td>
+        <td><input type="number" class="c-chloor-gebonden" step="0.01" value="${gebonden}" data-param="chloor_gebonden" readonly
+            style="background-color:#f0f0f0; cursor:not-allowed;" tabindex="-1"></td>`;
+
+    const isPeuterbad = badNaam === 'Peuterbad';
+    const extraCel = isPeuterbad
+        ? `<td style="text-align:center;"><label style="display:flex;align-items:center;gap:6px;justify-content:center;">
+               <input type="checkbox" class="c-gebruikt" ${meting.bad_gebruikt ? 'checked' : ''}> Gebruikt
+           </label></td>`
+        : `<td><select class="c-helder">
+               <option value="Helder"       ${(meting.helderheid ?? 'Helder') === 'Helder'       ? 'selected' : ''}>Helder</option>
+               <option value="Licht troebel"${(meting.helderheid ?? '')        === 'Licht troebel' ? 'selected' : ''}>Licht troebel</option>
+               <option value="Troebel"      ${(meting.helderheid ?? '')        === 'Troebel'       ? 'selected' : ''}>Troebel</option>
+           </select></td>`;
+
+    return `<tr data-bad="${badNaam}">
+        <td><b>${badNaam}</b></td>
+        <td><input type="number" class="c-ph" step="0.01" value="${ph}" data-param="ph_waarde" oninput="valideerVeld(this, 'ph_waarde')"></td>
+        ${chloorCellen}
+        <td><input type="number" class="c-temp" step="0.1" value="${temp}" data-param="watertemperatuur" oninput="valideerVeld(this, 'watertemperatuur')"></td>
+        ${extraCel}
+    </tr>`;
+}
+
+// ── Coördinatoren subtabs ─────────────────────────────────────────────────
+
+let checklistAutoSaveTimer = null;
+
+/**
+ * Switch between the Metingen and Checklijst subtabs for the coordinator view.
+ * @param {string} subtab - 'metingen' or 'checklist'
+ */
+function wisselCoordSubtab(subtab) {
+    huidigeCoordSubtab = subtab;
+    ['metingen', 'checklist'].forEach(s => {
+        document.getElementById(`subtab-coord-${s}`)?.classList.toggle('actief', s === subtab);
+    });
+    document.getElementById('coordinatoren-blokken-content').style.display  = subtab === 'metingen'  ? 'block' : 'none';
+    document.getElementById('coordinatoren-checklist-content').style.display = subtab === 'checklist' ? 'block' : 'none';
+    if (subtab === 'checklist') {
+        const datum = document.getElementById('centraleDatum').value;
+        laadCoordChecklist(datum);
     }
+}
+
+/**
+ * Load checklist data for a date and populate the checklist form.
+ * Also wires up autosave and the character counter on the textarea.
+ * @param {string} datum
+ */
+async function laadCoordChecklist(datum) {
+    if (!datum) return;
+    try {
+        const res = await apiCall(`/api/coordinatoren/checklist?datum=${datum}`);
+        const d = await res.json();
+        document.getElementById('proef-waterspeel').checked = !!d.proef_waterspeel;
+        document.getElementById('proef-spraypark').checked  = !!d.proef_spraypark;
+        document.getElementById('proef-douches').checked    = !!d.proef_douches;
+        document.getElementById('proef-glijbaan').checked   = !!d.proef_glijbaan;
+        const ta = document.getElementById('coord-opmerkingen');
+        ta.value = d.opmerkingen || '';
+        document.getElementById('coord-opmerkingen-teller').textContent = ta.value.length;
+    } catch (e) { console.error('Fout bij laden checklist:', e); }
+
+    // Attach listeners once (guard against duplicate attachment)
+    const form = document.getElementById('coordinatoren-checklist-content');
+    if (form.dataset.listenersAttached) return;
+    form.dataset.listenersAttached = '1';
+
+    form.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+        cb.addEventListener('change', e => { e.stopPropagation(); scheduleAutoSaveChecklist(); });
+    });
+    const ta = document.getElementById('coord-opmerkingen');
+    ta.addEventListener('input', e => {
+        e.stopPropagation();
+        document.getElementById('coord-opmerkingen-teller').textContent = ta.value.length;
+        scheduleAutoSaveChecklist();
+    });
+}
+
+/**
+ * Debounce and save the checklist.
+ */
+function scheduleAutoSaveChecklist() {
+    if (checklistAutoSaveTimer) clearTimeout(checklistAutoSaveTimer);
+    setAutoSaveStatus('pending');
+    checklistAutoSaveTimer = setTimeout(async () => {
+        setAutoSaveStatus('saving');
+        const datum = document.getElementById('centraleDatum').value;
+        const payload = {
+            datum,
+            proef_waterspeel: document.getElementById('proef-waterspeel').checked ? 1 : 0,
+            proef_spraypark:  document.getElementById('proef-spraypark').checked  ? 1 : 0,
+            proef_douches:    document.getElementById('proef-douches').checked    ? 1 : 0,
+            proef_glijbaan:   document.getElementById('proef-glijbaan').checked   ? 1 : 0,
+            opmerkingen:      document.getElementById('coord-opmerkingen').value  || null,
+        };
+        try {
+            const res = await apiCall('/api/coordinatoren/checklist', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
+            });
+            setAutoSaveStatus(res.ok ? 'saved' : 'error');
+            if (!res.ok) toonBericht('Fout bij opslaan checklist.', 'fout');
+        } catch (e) { console.error(e); setAutoSaveStatus('error'); }
+    }, 1200);
+}
+
+/**
+ * Build a coordinator measurement block element for a given tijdstip.
+ * The time header is an editable input; all listeners read data-blok-tijdstip
+ * dynamically so renaming the block keeps everything in sync.
+ * @param {string} tijdstip - Time string in HH:MM:SS or HH:MM format.
+ * @param {Array}  metingen - Array of pool measurement objects for this block.
+ * @returns {HTMLElement}
+ */
+function maakBlokElement(tijdstip, metingen) {
+    const displayTijd = String(tijdstip).slice(0, 5);
+    const el = document.createElement('div');
+    el.className = 'categorie-box';
+    el.setAttribute('data-blok-tijdstip', tijdstip);
+
+    el.innerHTML = `
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+            <h3 style="margin:0; display:flex; align-items:center; gap:8px;">
+                Meting
+                <input type="time" class="blok-tijdstip-input" value="${displayTijd}"
+                    style="font-size:inherit; font-weight:bold; border:none; border-bottom:1px solid #aaa;
+                           background:transparent; cursor:text; padding:0 2px; color:inherit; width:auto;">
+            </h3>
+            <button class="blok-verwijder-btn" style="background:#dc3545; color:white; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:13px;">Verwijderen</button>
+        </div>
+        <table class="categorie-tabel">
+            <thead>
+                <tr>
+                    <th rowspan="2">Bad</th>
+                    <th rowspan="2">pH</th>
+                    <th colspan="3">Chloor (mg/l)</th>
+                    <th rowspan="2">Temp (°C)</th>
+                    <th rowspan="2">Helderheid / Gebruik</th>
+                </tr>
+                <tr>
+                    <th>Vrij</th>
+                    <th>Totaal</th>
+                    <th>Gebonden</th>
+                </tr>
+            </thead>
+            <tbody>
+                ${['Diep', 'Ondiep', 'Peuterbad'].map(bad => {
+                    const m = (metingen || []).find(r => r.bad_naam === bad) || {};
+                    return genereerRijCoordinatoren(bad, m);
+                }).join('')}
+            </tbody>
+        </table>`;
+
+    // Delete button reads tijdstip from element at click time
+    el.querySelector('.blok-verwijder-btn').addEventListener('click', () => {
+        verwijderBlok(el.getAttribute('data-blok-tijdstip'));
+    });
+
+    // Time input: rename the block when the user changes the time
+    el.querySelector('.blok-tijdstip-input').addEventListener('change', async (e) => {
+        e.stopPropagation();
+        const nieuwTijd = e.target.value;
+        if (!nieuwTijd) return;
+        const nieuwTijdstip = nieuwTijd + ':00';
+        const oudTijdstip   = el.getAttribute('data-blok-tijdstip');
+        if (nieuwTijdstip === oudTijdstip) return;
+
+        // Prevent duplicate block at the new time
+        const blokkContainer = document.getElementById('coordinatoren-blokken-content');
+        if (blokkContainer.querySelector(`[data-blok-tijdstip="${nieuwTijdstip}"]`)) {
+            toonBericht('Er bestaat al een blok voor dit tijdstip.', 'fout');
+            e.target.value = oudTijdstip.slice(0, 5);
+            return;
+        }
+
+        // Delete old DB record (no-op/404 if block was never saved)
+        const datum = document.getElementById('centraleDatum').value;
+        try {
+            await apiCall(`/api/coordinatoren?datum=${datum}&tijdstip=${encodeURIComponent(oudTijdstip)}`, { method: 'DELETE' });
+        } catch (err) { /* ignore */ }
+
+        // Re-key the element and save under the new time
+        el.setAttribute('data-blok-tijdstip', nieuwTijdstip);
+        scheduleAutoSaveBlok(nieuwTijdstip);
+    });
+
+    // Data inputs read tijdstip from element at event time, not from closure
+    el.querySelectorAll('input:not(.blok-tijdstip-input):not(.c-chloor-gebonden), select').forEach(input => {
+        input.addEventListener('input',  () => scheduleAutoSaveBlok(el.getAttribute('data-blok-tijdstip')));
+        input.addEventListener('change', () => scheduleAutoSaveBlok(el.getAttribute('data-blok-tijdstip')));
+    });
+
+    // Recalculate gebonden = totaal - vrij whenever vrij or totaal changes
+    el.querySelectorAll('.c-chloor-vrij, .c-chloor-totaal').forEach(input => {
+        input.addEventListener('input', () => {
+            const rij      = input.closest('tr');
+            const v = parseFloat(rij.querySelector('.c-chloor-vrij')?.value);
+            const t = parseFloat(rij.querySelector('.c-chloor-totaal')?.value);
+            const gebEl = rij.querySelector('.c-chloor-gebonden');
+            gebEl.value = (!isNaN(v) && !isNaN(t)) ? (t - v).toFixed(2) : '';
+            if (gebEl.value !== '') valideerVeld(gebEl, 'chloor_gebonden');
+        });
+    });
+
+    // Initial validation pass
+    el.querySelectorAll('input[type="number"]').forEach(input => {
+        const param = input.getAttribute('data-param');
+        if (param && input.value !== '') valideerVeld(input, param);
+    });
+
+    return el;
+}
+
+/**
+ * Delete a coordinator measurement block after confirmation.
+ * Unsaved (new) blocks are removed from the DOM only; saved blocks are also deleted on the server.
+ * @param {string} tijdstip - The block's time key (HH:MM:SS).
+ */
+async function verwijderBlok(tijdstip) {
+    if (!confirm(`Blok ${String(tijdstip).slice(0, 5)} verwijderen?`)) return;
+    const datum = document.getElementById('centraleDatum').value;
+    try {
+        const res = await apiCall(`/api/coordinatoren?datum=${datum}&tijdstip=${encodeURIComponent(tijdstip)}`, { method: 'DELETE' });
+        if (!res.ok && res.status !== 404) {
+            const e = await res.json().catch(() => null);
+            toonBericht(e?.error || 'Fout bij verwijderen.', 'fout');
+            return;
+        }
+        // 404 means block was never saved to DB — still safe to remove from DOM
+    } catch (e) { console.error(e); toonBericht('Verbindingsfout bij verwijderen.', 'fout'); return; }
+    const el = document.querySelector(`[data-blok-tijdstip="${tijdstip}"]`);
+    if (el) el.remove();
+    setAutoSaveStatus('saved');
+}
+
+/**
+ * Add a new empty measurement block for the current time.
+ */
+function voegNieuwBlokToe() {
+    const now = new Date();
+    const tijdstip = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:00`;
+    const blokkContainer = document.getElementById('coordinatoren-blokken-content');
+    if (blokkContainer.querySelector(`[data-blok-tijdstip="${tijdstip}"]`)) {
+        toonBericht('Er bestaat al een blok voor dit tijdstip.', 'fout');
+        return;
+    }
+    const btnRij = blokkContainer.lastElementChild;
+    blokkContainer.insertBefore(maakBlokElement(tijdstip, []), btnRij);
+}
