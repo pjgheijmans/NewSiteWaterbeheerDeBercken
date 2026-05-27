@@ -9,7 +9,7 @@ const pool = require('./db');
 async function getMetingenTrend(van, tot) {
     const [rows] = await pool.execute(
         `SELECT mg.datum, b.naam AS bad_naam, mg.ph_waarde, mg.chloor_waarde, mg.temperatuur, mg.flow, mg.filter_druk_in, mg.filter_druk_uit
-             FROM metingen_grote_baden mg JOIN baden b ON mg.bad_id = b.id
+             FROM metingen_diep_ondiep mg JOIN baden b ON mg.bad_id = b.id
              WHERE mg.datum BETWEEN ? AND ?
              UNION ALL
              SELECT mp.datum, b.naam AS bad_naam, mp.ph_waarde, mp.chloor_waarde, NULL AS temperatuur, mp.flow, mp.filter_druk_in, NULL AS filter_druk_uit

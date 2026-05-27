@@ -140,6 +140,11 @@ async function verwerkCentraleOpslaan(autoSave = false) {
         else if (huidigeRol === 'waterbeheer') laadEnBerekenVerbruik();
     }
 
+    // ── Logboek – geen centrale opslaan nodig ────────────────────────────
+    if (huidigeRol === 'waterbeheer' && huidigeBadPagina === 'logboek') {
+        setAutoSaveStatus('saved'); return;
+    }
+
     // ── Verbruik / Verwarmingssysteem subtabs ─────────────────────────────
     if (huidigeRol === 'waterbeheer' && huidigeBadPagina === 'grote-baden' && huidigeSubtab !== 'meetwaarden') {
         const ok = await slaAlgemeenGegevensOp();

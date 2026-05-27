@@ -25,6 +25,7 @@ app.use('/api/coordinatoren', require('./routes/coordinatoren'));
 app.use('/api/verbruik',      require('./routes/verbruik'));
 app.use('/api/trend',         require('./routes/trend'));
 app.use('/api/database',      require('./routes/database'));
+app.use('/api/logboek',       require('./routes/logboek'));
 
 // Frontend: assemble HTML from partials (must come before static so / is handled here)
 app.use('/', require('./routes/frontend'));

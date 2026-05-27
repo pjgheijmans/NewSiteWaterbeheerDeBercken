@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS metingen_coordinatoren (
     bad_id INT,
     datum DATE NOT NULL,
     tijdstip TIME NOT NULL DEFAULT '00:00:00',
+    auteur VARCHAR(100) NULL,
     ph_waarde DECIMAL(4,2) NULL,
     chloor_waarde DECIMAL(4,2) NULL,
     chloor_vrij DECIMAL(4,2) NULL,
@@ -97,6 +98,28 @@ CREATE TABLE IF NOT EXISTS gebruikers (
 INSERT IGNORE INTO gebruikers (voornaam, achternaam, inlognaam, wachtwoord, taak) VALUES ('Admin', '', 'Admin', 'lpphw', 'Administrator');
 INSERT IGNORE INTO gebruikers (voornaam, achternaam, inlognaam, wachtwoord, taak) VALUES ('Paul', 'Heijmans', 'pheijmans', 'Paul', 'waterbeheerder');
 
+-- Vrij-tekst logboek voor waterbeheerders
+CREATE TABLE IF NOT EXISTS logboek (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    datum DATE NOT NULL,
+    tijdstip DATETIME NOT NULL,
+    auteur VARCHAR(100) NULL,
+    tekst TEXT NOT NULL,
+    UNIQUE KEY uniek_logboek (datum, tijdstip),
+    INDEX idx_logboek_datum (datum)
+);
+
+-- Vrij-tekst logboek voor coördinatoren
+CREATE TABLE IF NOT EXISTS coordinatoren_logboek (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    datum DATE NOT NULL,
+    tijdstip DATETIME NOT NULL,
+    auteur VARCHAR(100) NULL,
+    tekst TEXT NOT NULL,
+    UNIQUE KEY uniek_coord_logboek (datum, tijdstip),
+    INDEX idx_coord_logboek_datum (datum)
+);
+
 -- Dagelijkse temperatuur en bezoekers voor coördinatoren
 CREATE TABLE IF NOT EXISTS coordinatoren_daggegevens (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -115,7 +138,6 @@ CREATE TABLE IF NOT EXISTS coordinatoren_checklist (
     proef_spraypark  TINYINT(1) NOT NULL DEFAULT 0,
     proef_douches    TINYINT(1) NOT NULL DEFAULT 0,
     proef_glijbaan   TINYINT(1) NOT NULL DEFAULT 0,
-    opmerkingen      TEXT NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
@@ -151,7 +173,7 @@ CREATE TABLE IF NOT EXISTS verbruik_diep_ondiep (
 );
 
 -- Verwarmingssysteem: ketelstatus en inspecties
-CREATE TABLE IF NOT EXISTS verwarmings_systeem_grote_baden (
+CREATE TABLE IF NOT EXISTS verwarmings_systeem_diep_ondiep (
     id INT AUTO_INCREMENT PRIMARY KEY,
     datum DATE NOT NULL UNIQUE,
     verwarming_status_1 BOOLEAN DEFAULT FALSE,
@@ -163,3 +185,13 @@ CREATE TABLE IF NOT EXISTS verwarmings_systeem_grote_baden (
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+-- Migratie: voeg auteur toe aan metingen_coordinatoren
+ALTER TABLE metingen_coordinatoren ADD COLUMN IF NOT EXISTS auteur VARCHAR(100) NULL AFTER tijdstip;
+
+-- Migratie: voeg auteur toe aan logboek tabellen
+ALTER TABLE logboek ADD COLUMN IF NOT EXISTS auteur VARCHAR(100) NULL AFTER tijdstip;
+ALTER TABLE coordinatoren_logboek ADD COLUMN IF NOT EXISTS auteur VARCHAR(100) NULL AFTER tijdstip;
+
+-- Migratie: verwijder opmerkingen kolom uit coordinatoren_checklist
+ALTER TABLE coordinatoren_checklist DROP COLUMN IF EXISTS opmerkingen;

@@ -3,9 +3,9 @@ const router = express.Router();
 const repo = require('../repositories/database');
 const { checkAuth, isAdminOrWaterbeheerder } = require('../middleware/auth');
 
-const TRUNC_TABLES  = ['metingen','metingen_coordinatoren','metingen_peuterbad','verbruik_diep_ondiep','verwarmings_systeem_grote_baden','acties','limieten','gebruikers'];
-const EXPORT_TABLES = ['metingen','metingen_grote_baden','metingen_peuterbad','metingen_coordinatoren','verbruik_diep_ondiep','verwarmings_systeem_grote_baden','acties','limieten','gebruikers'];
-const IMPORT_TABLES = ['metingen','metingen_coordinatoren','metingen_peuterbad','verbruik_diep_ondiep','verwarmings_systeem_grote_baden','limieten','gebruikers'];
+const TRUNC_TABLES  = ['metingen','metingen_coordinatoren','metingen_peuterbad','verbruik_diep_ondiep','verwarmings_systeem_diep_ondiep','acties','limieten','gebruikers'];
+const EXPORT_TABLES = ['metingen','metingen_diep_ondiep','metingen_peuterbad','metingen_coordinatoren','verbruik_diep_ondiep','verwarmings_systeem_diep_ondiep','acties','limieten','gebruikers'];
+const IMPORT_TABLES = ['metingen','metingen_coordinatoren','metingen_peuterbad','verbruik_diep_ondiep','verwarmings_systeem_diep_ondiep','limieten','gebruikers'];
 const NEED_BAD_ID   = ['metingen','metingen_coordinatoren','metingen_peuterbad'];
 
 router.post('/truncate/:tabelnaam', checkAuth, async (req, res) => {
@@ -80,7 +80,7 @@ router.post('/import/:tabelnaam', checkAuth, express.text({ type: 'text/csv', li
             }
 
             const cols = Object.keys(rij).filter(k => k !== 'id');
-            const actualTabel = tabel === 'metingen' ? 'metingen_grote_baden' : tabel;
+            const actualTabel = tabel === 'metingen' ? 'metingen_diep_ondiep' : tabel;
             await repo.importRow(actualTabel, cols, cols.map(k => rij[k]));
         }
 

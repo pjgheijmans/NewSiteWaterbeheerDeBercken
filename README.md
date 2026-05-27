@@ -36,16 +36,16 @@ Node.js/Express backend met MySQL database voor het bijhouden van dagelijkse zwe
 | Tabel                  | Inhoud                                                          |
 |------------------------|-----------------------------------------------------------------|
 | `baden`               | Baden: Diep, Ondiep, Peuterbad                                  |
-| `metingen_grote_baden`| Meetwaarden Diep/Ondiep: pH, chloor, temp, flow, filterdruk    |
+| `metingen_diep_ondiep`| Meetwaarden Diep/Ondiep: pH, chloor, temp, flow, filterdruk    |
 | `metingen_peuterbad`   | Meetwaarden peuterbad: pH, chloor, flow, filterdruk, water, chemicaliën |
 | `metingen_coordinatoren` | Coördinator metingen: pH, chloor, temperatuur, helderheid    |
 | `verbruik_diep_ondiep` | Verbruiksgegevens: water, elektriciteit, gas, chemicaliën, floculant |
-| `verwarmings_systeem_grote_baden`  | Ketelstatus per dag: 4 ketels, druk ok, visuele inspectie       |
+| `verwarmings_systeem_diep_ondiep`  | Ketelstatus per dag: 4 ketels, druk ok, visuele inspectie       |
 | `limieten`             | Min/max richtwaarden per parameter                              |
 | `gebruikers`           | Inlogaccounts: waterbeheerder, coordinator, Administrator       |
 | `acties`               | Automatisch gegenereerde acties/alarmen (bijv. filter spoelen)  |
 
-> `verbruik_diep_ondiep` en `verwarmings_systeem_grote_baden` zijn een splitsing van de vroegere `metingen_algemeen` tabel.
+> `verbruik_diep_ondiep` en `verwarmings_systeem_diep_ondiep` zijn een splitsing van de vroegere `metingen_algemeen` tabel.
 
 De standaard limieten en testgebruikers worden ingesteld via `INSERT IGNORE` in `init.sql`. Er is geen afzonderlijke seed-functie in de server nodig.
 
@@ -206,5 +206,5 @@ Grafieken worden weergegeven via [Chart.js](https://www.chartjs.org/) (geladen v
 
 - De frontend is een single-page application in `public/index.html`. Alle UI-logica, stijlen en JavaScript zitten in dit ene bestand.
 - `init.sql` is de enige bron van standaardwaarden voor limieten en testgebruikers. Er is geen aparte seed-stap nodig.
-- Het schema is gesplitst in schone tabellen per domein. `metingen_algemeen` bestaat niet meer; de data zit nu in `verbruik_diep_ondiep` en `verwarmings_systeem_grote_baden`.
+- Het schema is gesplitst in schone tabellen per domein. `metingen_algemeen` bestaat niet meer; de data zit nu in `verbruik_diep_ondiep` en `verwarmings_systeem_diep_ondiep`.
 - De server is opgesplitst in losse route-bestanden per domein (`routes/`) en een gedeelde databaseverbinding (`db.js`).

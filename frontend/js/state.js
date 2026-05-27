@@ -11,6 +11,7 @@
     let huidigeBadPagina = 'grote-baden';
     let huidigeSubtab = 'meetwaarden';
     let huidigeCoordSubtab = 'metingen';
+    let huidigePeuterbadSubtab = 'meetwaarden';
     let huidigeTrendSubtab = 'meetwaarden';
     let trendCharts = {};
     let gecachteData = [];

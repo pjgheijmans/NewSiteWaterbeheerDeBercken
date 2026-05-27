@@ -54,7 +54,7 @@ async function saveVerbruik({ datum, floculant, water_diep, water_ondiep, water_
  */
 async function getVerwarming(datum) {
     const [rows] = await pool.execute(
-        'SELECT * FROM verwarmings_systeem_grote_baden WHERE datum = ?', [datum]
+        'SELECT * FROM verwarmings_systeem_diep_ondiep WHERE datum = ?', [datum]
     );
     return rows[0] || {};
 }
@@ -65,7 +65,7 @@ async function getVerwarming(datum) {
  */
 async function saveVerwarming({ datum, verwarming_status_1, verwarming_status_2, verwarming_status_3, verwarming_status_4, verwarming_druk_ok, verwarming_visuele_controle }) {
     await pool.execute(
-        'INSERT INTO verwarmings_systeem_grote_baden (datum, verwarming_status_1, verwarming_status_2, verwarming_status_3, verwarming_status_4, verwarming_druk_ok, verwarming_visuele_controle) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE verwarming_status_1 = VALUES(verwarming_status_1), verwarming_status_2 = VALUES(verwarming_status_2), verwarming_status_3 = VALUES(verwarming_status_3), verwarming_status_4 = VALUES(verwarming_status_4), verwarming_druk_ok = VALUES(verwarming_druk_ok), verwarming_visuele_controle = VALUES(verwarming_visuele_controle)',
+        'INSERT INTO verwarmings_systeem_diep_ondiep (datum, verwarming_status_1, verwarming_status_2, verwarming_status_3, verwarming_status_4, verwarming_druk_ok, verwarming_visuele_controle) VALUES (?, ?, ?, ?, ?, ?, ?) ON DUPLICATE KEY UPDATE verwarming_status_1 = VALUES(verwarming_status_1), verwarming_status_2 = VALUES(verwarming_status_2), verwarming_status_3 = VALUES(verwarming_status_3), verwarming_status_4 = VALUES(verwarming_status_4), verwarming_druk_ok = VALUES(verwarming_druk_ok), verwarming_visuele_controle = VALUES(verwarming_visuele_controle)',
         [datum, verwarming_status_1, verwarming_status_2, verwarming_status_3, verwarming_status_4, verwarming_druk_ok, verwarming_visuele_controle]
     );
 }

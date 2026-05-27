@@ -337,24 +337,16 @@ input[type="text"].buiten-limiet {
     color: white;
 }
 
-#subtab-verbruik-content .veld-item input[type="number"],
-#subtab-verbruik-content .veld-item input[type="text"] {
-    width: 100px;
-}
+
 
 #subtab-meetwaarden-content .categorie-tabel,
-#waterbeheer-peuterbad-content .categorie-tabel {
+#peuterbad-meetwaarden-content .categorie-tabel {
     width: auto;
 }
 
 #subtab-meetwaarden-content .categorie-tabel td input,
-#waterbeheer-peuterbad-content .categorie-tabel td input {
+#peuterbad-meetwaarden-content .categorie-tabel td input {
     width: 80px;
-}
-
-#waterbeheer-peuterbad-content .veld-item input[type="number"],
-#waterbeheer-peuterbad-content .veld-item input[type="text"] {
-    width: 100px;
 }
 
 .status-melding {
@@ -373,75 +365,216 @@ input[type="text"].buiten-limiet {
 }
 
 /* ── Responsive ── */
+
+/* Wrap the generic table so it scrolls on narrow screens */
+.table-scroll {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+}
+
+/* ── 900 px: tablet landscape ── */
 @media (max-width: 900px) {
+    /* Nav scrolls horizontally — no wrapping */
     .hoofd-nav {
-        flex-wrap: wrap;
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        gap: 6px;
+    }
+    .hoofd-nav button {
+        flex-shrink: 0;
+        white-space: nowrap;
     }
     .logout-btn {
-        margin-left: 0 !important;
-        width: 100%;
+        margin-left: auto !important;
+        width: auto;
     }
 }
 
+/* ── 768 px: tablet portrait / large phone ── */
 @media (max-width: 768px) {
-    body {
-        margin: 10px;
-    }
+    body { margin: 8px; }
+
     .container {
-        padding: 15px;
+        padding: 12px;
         border-radius: 6px;
     }
+
     .header-box {
         flex-direction: column;
         align-items: flex-start;
-        gap: 6px;
+        gap: 4px;
     }
-    h1 {
-        font-size: 20px;
+    h1 { font-size: 19px; }
+
+    /* Tab bars — scroll horizontally, never wrap */
+    .menu-tabs,
+    .subtab-nav {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+        padding-bottom: 2px;
     }
-    .hoofd-nav button {
-        padding: 8px 12px;
-        font-size: 14px;
-    }
-    .menu-tabs {
-        flex-wrap: wrap;
-    }
-    .tab-btn {
+    .tab-btn, .subtab-btn {
+        flex-shrink: 0;
+        white-space: nowrap;
         padding: 8px 14px;
         font-size: 13px;
     }
-    .subtab-nav {
-        flex-wrap: wrap;
-    }
-    .subtab-btn {
-        padding: 6px 12px;
-        font-size: 13px;
-    }
+
+    /* Date navigation: icon-only buttons flanking the date field */
     .datum-navigatie {
-        flex-wrap: wrap;
-        gap: 10px;
+        justify-content: center;
+        gap: 6px;
+        flex-wrap: nowrap;
+    }
+    .datum-navigatie .nav-label {
+        display: none;
     }
     .datum-navigatie button {
-        flex: 1;
-        padding: 8px 12px;
+        flex: 0 0 auto;
+        padding: 10px 16px;
+        font-size: 18px;
+        min-width: 0;
     }
     .datum-navigatie input[type="date"] {
+        flex: 1;
+        max-width: 175px;
+        font-size: 15px;
+        text-align: center;
+    }
+
+    /* Bigger touch targets for all inputs */
+    input[type="number"],
+    input[type="text"],
+    input[type="time"],
+    select,
+    textarea {
+        min-height: 42px;
+        font-size: 15px !important;
+    }
+    input[type="checkbox"] {
+        width: 20px;
+        height: 20px;
+    }
+
+    /* Override narrow fixed widths on the meetwaarden inputs for desktop */
+    #subtab-meetwaarden-content .categorie-tabel td input,
+    #peuterbad-meetwaarden-content .categorie-tabel td input {
         width: 100%;
+    }
+
+    /* Buttons full-width in action bars */
+    .actie-container {
+        flex-wrap: wrap;
+        gap: 8px;
     }
     .btn-centraal-opslaan {
         width: 100%;
     }
+
+    /* Generic wide tables scroll */
+    table:not(.categorie-tabel) {
+        display: block;
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
 }
 
+/* ── 600 px: phone — coordinator block tables become cards ── */
+@media (max-width: 600px) {
+
+    /* ---- Coordinator measurement blocks: card-row layout ---- */
+    .coord-tabel thead {
+        display: none;
+    }
+    .coord-tabel tr {
+        display: block;
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 6px;
+        margin-bottom: 10px;
+        overflow: hidden;
+    }
+    .coord-tabel td {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 8px;
+        border: none;
+        border-bottom: 1px solid #f0f0f0;
+        padding: 8px 10px;
+    }
+    .coord-tabel td:last-child {
+        border-bottom: none;
+    }
+    /* Pool name row: full-width header */
+    .coord-tabel td:first-child {
+        background: #e9ecef;
+        font-size: 15px;
+        justify-content: center;
+    }
+    .coord-tabel td:first-child::before { display: none; }
+    /* Label before each value cell */
+    .coord-tabel td[data-label]::before {
+        content: attr(data-label);
+        font-weight: 600;
+        font-size: 13px;
+        color: #555;
+        flex-shrink: 0;
+        min-width: 120px;
+    }
+    .coord-tabel td input,
+    .coord-tabel td select {
+        flex: 1;
+        width: auto;
+        min-width: 70px;
+        max-width: 160px;
+    }
+
+    /* Limieten boxes: single column */
+    #limietenGroepen .categorie-tabel thead { display: none; }
+    #limietenGroepen .categorie-tabel tr {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 0;
+        border-bottom: 1px solid #f0f0f0;
+        flex-wrap: wrap;
+    }
+    #limietenGroepen .categorie-tabel td {
+        border: none;
+        padding: 2px 4px;
+    }
+    #limietenGroepen .categorie-tabel td:first-child {
+        flex: 1 1 100%;
+        padding-bottom: 0;
+    }
+    #limietenGroepen .categorie-tabel input {
+        width: 80px;
+    }
+
+    /* Compact categorie-box on small phones */
+    .categorie-box {
+        padding: 10px;
+    }
+    .categorie-box h3 {
+        font-size: 16px;
+    }
+
+    /* Veld-grid to single column */
+    .veld-grid {
+        grid-template-columns: 1fr;
+    }
+}
+
+/* ── 480 px: small phone ── */
 @media (max-width: 480px) {
     .login-box {
-        margin: 20px auto;
-        padding: 20px;
+        margin: 16px auto;
+        padding: 16px;
     }
-    .categorie-box {
-        padding: 12px;
-    }
-    th, td {
-        padding: 8px;
-    }
+    body { margin: 4px; }
+    .container { padding: 8px; }
+    th, td { padding: 7px; }
 }

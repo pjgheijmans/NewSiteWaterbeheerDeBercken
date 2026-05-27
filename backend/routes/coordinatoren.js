@@ -4,6 +4,7 @@
 const express = require('express');
 const router = express.Router();
 const repo = require('../repositories/coordinatoren');
+const logboekRepo = require('../repositories/coordinatoren_logboek');
 const { checkAuth, isWaterbeheerderOrCoordinator } = require('../middleware/auth');
 
 /**
@@ -24,7 +25,9 @@ router.post('/', checkAuth, async (req, res) => {
         return res.status(403).json({ error: 'Geen toegang' });
     try {
         const bad_id = await repo.getBadId(req.body.bad_naam);
-        await repo.saveMeting(bad_id, req.body); // tijdstip is part of req.body
+        const g = req.session.gebruiker;
+        const auteur = [g.voornaam, g.achternaam].filter(Boolean).join(' ').trim() || g.inlognaam;
+        await repo.saveMeting(bad_id, req.body, auteur);
         res.json({ status: 'success' });
     } catch (err) {
         res.status(err.status || 500).json({ error: err.message });
@@ -82,6 +85,36 @@ router.delete('/', checkAuth, async (req, res) => {
     if (!datum || !tijdstip) return res.status(400).json({ error: 'datum en tijdstip zijn verplicht' });
     try {
         await repo.deleteBlok(datum, tijdstip);
+        res.json({ status: 'success' });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+// ── Coordinator logboek ───────────────────────────────────────────────────
+
+router.get('/logboek', checkAuth, async (req, res) => {
+    if (!isWaterbeheerderOrCoordinator(req.session.gebruiker.taak))
+        return res.status(403).json({ error: 'Geen toegang' });
+    try { res.json(await logboekRepo.getByDatum(req.query.datum)); }
+    catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.post('/logboek', checkAuth, async (req, res) => {
+    if (!isWaterbeheerderOrCoordinator(req.session.gebruiker.taak))
+        return res.status(403).json({ error: 'Geen toegang' });
+    try {
+        const { datum, tijdstip, tekst } = req.body;
+        const g = req.session.gebruiker;
+        const auteur = [g.voornaam, g.achternaam].filter(Boolean).join(' ').trim() || g.inlognaam;
+        const row = await logboekRepo.save(datum, tijdstip, tekst ?? '', auteur);
+        res.json({ status: 'success', id: row?.id ?? null, auteur: row?.auteur ?? auteur });
+    } catch (err) { res.status(500).json({ error: err.message }); }
+});
+
+router.delete('/logboek/:id', checkAuth, async (req, res) => {
+    if (!isWaterbeheerderOrCoordinator(req.session.gebruiker.taak))
+        return res.status(403).json({ error: 'Geen toegang' });
+    try {
+        await logboekRepo.deleteById(req.params.id);
         res.json({ status: 'success' });
     } catch (err) { res.status(500).json({ error: err.message }); }
 });

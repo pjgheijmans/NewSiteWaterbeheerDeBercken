@@ -9,9 +9,9 @@ const { checkAuth, isAdminOrWaterbeheerder } = require('../middleware/auth');
 /**
  * Table names allowed for truncate operations.
  */
-const TRUNC_TABLES  = ['metingen_diep_ondiep','metingen_coordinatoren','coordinatoren_checklist','coordinatoren_daggegevens','metingen_peuterbad','verbruik_diep_ondiep','verwarmings_systeem_grote_baden','acties','limieten','gebruikers'];
-const EXPORT_TABLES = ['metingen_diep_ondiep','metingen_peuterbad','metingen_coordinatoren','coordinatoren_checklist','coordinatoren_daggegevens','verbruik_diep_ondiep','verwarmings_systeem_grote_baden','acties','limieten','gebruikers'];
-const IMPORT_TABLES = ['metingen_diep_ondiep','metingen_coordinatoren','coordinatoren_checklist','coordinatoren_daggegevens','metingen_peuterbad','verbruik_diep_ondiep','verwarmings_systeem_grote_baden','limieten','gebruikers'];
+const TRUNC_TABLES  = ['logboek','coordinatoren_logboek','metingen_diep_ondiep','metingen_coordinatoren','coordinatoren_checklist','coordinatoren_daggegevens','metingen_peuterbad','verbruik_diep_ondiep','verwarmings_systeem_diep_ondiep','acties','limieten','gebruikers'];
+const EXPORT_TABLES = ['logboek','coordinatoren_logboek','metingen_diep_ondiep','metingen_peuterbad','metingen_coordinatoren','coordinatoren_checklist','coordinatoren_daggegevens','verbruik_diep_ondiep','verwarmings_systeem_diep_ondiep','acties','limieten','gebruikers'];
+const IMPORT_TABLES = ['logboek','metingen_diep_ondiep','metingen_coordinatoren','coordinatoren_checklist','coordinatoren_daggegevens','metingen_peuterbad','verbruik_diep_ondiep','verwarmings_systeem_diep_ondiep','limieten','gebruikers'];
 const NEED_BAD_ID   = ['metingen_diep_ondiep','metingen_coordinatoren','metingen_peuterbad'];
 
 /**

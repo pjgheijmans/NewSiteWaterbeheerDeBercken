@@ -4,10 +4,12 @@
  */
 function wisselBadPagina(pagina) {
         huidigeBadPagina = pagina;
-        document.getElementById('tab-grote-baden').classList.toggle('actief', pagina === 'grote-baden');
-        document.getElementById('tab-peuterbad').classList.toggle('actief', pagina === 'peuterbad');
+        ['grote-baden', 'peuterbad', 'logboek'].forEach(p => {
+            document.getElementById(`tab-${p}`)?.classList.toggle('actief', p === pagina);
+        });
         document.getElementById('waterbeheer-grote-baden-content').style.display = (pagina === 'grote-baden') ? 'block' : 'none';
-        document.getElementById('waterbeheer-peuterbad-content').style.display = (pagina === 'peuterbad') ? 'block' : 'none';
+        document.getElementById('waterbeheer-peuterbad-content').style.display   = (pagina === 'peuterbad')   ? 'block' : 'none';
+        document.getElementById('waterbeheer-logboek-content').style.display     = (pagina === 'logboek')     ? 'block' : 'none';
         document.getElementById('tables-content').style.display = 'none';
         laadMetingen();
     }
@@ -35,6 +37,13 @@ function wisselSubtab(subtab) {
 async function laadMetingen() {
         const datum = document.getElementById('centraleDatum').value;
         if (!datum) return;
+
+        // Logboek has its own loader
+        if (huidigeRol === 'waterbeheer' && huidigeBadPagina === 'logboek') {
+            laadLogboek(datum);
+            return;
+        }
+
         const endpoint = (huidigeRol === 'waterbeheer') ? '/api/metingen' : '/api/coordinatoren';
 
         try {
@@ -103,11 +112,13 @@ function bouwTabelOp(data) {
         const tBody = document.getElementById('dagstaatTbody');
         tKop.innerHTML = ''; tBody.innerHTML = '';
 
-        // Always reset coordinator elements regardless of which role/path runs
+        // Always reset role-specific elements before deciding what to show
+        document.getElementById('waterbeheer-logboek-content').style.display = 'none';
         document.getElementById('coordinatoren-subtab-nav').style.display = 'none';
         document.getElementById('coordinatoren-blokken-content').style.display = 'none';
         document.getElementById('coordinatoren-checklist-content').style.display = 'none';
         document.getElementById('coordinatoren-daggegevens-content').style.display = 'none';
+        document.getElementById('coordinatoren-logboek-content').style.display = 'none';
 
         if (huidigeRol === 'waterbeheer' && huidigeBadPagina === 'grote-baden') {
             categorieContent.style.display = 'block';
@@ -162,6 +173,7 @@ function bouwTabelOp(data) {
             zetInputValue('peuterbad-water', meting?.water ?? '');
             zetInputValue('peuterbad-chemicalien-chloor', meting?.chemicalien_chloor ?? '');
             zetInputValue('peuterbad-chemicalien-zwavelzuur', meting?.chemicalien_zwavelzuur ?? '');
+            wisselPeuterbadSubtab(huidigePeuterbadSubtab);
             return;
         }
 
@@ -177,10 +189,10 @@ function bouwTabelOp(data) {
             const blokkContainer = document.getElementById('coordinatoren-blokken-content');
             blokkContainer.innerHTML = '';
             const blokken = Array.isArray(data) ? data : [];
-            blokken.forEach(blok => blokkContainer.appendChild(maakBlokElement(blok.tijdstip, blok.metingen)));
+            blokken.forEach(blok => blokkContainer.appendChild(maakBlokElement(blok.tijdstip, blok.metingen, blok.auteur || '')));
             const btnRij = document.createElement('div');
             btnRij.className = 'actie-container';
-            btnRij.style.marginTop = '12px';
+            btnRij.style.cssText = 'justify-content:flex-start; margin-top:12px;';
             btnRij.innerHTML = `<button class="btn-centraal-opslaan" onclick="voegNieuwBlokToe()">+ Nieuw blok toevoegen</button>`;
             blokkContainer.appendChild(btnRij);
 
@@ -251,17 +263,17 @@ function genereerRijCoordinatoren(badNaam, meting) {
     const gebonden = (!isNaN(vNum) && !isNaN(tNum)) ? (tNum - vNum).toFixed(2) : '';
 
     const chloorCellen = `
-        <td><input type="number" class="c-chloor-vrij"     step="0.01" value="${vrij}"     data-param="chloor_vrij"     oninput="valideerVeld(this, 'chloor_vrij')"></td>
-        <td><input type="number" class="c-chloor-totaal"   step="0.01" value="${totaal}"   data-param="chloor_totaal"   oninput="valideerVeld(this, 'chloor_totaal')"></td>
-        <td><input type="number" class="c-chloor-gebonden" step="0.01" value="${gebonden}" data-param="chloor_gebonden" readonly
+        <td data-label="Chloor Vrij (mg/l)"><input type="number" class="c-chloor-vrij"     step="0.01" value="${vrij}"     data-param="chloor_vrij"     oninput="valideerVeld(this, 'chloor_vrij')"></td>
+        <td data-label="Chloor Totaal (mg/l)"><input type="number" class="c-chloor-totaal"   step="0.01" value="${totaal}"   data-param="chloor_totaal"   oninput="valideerVeld(this, 'chloor_totaal')"></td>
+        <td data-label="Chloor Gebonden (mg/l)"><input type="number" class="c-chloor-gebonden" step="0.01" value="${gebonden}" data-param="chloor_gebonden" readonly
             style="background-color:#f0f0f0; cursor:not-allowed;" tabindex="-1"></td>`;
 
     const isPeuterbad = badNaam === 'Peuterbad';
     const extraCel = isPeuterbad
-        ? `<td style="text-align:center;"><label style="display:flex;align-items:center;gap:6px;justify-content:center;">
+        ? `<td data-label="Gebruik"><label style="display:flex;align-items:center;gap:6px;">
                <input type="checkbox" class="c-gebruikt" ${meting.bad_gebruikt ? 'checked' : ''}> Gebruikt
            </label></td>`
-        : `<td><select class="c-helder">
+        : `<td data-label="Helderheid"><select class="c-helder">
                <option value="Helder"       ${(meting.helderheid ?? 'Helder') === 'Helder'       ? 'selected' : ''}>Helder</option>
                <option value="Licht troebel"${(meting.helderheid ?? '')        === 'Licht troebel' ? 'selected' : ''}>Licht troebel</option>
                <option value="Troebel"      ${(meting.helderheid ?? '')        === 'Troebel'       ? 'selected' : ''}>Troebel</option>
@@ -269,9 +281,9 @@ function genereerRijCoordinatoren(badNaam, meting) {
 
     return `<tr data-bad="${badNaam}">
         <td><b>${badNaam}</b></td>
-        <td><input type="number" class="c-ph" step="0.01" value="${ph}" data-param="ph_waarde" oninput="valideerVeld(this, 'ph_waarde')"></td>
+        <td data-label="pH"><input type="number" class="c-ph" step="0.01" value="${ph}" data-param="ph_waarde" oninput="valideerVeld(this, 'ph_waarde')"></td>
         ${chloorCellen}
-        <td><input type="number" class="c-temp" step="0.1" value="${temp}" data-param="watertemperatuur" oninput="valideerVeld(this, 'watertemperatuur')"></td>
+        <td data-label="Temp (°C)"><input type="number" class="c-temp" step="0.1" value="${temp}" data-param="watertemperatuur" oninput="valideerVeld(this, 'watertemperatuur')"></td>
         ${extraCel}
     </tr>`;
 }
@@ -281,20 +293,35 @@ function genereerRijCoordinatoren(badNaam, meting) {
 let checklistAutoSaveTimer = null;
 
 /**
+ * Switch between Meetwaarden and Verbruik subtabs for the peuterbad view.
+ * @param {string} subtab - 'meetwaarden' or 'verbruik'
+ */
+function wisselPeuterbadSubtab(subtab) {
+    huidigePeuterbadSubtab = subtab;
+    ['meetwaarden', 'verbruik'].forEach(s => {
+        document.getElementById(`subtab-peuterbad-${s}`).classList.toggle('actief', s === subtab);
+        document.getElementById(`peuterbad-${s}-content`).style.display = (s === subtab) ? 'block' : 'none';
+    });
+    if (subtab === 'verbruik') laadEnBerekenVerbruik();
+}
+
+/**
  * Switch between the Metingen and Checklijst subtabs for the coordinator view.
  * @param {string} subtab - 'metingen' or 'checklist'
  */
 function wisselCoordSubtab(subtab) {
     huidigeCoordSubtab = subtab;
-    ['metingen', 'checklist', 'daggegevens'].forEach(s => {
+    ['metingen', 'checklist', 'daggegevens', 'logboek'].forEach(s => {
         document.getElementById(`subtab-coord-${s}`)?.classList.toggle('actief', s === subtab);
     });
     document.getElementById('coordinatoren-blokken-content').style.display    = subtab === 'metingen'    ? 'block' : 'none';
     document.getElementById('coordinatoren-checklist-content').style.display   = subtab === 'checklist'   ? 'block' : 'none';
     document.getElementById('coordinatoren-daggegevens-content').style.display = subtab === 'daggegevens' ? 'block' : 'none';
+    document.getElementById('coordinatoren-logboek-content').style.display     = subtab === 'logboek'     ? 'block' : 'none';
     const datum = document.getElementById('centraleDatum').value;
     if (subtab === 'checklist')   laadCoordChecklist(datum);
     if (subtab === 'daggegevens') laadCoordDaggegevens(datum);
+    if (subtab === 'logboek')     laadLogboek(datum, 'coordinatoren-logboek-blokken', '/api/coordinatoren/logboek');
 }
 
 /**
@@ -311,9 +338,6 @@ async function laadCoordChecklist(datum) {
         document.getElementById('proef-spraypark').checked  = !!d.proef_spraypark;
         document.getElementById('proef-douches').checked    = !!d.proef_douches;
         document.getElementById('proef-glijbaan').checked   = !!d.proef_glijbaan;
-        const ta = document.getElementById('coord-opmerkingen');
-        ta.value = d.opmerkingen || '';
-        document.getElementById('coord-opmerkingen-teller').textContent = ta.value.length;
     } catch (e) { console.error('Fout bij laden checklist:', e); }
 
     // Attach listeners once (guard against duplicate attachment)
@@ -323,12 +347,6 @@ async function laadCoordChecklist(datum) {
 
     form.querySelectorAll('input[type="checkbox"]').forEach(cb => {
         cb.addEventListener('change', e => { e.stopPropagation(); scheduleAutoSaveChecklist(); });
-    });
-    const ta = document.getElementById('coord-opmerkingen');
-    ta.addEventListener('input', e => {
-        e.stopPropagation();
-        document.getElementById('coord-opmerkingen-teller').textContent = ta.value.length;
-        scheduleAutoSaveChecklist();
     });
 }
 
@@ -347,7 +365,6 @@ function scheduleAutoSaveChecklist() {
             proef_spraypark:  document.getElementById('proef-spraypark').checked  ? 1 : 0,
             proef_douches:    document.getElementById('proef-douches').checked    ? 1 : 0,
             proef_glijbaan:   document.getElementById('proef-glijbaan').checked   ? 1 : 0,
-            opmerkingen:      document.getElementById('coord-opmerkingen').value  || null,
         };
         try {
             const res = await apiCall('/api/coordinatoren/checklist', {
@@ -419,23 +436,25 @@ function scheduleAutoSaveDaggegevens() {
  * @param {Array}  metingen - Array of pool measurement objects for this block.
  * @returns {HTMLElement}
  */
-function maakBlokElement(tijdstip, metingen) {
+function maakBlokElement(tijdstip, metingen, auteur = '') {
     const displayTijd = String(tijdstip).slice(0, 5);
+    const auteurLabel = auteur ? `<span style="font-size:13px; font-weight:normal; color:#888; margin-left:10px;">— ${auteur}</span>` : '';
     const el = document.createElement('div');
     el.className = 'categorie-box';
     el.setAttribute('data-blok-tijdstip', tijdstip);
 
     el.innerHTML = `
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
-            <h3 style="margin:0; display:flex; align-items:center; gap:8px;">
+            <h3 style="margin:0; display:flex; align-items:center; gap:8px; flex-wrap:wrap;">
                 Meting
                 <input type="time" class="blok-tijdstip-input" value="${displayTijd}"
                     style="font-size:inherit; font-weight:bold; border:none; border-bottom:1px solid #aaa;
                            background:transparent; cursor:text; padding:0 2px; color:inherit; width:auto;">
+                ${auteurLabel}
             </h3>
             <button class="blok-verwijder-btn" style="background:#dc3545; color:white; border:none; padding:4px 10px; border-radius:4px; cursor:pointer; font-size:13px;">Verwijderen</button>
         </div>
-        <table class="categorie-tabel">
+        <table class="categorie-tabel coord-tabel">
             <thead>
                 <tr>
                     <th rowspan="2">Bad</th>
@@ -552,5 +571,8 @@ function voegNieuwBlokToe() {
         return;
     }
     const btnRij = blokkContainer.lastElementChild;
-    blokkContainer.insertBefore(maakBlokElement(tijdstip, []), btnRij);
+    const auteur = ingelogdeGebruiker
+        ? [ingelogdeGebruiker.voornaam, ingelogdeGebruiker.achternaam].filter(Boolean).join(' ').trim() || ingelogdeGebruiker.inlognaam
+        : '';
+    blokkContainer.insertBefore(maakBlokElement(tijdstip, [], auteur), btnRij);
 }

@@ -9,7 +9,7 @@ const pool = require('./db');
  */
 async function getCoordinatoren(datum) {
     const [rows] = await pool.execute(
-        `SELECT b.naam AS bad_naam, mc.tijdstip,
+        `SELECT b.naam AS bad_naam, mc.tijdstip, mc.auteur,
                 mc.ph_waarde, mc.chloor_vrij, mc.chloor_totaal,
                 mc.watertemperatuur, mc.helderheid, mc.bad_gebruikt
          FROM metingen_coordinatoren mc
@@ -22,7 +22,7 @@ async function getCoordinatoren(datum) {
     const blokken = new Map();
     rows.forEach(row => {
         const tijdstip = row.tijdstip;
-        if (!blokken.has(tijdstip)) blokken.set(tijdstip, { tijdstip, metingen: [] });
+        if (!blokken.has(tijdstip)) blokken.set(tijdstip, { tijdstip, auteur: row.auteur ?? '', metingen: [] });
         blokken.get(tijdstip).metingen.push({
             bad_naam:         row.bad_naam,
             ph_waarde:        row.ph_waarde,
@@ -48,11 +48,11 @@ async function getBadId(bad_naam) {
 /**
  * Insert or update a coordinatoren meting record including tijdstip.
  */
-async function saveMeting(bad_id, { datum, tijdstip, ph_waarde, chloor_vrij, chloor_totaal, watertemperatuur, helderheid, bad_gebruikt }) {
+async function saveMeting(bad_id, { datum, tijdstip, ph_waarde, chloor_vrij, chloor_totaal, watertemperatuur, helderheid, bad_gebruikt }, auteur) {
     await pool.execute(
         `INSERT INTO metingen_coordinatoren
-           (bad_id, datum, tijdstip, ph_waarde, chloor_vrij, chloor_totaal, watertemperatuur, helderheid, bad_gebruikt)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+           (bad_id, datum, tijdstip, auteur, ph_waarde, chloor_vrij, chloor_totaal, watertemperatuur, helderheid, bad_gebruikt)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
          ON DUPLICATE KEY UPDATE
            ph_waarde        = VALUES(ph_waarde),
            chloor_vrij      = VALUES(chloor_vrij),
@@ -60,7 +60,7 @@ async function saveMeting(bad_id, { datum, tijdstip, ph_waarde, chloor_vrij, chl
            watertemperatuur = VALUES(watertemperatuur),
            helderheid       = VALUES(helderheid),
            bad_gebruikt     = VALUES(bad_gebruikt)`,
-        [bad_id, datum, tijdstip || '00:00:00',
+        [bad_id, datum, tijdstip || '00:00:00', auteur ?? null,
          ph_waarde, chloor_vrij, chloor_totaal,
          watertemperatuur, helderheid ?? null, bad_gebruikt ?? null]
     );
@@ -81,27 +81,26 @@ async function deleteBlok(datum, tijdstip) {
  */
 async function getChecklist(datum) {
     const [rows] = await pool.execute(
-        'SELECT proef_waterspeel, proef_spraypark, proef_douches, proef_glijbaan, opmerkingen FROM coordinatoren_checklist WHERE datum = ?',
+        'SELECT proef_waterspeel, proef_spraypark, proef_douches, proef_glijbaan FROM coordinatoren_checklist WHERE datum = ?',
         [datum]
     );
-    return rows[0] || { proef_waterspeel: 0, proef_spraypark: 0, proef_douches: 0, proef_glijbaan: 0, opmerkingen: '' };
+    return rows[0] || { proef_waterspeel: 0, proef_spraypark: 0, proef_douches: 0, proef_glijbaan: 0 };
 }
 
 /**
  * Insert or update the checklist record for a date.
  */
-async function saveChecklist(datum, { proef_waterspeel, proef_spraypark, proef_douches, proef_glijbaan, opmerkingen }) {
+async function saveChecklist(datum, { proef_waterspeel, proef_spraypark, proef_douches, proef_glijbaan }) {
     await pool.execute(
-        `INSERT INTO coordinatoren_checklist (datum, proef_waterspeel, proef_spraypark, proef_douches, proef_glijbaan, opmerkingen)
-         VALUES (?, ?, ?, ?, ?, ?)
+        `INSERT INTO coordinatoren_checklist (datum, proef_waterspeel, proef_spraypark, proef_douches, proef_glijbaan)
+         VALUES (?, ?, ?, ?, ?)
          ON DUPLICATE KEY UPDATE
            proef_waterspeel = VALUES(proef_waterspeel),
            proef_spraypark  = VALUES(proef_spraypark),
            proef_douches    = VALUES(proef_douches),
-           proef_glijbaan   = VALUES(proef_glijbaan),
-           opmerkingen      = VALUES(opmerkingen)`,
+           proef_glijbaan   = VALUES(proef_glijbaan)`,
         [datum, proef_waterspeel ? 1 : 0, proef_spraypark ? 1 : 0,
-                proef_douches ? 1 : 0, proef_glijbaan ? 1 : 0, opmerkingen || null]
+                proef_douches ? 1 : 0, proef_glijbaan ? 1 : 0]
     );
 }
 

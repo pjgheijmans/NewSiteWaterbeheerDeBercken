@@ -471,7 +471,7 @@
     <!-- Applicatie Dashboard -->
     <div id="scherm-dashboard" class="container" style="display: none;">
         <div class="header-box">
-            <h1>Zwembad Dashboard</h1>
+            <h1>Zwembad Dagstaat</h1>
             <span id="welkom-tekst" style="font-weight:bold;"></span>
         </div>
 
@@ -899,14 +899,14 @@
                         <td><b>Verwarmings systeem</b></td>
                         <td>Bevat verwarmingsstatus en inspecties per dag.</td>
                         <td><button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px;"
-                                onclick="exporteerTabel('verwarmings_systeem_grote_baden')">CSV Exporteren</button></td>
+                                onclick="exporteerTabel('verwarmings_systeem_diep_ondiep')">CSV Exporteren</button></td>
                         <td>
                             <button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px; background-color:#17a2b8;"
-                                onclick="triggerImportBladeren('verwarmings_systeem_grote_baden')">CSV Importeren</button>
-                            <input type="file" id="import-file-verwarmings_systeem_grote_baden" accept=".csv" style="display:none;"
-                                onchange="verwerkCsvUpload(this, 'verwarmings_systeem_grote_baden')">
+                                onclick="triggerImportBladeren('verwarmings_systeem_diep_ondiep')">CSV Importeren</button>
+                            <input type="file" id="import-file-verwarmings_systeem_diep_ondiep" accept=".csv" style="display:none;"
+                                onchange="verwerkCsvUpload(this, 'verwarmings_systeem_diep_ondiep')">
                         </td>
-                        <td><button class="btn-wissen-gevaar" onclick="leegmakenTabel('verwarmings_systeem_grote_baden')">Tabel Leegmaken</button></td>
+                        <td><button class="btn-wissen-gevaar" onclick="leegmakenTabel('verwarmings_systeem_diep_ondiep')">Tabel Leegmaken</button></td>
                     </tr>
                     <tr>
                         <td><b>Acties</b></td>
