@@ -48,16 +48,40 @@ function zetInputValue(id, waarde) {
     }
 
 /**
- * Validate a numeric input field against the configured limits for a parameter.
- * Adds or removes the 'buiten-limiet' CSS class based on whether the value is in range.
+ * Validate a numeric input field for decimal precision (based on step attribute)
+ * and against the configured min/max limits for a parameter.
+ * Adds or removes the 'buiten-limiet' CSS class accordingly.
  * @param {HTMLInputElement} inputElement - The input element to validate.
- * @param {string} parameterNaam - The parameter name used to lookup limits.
+ * @param {string|null} parameterNaam - The parameter name used to lookup limits, or null for precision-only check.
  */
 function valideerVeld(inputElement, parameterNaam) {
+        if (inputElement.value === '') {
+            inputElement.classList.remove('buiten-limiet');
+            return;
+        }
         const waarde = parseFloat(inputElement.value);
+        if (isNaN(waarde)) {
+            inputElement.classList.add('buiten-limiet');
+            return;
+        }
+
+        // Precision check: count decimal places in the typed string vs what step allows
+        const step = parseFloat(inputElement.getAttribute('step'));
+        if (!isNaN(step) && step > 0) {
+            const allowed = step >= 1 ? 0 : (step.toString().split('.')[1] || '').length;
+            const dotIdx = inputElement.value.indexOf('.');
+            const entered = dotIdx === -1 ? 0 : inputElement.value.length - dotIdx - 1;
+            if (entered > allowed) {
+                inputElement.classList.add('buiten-limiet');
+                return;
+            }
+        }
+
+        // Min/max limit check
         const limiet = actieveLimieten[parameterNaam];
-        if (!isNaN(waarde) && limiet) {
-            if (waarde < limiet.min || waarde > limiet.max) { inputElement.classList.add('buiten-limiet'); }
-            else { inputElement.classList.remove('buiten-limiet'); }
-        } else { inputElement.classList.remove('buiten-limiet'); }
+        if (limiet) {
+            inputElement.classList.toggle('buiten-limiet', waarde < limiet.min || waarde > limiet.max);
+        } else {
+            inputElement.classList.remove('buiten-limiet');
+        }
     }

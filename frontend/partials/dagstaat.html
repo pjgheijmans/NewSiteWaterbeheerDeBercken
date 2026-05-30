@@ -49,8 +49,8 @@
                                 </tr>
                                 <tr>
                                     <td>Flow</td>
-                                    <td><input type="number" id="flow-diep" data-param="flow_diep" oninput="valideerVeld(this, 'flow_diep')"></td>
-                                    <td><input type="number" id="flow-ondiep" data-param="flow_ondiep" oninput="valideerVeld(this, 'flow_ondiep')"></td>
+                                    <td><input type="number" step="1" id="flow-diep" data-param="flow_diep" oninput="valideerVeld(this, 'flow_diep')"></td>
+                                    <td><input type="number" step="1" id="flow-ondiep" data-param="flow_ondiep" oninput="valideerVeld(this, 'flow_ondiep')"></td>
                                 </tr>
                                 <tr>
                                     <td>Filterdruk In</td>
@@ -77,17 +77,17 @@
                             <tbody>
                                 <tr>
                                     <td><b>Diep</b></td>
-                                    <td><input type="number" step="0.01" id="water-diep"   data-param="water_diep"   oninput="valideerVeld(this,'water_diep')"></td>
+                                    <td><input type="number" step="1" id="water-diep"   data-param="water_diep"   oninput="valideerVeld(this,'water_diep')"></td>
                                     <td><input type="text" id="water-diep-verbruik"   disabled style="background-color:#f0f0f0; cursor:not-allowed;"></td>
                                 </tr>
                                 <tr>
                                     <td><b>Ondiep</b></td>
-                                    <td><input type="number" step="0.01" id="water-ondiep" data-param="water_ondiep" oninput="valideerVeld(this,'water_ondiep')"></td>
+                                    <td><input type="number" step="1" id="water-ondiep" data-param="water_ondiep" oninput="valideerVeld(this,'water_ondiep')"></td>
                                     <td><input type="text" id="water-ondiep-verbruik" disabled style="background-color:#f0f0f0; cursor:not-allowed;"></td>
                                 </tr>
                                 <tr>
                                     <td><b>Totaal</b></td>
-                                    <td><input type="number" step="0.01" id="water-totaal" data-param="water_totaal" oninput="valideerVeld(this,'water_totaal')"></td>
+                                    <td><input type="number" step="1" id="water-totaal" data-param="water_totaal" oninput="valideerVeld(this,'water_totaal')"></td>
                                     <td><input type="text" id="water-totaal-verbruik" disabled style="background-color:#f0f0f0; cursor:not-allowed;"></td>
                                 </tr>
                             </tbody>
@@ -103,17 +103,17 @@
                             <tbody>
                                 <tr>
                                     <td><b>Elektriciteit Nacht</b></td>
-                                    <td><input type="number" id="elektriciteit-nacht" data-param="elektriciteit_nacht" oninput="valideerVeld(this,'elektriciteit_nacht')"></td>
+                                    <td><input type="number" step="1" id="elektriciteit-nacht" data-param="elektriciteit_nacht" oninput="valideerVeld(this,'elektriciteit_nacht')"></td>
                                     <td><input type="text" id="elektriciteit-nacht-verbruik" disabled style="background-color:#f0f0f0; cursor:not-allowed;"></td>
                                 </tr>
                                 <tr>
                                     <td><b>Elektriciteit Dag</b></td>
-                                    <td><input type="number" id="elektriciteit-dag" data-param="elektriciteit_dag" oninput="valideerVeld(this,'elektriciteit_dag')"></td>
+                                    <td><input type="number" step="1" id="elektriciteit-dag" data-param="elektriciteit_dag" oninput="valideerVeld(this,'elektriciteit_dag')"></td>
                                     <td><input type="text" id="elektriciteit-dag-verbruik" disabled style="background-color:#f0f0f0; cursor:not-allowed;"></td>
                                 </tr>
                                 <tr>
                                     <td><b>Gas</b></td>
-                                    <td><input type="number" id="gas" data-param="gas" oninput="valideerVeld(this,'gas')"></td>
+                                    <td><input type="number" step="1" id="gas" data-param="gas" oninput="valideerVeld(this,'gas')"></td>
                                     <td><input type="text" id="gas-verbruik" disabled style="background-color:#f0f0f0; cursor:not-allowed;"></td>
                                 </tr>
                             </tbody>
@@ -129,17 +129,17 @@
                             <tbody>
                                 <tr>
                                     <td><b>Floculant</b></td>
-                                    <td><input type="text" id="floculant"></td>
+                                    <td><input type="number" step="1" id="floculant" oninput="valideerVeld(this, null)"></td>
                                     <td><input type="text" id="floculant-verbruik" disabled style="background-color:#f0f0f0; cursor:not-allowed;"></td>
                                 </tr>
                                 <tr>
                                     <td><b>Chloor</b></td>
-                                    <td><input type="text" id="chemicalien-chloor"></td>
+                                    <td><input type="number" step="1" id="chemicalien-chloor" oninput="valideerVeld(this, null)"></td>
                                     <td><input type="text" id="chemicalien-chloor-verbruik" disabled style="background-color:#f0f0f0; cursor:not-allowed;"></td>
                                 </tr>
                                 <tr>
                                     <td><b>Zwavelzuur</b></td>
-                                    <td><input type="text" id="chemicalien-zwavelzuur"></td>
+                                    <td><input type="number" step="1" id="chemicalien-zwavelzuur" oninput="valideerVeld(this, null)"></td>
                                     <td><input type="text" id="chemicalien-zwavelzuur-verbruik" disabled style="background-color:#f0f0f0; cursor:not-allowed;"></td>
                                 </tr>
                             </tbody>
@@ -223,7 +223,7 @@
                                 </tr>
                                 <tr>
                                     <td>Flow</td>
-                                    <td><input type="number" id="peuterbad-flow" data-param="flow_peuterbad" oninput="valideerVeld(this,'flow_peuterbad')"></td>
+                                    <td><input type="number" step="1" id="peuterbad-flow" data-param="flow_peuterbad" oninput="valideerVeld(this,'flow_peuterbad')"></td>
                                 </tr>
                             </tbody>
                         </table>
@@ -240,7 +240,7 @@
                             <tbody>
                                 <tr>
                                     <td><b>Water (m³)</b></td>
-                                    <td><input type="number" step="0.01" id="peuterbad-water" data-param="water_peuterbad" oninput="valideerVeld(this,'water_peuterbad')"></td>
+                                    <td><input type="number" step="1" id="peuterbad-water" data-param="water_peuterbad" oninput="valideerVeld(this,'water_peuterbad')"></td>
                                     <td><input type="text" id="peuterbad-water-verbruik" disabled style="background-color:#f0f0f0; cursor:not-allowed;"></td>
                                 </tr>
                             </tbody>
@@ -256,12 +256,12 @@
                             <tbody>
                                 <tr>
                                     <td><b>Chloor</b></td>
-                                    <td><input type="text" id="peuterbad-chemicalien-chloor"></td>
+                                    <td><input type="number" step="1" id="peuterbad-chemicalien-chloor" oninput="valideerVeld(this, null)"></td>
                                     <td><input type="text" id="peuterbad-chemicalien-chloor-verbruik" disabled style="background-color:#f0f0f0; cursor:not-allowed;"></td>
                                 </tr>
                                 <tr>
                                     <td><b>Zwavelzuur</b></td>
-                                    <td><input type="text" id="peuterbad-chemicalien-zwavelzuur"></td>
+                                    <td><input type="number" step="1" id="peuterbad-chemicalien-zwavelzuur" oninput="valideerVeld(this, null)"></td>
                                     <td><input type="text" id="peuterbad-chemicalien-zwavelzuur-verbruik" disabled style="background-color:#f0f0f0; cursor:not-allowed;"></td>
                                 </tr>
                             </tbody>
@@ -308,7 +308,7 @@
                         </div>
                         <div class="veld-item">
                             <label for="coord-bezoekers-vandaag">Aantal bezoekers vandaag</label>
-                            <input type="number" id="coord-bezoekers-vandaag" min="0" placeholder="bijv. 120">
+                            <input type="number" id="coord-bezoekers-vandaag" min="0" step="1" placeholder="bijv. 120">
                         </div>
                     </div>
                 </div>
