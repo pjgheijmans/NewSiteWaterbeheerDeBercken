@@ -105,8 +105,8 @@ async function laadEnBerekenVerbruik() {
                 const el = document.getElementById(`${veldId}-verbruik`);
                 if (!el) return;
                 if (isNaN(h)) { el.value = '-'; return; }
-                const verbruik = h - v;
-                el.value = verbruik !== 0 ? verbruik.toFixed(2) : '0.00';
+                const verbruik = Math.round(h) - Math.round(v);
+                el.value = verbruik !== 0 ? String(verbruik) : '0';
             };
 
             berekenEnZet('water-diep', 'water_diep');

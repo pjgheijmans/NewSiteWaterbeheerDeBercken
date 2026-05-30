@@ -44,9 +44,9 @@ CREATE TABLE IF NOT EXISTS metingen_peuterbad (
     chloor_waarde DECIMAL(4,2) NULL,
     flow INT NULL,
     filter_druk_in DECIMAL(4,2) NULL,
-    water VARCHAR(100) NULL,
-    chemicalien_chloor VARCHAR(100) NULL,
-    chemicalien_zwavelzuur VARCHAR(100) NULL,
+    water INT NULL,
+    chemicalien_chloor INT NULL,
+    chemicalien_zwavelzuur INT NULL,
     FOREIGN KEY (bad_id) REFERENCES baden(id),
     UNIQUE KEY unieke_meting_peuterbad (bad_id, datum)
 );
@@ -170,19 +170,19 @@ CREATE TABLE IF NOT EXISTS acties (
 -- Migratie: voeg opgelost_door toe aan acties
 ALTER TABLE acties ADD COLUMN IF NOT EXISTS opgelost_door VARCHAR(100) NULL AFTER opgelost_op;
 
--- Verbruik diep/ondiep: water, elektriciteit, gas, chemicaliën
+-- Verbruik diep/ondiep: water, elektriciteit, gas, chemicaliën (gehele getallen)
 CREATE TABLE IF NOT EXISTS verbruik_diep_ondiep (
     id INT AUTO_INCREMENT PRIMARY KEY,
     datum DATE NOT NULL UNIQUE,
-    floculant VARCHAR(100) NULL,
-    water_diep DECIMAL(10,2) NULL,
-    water_ondiep DECIMAL(10,2) NULL,
-    water_totaal DECIMAL(10,2) NULL,
-    elektriciteit_nacht DECIMAL(10,2) NULL,
-    elektriciteit_dag DECIMAL(10,2) NULL,
-    gas DECIMAL(10,2) NULL,
-    chemicalien_chloor VARCHAR(100) NULL,
-    chemicalien_zwavelzuur VARCHAR(100) NULL,
+    floculant INT NULL,
+    water_diep INT NULL,
+    water_ondiep INT NULL,
+    water_totaal INT NULL,
+    elektriciteit_nacht INT NULL,
+    elektriciteit_dag INT NULL,
+    gas INT NULL,
+    chemicalien_chloor INT NULL,
+    chemicalien_zwavelzuur INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
@@ -210,3 +210,21 @@ ALTER TABLE coordinatoren_logboek ADD COLUMN IF NOT EXISTS auteur VARCHAR(100) N
 
 -- Migratie: verwijder opmerkingen kolom uit coordinatoren_checklist
 ALTER TABLE coordinatoren_checklist DROP COLUMN IF EXISTS opmerkingen;
+
+-- Migratie: verbruik velden naar INT (meters geven gehele getallen, geen decimalen)
+ALTER TABLE verbruik_diep_ondiep
+    MODIFY floculant          INT NULL,
+    MODIFY water_diep         INT NULL,
+    MODIFY water_ondiep       INT NULL,
+    MODIFY water_totaal       INT NULL,
+    MODIFY elektriciteit_nacht INT NULL,
+    MODIFY elektriciteit_dag  INT NULL,
+    MODIFY gas                INT NULL,
+    MODIFY chemicalien_chloor INT NULL,
+    MODIFY chemicalien_zwavelzuur INT NULL;
+
+-- Migratie: peuterbad water en chemicaliën naar INT
+ALTER TABLE metingen_peuterbad
+    MODIFY water               INT NULL,
+    MODIFY chemicalien_chloor  INT NULL,
+    MODIFY chemicalien_zwavelzuur INT NULL;
