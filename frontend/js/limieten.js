@@ -58,6 +58,8 @@ const LIMIETEN_LABELS = {
     actie_bezoekers_max:   'Bezoekers max (per dag)',
     actie_spoelbeurt_max:  'Bezoekers max (sinds spoelbeurt)',
     actie_floculant_min:   'Floculant min',
+    seizoen_begin:         'Begin seizoen',
+    seizoen_eind:          'Eind seizoen',
 };
 
 const LIMIETEN_GROEPEN = [
@@ -84,6 +86,13 @@ const LIMIETEN_GROEPEN = [
         info: 'Drempelwaarden die bepalen wanneer een actie wordt aangemaakt. Actie wordt getriggerd als de gemeten waarde de drempel overschrijdt (max) of onderschrijdt (min).',
         enkelvoudig: true,
         params: ['actie_druk_verschil', 'actie_druk_peuterbad', 'actie_flow_diep', 'actie_flow_ondiep', 'actie_flow_peuterbad', 'actie_chloor_min', 'actie_zwavelzuur_min', 'actie_bezoekers_max', 'actie_spoelbeurt_max', 'actie_floculant_min'],
+    },
+    {
+        titel: 'Seizoen',
+        info: 'Begin- en einddatum van het seizoen. Datumnavigatie kan niet buiten deze grenzen.',
+        enkelvoudig: true,
+        datum: true,
+        params: ['seizoen_begin', 'seizoen_eind'],
     },
 ];
 
@@ -115,6 +124,7 @@ async function laadLimietenVanServer() {
         const limieten = await response.json();
         actieveLimieten = normaliseerLimieten(limieten);
         bouwLimietenBeheerTabel();
+        if (typeof pasSeizoenAan === 'function') pasSeizoenAan();
     } catch (fout) { console.error("Kon limieten niet laden", fout); }
 }
 
@@ -144,6 +154,18 @@ function normaliseerLimieten(limieten) {
     return genormaliseerd;
 }
 
+/** Convert YYYYMMDD integer (e.g. 20260425) to ISO date string "2026-04-25". */
+function yyyymmddNaarIso(val) {
+    if (!val) return '';
+    const s = String(Math.round(val)).padStart(8, '0');
+    return `${s.slice(0, 4)}-${s.slice(4, 6)}-${s.slice(6, 8)}`;
+}
+
+/** Convert ISO date string "2026-04-25" to YYYYMMDD integer 20260425. */
+function isoNaarYyyymmdd(iso) {
+    return iso ? parseInt(iso.replace(/-/g, ''), 10) : 0;
+}
+
 /**
  * Render limit groups as styled boxes into #limietenGroepen.
  * Attaches autosave listeners to each input after rendering.
@@ -160,16 +182,20 @@ function bouwLimietenBeheerTabel() {
         if (groep.info) html += `<p style="font-size:13px; color:#666; margin: -8px 0 10px;">${groep.info}</p>`;
 
         if (groep.enkelvoudig) {
+            const isDatum = !!groep.datum;
             html += `<table class="categorie-tabel">
-                <thead><tr><th>Parameter</th><th>Drempelwaarde</th></tr></thead>
+                <thead><tr><th>Parameter</th><th>${isDatum ? 'Datum' : 'Drempelwaarde'}</th></tr></thead>
                 <tbody>`;
             groep.params.forEach(param => {
                 const val = actieveLimieten[param] || { min: 0, max: '' };
                 const label = LIMIETEN_LABELS[param] || param;
+                const invoer = isDatum
+                    ? `<input type="date" class="l-max l-datum" value="${yyyymmddNaarIso(val.max)}">`
+                    : `<input type="number" class="l-max" step="0.01" value="${val.max}">`;
                 html += `<tr data-limiet-param="${param}">
                     <td><b>${label}</b></td>
                     <td>
-                        <input type="number" class="l-max" step="0.01" value="${val.max}">
+                        ${invoer}
                         <input type="hidden" class="l-min" value="0">
                     </td>
                 </tr>`;
@@ -209,10 +235,14 @@ async function verwerkCentraleLimietenOpslaan(autoSave = false) {
     let succesTeller = 0;
     for (const rij of rijen) {
         const paramNaam = rij.getAttribute('data-limiet-param');
+        const maxEl = rij.querySelector('.l-max');
+        const maxWaarde = maxEl.classList.contains('l-datum')
+            ? isoNaarYyyymmdd(maxEl.value)
+            : parseFloat(maxEl.value);
         const payload = {
             parameter_naam: paramNaam,
             min_waarde: parseFloat(rij.querySelector('.l-min').value),
-            max_waarde: parseFloat(rij.querySelector('.l-max').value),
+            max_waarde: maxWaarde,
         };
         try {
             const response = await apiCall('/api/limieten', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });

@@ -35,6 +35,8 @@ const DEFAULT_LIMIETEN = [
     { parameter_naam: 'actie_bezoekers_max',    min_waarde: 0.00,  max_waarde: 750.00  },
     { parameter_naam: 'actie_spoelbeurt_max',   min_waarde: 0.00,  max_waarde: 1500.00 },
     { parameter_naam: 'actie_floculant_min',    min_waarde: 0.00,  max_waarde: 10.00   },
+    { parameter_naam: 'seizoen_begin',          min_waarde: 0.00,  max_waarde: 20260425.00 },
+    { parameter_naam: 'seizoen_eind',           min_waarde: 0.00,  max_waarde: 20260901.00 },
 ];
 
 /**

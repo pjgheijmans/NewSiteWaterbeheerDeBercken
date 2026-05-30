@@ -1,7 +1,7 @@
 <div id="sectie-dagstaat">
             <div class="datum-navigatie">
                 <button onclick="veranderDatum(-1)">◀<span class="nav-label"> Vorige Dag</span></button>
-                <input type="date" id="centraleDatum" onchange="laadMetingen()">
+                <input type="date" id="centraleDatum" onchange="pasSeizoenAan(); laadMetingen()">
                 <button onclick="veranderDatum(1)"><span class="nav-label">Volgende Dag </span>▶</button>
             </div>
 
