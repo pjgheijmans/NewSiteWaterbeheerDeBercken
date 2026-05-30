@@ -57,6 +57,7 @@ const LIMIETEN_LABELS = {
     actie_zwavelzuur_min:  'Zwavelzuurvoorraad min (L)',
     actie_bezoekers_max:   'Bezoekers max (per dag)',
     actie_spoelbeurt_max:  'Bezoekers max (sinds spoelbeurt)',
+    actie_floculant_min:   'Floculant min',
 };
 
 const LIMIETEN_GROEPEN = [
@@ -82,7 +83,7 @@ const LIMIETEN_GROEPEN = [
         titel: 'Actie-drempelwaarden',
         info: 'Drempelwaarden die bepalen wanneer een actie wordt aangemaakt. Actie wordt getriggerd als de gemeten waarde de drempel overschrijdt (max) of onderschrijdt (min).',
         enkelvoudig: true,
-        params: ['actie_druk_verschil', 'actie_druk_peuterbad', 'actie_flow_diep', 'actie_flow_ondiep', 'actie_flow_peuterbad', 'actie_chloor_min', 'actie_zwavelzuur_min', 'actie_bezoekers_max', 'actie_spoelbeurt_max'],
+        params: ['actie_druk_verschil', 'actie_druk_peuterbad', 'actie_flow_diep', 'actie_flow_ondiep', 'actie_flow_peuterbad', 'actie_chloor_min', 'actie_zwavelzuur_min', 'actie_bezoekers_max', 'actie_spoelbeurt_max', 'actie_floculant_min'],
     },
 ];
 

@@ -44,6 +44,7 @@ async function laadDrempelwaarden() {
         actie_zwavelzuur_min: 50,
         actie_bezoekers_max:  750,
         actie_spoelbeurt_max: 1500,
+        actie_floculant_min:  10,
     };
     try {
         const [rows] = await pool.execute(
@@ -62,7 +63,8 @@ async function laadDrempelwaarden() {
 async function stelIn(bad_id, datum, actie_type, beschrijving, actief) {
     if (actief) {
         await pool.execute(
-            'INSERT IGNORE INTO acties (bad_id, datum, beschrijving, actie_type) VALUES (?, ?, ?, ?)',
+            `INSERT INTO acties (bad_id, datum, beschrijving, actie_type) VALUES (?, ?, ?, ?)
+             ON DUPLICATE KEY UPDATE beschrijving = VALUES(beschrijving)`,
             [bad_id, datum, beschrijving, actie_type]
         );
     } else {
@@ -87,14 +89,14 @@ async function genereer(bad_id, datum, bad_naam, body) {
         // Filter druk difference
         if (!isNaN(drukIn) && !isNaN(drukUit)) {
             await stelIn(bad_id, datum, 'filter_spoelen_druk',
-                `Filterdruk verschil ${bad_naam} > ${d.actie_druk_verschil} bar — filter spoelen`,
+                `Filterdruk verschil ${bad_naam} > ${d.actie_druk_verschil} bar — Filter spoelen`,
                 drukIn - drukUit > d.actie_druk_verschil);
         }
         // Flow
         const flowMin = bad_naam === 'Diep' ? d.actie_flow_diep : d.actie_flow_ondiep;
         if (!isNaN(flow)) {
             await stelIn(bad_id, datum, 'filter_spoelen_flow',
-                `Flow ${bad_naam} onder ${flowMin} m³/h — filter spoelen`,
+                `Flow ${bad_naam} onder ${flowMin} m³/h — Filter spoelen`,
                 flow < flowMin);
         }
     }
@@ -103,13 +105,13 @@ async function genereer(bad_id, datum, bad_naam, body) {
         // Filter druk absolute
         if (!isNaN(drukIn)) {
             await stelIn(bad_id, datum, 'filter_spoelen_druk',
-                `Filterdruk Peuterbad > ${d.actie_druk_peuterbad} bar — filter spoelen`,
+                `Filterdruk Peuterbad > ${d.actie_druk_peuterbad} bar — Filter spoelen`,
                 drukIn > d.actie_druk_peuterbad);
         }
         // Flow
         if (!isNaN(flow)) {
             await stelIn(bad_id, datum, 'filter_spoelen_flow',
-                `Flow Peuterbad onder ${d.actie_flow_peuterbad} m³/h — filter spoelen`,
+                `Flow Peuterbad onder ${d.actie_flow_peuterbad} m³/h — Filter spoelen`,
                 flow < d.actie_flow_peuterbad);
         }
     }
@@ -128,15 +130,22 @@ async function genereerVerbruik(datum, body) {
     const chloor = parseFloat(body.chemicalien_chloor);
     if (!isNaN(chloor)) {
         await stelIn(bad_id, datum, 'chloor_bestellen',
-            `Chloorvoorraad onder ${d.actie_chloor_min} liter — chloor bestellen`,
+            `Chloorvoorraad onder ${d.actie_chloor_min} liter — Chloor bestellen`,
             chloor < d.actie_chloor_min);
     }
 
     const zwavelzuur = parseFloat(body.chemicalien_zwavelzuur);
     if (!isNaN(zwavelzuur)) {
         await stelIn(bad_id, datum, 'zwavelzuur_bestellen',
-            `Zwavelzuurvoorraad onder ${d.actie_zwavelzuur_min} liter — zwavelzuur bestellen`,
+            `Zwavelzuurvoorraad onder ${d.actie_zwavelzuur_min} liter — Zwavelzuur bestellen`,
             zwavelzuur < d.actie_zwavelzuur_min);
+    }
+
+    const floculant = parseFloat(body.floculant);
+    if (!isNaN(floculant)) {
+        await stelIn(bad_id, datum, 'floculant_bijvullen',
+            `Floculant ${floculant} < ${d.actie_floculant_min} — Vul floculant bij`,
+            floculant < d.actie_floculant_min);
     }
 }
 
@@ -151,7 +160,7 @@ async function genereerBezoekers(datum, bezoekers_vandaag) {
     const [bads] = await pool.execute("SELECT id, naam FROM baden WHERE naam IN ('Diep', 'Ondiep')");
     for (const bad of bads) {
         await stelIn(bad.id, datum, 'filter_spoelen_bezoekers',
-            `Aantal bezoekers > ${d.actie_bezoekers_max} — filter spoelen`,
+            `Aantal bezoekers ${aantal} > ${d.actie_bezoekers_max} — Filter spoelen`,
             aantal > d.actie_bezoekers_max);
     }
 }
@@ -200,7 +209,7 @@ async function genereerSpoelbeurt(datum) {
         const totaal = await berekenSpoelbeurtTotaal(bad.id, datum);
         totalen[bad.naam.toLowerCase()] = totaal;
         await stelIn(bad.id, datum, 'filter_spoelen_spoelbeurt',
-            `Aantal bezoekers sinds spoelbeurt ${bad.naam} > ${d.actie_spoelbeurt_max} — filter spoelen`,
+            `Aantal bezoekers sinds spoelbeurt ${bad.naam} ${totaal} > ${d.actie_spoelbeurt_max} — Filter spoelen`,
             totaal > d.actie_spoelbeurt_max);
     }
     return totalen;

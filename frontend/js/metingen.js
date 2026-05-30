@@ -88,7 +88,7 @@ const SUBTAB_LABELS = {
 const SUBTAB_ACTIE_MAP = {
     'meetwaarden':           ['filter_spoelen_druk|Diep',      'filter_spoelen_druk|Ondiep',
                               'filter_spoelen_flow|Diep',      'filter_spoelen_flow|Ondiep'],
-    'verbruik':              ['chloor_bestellen|Diep',         'zwavelzuur_bestellen|Diep'],
+    'verbruik':              ['chloor_bestellen|Diep', 'zwavelzuur_bestellen|Diep', 'floculant_bijvullen|Diep'],
     'verwarmingssysteem':    [],
     'bezoekers':             ['filter_spoelen_bezoekers|Diep',   'filter_spoelen_bezoekers|Ondiep',
                               'filter_spoelen_spoelbeurt|Diep', 'filter_spoelen_spoelbeurt|Ondiep'],
@@ -97,9 +97,10 @@ const SUBTAB_ACTIE_MAP = {
 };
 
 /**
- * Update subtab button labels with action counts, mirroring the main Acties tab badge logic.
+ * Update subtab button labels with action group counts, mirroring the main Acties tab badge logic.
+ * Counts groups (visual rows) rather than individual DB actions.
  */
-function updateSubtabBadges(open, gesloten) {
+function updateSubtabBadges(actieGroepen) {
     Object.entries(SUBTAB_ACTIE_MAP).forEach(([subtab, sleutels]) => {
         const btn = document.getElementById(`subtab-${subtab}`);
         if (!btn) return;
@@ -109,8 +110,12 @@ function updateSubtabBadges(open, gesloten) {
             btn.classList.remove('subtab-heeft-acties');
             return;
         }
-        const nOpen   = open.filter(a => sleutels.includes(`${a.actie_type}|${a.bad_naam}`)).length;
-        const nTotaal = nOpen + gesloten.filter(a => sleutels.includes(`${a.actie_type}|${a.bad_naam}`)).length;
+        let nOpen = 0, nTotaal = 0;
+        actieGroepen.forEach(groep => {
+            if (!groep.items.some(a => sleutels.includes(`${a.actie_type}|${a.bad_naam}`))) return;
+            nTotaal++;
+            if (!groep.items.every(a => a.opgelost)) nOpen++;
+        });
         btn.classList.toggle('subtab-heeft-acties', nOpen > 0);
         if (nOpen > 0)        btn.textContent = `${label} ⚠ (${nOpen})`;
         else if (nTotaal > 0) btn.textContent = `${label} ✓`;
@@ -151,6 +156,7 @@ const ACTIE_VELD_MAP = {
     'filter_spoelen_spoelbeurt|Ondiep':  ['bezoekers-spoelbeurt-ondiep-display'],
     'chloor_bestellen|Diep':             ['chemicalien-chloor'],
     'zwavelzuur_bestellen|Diep':        ['chemicalien-zwavelzuur'],
+    'floculant_bijvullen|Diep':         ['floculant'],
 };
 
 /**
@@ -166,25 +172,36 @@ async function laadActies(datum) {
         const open     = acties.filter(a => !a.opgelost);
         const gesloten = acties.filter(a =>  a.opgelost);
 
+        // ── Build groups early — used by badges AND tab content ──────────
+        const groepSleutel = a =>
+            `${a.bad_naam}|${a.actie_type.startsWith('filter_spoelen') ? 'filter_spoelen' : a.actie_type}`;
+        const actieGroepen = new Map();
+        acties.forEach(a => {
+            const k = groepSleutel(a);
+            if (!actieGroepen.has(k)) actieGroepen.set(k, { bad_naam: a.bad_naam, items: [] });
+            actieGroepen.get(k).items.push(a);
+        });
+        const openGroepen     = [...actieGroepen.values()].filter(g => !g.items.every(a => a.opgelost));
+        const geslotenGroepen = [...actieGroepen.values()].filter(g =>  g.items.every(a => a.opgelost));
+
         // ── Tab badge ────────────────────────────────────────────────────
-        const totaal = acties.length;
         const tabBtn = document.getElementById('tab-acties');
         if (tabBtn) {
-            if (totaal === 0)         tabBtn.textContent = 'Acties';
-            else if (open.length > 0) tabBtn.textContent = `Acties (${open.length} ⚠ / ${totaal})`;
-            else                      tabBtn.textContent = `Acties (${totaal} ✓)`;
-            tabBtn.classList.toggle('acties-actief', open.length > 0);
+            if (actieGroepen.size === 0)       tabBtn.textContent = 'Acties';
+            else if (openGroepen.length > 0)   tabBtn.textContent = `Acties (${openGroepen.length} ⚠ / ${actieGroepen.size})`;
+            else                               tabBtn.textContent = `Acties (${actieGroepen.size} ✓)`;
+            tabBtn.classList.toggle('acties-actief', openGroepen.length > 0);
         }
 
         // ── Main nav badge ───────────────────────────────────────────────
         const navBtn = document.getElementById('btn-rol-waterbeheer');
         if (navBtn) {
-            navBtn.textContent = open.length > 0 ? `Waterbeheer ⚠ (${open.length})` : 'Waterbeheer';
-            navBtn.classList.toggle('heeft-acties', open.length > 0);
+            navBtn.textContent = openGroepen.length > 0 ? `Waterbeheer ⚠ (${openGroepen.length})` : 'Waterbeheer';
+            navBtn.classList.toggle('heeft-acties', openGroepen.length > 0);
         }
 
         // ── Subtab badges ────────────────────────────────────────────────
-        updateSubtabBadges(open, gesloten);
+        updateSubtabBadges(actieGroepen);
 
         // ── Field indicators: ⚠ for open, ✓ for resolved ──────────────
         document.querySelectorAll('.actie-indicator').forEach(el => el.remove());
@@ -227,17 +244,6 @@ async function laadActies(datum) {
                 : { reden: b.slice(0, idx), actie: b.slice(idx + 3) };
         };
 
-        // Group filter_spoelen_* actions per pool into one combined row
-        const groepSleutel = a =>
-            `${a.bad_naam}|${a.actie_type.startsWith('filter_spoelen') ? 'filter_spoelen' : a.actie_type}`;
-
-        const actieGroepen = new Map();
-        acties.forEach(a => {
-            const k = groepSleutel(a);
-            if (!actieGroepen.has(k)) actieGroepen.set(k, { bad_naam: a.bad_naam, items: [] });
-            actieGroepen.get(k).items.push(a);
-        });
-
         const rijGroep = groep => {
             const alleOpgelost = groep.items.every(a => a.opgelost);
             const ids = groep.items.map(a => a.id);
@@ -275,9 +281,6 @@ async function laadActies(datum) {
                 </td>
             </tr>`;
         };
-
-        const openGroepen    = [...actieGroepen.values()].filter(g => !g.items.every(a => a.opgelost));
-        const geslotenGroepen = [...actieGroepen.values()].filter(g =>  g.items.every(a => a.opgelost));
 
         if (acties.length === 0) {
             inhoud.innerHTML = `<div class="categorie-box" style="color:#28a745; font-weight:bold;">
