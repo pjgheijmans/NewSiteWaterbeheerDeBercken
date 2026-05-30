@@ -13,6 +13,12 @@ services:
     volumes:
       - db_data:/var/lib/mysql
       - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pgeheim_wachtwoord"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 30s
 
   web:
     build: .
@@ -31,7 +37,8 @@ services:
       - .:/app
       - /app/node_modules
     depends_on:
-      - db
+      db:
+        condition: service_healthy
 
 volumes:
   db_data:

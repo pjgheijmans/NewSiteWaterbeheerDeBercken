@@ -137,7 +137,10 @@ async function verwerkCentraleOpslaan(autoSave = false) {
      */
     function refreshNaOpslaan() {
         if (!autoSave) laadMetingen();
-        else if (huidigeRol === 'waterbeheer') laadEnBerekenVerbruik();
+        else if (huidigeRol === 'waterbeheer') {
+            laadEnBerekenVerbruik();
+            laadActies(document.getElementById('centraleDatum').value);
+        }
     }
 
     // ── Logboek – geen centrale opslaan nodig ────────────────────────────

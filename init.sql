@@ -85,7 +85,17 @@ INSERT IGNORE INTO limieten (parameter_naam, min_waarde, max_waarde) VALUES
 ('water_peuterbad', 0.00, 99999.00),
 ('chloor_vrij', 0.50, 1.50),
 ('chloor_totaal', 0.30, 3.50),
-('chloor_gebonden', 0.30, 3.50);
+('chloor_gebonden', 0.30, 3.50),
+-- Actie-drempelwaarden (max_waarde = drempelwaarde; actie wanneer gemeten waarde deze overschrijdt/onderschrijdt)
+('actie_druk_verschil', 0.00, 0.40),
+('actie_druk_peuterbad', 0.00, 1.00),
+('actie_flow_diep', 0.00, 250.00),
+('actie_flow_ondiep', 0.00, 75.00),
+('actie_flow_peuterbad', 0.00, 4.00),
+('actie_chloor_min', 0.00, 200.00),
+('actie_zwavelzuur_min', 0.00, 50.00),
+('actie_bezoekers_max', 0.00, 750.00),
+('actie_spoelbeurt_max', 0.00, 1500.00);
 
 CREATE TABLE IF NOT EXISTS gebruikers (
     id INT AUTO_INCREMENT PRIMARY KEY, 
@@ -150,10 +160,14 @@ CREATE TABLE IF NOT EXISTS acties (
     actie_type VARCHAR(50) NOT NULL,
     opgelost BOOLEAN DEFAULT FALSE,
     opgelost_op DATETIME NULL,
+    opgelost_door VARCHAR(100) NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (bad_id) REFERENCES baden(id),
     UNIQUE KEY unieke_actie (bad_id, datum, actie_type)
 );
+
+-- Migratie: voeg opgelost_door toe aan acties
+ALTER TABLE acties ADD COLUMN IF NOT EXISTS opgelost_door VARCHAR(100) NULL AFTER opgelost_op;
 
 -- Verbruik diep/ondiep: water, elektriciteit, gas, chemicaliën
 CREATE TABLE IF NOT EXISTS verbruik_diep_ondiep (

@@ -2,6 +2,8 @@
  * Generic repository for database export/import/truncate utilities.
  */
 const pool = require('./db');
+const fs   = require('fs');
+const path = require('path');
 const limietenRepo = require('./limieten');
 const gebruikersRepo = require('./gebruikers');
 
@@ -43,12 +45,35 @@ async function exportRows(tabel) {
 }
 
 /**
+ * Execute every statement in init.sql, creating all tables and running migrations.
+ * Errors from individual statements are logged but do not abort the process.
+ */
+async function runInitSql() {
+    const sql = fs.readFileSync(path.join(__dirname, '..', '..', 'init.sql'), 'utf8');
+    const statements = sql
+        .split('\n')
+        .filter(line => !line.trim().startsWith('--'))
+        .join('\n')
+        .split(';')
+        .map(s => s.trim())
+        .filter(s => s.length > 0);
+
+    for (const stmt of statements) {
+        try {
+            await pool.query(stmt);
+        } catch (err) {
+            console.warn('init.sql statement warning:', err.message.slice(0, 120));
+        }
+    }
+}
+
+/**
  * Truncate the specified table with foreign key checks disabled.
  */
 async function truncate(tabel) {
-    await pool.execute('SET FOREIGN_KEY_CHECKS = 0');
-    await pool.execute(`TRUNCATE TABLE ${tabel}`);
-    await pool.execute('SET FOREIGN_KEY_CHECKS = 1');
+    await pool.query('SET FOREIGN_KEY_CHECKS = 0');
+    await pool.query(`TRUNCATE TABLE ${tabel}`);
+    await pool.query('SET FOREIGN_KEY_CHECKS = 1');
 }
 
 /**
@@ -80,14 +105,15 @@ async function setForeignKeyChecks(on) {
 }
 
 /**
- * Truncate every data table, wiping all content including limieten and gebruikers.
+ * Truncate every data table. Skips tables that do not exist yet.
  */
 async function truncateAll() {
-    await pool.execute('SET FOREIGN_KEY_CHECKS = 0');
+    await pool.query('SET FOREIGN_KEY_CHECKS = 0');
     for (const tabel of ALL_DATA_TABLES) {
-        await pool.execute(`TRUNCATE TABLE ${tabel}`);
+        try { await pool.query(`TRUNCATE TABLE ${tabel}`); }
+        catch (err) { console.warn(`truncateAll: skipping ${tabel}: ${err.message.slice(0, 80)}`); }
     }
-    await pool.execute('SET FOREIGN_KEY_CHECKS = 1');
+    await pool.query('SET FOREIGN_KEY_CHECKS = 1');
 }
 
 /**
@@ -98,4 +124,4 @@ async function seedAllDefaults() {
     await gebruikersRepo.seedDefaults();
 }
 
-module.exports = { exportRows, truncate, truncateAll, seedAllDefaults, getBadId, importRow, setForeignKeyChecks };
+module.exports = { exportRows, truncate, truncateAll, seedAllDefaults, runInitSql, getBadId, importRow, setForeignKeyChecks };

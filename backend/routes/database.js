@@ -129,8 +129,9 @@ router.post('/initialiseer', checkAuth, async (req, res) => {
     if (!isAdminOrWaterbeheerder(req.session.gebruiker.taak))
         return res.status(403).json({ error: 'Geen toegang' });
     try {
-        await repo.truncateAll();
-        await repo.seedAllDefaults();
+        await repo.runInitSql();    // create all tables + run migrations
+        await repo.truncateAll();   // wipe all data
+        await repo.seedAllDefaults(); // seed limieten + gebruikers
         req.session.destroy(() => {});
         res.json({ status: 'success', message: 'Database geïnitialiseerd met standaardwaarden.' });
     } catch (err) { console.error(err); res.status(500).json({ error: err.message }); }

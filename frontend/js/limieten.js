@@ -48,6 +48,15 @@ const LIMIETEN_LABELS = {
     chloor_vrij:           'Chloor Vrij (mg/l)',
     chloor_totaal:         'Chloor Totaal (mg/l)',
     chloor_gebonden:       'Chloor Gebonden (mg/l)',
+    actie_druk_verschil:   'Filterdruk verschil max (bar)',
+    actie_druk_peuterbad:  'Filterdruk Peuterbad max (bar)',
+    actie_flow_diep:       'Flow Diep min (m³/h)',
+    actie_flow_ondiep:     'Flow Ondiep min (m³/h)',
+    actie_flow_peuterbad:  'Flow Peuterbad min (m³/h)',
+    actie_chloor_min:      'Chloorvoorraad min (L)',
+    actie_zwavelzuur_min:  'Zwavelzuurvoorraad min (L)',
+    actie_bezoekers_max:   'Bezoekers max (per dag)',
+    actie_spoelbeurt_max:  'Bezoekers max (sinds spoelbeurt)',
 };
 
 const LIMIETEN_GROEPEN = [
@@ -68,6 +77,12 @@ const LIMIETEN_GROEPEN = [
         titel: 'Coördinatoren – Chloor',
         info: 'Chloor Vrij geldt ook als grenswaarde voor de waterbeheer-meting (chloor_waarde).',
         params: ['chloor_vrij', 'chloor_totaal', 'chloor_gebonden'],
+    },
+    {
+        titel: 'Actie-drempelwaarden',
+        info: 'Drempelwaarden die bepalen wanneer een actie wordt aangemaakt. Actie wordt getriggerd als de gemeten waarde de drempel overschrijdt (max) of onderschrijdt (min).',
+        enkelvoudig: true,
+        params: ['actie_druk_verschil', 'actie_druk_peuterbad', 'actie_flow_diep', 'actie_flow_ondiep', 'actie_flow_peuterbad', 'actie_chloor_min', 'actie_zwavelzuur_min', 'actie_bezoekers_max', 'actie_spoelbeurt_max'],
     },
 ];
 
@@ -142,25 +157,42 @@ function bouwLimietenBeheerTabel() {
 
         let html = `<h3>${groep.titel}</h3>`;
         if (groep.info) html += `<p style="font-size:13px; color:#666; margin: -8px 0 10px;">${groep.info}</p>`;
-        html += `<table class="categorie-tabel">
-            <thead><tr><th>Parameter</th><th>Minimum</th><th>Maximum</th></tr></thead>
-            <tbody>`;
 
-        groep.params.forEach(param => {
-            const val = actieveLimieten[param] || { min: '', max: '' };
-            const label = LIMIETEN_LABELS[param] || param;
-            html += `<tr data-limiet-param="${param}">
-                <td><b>${label}</b></td>
-                <td><input type="number" class="l-min" step="0.01" value="${val.min}"></td>
-                <td><input type="number" class="l-max" step="0.01" value="${val.max}"></td>
-            </tr>`;
-        });
+        if (groep.enkelvoudig) {
+            html += `<table class="categorie-tabel">
+                <thead><tr><th>Parameter</th><th>Drempelwaarde</th></tr></thead>
+                <tbody>`;
+            groep.params.forEach(param => {
+                const val = actieveLimieten[param] || { min: 0, max: '' };
+                const label = LIMIETEN_LABELS[param] || param;
+                html += `<tr data-limiet-param="${param}">
+                    <td><b>${label}</b></td>
+                    <td>
+                        <input type="number" class="l-max" step="0.01" value="${val.max}">
+                        <input type="hidden" class="l-min" value="0">
+                    </td>
+                </tr>`;
+            });
+        } else {
+            html += `<table class="categorie-tabel">
+                <thead><tr><th>Parameter</th><th>Minimum</th><th>Maximum</th></tr></thead>
+                <tbody>`;
+            groep.params.forEach(param => {
+                const val = actieveLimieten[param] || { min: '', max: '' };
+                const label = LIMIETEN_LABELS[param] || param;
+                html += `<tr data-limiet-param="${param}">
+                    <td><b>${label}</b></td>
+                    <td><input type="number" class="l-min" step="0.01" value="${val.min}"></td>
+                    <td><input type="number" class="l-max" step="0.01" value="${val.max}"></td>
+                </tr>`;
+            });
+        }
 
         html += '</tbody></table>';
         box.innerHTML = html;
         container.appendChild(box);
 
-        box.querySelectorAll('input').forEach(input => {
+        box.querySelectorAll('input:not([type="hidden"])').forEach(input => {
             input.addEventListener('input', scheduleAutoSaveLimieten);
         });
     });

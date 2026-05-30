@@ -4,12 +4,20 @@
  */
 function wisselBadPagina(pagina) {
         huidigeBadPagina = pagina;
-        ['grote-baden', 'peuterbad', 'logboek'].forEach(p => {
+        // Always hide coordinator elements — bouwTabelOp is skipped for logboek/acties pages
+        ['coordinatoren-subtab-nav', 'coordinatoren-blokken-content',
+         'coordinatoren-checklist-content', 'coordinatoren-daggegevens-content',
+         'coordinatoren-logboek-content'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+        ['grote-baden', 'peuterbad', 'logboek', 'acties'].forEach(p => {
             document.getElementById(`tab-${p}`)?.classList.toggle('actief', p === pagina);
         });
         document.getElementById('waterbeheer-grote-baden-content').style.display = (pagina === 'grote-baden') ? 'block' : 'none';
         document.getElementById('waterbeheer-peuterbad-content').style.display   = (pagina === 'peuterbad')   ? 'block' : 'none';
         document.getElementById('waterbeheer-logboek-content').style.display     = (pagina === 'logboek')     ? 'block' : 'none';
+        document.getElementById('waterbeheer-acties-content').style.display      = (pagina === 'acties')      ? 'block' : 'none';
         document.getElementById('tables-content').style.display = 'none';
         laadMetingen();
     }
@@ -21,12 +29,15 @@ function wisselBadPagina(pagina) {
  */
 function wisselSubtab(subtab) {
         huidigeSubtab = subtab;
-        ['meetwaarden', 'verbruik', 'verwarmingssysteem'].forEach(s => {
+        ['meetwaarden', 'verbruik', 'verwarmingssysteem', 'bezoekers'].forEach(s => {
             document.getElementById(`subtab-${s}`).classList.toggle('actief', s === subtab);
             document.getElementById(`subtab-${s}-content`).style.display = (s === subtab) ? 'block' : 'none';
         });
         if (subtab === 'verbruik' || subtab === 'verwarmingssysteem') {
             laadWaterbeheerVelden();
+        }
+        if (subtab === 'bezoekers') {
+            laadBezoekers();
         }
     }
 
@@ -38,9 +49,13 @@ async function laadMetingen() {
         const datum = document.getElementById('centraleDatum').value;
         if (!datum) return;
 
-        // Logboek has its own loader
+        // Logboek and Acties have their own loaders
         if (huidigeRol === 'waterbeheer' && huidigeBadPagina === 'logboek') {
             laadLogboek(datum);
+            return;
+        }
+        if (huidigeRol === 'waterbeheer' && huidigeBadPagina === 'acties') {
+            laadActies(datum);
             return;
         }
 
@@ -52,54 +67,269 @@ async function laadMetingen() {
             bouwTabelOp(gecachteData);
             
             if (huidigeRol === 'waterbeheer') {
-                laadActies(datum);
+                await laadBezoekers();        // must complete first: generates bezoekers actions in DB
+                laadActies(datum);            // fire-and-forget: now sees the up-to-date action state
                 await laadEnBerekenVerbruik();
             }
         } catch (fout) { toonBericht('Fout bij het ophalen van de gegevens.', 'fout'); }
     }
 
-/**
- * Load the action items for a given date and display them in the action panel.
- * @param {string} datum - The selected date used for filtering actions.
- */
-async function laadActies(datum) {
-        try {
-            const response = await apiCall(`/api/acties?datum=${datum}`);
-            const acties = await response.json();
-            if (acties.length > 0) {
-                document.getElementById('acties-paneel').style.display = 'block';
-                const tbody = document.getElementById('acties-tbody');
-                tbody.innerHTML = acties.map(actie => `
-                    <tr style="background: white; border-bottom: 1px solid #ddd;">
-                        <td style="padding: 10px;">${actie.bad_naam}</td>
-                        <td style="padding: 10px;">${actie.beschrijving}</td>
-                        <td style="padding: 10px; text-align: center;">
-                            <input type="checkbox" onchange="losActieOp(${actie.id}, this.checked)" style="width: 18px; height: 18px; cursor: pointer;">
-                        </td>
-                    </tr>
-                `).join('');
-            } else {
-                document.getElementById('acties-paneel').style.display = 'none';
-            }
-        } catch (fout) { console.error('Fout bij laden acties:', fout); }
-    }
+// Base labels for every subtab (used when rebuilding badge text)
+const SUBTAB_LABELS = {
+    'meetwaarden':           'Meetwaarden',
+    'verbruik':              'Verbruik',
+    'verwarmingssysteem':    'Verwarmingssysteem',
+    'bezoekers':             'Bezoekers',
+    'peuterbad-meetwaarden': 'Meetwaarden',
+    'peuterbad-verbruik':    'Verbruik',
+};
+
+// Which actie_type|bad_naam keys are relevant to each subtab
+const SUBTAB_ACTIE_MAP = {
+    'meetwaarden':           ['filter_spoelen_druk|Diep',      'filter_spoelen_druk|Ondiep',
+                              'filter_spoelen_flow|Diep',      'filter_spoelen_flow|Ondiep'],
+    'verbruik':              ['chloor_bestellen|Diep',         'zwavelzuur_bestellen|Diep'],
+    'verwarmingssysteem':    [],
+    'bezoekers':             ['filter_spoelen_bezoekers|Diep',   'filter_spoelen_bezoekers|Ondiep',
+                              'filter_spoelen_spoelbeurt|Diep', 'filter_spoelen_spoelbeurt|Ondiep'],
+    'peuterbad-meetwaarden': ['filter_spoelen_druk|Peuterbad', 'filter_spoelen_flow|Peuterbad'],
+    'peuterbad-verbruik':    [],
+};
 
 /**
- * Mark an action as resolved on the server and refresh the action list.
- * @param {number} actieId - The id of the action to resolve.
- * @param {boolean} opgelost - Whether the action checkbox was checked.
+ * Update subtab button labels with action counts, mirroring the main Acties tab badge logic.
+ */
+function updateSubtabBadges(open, gesloten) {
+    Object.entries(SUBTAB_ACTIE_MAP).forEach(([subtab, sleutels]) => {
+        const btn = document.getElementById(`subtab-${subtab}`);
+        if (!btn) return;
+        const label = SUBTAB_LABELS[subtab] || subtab;
+        if (!sleutels.length) {
+            btn.textContent = label;
+            btn.classList.remove('subtab-heeft-acties');
+            return;
+        }
+        const nOpen   = open.filter(a => sleutels.includes(`${a.actie_type}|${a.bad_naam}`)).length;
+        const nTotaal = nOpen + gesloten.filter(a => sleutels.includes(`${a.actie_type}|${a.bad_naam}`)).length;
+        btn.classList.toggle('subtab-heeft-acties', nOpen > 0);
+        if (nOpen > 0)        btn.textContent = `${label} ⚠ (${nOpen})`;
+        else if (nTotaal > 0) btn.textContent = `${label} ✓`;
+        else                  btn.textContent = label;
+    });
+}
+
+/**
+ * Fetch today's visitor count from the coordinator and update the Bezoekers tab display.
+ * Also triggers the bezoekers action check on the backend.
+ */
+async function laadBezoekers() {
+    const datum = document.getElementById('centraleDatum').value;
+    if (!datum) return;
+    try {
+        const res = await apiCall(`/api/bezoekers?datum=${datum}`);
+        const data = await res.json();
+        const el = document.getElementById('bezoekers-vandaag-display');
+        if (el) el.value = data.bezoekers_vandaag ?? '';
+        const elDiep = document.getElementById('bezoekers-spoelbeurt-diep-display');
+        if (elDiep) elDiep.value = data.bezoekers_totaal_diep ?? '';
+        const elOndiep = document.getElementById('bezoekers-spoelbeurt-ondiep-display');
+        if (elOndiep) elOndiep.value = data.bezoekers_totaal_ondiep ?? '';
+    } catch (fout) { console.error('Fout bij laden bezoekers:', fout); }
+}
+
+// Mapping from actie_type|bad_naam to input element IDs for field indicators
+const ACTIE_VELD_MAP = {
+    'filter_spoelen_druk|Diep':         ['filter-in-diep',     'filter-uit-diep'],
+    'filter_spoelen_druk|Ondiep':       ['filter-in-ondiep',   'filter-uit-ondiep'],
+    'filter_spoelen_druk|Peuterbad':    ['peuterbad-filterdruk'],
+    'filter_spoelen_flow|Diep':         ['flow-diep'],
+    'filter_spoelen_flow|Ondiep':       ['flow-ondiep'],
+    'filter_spoelen_flow|Peuterbad':    ['peuterbad-flow'],
+    'filter_spoelen_bezoekers|Diep':     ['bezoekers-vandaag-display'],
+    'filter_spoelen_bezoekers|Ondiep':   ['bezoekers-vandaag-display'],
+    'filter_spoelen_spoelbeurt|Diep':    ['bezoekers-spoelbeurt-diep-display'],
+    'filter_spoelen_spoelbeurt|Ondiep':  ['bezoekers-spoelbeurt-ondiep-display'],
+    'chloor_bestellen|Diep':             ['chemicalien-chloor'],
+    'zwavelzuur_bestellen|Diep':        ['chemicalien-zwavelzuur'],
+};
+
+/**
+ * Load acties for a date, update the tab badge, add field indicators,
+ * and populate the Acties tab content.
+ */
+async function laadActies(datum) {
+    try {
+        const response = await apiCall(`/api/acties?datum=${datum}`);
+        const acties = await response.json();
+
+        if (!Array.isArray(acties)) return;
+        const open     = acties.filter(a => !a.opgelost);
+        const gesloten = acties.filter(a =>  a.opgelost);
+
+        // ── Tab badge ────────────────────────────────────────────────────
+        const totaal = acties.length;
+        const tabBtn = document.getElementById('tab-acties');
+        if (tabBtn) {
+            if (totaal === 0)         tabBtn.textContent = 'Acties';
+            else if (open.length > 0) tabBtn.textContent = `Acties (${open.length} ⚠ / ${totaal})`;
+            else                      tabBtn.textContent = `Acties (${totaal} ✓)`;
+            tabBtn.classList.toggle('acties-actief', open.length > 0);
+        }
+
+        // ── Main nav badge ───────────────────────────────────────────────
+        const navBtn = document.getElementById('btn-rol-waterbeheer');
+        if (navBtn) {
+            navBtn.textContent = open.length > 0 ? `Waterbeheer ⚠ (${open.length})` : 'Waterbeheer';
+            navBtn.classList.toggle('heeft-acties', open.length > 0);
+        }
+
+        // ── Subtab badges ────────────────────────────────────────────────
+        updateSubtabBadges(open, gesloten);
+
+        // ── Field indicators: ⚠ for open, ✓ for resolved ──────────────
+        document.querySelectorAll('.actie-indicator').forEach(el => el.remove());
+        open.forEach(actie => {
+            const sleutel = `${actie.actie_type}|${actie.bad_naam}`;
+            (ACTIE_VELD_MAP[sleutel] || []).forEach(inputId => {
+                const input = document.getElementById(inputId);
+                if (!input) return;
+                const indicator = document.createElement('span');
+                indicator.className = 'actie-indicator';
+                indicator.title = actie.beschrijving;
+                indicator.textContent = '⚠';
+                input.parentElement.appendChild(indicator);
+            });
+        });
+        gesloten.forEach(actie => {
+            const sleutel = `${actie.actie_type}|${actie.bad_naam}`;
+            (ACTIE_VELD_MAP[sleutel] || []).forEach(inputId => {
+                const input = document.getElementById(inputId);
+                if (!input) return;
+                const indicator = document.createElement('span');
+                indicator.className = 'actie-indicator actie-indicator-opgelost';
+                const tijdstip = actie.opgelost_op ? String(actie.opgelost_op).slice(0, 16).replace('T', ' ') : '';
+                const door = actie.opgelost_door ? ` door ${actie.opgelost_door}` : '';
+                indicator.title = `Afgehandeld${door}${tijdstip ? ' om ' + tijdstip : ''}`;
+                indicator.textContent = '✓';
+                input.parentElement.appendChild(indicator);
+            });
+        });
+
+        // ── Tab content ─────────────────────────────────────────────────
+        const inhoud = document.getElementById('acties-tab-inhoud');
+        if (!inhoud) return;
+
+        // Split "reden — actie" on the last occurrence of ' — '
+        const splitBeschrijving = b => {
+            const idx = b.lastIndexOf(' — ');
+            return idx === -1
+                ? { reden: b, actie: '' }
+                : { reden: b.slice(0, idx), actie: b.slice(idx + 3) };
+        };
+
+        // Group filter_spoelen_* actions per pool into one combined row
+        const groepSleutel = a =>
+            `${a.bad_naam}|${a.actie_type.startsWith('filter_spoelen') ? 'filter_spoelen' : a.actie_type}`;
+
+        const actieGroepen = new Map();
+        acties.forEach(a => {
+            const k = groepSleutel(a);
+            if (!actieGroepen.has(k)) actieGroepen.set(k, { bad_naam: a.bad_naam, items: [] });
+            actieGroepen.get(k).items.push(a);
+        });
+
+        const rijGroep = groep => {
+            const alleOpgelost = groep.items.every(a => a.opgelost);
+            const ids = groep.items.map(a => a.id);
+            const { actie } = splitBeschrijving(groep.items[0].beschrijving);
+            const reden = groep.items.map(a => splitBeschrijving(a.beschrijving).reden).join('<br>');
+
+            if (!alleOpgelost) {
+                return `
+                <tr>
+                    <td><b>${groep.bad_naam}</b></td>
+                    <td><b>${actie}</b></td>
+                    <td>${reden}</td>
+                    <td style="text-align:center;">
+                        <input type="checkbox" onchange="losActieGroepOp(${JSON.stringify(ids)}, this.checked)"
+                            style="width:18px; height:18px; cursor:pointer;">
+                    </td>
+                </tr>`;
+            }
+            const latest = groep.items.reduce((a, b) =>
+                (String(a.opgelost_op) > String(b.opgelost_op)) ? a : b);
+            const tijdstip = latest.opgelost_op ? String(latest.opgelost_op).slice(0, 16).replace('T', ' ') : '';
+            const door = latest.opgelost_door ? ` door ${latest.opgelost_door}` : '';
+            return `
+            <tr style="background:#f0fff0; color:#555;">
+                <td><b>${groep.bad_naam}</b></td>
+                <td>
+                    <span style="text-decoration:line-through;"><b>${actie}</b></span>
+                    <span style="font-size:12px; color:#28a745; display:block;">✓ Afgehandeld${door}${tijdstip ? ' om ' + tijdstip : ''}</span>
+                </td>
+                <td><span style="text-decoration:line-through;">${reden}</span></td>
+                <td style="text-align:center;">
+                    <input type="checkbox" checked onchange="losActieGroepOp(${JSON.stringify(ids)}, this.checked)"
+                        title="Vink uit om actie te heropenen"
+                        style="width:18px; height:18px; cursor:pointer;">
+                </td>
+            </tr>`;
+        };
+
+        const openGroepen    = [...actieGroepen.values()].filter(g => !g.items.every(a => a.opgelost));
+        const geslotenGroepen = [...actieGroepen.values()].filter(g =>  g.items.every(a => a.opgelost));
+
+        if (acties.length === 0) {
+            inhoud.innerHTML = `<div class="categorie-box" style="color:#28a745; font-weight:bold;">
+                ✓ Geen openstaande acties voor deze dag.</div>`;
+            return;
+        }
+
+        inhoud.innerHTML = `
+            <div class="categorie-box">
+                <h3 style="color:${openGroepen.length > 0 ? '#dc3545' : '#28a745'};">
+                    ${openGroepen.length > 0 ? `Openstaande acties (${openGroepen.length})` : '✓ Alle acties afgehandeld'}
+                </h3>
+                <table class="categorie-tabel">
+                    <thead><tr><th>Bad</th><th>Actie</th><th>Reden</th><th style="text-align:center; width:110px;">Uitgevoerd</th></tr></thead>
+                    <tbody>
+                        ${openGroepen.map(rijGroep).join('')}
+                        ${geslotenGroepen.map(rijGroep).join('')}
+                    </tbody>
+                </table>
+            </div>`;
+    } catch (fout) { console.error('Fout bij laden acties:', fout); }
+}
+
+/**
+ * Resolve or reopen all actions in a grouped row, then refresh the acties view.
+ */
+async function losActieGroepOp(ids, opgelost) {
+    try {
+        const endpoint = opgelost ? 'resolve' : 'unresolve';
+        await Promise.all(ids.map(id => apiCall(`/api/acties/${id}/${endpoint}`, { method: 'POST' })));
+        const datum = document.getElementById('centraleDatum').value;
+        await laadActies(datum);
+        toonBericht(opgelost ? 'Actie gemarkeerd als opgelost!' : 'Actie heropend.', 'succes');
+    } catch (fout) { console.error('Fout bij oplossen acties:', fout); }
+}
+
+/**
+ * Mark an action as resolved or reopen it (undo), then refresh the acties view.
  */
 async function losActieOp(actieId, opgelost) {
-        if (!opgelost) return;
-        try {
-            const response = await apiCall(`/api/acties/${actieId}/resolve`, { method: 'POST' });
-            if (response.ok) {
-                const datum = document.getElementById('centraleDatum').value;
-                laadActies(datum);
-                toonBericht('Actie gemarkeerd als opgelost!', 'succes');
-            }
-        } catch (fout) { console.error('Fout bij oplossen actie:', fout); }
-    }
+    try {
+        const endpoint = opgelost
+            ? `/api/acties/${actieId}/resolve`
+            : `/api/acties/${actieId}/unresolve`;
+        const response = await apiCall(endpoint, { method: 'POST' });
+        if (response.ok) {
+            const datum = document.getElementById('centraleDatum').value;
+            await laadActies(datum);
+            toonBericht(opgelost ? 'Actie gemarkeerd als opgelost!' : 'Actie heropend.', 'succes');
+        }
+    } catch (fout) { console.error('Fout bij oplossen actie:', fout); }
+}
 
 /**
  * Build and render the central measurement table based on the active role, page, and data.
@@ -114,6 +344,7 @@ function bouwTabelOp(data) {
 
         // Always reset role-specific elements before deciding what to show
         document.getElementById('waterbeheer-logboek-content').style.display = 'none';
+        document.getElementById('waterbeheer-acties-content').style.display = 'none';
         document.getElementById('coordinatoren-subtab-nav').style.display = 'none';
         document.getElementById('coordinatoren-blokken-content').style.display = 'none';
         document.getElementById('coordinatoren-checklist-content').style.display = 'none';
@@ -126,7 +357,7 @@ function bouwTabelOp(data) {
             tabelContent.style.display = 'none';
 
             // Toon het actieve subtab
-            ['meetwaarden', 'verbruik', 'verwarmingssysteem'].forEach(s => {
+            ['meetwaarden', 'verbruik', 'verwarmingssysteem', 'bezoekers'].forEach(s => {
                 document.getElementById(`subtab-${s}`).classList.toggle('actief', s === huidigeSubtab);
                 document.getElementById(`subtab-${s}-content`).style.display = (s === huidigeSubtab) ? 'block' : 'none';
             });
@@ -347,6 +578,7 @@ async function laadCoordChecklist(datum) {
 
     form.querySelectorAll('input[type="checkbox"]').forEach(cb => {
         cb.addEventListener('change', e => { e.stopPropagation(); scheduleAutoSaveChecklist(); });
+        cb.addEventListener('input',  e => { e.stopPropagation(); });
     });
 }
 
@@ -389,9 +621,8 @@ async function laadCoordDaggegevens(datum) {
     try {
         const res = await apiCall(`/api/coordinatoren/daggegevens?datum=${datum}`);
         const d = await res.json();
-        document.getElementById('coord-lucht-temp').value          = d.lucht_temperatuur             ?? '';
-        document.getElementById('coord-bezoekers-vandaag').value   = d.bezoekers_vandaag             ?? '';
-        document.getElementById('coord-bezoekers-spoelbeurt').value= d.bezoekers_totaal_spoelbeurt   ?? '';
+        document.getElementById('coord-lucht-temp').value        = d.lucht_temperatuur ?? '';
+        document.getElementById('coord-bezoekers-vandaag').value = d.bezoekers_vandaag ?? '';
     } catch (e) { console.error('Fout bij laden daggegevens:', e); }
 
     const form = document.getElementById('coordinatoren-daggegevens-content');
@@ -399,7 +630,8 @@ async function laadCoordDaggegevens(datum) {
     form.dataset.listenersAttached = '1';
 
     form.querySelectorAll('input').forEach(input => {
-        input.addEventListener('input', e => { e.stopPropagation(); scheduleAutoSaveDaggegevens(); });
+        input.addEventListener('input',  e => { e.stopPropagation(); scheduleAutoSaveDaggegevens(); });
+        input.addEventListener('change', e => { e.stopPropagation(); scheduleAutoSaveDaggegevens(); });
     });
 }
 
@@ -414,9 +646,8 @@ function scheduleAutoSaveDaggegevens() {
         const datum = document.getElementById('centraleDatum').value;
         const payload = {
             datum,
-            lucht_temperatuur:           parseFloat(document.getElementById('coord-lucht-temp').value)           || null,
-            bezoekers_vandaag:           parseInt(document.getElementById('coord-bezoekers-vandaag').value)       || null,
-            bezoekers_totaal_spoelbeurt: parseInt(document.getElementById('coord-bezoekers-spoelbeurt').value)    || null,
+            lucht_temperatuur: parseFloat(document.getElementById('coord-lucht-temp').value)     || null,
+            bezoekers_vandaag: parseInt(document.getElementById('coord-bezoekers-vandaag').value) || null,
         };
         try {
             const res = await apiCall('/api/coordinatoren/daggegevens', {

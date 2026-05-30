@@ -5,28 +5,11 @@
                 <button onclick="veranderDatum(1)"><span class="nav-label">Volgende Dag </span>▶</button>
             </div>
 
-            <!-- Acties Paneel -->
-            <div id="acties-paneel" style="display: none; background: #fff3cd; border: 2px solid #ff6b6b; border-radius: 8px; padding: 15px; margin-bottom: 20px;">
-                <div style="display: flex; align-items: center; margin-bottom: 10px;">
-                    <span style="background: #ff6b6b; color: white; border-radius: 50%; width: 24px; height: 24px; display: flex; align-items: center; justify-content: center; font-weight: bold; margin-right: 10px;">⚠</span>
-                    <h3 style="margin: 0; color: #333;">Acties nodig</h3>
-                </div>
-                <table id="acties-tabel" style="width: 100%; border-collapse: collapse; font-size: 14px;">
-                    <thead style="background: #ff8787; color: white;">
-                        <tr>
-                            <th style="padding: 8px; text-align: left;">Bad</th>
-                            <th style="padding: 8px; text-align: left;">Actie</th>
-                            <th style="padding: 8px; text-align: center;">Voltooid</th>
-                        </tr>
-                    </thead>
-                    <tbody id="acties-tbody"></tbody>
-                </table>
-            </div>
-
             <div class="menu-tabs" id="waterbeheer-tabs">
                 <button class="tab-btn actief" id="tab-grote-baden" onclick="wisselBadPagina('grote-baden')">Diep / Ondiep</button>
                 <button class="tab-btn" id="tab-peuterbad" onclick="wisselBadPagina('peuterbad')">Peuterbad</button>
                 <button class="tab-btn" id="tab-logboek" onclick="wisselBadPagina('logboek')">Logboek</button>
+                <button class="tab-btn" id="tab-acties" onclick="wisselBadPagina('acties')">Acties</button>
             </div>
 
             <div id="waterbeheer-grote-baden-content" style="display: none;">
@@ -34,6 +17,7 @@
                     <button class="subtab-btn actief" id="subtab-meetwaarden" onclick="wisselSubtab('meetwaarden')">Meetwaarden</button>
                     <button class="subtab-btn" id="subtab-verbruik" onclick="wisselSubtab('verbruik')">Verbruik</button>
                     <button class="subtab-btn" id="subtab-verwarmingssysteem" onclick="wisselSubtab('verwarmingssysteem')">Verwarmingssysteem</button>
+                    <button class="subtab-btn" id="subtab-bezoekers" onclick="wisselSubtab('bezoekers')">Bezoekers</button>
                 </div>
 
                 <div id="subtab-meetwaarden-content">
@@ -163,6 +147,34 @@
                     </div>
                 </div>
 
+                <div id="subtab-bezoekers-content" style="display: none;">
+                    <div class="categorie-box">
+                        <h3>Bezoekers</h3>
+                        <table class="categorie-tabel">
+                            <tbody>
+                                <tr>
+                                    <td><b>Aantal bezoekers vandaag</b></td>
+                                    <td><input type="text" id="bezoekers-vandaag-display" disabled
+                                            style="background-color:#f0f0f0; cursor:not-allowed; width:120px;"></td>
+                                </tr>
+                                <tr>
+                                    <td><b>Bezoekers sinds spoelbeurt Diep</b></td>
+                                    <td><input type="text" id="bezoekers-spoelbeurt-diep-display" disabled
+                                            style="background-color:#f0f0f0; cursor:not-allowed; width:120px;"></td>
+                                </tr>
+                                <tr>
+                                    <td><b>Bezoekers sinds spoelbeurt Ondiep</b></td>
+                                    <td><input type="text" id="bezoekers-spoelbeurt-ondiep-display" disabled
+                                            style="background-color:#f0f0f0; cursor:not-allowed; width:120px;"></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                        <p style="font-size:13px; color:#666; margin-top:10px;">
+                            Automatisch berekend op basis van dagelijkse bezoekers. Telt opnieuw vanaf de dag na de laatste spoelbeurt.
+                        </p>
+                    </div>
+                </div>
+
                 <div id="subtab-verwarmingssysteem-content" style="display: none;">
                     <div class="categorie-box" id="categorie-verwarmingssysteem">
                         <h3>Verwarmingssysteem</h3>
@@ -258,6 +270,10 @@
                 </div>
             </div>
 
+            <div id="waterbeheer-acties-content" style="display:none;">
+                <div id="acties-tab-inhoud"></div>
+            </div>
+
             <div id="waterbeheer-logboek-content" style="display:none;">
                 <div id="logboek-blokken"></div>
                 <div class="actie-container" style="justify-content:flex-start; margin-top:12px;">
@@ -293,10 +309,6 @@
                         <div class="veld-item">
                             <label for="coord-bezoekers-vandaag">Aantal bezoekers vandaag</label>
                             <input type="number" id="coord-bezoekers-vandaag" min="0" placeholder="bijv. 120">
-                        </div>
-                        <div class="veld-item">
-                            <label for="coord-bezoekers-spoelbeurt">Totaal bezoekers sinds laatste spoelbeurt</label>
-                            <input type="number" id="coord-bezoekers-spoelbeurt" min="0" placeholder="bijv. 850">
                         </div>
                     </div>
                 </div>

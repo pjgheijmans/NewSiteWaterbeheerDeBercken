@@ -33,4 +33,24 @@ app.use(express.static(path.join(__dirname, '..', 'frontend')));
 
 // ── Start ─────────────────────────────────────────────────────────────────
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server gestart op http://localhost:${PORT}`));
+const pool = require('./repositories/db');
+const { runInitSql } = require('./repositories/database');
+
+async function waitForDb(maxAttempts = 15, intervalMs = 2000) {
+    for (let i = 0; i < maxAttempts; i++) {
+        try {
+            await pool.query('SELECT 1');
+            return;
+        } catch {
+            console.log(`Wachten op database (${i + 1}/${maxAttempts})...`);
+            await new Promise(r => setTimeout(r, intervalMs));
+        }
+    }
+    throw new Error('Database niet bereikbaar na meerdere pogingen');
+}
+
+(async () => {
+    await waitForDb();
+    await runInitSql();
+    app.listen(PORT, () => console.log(`Server gestart op http://localhost:${PORT}`));
+})().catch(err => { console.error('Startfout:', err); process.exit(1); });

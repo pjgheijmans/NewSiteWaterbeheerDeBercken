@@ -99,8 +99,19 @@ function wisselRol(rol) {
         document.getElementById('sectie-database').style.display = (rol === 'database') ? 'block' : 'none';
         document.getElementById('sectie-trendanalyse').style.display = (rol === 'trendanalyse') ? 'block' : 'none';
         document.getElementById('waterbeheer-tabs').style.display = (rol === 'waterbeheer') ? 'flex' : 'none';
+        if (rol === 'waterbeheer') {
+            ['coordinatoren-subtab-nav', 'coordinatoren-blokken-content',
+             'coordinatoren-checklist-content', 'coordinatoren-daggegevens-content',
+             'coordinatoren-logboek-content'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.style.display = 'none';
+            });
+        }
         if (isDagstaat) {
-            laadLimietenVanServer().then(() => laadMetingen());
+            laadLimietenVanServer().then(() => {
+                if (rol === 'waterbeheer') wisselBadPagina(huidigeBadPagina);
+                else laadMetingen();
+            });
         } else if (rol === 'gebruikers') {
             laadGebruikers();
         } else if (rol === 'limieten') {

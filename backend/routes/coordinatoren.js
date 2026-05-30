@@ -5,6 +5,7 @@ const express = require('express');
 const router = express.Router();
 const repo = require('../repositories/coordinatoren');
 const logboekRepo = require('../repositories/coordinatoren_logboek');
+const actiesRepo = require('../repositories/acties');
 const { checkAuth, isWaterbeheerderOrCoordinator } = require('../middleware/auth');
 
 /**
@@ -70,8 +71,12 @@ router.get('/daggegevens', checkAuth, async (req, res) => {
 router.post('/daggegevens', checkAuth, async (req, res) => {
     if (!isWaterbeheerderOrCoordinator(req.session.gebruiker.taak))
         return res.status(403).json({ error: 'Geen toegang' });
-    try { await repo.saveDaggegevens(req.body.datum, req.body); res.json({ status: 'success' }); }
-    catch (err) { res.status(500).json({ error: err.message }); }
+    try {
+        await repo.saveDaggegevens(req.body.datum, req.body);
+        actiesRepo.genereerBezoekers(req.body.datum, req.body.bezoekers_vandaag);                       // fire-and-forget
+        actiesRepo.genereerSpoelbeurt(req.body.datum);                                                // fire-and-forget
+        res.json({ status: 'success' });
+    } catch (err) { res.status(500).json({ error: err.message }); }
 });
 
 /**

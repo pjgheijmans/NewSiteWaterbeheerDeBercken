@@ -24,6 +24,16 @@ const DEFAULT_LIMIETEN = [
     { parameter_naam: 'chloor_vrij',            min_waarde: 0.50,  max_waarde: 1.50    },
     { parameter_naam: 'chloor_totaal',          min_waarde: 0.30,  max_waarde: 3.50    },
     { parameter_naam: 'chloor_gebonden',        min_waarde: 0.30,  max_waarde: 3.50    },
+    // Actie-drempelwaarden (max_waarde = drempelwaarde)
+    { parameter_naam: 'actie_druk_verschil',    min_waarde: 0.00,  max_waarde: 0.40    },
+    { parameter_naam: 'actie_druk_peuterbad',   min_waarde: 0.00,  max_waarde: 1.00    },
+    { parameter_naam: 'actie_flow_diep',        min_waarde: 0.00,  max_waarde: 250.00  },
+    { parameter_naam: 'actie_flow_ondiep',      min_waarde: 0.00,  max_waarde: 75.00   },
+    { parameter_naam: 'actie_flow_peuterbad',   min_waarde: 0.00,  max_waarde: 4.00    },
+    { parameter_naam: 'actie_chloor_min',       min_waarde: 0.00,  max_waarde: 200.00  },
+    { parameter_naam: 'actie_zwavelzuur_min',   min_waarde: 0.00,  max_waarde: 50.00   },
+    { parameter_naam: 'actie_bezoekers_max',    min_waarde: 0.00,  max_waarde: 750.00  },
+    { parameter_naam: 'actie_spoelbeurt_max',   min_waarde: 0.00,  max_waarde: 1500.00 },
 ];
 
 /**
