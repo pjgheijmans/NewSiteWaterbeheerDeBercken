@@ -346,12 +346,19 @@ input[type="text"].buiten-limiet {
 
 
 #subtab-meetwaarden-content .categorie-tabel,
-#peuterbad-meetwaarden-content .categorie-tabel {
+#peuterbad-meetwaarden-content .categorie-tabel,
+#subtab-verbruik-content .categorie-tabel,
+#peuterbad-verbruik-content .categorie-tabel,
+#subtab-verwarmingssysteem-content .categorie-tabel,
+#subtab-bezoekers-content .categorie-tabel {
     width: auto;
 }
 
 #subtab-meetwaarden-content .categorie-tabel td input,
-#peuterbad-meetwaarden-content .categorie-tabel td input {
+#peuterbad-meetwaarden-content .categorie-tabel td input,
+#subtab-verbruik-content .categorie-tabel td input,
+#peuterbad-verbruik-content .categorie-tabel td input,
+#subtab-bezoekers-content .categorie-tabel td input {
     width: 80px;
 }
 
@@ -502,10 +509,26 @@ input[type="text"].buiten-limiet {
         height: 20px;
     }
 
-    /* Override narrow fixed widths on the meetwaarden inputs for desktop */
+    /* Override narrow fixed widths for desktop on mobile */
     #subtab-meetwaarden-content .categorie-tabel td input,
-    #peuterbad-meetwaarden-content .categorie-tabel td input {
+    #peuterbad-meetwaarden-content .categorie-tabel td input,
+    #subtab-verbruik-content .categorie-tabel td input,
+    #peuterbad-verbruik-content .categorie-tabel td input,
+    #subtab-bezoekers-content .categorie-tabel td input {
         width: 100%;
+    }
+
+    /* Compact waterbeheer tables on mobile */
+    #waterbeheer-grote-baden-content .categorie-tabel th,
+    #waterbeheer-grote-baden-content .categorie-tabel td,
+    #waterbeheer-peuterbad-content   .categorie-tabel th,
+    #waterbeheer-peuterbad-content   .categorie-tabel td {
+        padding: 6px 8px;
+    }
+    #waterbeheer-grote-baden-content .categorie-tabel td input,
+    #waterbeheer-peuterbad-content   .categorie-tabel td input {
+        font-size: 13px !important;
+        min-height: 34px;
     }
 
     /* Buttons full-width in action bars */
