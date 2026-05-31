@@ -2,11 +2,17 @@
   "permissions": {
     "allow": [
       "Bash(python3)",
+      "Bash(mkdir -p \"C:\\\\Users\\\\User\\\\OneDrive\\\\Documenten - Waterbeheer\\\\Software\\\\Digital Dagstaat\\\\nieuwe_site_tryout\\\\.claude\\\\skills\\\\restart-dev\")",
+      "Bash(mkdir -p \"C:\\\\Users\\\\User\\\\OneDrive\\\\Documenten - Waterbeheer\\\\Software\\\\Digital Dagstaat\\\\nieuwe_site_tryout\\\\.claude\\\\skills\\\\db-reset\")",
+      "Bash(npx eslint *)",
+      "Skill(update-config)",
+      "Bash(git checkout *)",
       "Bash(git add *)",
+      "Bash(git commit *)",
       "Bash(git commit -m ' *)",
       "Bash(npx tsc *)",
       "Bash(git push *)",
-      "Bash(gh pr create --title 'Convert backend to TypeScript with full OO architecture' --body ' *)"
+      "Bash(gh pr create --title ' *)"
     ]
   }
 }
