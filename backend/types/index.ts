@@ -79,6 +79,80 @@ export interface BadTotalen {
     ondiep: number;
 }
 
+// ── Gebruikers ────────────────────────────────────────────────────────────────
+
+export interface GebruikerRecord {
+    id: number;
+    voornaam: string;
+    achternaam: string;
+    inlognaam: string;
+    wachtwoord: string;
+    taak: string;
+}
+
+export interface GebruikerInput {
+    voornaam: string;
+    achternaam: string;
+    inlognaam: string;
+    wachtwoord: string;
+    taak: string;
+}
+
+// ── Limieten ──────────────────────────────────────────────────────────────────
+
+export interface Limiet {
+    min: number;
+    max: number;
+}
+
+export type LimietenMap = Record<string, Limiet>;
+
+export interface LimietInput {
+    parameter_naam: string;
+    min_waarde: number;
+    max_waarde: number;
+}
+
+// ── Trend ─────────────────────────────────────────────────────────────────────
+
+export interface TrendMetingRow {
+    datum: string;
+    bad_naam: string;
+    ph_waarde: number | null;
+    chloor_waarde: number | null;
+    temperatuur: number | null;
+    flow: number | null;
+    filter_druk_in: number | null;
+    filter_druk_uit: number | null;
+}
+
+export interface TrendVerbruikRow {
+    datum: string;
+    water_diep: number | null;
+    water_ondiep: number | null;
+    water_totaal: number | null;
+    elektriciteit_nacht: number | null;
+    elektriciteit_dag: number | null;
+    gas: number | null;
+    chemicalien_chloor: number | null;
+    chemicalien_zwavelzuur: number | null;
+}
+
+export interface TrendPeuterbadRow {
+    datum: string;
+    water: number | null;
+    chemicalien_chloor: number | null;
+    chemicalien_zwavelzuur: number | null;
+}
+
+export interface TrendVerbruikResult {
+    algemeen: TrendVerbruikRow[];
+    peuterbad: TrendPeuterbadRow[];
+}
+
+// ── Logboek ───────────────────────────────────────────────────────────────────
+// LogboekEntry and LogboekSaveResult are defined in the Coordinatoren section above.
+
 // ── Verbruik ──────────────────────────────────────────────────────────────────
 
 export interface VerbruikData {
