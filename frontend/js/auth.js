@@ -1,104 +1,111 @@
 /**
- * Initialize the application by checking the current login state.
- * If the user is already authenticated, activate the dashboard.
- * Otherwise show the login screen.
+ * Authenticatie, dashboard-activatie en rolwisseling.
  */
-async function startApplicatie() {
-        try {
-            const res = await apiCall('/api/ingelogd');
-            const data = await res.json();
-            if (data.ingelogd) { activeerDashboard(data.gebruiker); }
-            else {
-                document.getElementById('scherm-login').style.display = 'block';
-                document.getElementById('scherm-dashboard').style.display = 'none';
-            }
-        } catch (f) { console.error("Starten mislukt", f); }
+class AuthModule {
+    /** @param {Application} app */
+    constructor(app) {
+        this.app = app;
     }
 
-/**
- * Submit the login form to the server and activate the dashboard on success.
- * Displays an error message when authentication fails or the request errors.
- */
-async function verwerkLogin() {
+    /** Start de applicatie door de inlogstatus te controleren. */
+    async start() {
+        try {
+            const res  = await this.app.api.call('/api/ingelogd');
+            const data = await res.json();
+            if (data.ingelogd) this._activeerDashboard(data.gebruiker);
+            else {
+                document.getElementById('scherm-login').style.display    = 'block';
+                document.getElementById('scherm-dashboard').style.display = 'none';
+            }
+        } catch (f) { console.error('Starten mislukt', f); }
+    }
+
+    /** Verwerk het loginformulier en activeer het dashboard bij succes. */
+    async verwerkLogin() {
         const u = document.getElementById('loginUsername').value;
         const p = document.getElementById('loginPassword').value;
         document.getElementById('login-fout').innerText = '';
-
         try {
-            const res = await apiCall('/api/login', {
+            const res  = await this.app.api.call('/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: u, password: p })
+                body: JSON.stringify({ username: u, password: p }),
             });
             const data = await res.json();
-            if (res.ok) { activeerDashboard(data.gebruiker); }
-            else { document.getElementById('login-fout').innerText = data.error; }
-        } catch (f) { document.getElementById('login-fout').innerText = 'Verbindingsfout.'; }
+            if (res.ok) this._activeerDashboard(data.gebruiker);
+            else document.getElementById('login-fout').innerText = data.error;
+        } catch { document.getElementById('login-fout').innerText = 'Verbindingsfout.'; }
     }
 
-/**
- * Show the dashboard UI for the authenticated user and initialize role-specific content.
- * @param {Object} gebruiker - The authenticated user object from the server.
- */
-function activeerDashboard(gebruiker) {
-        ingelogdeGebruiker = gebruiker;
-        document.getElementById('scherm-login').style.display = 'none';
+    /** Log de huidige gebruiker uit en herstart de applicatie. */
+    async verwerkLogout() {
+        await this.app.api.call('/api/logout', { method: 'POST' });
+        this.app.state.ingelogdeGebruiker = null;
+        await this.start();
+    }
+
+    /**
+     * @param {Object} gebruiker
+     * @private
+     */
+    _activeerDashboard(gebruiker) {
+        this.app.state.ingelogdeGebruiker = gebruiker;
+        document.getElementById('scherm-login').style.display    = 'none';
         document.getElementById('scherm-dashboard').style.display = 'block';
-        document.getElementById('welkom-tekst').innerText = `Ingelogd: ${gebruiker.voornaam} (${gebruiker.taak})`;
+        document.getElementById('welkom-tekst').innerText =
+            `Ingelogd: ${gebruiker.voornaam} (${gebruiker.taak})`;
 
+        const knoppen = {
+            waterbeheer:   false,
+            coordinatoren: false,
+            limieten:      false,
+            gebruikers:    false,
+            database:      false,
+            trendanalyse:  false,
+        };
+
+        let beginRol = 'waterbeheer';
         if (gebruiker.taak === 'waterbeheerder') {
-            document.getElementById('btn-rol-waterbeheer').style.display = 'inline-block';
-            document.getElementById('btn-rol-coordinatoren').style.display = 'inline-block';
-            document.getElementById('btn-rol-limieten').style.display = 'inline-block';
-            document.getElementById('btn-rol-gebruikers').style.display = 'inline-block';
-            document.getElementById('btn-rol-database').style.display = 'inline-block';
-            document.getElementById('btn-rol-trendanalyse').style.display = 'inline-block';
-            wisselRol('waterbeheer');
+            Object.keys(knoppen).forEach(k => { knoppen[k] = true; });
+            beginRol = 'waterbeheer';
         } else if (gebruiker.taak === 'Administrator') {
-            document.getElementById('btn-rol-waterbeheer').style.display = 'none';
-            document.getElementById('btn-rol-coordinatoren').style.display = 'none';
-            document.getElementById('btn-rol-limieten').style.display = 'inline-block';
-            document.getElementById('btn-rol-gebruikers').style.display = 'inline-block';
-            document.getElementById('btn-rol-database').style.display = 'inline-block';
-            document.getElementById('btn-rol-trendanalyse').style.display = 'inline-block';
-            wisselRol('limieten');
+            knoppen.limieten     = true;
+            knoppen.gebruikers   = true;
+            knoppen.database     = true;
+            knoppen.trendanalyse = true;
+            beginRol = 'limieten';
         } else {
-            document.getElementById('btn-rol-waterbeheer').style.display = 'none';
-            document.getElementById('btn-rol-coordinatoren').style.display = 'inline-block';
-            document.getElementById('btn-rol-limieten').style.display = 'none';
-            document.getElementById('btn-rol-gebruikers').style.display = 'none';
-            document.getElementById('btn-rol-database').style.display = 'none';
-            document.getElementById('btn-rol-trendanalyse').style.display = 'none';
-            wisselRol('coordinatoren');
+            knoppen.coordinatoren = true;
+            beginRol = 'coordinatoren';
         }
+
+        Object.entries(knoppen).forEach(([k, zichtbaar]) => {
+            const btn = document.getElementById(`btn-rol-${k}`);
+            if (btn) btn.style.display = zichtbaar ? 'inline-block' : 'none';
+        });
+
+        this.wisselRol(beginRol);
     }
 
-/**
- * Log the current user out and restart the application in the anonymous state.
- */
-async function verwerkLogout() {
-        await apiCall('/api/logout', { method: 'POST' });
-        ingelogdeGebruiker = null;
-        startApplicatie();
-    }
-
-/**
- * Switch the active application role and update visible sections accordingly.
- * @param {string} rol - The role to activate (waterbeheer, coordinatoren, limieten, gebruikers, database, trendanalyse).
- */
-function wisselRol(rol) {
-        huidigeRol = rol;
+    /**
+     * Wissel naar een andere applicatierol en laad de bijbehorende sectie.
+     * @param {string} rol
+     */
+    wisselRol(rol) {
+        this.app.state.huidigeRol = rol;
         ['waterbeheer', 'coordinatoren', 'limieten', 'gebruikers', 'database', 'trendanalyse'].forEach(r => {
             const btn = document.getElementById(`btn-rol-${r}`);
             if (btn) btn.classList.toggle('actief', r === rol);
         });
+
         const isDagstaat = (rol === 'waterbeheer' || rol === 'coordinatoren');
-        document.getElementById('sectie-dagstaat').style.display = isDagstaat ? 'block' : 'none';
-        document.getElementById('sectie-limieten').style.display = (rol === 'limieten') ? 'block' : 'none';
-        document.getElementById('sectie-gebruikers').style.display = (rol === 'gebruikers') ? 'block' : 'none';
-        document.getElementById('sectie-database').style.display = (rol === 'database') ? 'block' : 'none';
-        document.getElementById('sectie-trendanalyse').style.display = (rol === 'trendanalyse') ? 'block' : 'none';
-        document.getElementById('waterbeheer-tabs').style.display = (rol === 'waterbeheer') ? 'flex' : 'none';
+        document.getElementById('sectie-dagstaat').style.display      = isDagstaat          ? 'block' : 'none';
+        document.getElementById('sectie-limieten').style.display       = (rol === 'limieten')       ? 'block' : 'none';
+        document.getElementById('sectie-gebruikers').style.display     = (rol === 'gebruikers')     ? 'block' : 'none';
+        document.getElementById('sectie-database').style.display       = (rol === 'database')       ? 'block' : 'none';
+        document.getElementById('sectie-trendanalyse').style.display   = (rol === 'trendanalyse')   ? 'block' : 'none';
+        document.getElementById('waterbeheer-tabs').style.display      = (rol === 'waterbeheer')    ? 'flex'  : 'none';
+
         if (rol === 'waterbeheer') {
             ['coordinatoren-subtab-nav', 'coordinatoren-blokken-content',
              'coordinatoren-checklist-content', 'coordinatoren-daggegevens-content',
@@ -107,16 +114,20 @@ function wisselRol(rol) {
                 if (el) el.style.display = 'none';
             });
         }
+
         if (isDagstaat) {
-            laadLimietenVanServer().then(() => {
-                if (rol === 'waterbeheer') wisselBadPagina(huidigeBadPagina);
-                else laadMetingen();
+            this.app.limieten.laadLimietenVanServer().then(() => {
+                if (rol === 'waterbeheer')
+                    this.app.metingen.wisselBadPagina(this.app.state.huidigeBadPagina);
+                else
+                    this.app.metingen.laadMetingen();
             });
         } else if (rol === 'gebruikers') {
-            laadGebruikers();
+            this.app.gebruikers.laadGebruikers();
         } else if (rol === 'limieten') {
-            laadLimietenVanServer();
+            this.app.limieten.laadLimietenVanServer();
         } else if (rol === 'trendanalyse') {
-            initTrendDatums();
+            this.app.trend.initTrendDatums();
         }
     }
+}
