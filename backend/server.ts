@@ -4,6 +4,7 @@ import session from 'express-session';
 import pool from './repositories/db';
 import { maakMetingenRouter } from './routes/metingen';
 import { maakVerbruikRouter } from './routes/verbruik';
+import { maakCoordinatorenRouter } from './routes/coordinatoren';
 
 // Resterende routes zijn nog .js — worden stap voor stap omgezet naar TypeScript
 /* eslint-disable @typescript-eslint/no-var-requires */
@@ -11,7 +12,6 @@ const { runInitSql }      = require('./repositories/database');
 const authRoutes          = require('./routes/auth');
 const gebruikersRoutes    = require('./routes/gebruikers');
 const limietenRoutes      = require('./routes/limieten');
-const coordinatorenRoutes = require('./routes/coordinatoren');
 const trendRoutes         = require('./routes/trend');
 const databaseRoutes      = require('./routes/database');
 const logboekRoutes       = require('./routes/logboek');
@@ -36,7 +36,7 @@ app.use('/api',               authRoutes);
 app.use('/api/gebruikers',    gebruikersRoutes);
 app.use('/api/limieten',      limietenRoutes);
 app.use('/api',               maakMetingenRouter(pool));
-app.use('/api/coordinatoren', coordinatorenRoutes);
+app.use('/api/coordinatoren', maakCoordinatorenRouter(pool));
 app.use('/api/verbruik',      maakVerbruikRouter(pool));
 app.use('/api/trend',         trendRoutes);
 app.use('/api/database',      databaseRoutes);

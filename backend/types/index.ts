@@ -115,7 +115,67 @@ export interface VerwarmingInput extends VerwarmingData {
 // ── Coordinatoren ─────────────────────────────────────────────────────────────
 
 export interface Daggegevens {
+    lucht_temperatuur?: number | null;
     bezoekers_vandaag?: number | null;
-    buitentemperatuur?: number | null;
-    luchttemperatuur?: number | null;
+    bezoekers_totaal_spoelbeurt?: number | null;
+}
+
+export interface DaggegevensInput {
+    lucht_temperatuur?: number | null;
+    bezoekers_vandaag?: number | null;
+    bezoekers_totaal_spoelbeurt?: number | null;
+}
+
+export interface CoordinatorMeting {
+    bad_naam: string;
+    ph_waarde: number | null;
+    chloor_vrij: number | null;
+    chloor_totaal: number | null;
+    watertemperatuur: number | null;
+    helderheid: number | null;
+    bad_gebruikt: boolean | number | null;
+}
+
+export interface CoordinatorBlok {
+    tijdstip: string;
+    auteur: string;
+    metingen: CoordinatorMeting[];
+}
+
+export interface CoordinatorMetingInput {
+    datum: string;
+    bad_naam: string;
+    tijdstip?: string;
+    ph_waarde?: number | null;
+    chloor_vrij?: number | null;
+    chloor_totaal?: number | null;
+    watertemperatuur?: number | null;
+    helderheid?: number | null;
+    bad_gebruikt?: boolean | number | null;
+}
+
+export interface Checklist {
+    proef_waterspeel: boolean | number;
+    proef_spraypark: boolean | number;
+    proef_douches: boolean | number;
+    proef_glijbaan: boolean | number;
+}
+
+export interface ChecklistInput {
+    proef_waterspeel?: boolean | number;
+    proef_spraypark?: boolean | number;
+    proef_douches?: boolean | number;
+    proef_glijbaan?: boolean | number;
+}
+
+export interface LogboekEntry {
+    id: number;
+    tijdstip: string;
+    auteur: string | null;
+    tekst: string;
+}
+
+export interface LogboekSaveResult {
+    id: number;
+    auteur: string | null;
 }
