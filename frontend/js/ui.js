@@ -1,87 +1,102 @@
 /**
- * Display a status message in the application header.
- * @param {string} tekst - The message text to show.
- * @param {'succes'|'fout'|''} type - The message type for styling and timeouts.
+ * Beheert statusberichten, veldinvoer en limietvalidatie in de UI.
  */
-function toonBericht(tekst, type) {
-        const element = document.getElementById('statusBericht');
-        if (!element) return;
+class UIManager {
+    /** @param {Application} app */
+    constructor(app) {
+        this.app = app;
+    }
 
-        if (berichtTimer) clearTimeout(berichtTimer);
-        element.style.color = '';
-        element.innerText = tekst;
-        element.className = 'status-melding ' + type;
+    /**
+     * Toon een statusbericht bovenaan de pagina.
+     * @param {string} tekst
+     * @param {'succes'|'fout'|''} type
+     */
+    toonBericht(tekst, type) {
+        const el = document.getElementById('statusBericht');
+        if (!el) return;
+        const state = this.app.state;
+        if (state.berichtTimer) clearTimeout(state.berichtTimer);
+        el.style.color  = '';
+        el.innerText    = tekst;
+        el.className    = 'status-melding ' + type;
 
         if (type === 'fout') {
-            element.style.color = '#ff9800'; // Oranje waarschuwing
-            berichtTimer = setTimeout(() => { resetBerichtBox(element); }, 5000);
+            el.style.color   = '#ff9800';
+            state.berichtTimer = setTimeout(() => this._resetBerichtBox(el), 5000);
         } else if (type === 'succes') {
-            berichtTimer = setTimeout(() => { resetBerichtBox(element); }, 5000);
+            state.berichtTimer = setTimeout(() => this._resetBerichtBox(el), 5000);
         } else if (tekst !== '') {
-            element.style.color = '#dc3545'; // Rode kritieke fout (geen timer)
+            el.style.color = '#dc3545';
         }
     }
 
-/**
- * Reset the status message box to its default hidden/neutral state.
- * @param {HTMLElement} element - The DOM element containing the status message.
- */
-function resetBerichtBox(element) {
-        element.innerText = '';
-        element.className = 'status-melding';
-        element.style.color = '';
+    /** @param {HTMLElement} el */
+    _resetBerichtBox(el) {
+        el.innerText  = '';
+        el.className  = 'status-melding';
+        el.style.color = '';
     }
 
-/**
- * Set the value of a form input and validate it if it has a data parameter.
- * @param {string} id - The DOM id of the input element.
- * @param {*} waarde - The value to write into the input field.
- */
-function zetInputValue(id, waarde) {
-        const element = document.getElementById(id);
-        if (!element) return;
-        element.value = waarde !== undefined && waarde !== null ? waarde : '';
-        const parameterNaam = element.getAttribute('data-param');
-        if (parameterNaam) {
-            valideerVeld(element, parameterNaam);
-        }
+    /**
+     * Schrijf een waarde naar een invoerveld en valideer het daarna.
+     * @param {string} id
+     * @param {*} waarde
+     */
+    zetInputValue(id, waarde) {
+        const el = document.getElementById(id);
+        if (!el) return;
+        el.value = (waarde !== undefined && waarde !== null) ? waarde : '';
+        const param = el.getAttribute('data-param');
+        if (param) this.valideerVeld(el, param);
     }
 
-/**
- * Validate a numeric input field for decimal precision (based on step attribute)
- * and against the configured min/max limits for a parameter.
- * Adds or removes the 'buiten-limiet' CSS class accordingly.
- * @param {HTMLInputElement} inputElement - The input element to validate.
- * @param {string|null} parameterNaam - The parameter name used to lookup limits, or null for precision-only check.
- */
-function valideerVeld(inputElement, parameterNaam) {
-        if (inputElement.value === '') {
-            inputElement.classList.remove('buiten-limiet');
-            return;
-        }
-        const waarde = parseFloat(inputElement.value);
-        if (isNaN(waarde)) {
-            inputElement.classList.add('buiten-limiet');
-            return;
-        }
+    /**
+     * Valideer een numeriek invoerveld op decimaalprecisie en limietgrenzen.
+     * Voegt of verwijdert de CSS-klasse 'buiten-limiet'.
+     * @param {HTMLInputElement} el
+     * @param {string|null} parameterNaam
+     */
+    valideerVeld(el, parameterNaam) {
+        if (el.value === '') { el.classList.remove('buiten-limiet'); return; }
+        const waarde = parseFloat(el.value);
+        if (isNaN(waarde)) { el.classList.add('buiten-limiet'); return; }
 
-        // Precision check: count decimal places in the typed string vs what step allows
-        const step = parseFloat(inputElement.getAttribute('step'));
+        const step    = parseFloat(el.getAttribute('step'));
         if (!isNaN(step) && step > 0) {
-            const allowed = step >= 1 ? 0 : (step.toString().split('.')[1] || '').length;
-            const dotIdx = inputElement.value.indexOf('.');
-            const entered = dotIdx === -1 ? 0 : inputElement.value.length - dotIdx - 1;
-            if (entered > allowed) {
-                inputElement.classList.add('buiten-limiet');
-                return;
-            }
+            const toegestaan = step >= 1 ? 0 : (step.toString().split('.')[1] || '').length;
+            const dotIdx     = el.value.indexOf('.');
+            const ingevoerd  = dotIdx === -1 ? 0 : el.value.length - dotIdx - 1;
+            if (ingevoerd > toegestaan) { el.classList.add('buiten-limiet'); return; }
         }
 
-        // Min/max limit check
-        const limiet = actieveLimieten[parameterNaam];
+        const limiet = this.app.state.actieveLimieten[parameterNaam];
         if (limiet) {
-            inputElement.classList.toggle('buiten-limiet', waarde < limiet.min || waarde > limiet.max);
+            el.classList.toggle('buiten-limiet', waarde < limiet.min || waarde > limiet.max);
         } else {
-            inputElement.classList.remove('buiten-limiet');
+            el.classList.remove('buiten-limiet');
         }
     }
+
+    /**
+     * Update de auto-save statusindicator.
+     * @param {'pending'|'saving'|'saved'|'warning'|'error'} status
+     */
+    setAutoSaveStatus(status) {
+        const el = document.getElementById('autoSaveStatus');
+        if (!el) return;
+        const states = {
+            pending: ['Wijzigingen niet opgeslagen...', '#888'],
+            saving:  ['Bewaren…',                       '#fd7e14'],
+            saved:   ['✓ Opgeslagen',                   '#28a745'],
+            warning: ['⚠ Opgeslagen met waarschuwing',  '#fd7e14'],
+            error:   ['✗ Fout bij opslaan',             '#dc3545'],
+        };
+        const [text, color] = states[status] || ['', '#333'];
+        el.textContent  = text;
+        el.style.color  = color;
+        if (status === 'saved') {
+            setTimeout(() => { if (el.textContent.startsWith('✓')) el.textContent = ''; }, 4000);
+        }
+    }
+}

@@ -1,19 +1,26 @@
 /**
- * Switch the active trend subtab and show its content.
- * @param {string} subtab - The active trend tab ('meetwaarden' or 'verbruik').
+ * Trendanalyse — Chart.js grafieken voor metingen en verbruik.
  */
-function wisselTrendTab(subtab) {
-        huidigeTrendSubtab = subtab;
+class TrendModule {
+    /** @param {Application} app */
+    constructor(app) {
+        this.app = app;
+    }
+
+    /**
+     * Wissel het actieve trend-tabblad.
+     * @param {string} subtab - 'meetwaarden' of 'verbruik'
+     */
+    wisselTrendTab(subtab) {
+        this.app.state.huidigeTrendSubtab = subtab;
         ['meetwaarden', 'verbruik'].forEach(s => {
             document.getElementById(`trend-tab-${s}`).classList.toggle('actief', s === subtab);
             document.getElementById(`trend-${s}-content`).style.display = (s === subtab) ? 'block' : 'none';
         });
     }
 
-/**
- * Initialize the trend date pickers with a default range of the last 30 days.
- */
-function initTrendDatums() {
+    /** Initialiseer datumkiezers op een standaardbereik van 30 dagen. */
+    initTrendDatums() {
         const tot = new Date();
         const van = new Date();
         van.setDate(van.getDate() - 30);
@@ -22,36 +29,37 @@ function initTrendDatums() {
         if (!document.getElementById('trend-tot').value) document.getElementById('trend-tot').value = fmt(tot);
     }
 
-/**
- * Normalize a date value to a YYYY-MM-DD string.
- * @param {Date|string|null} d - The input date or date string.
- * @returns {string}
- */
-function datumStr(d) {
+    /** Laad en render trenddata voor het geselecteerde bereik. */
+    async laadTrendData() {
+        const van = document.getElementById('trend-van').value;
+        const tot = document.getElementById('trend-tot').value;
+        if (!van || !tot) { this.app.ui.toonBericht('Vul een geldig datumbereik in.', 'fout'); return; }
+        this.app.ui.toonBericht('Grafiek laden...', '');
+        if (this.app.state.huidigeTrendSubtab === 'meetwaarden')
+            await this._laadTrendMetingen(van, tot);
+        else
+            await this._laadTrendVerbruik(van, tot);
+        this.app.ui.toonBericht('', '');
+    }
+
+    // ── Chart helpers ─────────────────────────────────────────────────────
+
+    _datumStr(d) {
         if (!d) return '';
         if (d instanceof Date) return d.toISOString().split('T')[0];
         return String(d).split('T')[0];
     }
 
-/**
- * Destroy a previously created Chart.js chart and clear its reference.
- * @param {string} id - The canvas id of the chart to destroy.
- */
-function vernietigChart(id) {
-        if (trendCharts[id]) { trendCharts[id].destroy(); delete trendCharts[id]; }
+    _vernietigChart(id) {
+        const charts = this.app.state.trendCharts;
+        if (charts[id]) { charts[id].destroy(); delete charts[id]; }
     }
 
-/**
- * Create or replace a Chart.js line chart for the specified canvas.
- * @param {string} canvasId - The id of the canvas element.
- * @param {Array<string>} labels - The labels for the x-axis.
- * @param {Array<Object>} datasets - The datasets to plot.
- */
-function maakLineChart(canvasId, labels, datasets) {
-        vernietigChart(canvasId);
+    _maakLineChart(canvasId, labels, datasets) {
+        this._vernietigChart(canvasId);
         const ctx = document.getElementById(canvasId);
         if (!ctx) return;
-        trendCharts[canvasId] = new Chart(ctx, {
+        this.app.state.trendCharts[canvasId] = new Chart(ctx, {
             type: 'line',
             data: { labels, datasets },
             options: {
@@ -59,126 +67,75 @@ function maakLineChart(canvasId, labels, datasets) {
                 plugins: { legend: { position: 'top' } },
                 scales: {
                     x: { ticks: { maxTicksLimit: 12, maxRotation: 45 } },
-                    y: { beginAtZero: false }
-                }
-            }
+                    y: { beginAtZero: false },
+                },
+            },
         });
     }
 
-/**
- * Load the selected trend data range and render the appropriate charts.
- */
-async function laadTrendData() {
-        const van = document.getElementById('trend-van').value;
-        const tot = document.getElementById('trend-tot').value;
-        if (!van || !tot) { toonBericht('Vul een geldig datumbereik in.', 'fout'); return; }
-        toonBericht('Grafiek laden...', '');
-        if (huidigeTrendSubtab === 'meetwaarden') await laadTrendMetingen(van, tot);
-        else await laadTrendVerbruik(van, tot);
-        toonBericht('', '');
-    }
+    // ── Metingen trend ────────────────────────────────────────────────────
 
-/**
- * Load measurement trend data for the selected date range and render charts.
- * @param {string} van - Start date for the trend range (YYYY-MM-DD).
- * @param {string} tot - End date for the trend range (YYYY-MM-DD).
- */
-async function laadTrendMetingen(van, tot) {
+    async _laadTrendMetingen(van, tot) {
         try {
-            const res = await apiCall(`/api/trend/metingen?van=${van}&tot=${tot}`);
+            const res  = await this.app.api.call(`/api/trend/metingen?van=${van}&tot=${tot}`);
             const data = await res.json();
 
-            const diep = data.filter(r => r.bad_naam === 'Diep');
+            const diep   = data.filter(r => r.bad_naam === 'Diep');
             const ondiep = data.filter(r => r.bad_naam === 'Ondiep');
             const peuter = data.filter(r => r.bad_naam === 'Peuterbad');
 
-            const grootLabels = [...new Set([...diep, ...ondiep].map(r => datumStr(r.datum)))].sort();
-            const peuterLabels = peuter.map(r => datumStr(r.datum));
+            const grootLabels  = [...new Set([...diep, ...ondiep].map(r => this._datumStr(r.datum)))].sort();
+            const peuterLabels = peuter.map(r => this._datumStr(r.datum));
 
             const haal = (arr, veld, lbls) => lbls.map(d => {
-                const r = arr.find(x => datumStr(x.datum) === d);
+                const r = arr.find(x => this._datumStr(x.datum) === d);
                 return r ? r[veld] : null;
             });
             const ds = (label, arr, veld, lbls, kleur) => ({
                 label, data: haal(arr, veld, lbls),
                 borderColor: kleur, backgroundColor: kleur + '22',
-                tension: 0.3, spanGaps: true, pointRadius: 3
+                tension: 0.3, spanGaps: true, pointRadius: 3,
             });
 
-            maakLineChart('chart-ph-groot', grootLabels, [
-                ds('Diep', diep, 'ph_waarde', grootLabels, '#007BFF'),
-                ds('Ondiep', ondiep, 'ph_waarde', grootLabels, '#28a745')]);
-            maakLineChart('chart-chloor-groot', grootLabels, [
-                ds('Diep', diep, 'chloor_waarde', grootLabels, '#007BFF'),
-                ds('Ondiep', ondiep, 'chloor_waarde', grootLabels, '#28a745')]);
-            maakLineChart('chart-temp-groot', grootLabels, [
-                ds('Diep', diep, 'temperatuur', grootLabels, '#007BFF'),
-                ds('Ondiep', ondiep, 'temperatuur', grootLabels, '#28a745')]);
-            maakLineChart('chart-flow-groot', grootLabels, [
-                ds('Diep', diep, 'flow', grootLabels, '#007BFF'),
-                ds('Ondiep', ondiep, 'flow', grootLabels, '#28a745')]);
-            maakLineChart('chart-filterin-groot', grootLabels, [
-                ds('Diep', diep, 'filter_druk_in', grootLabels, '#007BFF'),
-                ds('Ondiep', ondiep, 'filter_druk_in', grootLabels, '#28a745')]);
-            maakLineChart('chart-filteruit-groot', grootLabels, [
-                ds('Diep', diep, 'filter_druk_uit', grootLabels, '#007BFF'),
-                ds('Ondiep', ondiep, 'filter_druk_uit', grootLabels, '#28a745')]);
+            this._maakLineChart('chart-ph-groot',       grootLabels, [ds('Diep', diep, 'ph_waarde',       grootLabels, '#007BFF'), ds('Ondiep', ondiep, 'ph_waarde',       grootLabels, '#28a745')]);
+            this._maakLineChart('chart-chloor-groot',   grootLabels, [ds('Diep', diep, 'chloor_waarde',   grootLabels, '#007BFF'), ds('Ondiep', ondiep, 'chloor_waarde',   grootLabels, '#28a745')]);
+            this._maakLineChart('chart-temp-groot',     grootLabels, [ds('Diep', diep, 'temperatuur',     grootLabels, '#007BFF'), ds('Ondiep', ondiep, 'temperatuur',     grootLabels, '#28a745')]);
+            this._maakLineChart('chart-flow-groot',     grootLabels, [ds('Diep', diep, 'flow',            grootLabels, '#007BFF'), ds('Ondiep', ondiep, 'flow',            grootLabels, '#28a745')]);
+            this._maakLineChart('chart-filterin-groot', grootLabels, [ds('Diep', diep, 'filter_druk_in',  grootLabels, '#007BFF'), ds('Ondiep', ondiep, 'filter_druk_in',  grootLabels, '#28a745')]);
+            this._maakLineChart('chart-filteruit-groot',grootLabels, [ds('Diep', diep, 'filter_druk_uit', grootLabels, '#007BFF'), ds('Ondiep', ondiep, 'filter_druk_uit', grootLabels, '#28a745')]);
 
-            maakLineChart('chart-ph-peuter', peuterLabels, [
-                ds('Peuterbad', peuter, 'ph_waarde', peuterLabels, '#fd7e14')]);
-            maakLineChart('chart-chloor-peuter', peuterLabels, [
-                ds('Peuterbad', peuter, 'chloor_waarde', peuterLabels, '#fd7e14')]);
-            maakLineChart('chart-flow-peuter', peuterLabels, [
-                ds('Peuterbad', peuter, 'flow', peuterLabels, '#fd7e14')]);
-            maakLineChart('chart-filterin-peuter', peuterLabels, [
-                ds('Peuterbad', peuter, 'filter_druk_in', peuterLabels, '#fd7e14')]);
-
-        } catch (fout) { console.error('Fout trend metingen:', fout); toonBericht('Fout bij laden grafiek.', 'fout'); }
+            this._maakLineChart('chart-ph-peuter',      peuterLabels, [ds('Peuterbad', peuter, 'ph_waarde',     peuterLabels, '#fd7e14')]);
+            this._maakLineChart('chart-chloor-peuter',  peuterLabels, [ds('Peuterbad', peuter, 'chloor_waarde', peuterLabels, '#fd7e14')]);
+            this._maakLineChart('chart-flow-peuter',    peuterLabels, [ds('Peuterbad', peuter, 'flow',          peuterLabels, '#fd7e14')]);
+            this._maakLineChart('chart-filterin-peuter',peuterLabels, [ds('Peuterbad', peuter, 'filter_druk_in',peuterLabels, '#fd7e14')]);
+        } catch (f) { console.error('Fout trend metingen:', f); this.app.ui.toonBericht('Fout bij laden grafiek.', 'fout'); }
     }
 
-/**
- * Load consumption trend data for the selected date range and render charts.
- * @param {string} van - Start date for the trend range (YYYY-MM-DD).
- * @param {string} tot - End date for the trend range (YYYY-MM-DD).
- */
-async function laadTrendVerbruik(van, tot) {
+    // ── Verbruik trend ────────────────────────────────────────────────────
+
+    async _laadTrendVerbruik(van, tot) {
         try {
-            const res = await apiCall(`/api/trend/verbruik?van=${van}&tot=${tot}`);
-            const data = await res.json();
-            const alg = data.algemeen || [];
+            const res    = await this.app.api.call(`/api/trend/verbruik?van=${van}&tot=${tot}`);
+            const data   = await res.json();
+            const alg    = data.algemeen  || [];
             const peuter = data.peuterbad || [];
 
-            const labels = alg.map(r => datumStr(r.datum));
-            const peuterLabels = peuter.map(r => datumStr(r.datum));
+            const labels       = alg.map(r => this._datumStr(r.datum));
+            const peuterLabels = peuter.map(r => this._datumStr(r.datum));
             const v = (arr, veld) => arr.map(r => r[veld]);
+            const lijn = (label, arr, veld, kleur) => ({
+                label, data: v(arr, veld), borderColor: kleur, backgroundColor: kleur + '22',
+                tension: 0.3, spanGaps: true,
+            });
 
-            maakLineChart('chart-water-groot', labels, [
-                { label: 'Diep (m³)', data: v(alg, 'water_diep'), borderColor: '#007BFF', backgroundColor: '#007BFF22', tension: 0.3, spanGaps: true },
-                { label: 'Ondiep (m³)', data: v(alg, 'water_ondiep'), borderColor: '#28a745', backgroundColor: '#28a74522', tension: 0.3, spanGaps: true },
-                { label: 'Totaal (m³)', data: v(alg, 'water_totaal'), borderColor: '#6c757d', backgroundColor: '#6c757d22', tension: 0.3, spanGaps: true, borderDash: [5,5] }
-            ]);
-            maakLineChart('chart-elektriciteit', labels, [
-                { label: 'Nacht (kWh)', data: v(alg, 'elektriciteit_nacht'), borderColor: '#6f42c1', backgroundColor: '#6f42c122', tension: 0.3, spanGaps: true },
-                { label: 'Dag (kWh)', data: v(alg, 'elektriciteit_dag'), borderColor: '#e83e8c', backgroundColor: '#e83e8c22', tension: 0.3, spanGaps: true }
-            ]);
-            maakLineChart('chart-gas', labels, [
-                { label: 'Gas (m³)', data: v(alg, 'gas'), borderColor: '#fd7e14', backgroundColor: '#fd7e1422', tension: 0.3, spanGaps: true }
-            ]);
-            maakLineChart('chart-water-peuter', peuterLabels, [
-                { label: 'Water (m³)', data: peuter.map(r => r.water), borderColor: '#fd7e14', backgroundColor: '#fd7e1422', tension: 0.3, spanGaps: true }
-            ]);
-            maakLineChart('chart-chem-chloor-groot', labels, [
-                { label: 'Chloor', data: v(alg, 'chemicalien_chloor'), borderColor: '#17a2b8', backgroundColor: '#17a2b822', tension: 0.3, spanGaps: true }
-            ]);
-            maakLineChart('chart-chem-zwavel-groot', labels, [
-                { label: 'Zwavelzuur', data: v(alg, 'chemicalien_zwavelzuur'), borderColor: '#dc3545', backgroundColor: '#dc354522', tension: 0.3, spanGaps: true }
-            ]);
-            maakLineChart('chart-chem-chloor-peuter', peuterLabels, [
-                { label: 'Chloor', data: peuter.map(r => r.chemicalien_chloor), borderColor: '#17a2b8', backgroundColor: '#17a2b822', tension: 0.3, spanGaps: true }
-            ]);
-            maakLineChart('chart-chem-zwavel-peuter', peuterLabels, [
-                { label: 'Zwavelzuur', data: peuter.map(r => r.chemicalien_zwavelzuur), borderColor: '#dc3545', backgroundColor: '#dc354522', tension: 0.3, spanGaps: true }
-            ]);
-
-        } catch (fout) { console.error('Fout trend verbruik:', fout); toonBericht('Fout bij laden grafiek.', 'fout'); }
+            this._maakLineChart('chart-water-groot',     labels, [lijn('Diep (m³)', alg, 'water_diep', '#007BFF'), lijn('Ondiep (m³)', alg, 'water_ondiep', '#28a745'), { ...lijn('Totaal (m³)', alg, 'water_totaal', '#6c757d'), borderDash: [5,5] }]);
+            this._maakLineChart('chart-elektriciteit',   labels, [lijn('Nacht (kWh)', alg, 'elektriciteit_nacht', '#6f42c1'), lijn('Dag (kWh)', alg, 'elektriciteit_dag', '#e83e8c')]);
+            this._maakLineChart('chart-gas',             labels, [lijn('Gas (m³)', alg, 'gas', '#fd7e14')]);
+            this._maakLineChart('chart-water-peuter',    peuterLabels, [lijn('Water (m³)', peuter, 'water', '#fd7e14')]);
+            this._maakLineChart('chart-chem-chloor-groot',  labels, [lijn('Chloor', alg, 'chemicalien_chloor', '#17a2b8')]);
+            this._maakLineChart('chart-chem-zwavel-groot',  labels, [lijn('Zwavelzuur', alg, 'chemicalien_zwavelzuur', '#dc3545')]);
+            this._maakLineChart('chart-chem-chloor-peuter', peuterLabels, [lijn('Chloor', peuter, 'chemicalien_chloor', '#17a2b8')]);
+            this._maakLineChart('chart-chem-zwavel-peuter', peuterLabels, [lijn('Zwavelzuur', peuter, 'chemicalien_zwavelzuur', '#dc3545')]);
+        } catch (f) { console.error('Fout trend verbruik:', f); this.app.ui.toonBericht('Fout bij laden grafiek.', 'fout'); }
     }
+}

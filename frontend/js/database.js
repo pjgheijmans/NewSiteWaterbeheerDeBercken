@@ -1,118 +1,100 @@
 /**
- * Open the hidden CSV import file selector for the given table.
- * @param {string} tabelnaam - The target table name for the import.
+ * Databasebeheer — CSV import/export en tabel-truncate operaties.
  */
-function triggerImportBladeren(tabelnaam) {
+class DatabaseModule {
+    /** @param {Application} app */
+    constructor(app) {
+        this.app = app;
+    }
+
+    /**
+     * Open de verborgen bestandskiezer voor CSV-import.
+     * @param {string} tabelnaam
+     */
+    triggerImportBladeren(tabelnaam) {
         document.getElementById(`import-file-${tabelnaam}`).click();
     }
 
-/**
- * Read a CSV file from the user and send its contents to the server import endpoint.
- * @param {HTMLInputElement} inputElement - The file input element containing the selected CSV.
- * @param {string} tabelnaam - The target table name for import.
- */
-async function verwerkCsvUpload(inputElement, tabelnaam) {
+    /**
+     * Lees een CSV-bestand en stuur de inhoud naar de import-endpoint.
+     * @param {HTMLInputElement} inputElement
+     * @param {string} tabelnaam
+     */
+    verwerkCsvUpload(inputElement, tabelnaam) {
         const bestand = inputElement.files[0];
         if (!bestand) return;
-
-        toonBericht('CSV-bestand wordt verwerkt...', 'succes');
+        this.app.ui.toonBericht('CSV-bestand wordt verwerkt...', 'succes');
 
         const reader = new FileReader();
-        reader.onload = async function (e) {
-            const ruweTekst = e.target.result;
-
+        reader.onload = async e => {
             try {
-                const res = await apiCall(`/api/database/import/${tabelnaam}`, {
+                const res  = await this.app.api.call(`/api/database/import/${tabelnaam}`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'text/csv' },
-                    body: ruweTekst
+                    body: e.target.result,
                 });
                 const data = await res.json();
-
-                if (res.ok) {
-                    toonBericht(`CSV succesvol geïmporteerd in '${tabelnaam}'!`, 'succes');
-                } else {
-                    toonBericht(`Import mislukt: ${data.error}`, 'fout');
-                }
-            } catch (f) { toonBericht('Verbindingsfout tijdens import.', 'fout'); }
-
-            // Reset het inputveld zodat hetzelfde bestand direct nogmaals gekozen kan worden
+                if (res.ok)
+                    this.app.ui.toonBericht(`CSV succesvol geïmporteerd in '${tabelnaam}'!`, 'succes');
+                else
+                    this.app.ui.toonBericht(`Import mislukt: ${data.error}`, 'fout');
+            } catch { this.app.ui.toonBericht('Verbindingsfout tijdens import.', 'fout'); }
             inputElement.value = '';
         };
-
         reader.readAsText(bestand, 'UTF-8');
     }
 
-/**
- * Confirm and execute a full truncate of the specified backend database table.
- * @param {string} tabelnaam - The name of the table to clear.
- */
-async function leegmakenTabel(tabelnaam) {
-        const bevestig = confirm(`🚨 GEVAAR: Weet u 100% zeker dat u de tabel '${tabelnaam}' VOLLEDIG wilt leegmaken?\nAlle data wordt permanent gewist!`);
-        if (!bevestig) return;
-
-        toonBericht('Tabel aan het leegmaken...', '');
+    /**
+     * Leeg een tabel na bevestiging.
+     * @param {string} tabelnaam
+     */
+    async leegmakenTabel(tabelnaam) {
+        if (!confirm(`🚨 GEVAAR: Weet u 100% zeker dat u de tabel '${tabelnaam}' VOLLEDIG wilt leegmaken?\nAlle data wordt permanent gewist!`)) return;
+        this.app.ui.toonBericht('Tabel aan het leegmaken...', '');
         try {
-            const res = await apiCall(`/api/database/truncate/${tabelnaam}`, { method: 'POST' });
+            const res  = await this.app.api.call(`/api/database/truncate/${tabelnaam}`, { method: 'POST' });
             const data = await res.json();
             if (res.ok) {
-                toonBericht(`Tabel '${tabelnaam}' is succesvol leeggemaakt.`, 'succes');
-                if (tabelnaam === 'gebruikers') { verwerkLogout(); } // Uitloggen als je jezelf wist
-            } else { toonBericht(`Fout: ${data.error}`, 'fout'); }
-        } catch (f) { toonBericht('Verbindingsfout met server.', 'fout'); }
+                this.app.ui.toonBericht(`Tabel '${tabelnaam}' is succesvol leeggemaakt.`, 'succes');
+                if (tabelnaam === 'gebruikers') this.app.auth.verwerkLogout();
+            } else {
+                this.app.ui.toonBericht(`Fout: ${data.error}`, 'fout');
+            }
+        } catch { this.app.ui.toonBericht('Verbindingsfout met server.', 'fout'); }
     }
 
-/**
- * Wipe every table in the database after double confirmation. Redirects to login.
- */
-async function verwijderDatabase() {
-    const stap1 = confirm('GEVAAR: Dit wist ALLE data permanent — metingen, gebruikers, limieten, alles.\n\nWeet u dit zeker?');
-    if (!stap1) return;
-    const stap2 = confirm('LAATSTE WAARSCHUWING: Er is geen herstel mogelijk.\n\nDruk op OK om alle data te verwijderen.');
-    if (!stap2) return;
+    /** Wis alle tabellen na dubbele bevestiging. */
+    async verwijderDatabase() {
+        if (!confirm('GEVAAR: Dit wist ALLE data permanent — metingen, gebruikers, limieten, alles.\n\nWeet u dit zeker?')) return;
+        if (!confirm('LAATSTE WAARSCHUWING: Er is geen herstel mogelijk.\n\nDruk op OK om alle data te verwijderen.')) return;
+        this.app.ui.toonBericht('Database wordt gewist...', '');
+        try {
+            const res  = await this.app.api.call('/api/database/verwijder-alles', { method: 'POST' });
+            const data = await res.json();
+            if (res.ok) { alert('Database volledig gewist. U wordt uitgelogd.'); window.location.reload(); }
+            else         this.app.ui.toonBericht(`Fout: ${data.error}`, 'fout');
+        } catch { this.app.ui.toonBericht('Verbindingsfout met server.', 'fout'); }
+    }
 
-    toonBericht('Database wordt gewist...', '');
-    try {
-        const res = await apiCall('/api/database/verwijder-alles', { method: 'POST' });
-        const data = await res.json();
-        if (res.ok) {
-            alert('Database volledig gewist. U wordt uitgelogd.');
-            window.location.reload();
-        } else { toonBericht(`Fout: ${data.error}`, 'fout'); }
-    } catch (f) { toonBericht('Verbindingsfout met server.', 'fout'); }
+    /** Wis alle tabellen en seed standaard limieten en gebruikers. */
+    async maakNieuweDatabase() {
+        if (!confirm('Dit wist ALLE data en maakt een lege database aan met standaard limieten en standaard gebruikers.\n\nWeet u dit zeker?')) return;
+        if (!confirm('LAATSTE WAARSCHUWING: Alle huidige metingen en instellingen worden permanent gewist.\n\nDruk op OK om door te gaan.')) return;
+        this.app.ui.toonBericht('Database wordt geïnitialiseerd...', '');
+        try {
+            const res  = await this.app.api.call('/api/database/initialiseer', { method: 'POST' });
+            const data = await res.json();
+            if (res.ok) { alert('Nieuwe database aangemaakt. U wordt uitgelogd.'); window.location.reload(); }
+            else         this.app.ui.toonBericht(`Fout: ${data.error}`, 'fout');
+        } catch { this.app.ui.toonBericht('Verbindingsfout met server.', 'fout'); }
+    }
+
+    /**
+     * Download een tabel als CSV-bestand.
+     * @param {string} tabelnaam
+     */
+    exporteerTabel(tabelnaam) {
+        this.app.ui.toonBericht('Export wordt voorbereid...', 'succes');
+        window.location.href = `/api/database/export/${tabelnaam}`;
+    }
 }
-
-/**
- * Wipe every table then seed default limieten and gebruikers. Redirects to login.
- */
-async function maakNieuweDatabase() {
-    const stap1 = confirm('Dit wist ALLE data en maakt een lege database aan met standaard limieten en standaard gebruikers.\n\nWeet u dit zeker?');
-    if (!stap1) return;
-    const stap2 = confirm('LAATSTE WAARSCHUWING: Alle huidige metingen en instellingen worden permanent gewist.\n\nDruk op OK om door te gaan.');
-    if (!stap2) return;
-
-    toonBericht('Database wordt geïnitialiseerd...', '');
-    try {
-        const res = await apiCall('/api/database/initialiseer', { method: 'POST' });
-        const data = await res.json();
-        if (res.ok) {
-            alert('Nieuwe database aangemaakt. U wordt uitgelogd.');
-            window.location.reload();
-        } else { toonBericht(`Fout: ${data.error}`, 'fout'); }
-    } catch (f) { toonBericht('Verbindingsfout met server.', 'fout'); }
-}
-
-/**
- * Download the full export CSV for a specified table from the server.
- * @param {string} tabelnaam - The target table name to export.
- */
-async function exporteerTabel(tabelnaam) {
-            toonBericht('Export wordt voorbereid...', 'succes');
-            try {
-                // Omdat we een bestand downloaden, gebruiken we window.location.href 
-                // De browser handelt de download hiermee automatisch af
-                window.location.href = `/api/database/export/${tabelnaam}`;
-            } catch (f) {
-                toonBericht('Fout tijdens het downloaden van de export.', 'fout');
-            }
-        }
