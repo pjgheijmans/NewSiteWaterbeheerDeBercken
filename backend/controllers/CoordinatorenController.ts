@@ -1,9 +1,8 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { checkAuth, isWaterbeheerderOrCoordinator } from '../middleware/auth';
 import { ICoordinatorenRepository } from '../repositories/ICoordinatorenRepository';
 import { ICoordinatorenLogboekRepository } from '../repositories/ICoordinatorenLogboekRepository';
 import { IActiesRepository } from '../repositories/IActiesRepository';
-import { AppError } from '../errors';
 import { CoordinatorMetingInput, ChecklistInput, DaggegevensInput, Gebruiker } from '../types';
 
 export class CoordinatorenController {
@@ -35,59 +34,54 @@ export class CoordinatorenController {
         return true;
     }
 
-    private stuurFout(res: Response, err: unknown): void {
-        const status = err instanceof AppError ? err.status : 500;
-        res.status(status).json({ error: (err as Error).message });
-    }
-
     private berekenAuteur(g: Gebruiker): string {
         return [g.voornaam, g.achternaam].filter((n): n is string => !!n).join(' ').trim()
             || g.inlognaam
             || g.gebruikersnaam;
     }
 
-    private async getMetingen(req: Request, res: Response): Promise<void> {
+    private async getMetingen(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistToegang(req, res)) return;
         try {
             res.json(await this.coordRepo.getCoordinatoren(req.query.datum as string));
-        } catch (err) { this.stuurFout(res, err); }
+        } catch (err) { next(err); }
     }
 
-    private async postMeting(req: Request, res: Response): Promise<void> {
+    private async postMeting(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistToegang(req, res)) return;
         try {
-            const body = req.body as CoordinatorMetingInput;
+            const body   = req.body as CoordinatorMetingInput;
             const bad_id = await this.coordRepo.getBadId(body.bad_naam);
             const auteur = this.berekenAuteur(req.session.gebruiker!);
             await this.coordRepo.saveMeting(bad_id, body, auteur);
             res.json({ status: 'success' });
-        } catch (err) { this.stuurFout(res, err); }
+        } catch (err) { next(err); }
     }
 
-    private async getChecklist(req: Request, res: Response): Promise<void> {
+    private async getChecklist(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistToegang(req, res)) return;
         try {
             res.json(await this.coordRepo.getChecklist(req.query.datum as string));
-        } catch (err) { this.stuurFout(res, err); }
+        } catch (err) { next(err); }
     }
 
-    private async postChecklist(req: Request, res: Response): Promise<void> {
+    private async postChecklist(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistToegang(req, res)) return;
         try {
             const body = req.body as ChecklistInput & { datum: string };
             await this.coordRepo.saveChecklist(body.datum, body);
             res.json({ status: 'success' });
-        } catch (err) { this.stuurFout(res, err); }
+        } catch (err) { next(err); }
     }
 
-    private async getDaggegevens(req: Request, res: Response): Promise<void> {
+    private async getDaggegevens(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistToegang(req, res)) return;
         try {
             res.json(await this.coordRepo.getDaggegevens(req.query.datum as string));
-        } catch (err) { this.stuurFout(res, err); }
+        } catch (err) { next(err); }
     }
 
-    private async postDaggegevens(req: Request, res: Response): Promise<void> {
+    private async postDaggegevens(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistToegang(req, res)) return;
         try {
             const body = req.body as DaggegevensInput & { datum: string };
@@ -96,10 +90,10 @@ export class CoordinatorenController {
             void this.actiesRepo.genereerBezoekers(body.datum, body.bezoekers_vandaag ?? null);
             void this.actiesRepo.genereerSpoelbeurt(body.datum);
             res.json({ status: 'success' });
-        } catch (err) { this.stuurFout(res, err); }
+        } catch (err) { next(err); }
     }
 
-    private async deleteBlok(req: Request, res: Response): Promise<void> {
+    private async deleteBlok(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistToegang(req, res)) return;
         const datum    = req.query.datum    as string;
         const tijdstip = req.query.tijdstip as string;
@@ -110,31 +104,31 @@ export class CoordinatorenController {
         try {
             await this.coordRepo.deleteBlok(datum, tijdstip);
             res.json({ status: 'success' });
-        } catch (err) { this.stuurFout(res, err); }
+        } catch (err) { next(err); }
     }
 
-    private async getLogboek(req: Request, res: Response): Promise<void> {
+    private async getLogboek(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistToegang(req, res)) return;
         try {
             res.json(await this.logboekRepo.getByDatum(req.query.datum as string));
-        } catch (err) { this.stuurFout(res, err); }
+        } catch (err) { next(err); }
     }
 
-    private async postLogboek(req: Request, res: Response): Promise<void> {
+    private async postLogboek(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistToegang(req, res)) return;
         try {
             const { datum, tijdstip, tekst } = req.body as { datum: string; tijdstip: string; tekst?: string };
             const auteur = this.berekenAuteur(req.session.gebruiker!);
-            const row = await this.logboekRepo.save(datum, tijdstip, tekst ?? '', auteur);
+            const row    = await this.logboekRepo.save(datum, tijdstip, tekst ?? '', auteur);
             res.json({ status: 'success', id: row?.id ?? null, auteur: row?.auteur ?? auteur });
-        } catch (err) { this.stuurFout(res, err); }
+        } catch (err) { next(err); }
     }
 
-    private async deleteLogboek(req: Request, res: Response): Promise<void> {
+    private async deleteLogboek(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistToegang(req, res)) return;
         try {
             await this.logboekRepo.deleteById(String(req.params['id']));
             res.json({ status: 'success' });
-        } catch (err) { this.stuurFout(res, err); }
+        } catch (err) { next(err); }
     }
 }

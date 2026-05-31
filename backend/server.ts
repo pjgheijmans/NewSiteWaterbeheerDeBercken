@@ -17,6 +17,7 @@ import { maakTrendRouter }         from './routes/trend';
 import { maakDatabaseRouter }      from './routes/database';
 import { maakLogboekRouter }       from './routes/logboek';
 import { maakFrontendRouter }      from './routes/frontend';
+import { errorHandler }           from './middleware/errorHandler';
 
 /**
  * Configureer en start de Express-applicatie.
@@ -52,6 +53,9 @@ app.use('/', maakFrontendRouter());
 
 // process.cwd() werkt zowel in dev (ts-node) als in prod (node dist/...)
 app.use(express.static(path.join(process.cwd(), 'frontend')));
+
+// ── Centrale foutafhandeling (na alle routes) ─────────────────────────────────
+app.use(errorHandler);
 
 // ── Start ─────────────────────────────────────────────────────────────────────
 const PORT = parseInt(process.env.PORT || '3000', 10);

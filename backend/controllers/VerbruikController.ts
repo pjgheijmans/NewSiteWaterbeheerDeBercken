@@ -1,8 +1,7 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { checkAuth, isWaterbeheerder } from '../middleware/auth';
 import { IVerbruikRepository } from '../repositories/IVerbruikRepository';
 import { IActiesRepository } from '../repositories/IActiesRepository';
-import { AppError } from '../errors';
 import { VerbruikInput, VerwarmingInput } from '../types';
 
 export class VerbruikController {
@@ -28,47 +27,42 @@ export class VerbruikController {
         return true;
     }
 
-    private stuurFout(res: Response, err: unknown): void {
-        const status = err instanceof AppError ? err.status : 500;
-        res.status(status).json({ error: (err as Error).message });
-    }
-
-    private async getVerbruik(req: Request, res: Response): Promise<void> {
+    private async getVerbruik(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistWaterbeheerder(req, res)) return;
         try {
             res.json(await this.verbruikRepo.getVerbruik(req.query.datum as string));
-        } catch (err) { this.stuurFout(res, err); }
+        } catch (err) { next(err); }
     }
 
-    private async getVorigeVerbruik(req: Request, res: Response): Promise<void> {
+    private async getVorigeVerbruik(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistWaterbeheerder(req, res)) return;
         try {
             res.json(await this.verbruikRepo.getVorigeVerbruik(req.query.datum as string));
-        } catch (err) { this.stuurFout(res, err); }
+        } catch (err) { next(err); }
     }
 
-    private async postVerbruik(req: Request, res: Response): Promise<void> {
+    private async postVerbruik(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistWaterbeheerder(req, res)) return;
         try {
             const body = req.body as VerbruikInput;
             await this.verbruikRepo.saveVerbruik(body);
             await this.actiesRepo.genereerVerbruik(body.datum, body);
             res.json({ status: 'success' });
-        } catch (err) { this.stuurFout(res, err); }
+        } catch (err) { next(err); }
     }
 
-    private async getVerwarming(req: Request, res: Response): Promise<void> {
+    private async getVerwarming(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistWaterbeheerder(req, res)) return;
         try {
             res.json(await this.verbruikRepo.getVerwarming(req.query.datum as string));
-        } catch (err) { this.stuurFout(res, err); }
+        } catch (err) { next(err); }
     }
 
-    private async postVerwarming(req: Request, res: Response): Promise<void> {
+    private async postVerwarming(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistWaterbeheerder(req, res)) return;
         try {
             await this.verbruikRepo.saveVerwarming(req.body as VerwarmingInput);
             res.json({ status: 'success' });
-        } catch (err) { this.stuurFout(res, err); }
+        } catch (err) { next(err); }
     }
 }

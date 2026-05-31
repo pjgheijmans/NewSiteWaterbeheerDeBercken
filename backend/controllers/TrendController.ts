@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { checkAuth, isWaterbeheerder } from '../middleware/auth';
 import { ITrendRepository } from '../repositories/ITrendRepository';
 
@@ -19,15 +19,15 @@ export class TrendController {
         return true;
     }
 
-    private async getMetingen(req: Request, res: Response): Promise<void> {
+    private async getMetingen(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistWaterbeheerder(req, res)) return;
         try { res.json(await this.repo.getMetingenTrend(req.query.van as string, req.query.tot as string)); }
-        catch (err) { res.status(500).json({ error: (err as Error).message }); }
+        catch (err) { next(err); }
     }
 
-    private async getVerbruik(req: Request, res: Response): Promise<void> {
+    private async getVerbruik(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistWaterbeheerder(req, res)) return;
         try { res.json(await this.repo.getVerbruikTrend(req.query.van as string, req.query.tot as string)); }
-        catch (err) { res.status(500).json({ error: (err as Error).message }); }
+        catch (err) { next(err); }
     }
 }
