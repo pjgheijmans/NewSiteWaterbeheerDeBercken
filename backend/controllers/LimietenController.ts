@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { checkAuth, isAdminOrWaterbeheerder } from '../middleware/auth';
 import { ILimietenRepository } from '../repositories/ILimietenRepository';
 import { LimietInput } from '../types';
@@ -13,20 +13,20 @@ export class LimietenController {
         this.router.post('/', checkAuth, this.save.bind(this));
     }
 
-    private async getAll(_req: Request, res: Response): Promise<void> {
+    private async getAll(_req: Request, res: Response, next: NextFunction): Promise<void> {
         try { res.json(await this.repo.getAll()); }
-        catch (err) { res.status(500).json({ error: (err as Error).message }); }
+        catch (err) { next(err); }
     }
 
     private getDefaults(_req: Request, res: Response): void {
         res.json(this.repo.getDefaults());
     }
 
-    private async save(req: Request, res: Response): Promise<void> {
+    private async save(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!isAdminOrWaterbeheerder(req.session.gebruiker!.taak)) {
             res.status(403).json({ error: 'Geen toegang' }); return;
         }
         try { await this.repo.save(req.body as LimietInput); res.json({ status: 'success' }); }
-        catch (err) { res.status(500).json({ error: (err as Error).message }); }
+        catch (err) { next(err); }
     }
 }

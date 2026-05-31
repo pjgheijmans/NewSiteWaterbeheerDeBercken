@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { checkAuth, isWaterbeheerder } from '../middleware/auth';
 import { IMetingenRepository } from '../repositories/IMetingenRepository';
 import { IActiesRepository } from '../repositories/IActiesRepository';
@@ -31,22 +31,17 @@ export class MetingenController {
         return true;
     }
 
-    private stuurFout(res: Response, err: unknown): void {
-        const status = err instanceof AppError ? err.status : 500;
-        res.status(status).json({ error: (err as Error).message });
-    }
-
-    private async getMetingen(req: Request, res: Response): Promise<void> {
+    private async getMetingen(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistWaterbeheerder(req, res)) return;
         try {
             res.json(await this.metingenRepo.getMetingen(req.query.datum as string));
-        } catch (err) { this.stuurFout(res, err); }
+        } catch (err) { next(err); }
     }
 
-    private async postMeting(req: Request, res: Response): Promise<void> {
+    private async postMeting(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistWaterbeheerder(req, res)) return;
         try {
-            const body = req.body as MetingInput;
+            const body   = req.body as MetingInput;
             const bad_id = await this.metingenRepo.getBadId(body.bad_naam);
 
             if (body.bad_naam === 'Peuterbad') {
@@ -56,35 +51,35 @@ export class MetingenController {
             }
             await this.actiesRepo.genereer(bad_id, body.datum, body.bad_naam, body);
             res.json({ status: 'success' });
-        } catch (err) { this.stuurFout(res, err); }
+        } catch (err) { next(err); }
     }
 
-    private async getActies(req: Request, res: Response): Promise<void> {
+    private async getActies(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistWaterbeheerder(req, res)) return;
         try {
             const datum = (req.query.datum as string) || new Date().toISOString().split('T')[0];
             res.json(await this.actiesRepo.getActies(datum));
-        } catch (err) { this.stuurFout(res, err); }
+        } catch (err) { next(err); }
     }
 
-    private async resolveActie(req: Request, res: Response): Promise<void> {
+    private async resolveActie(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistWaterbeheerder(req, res)) return;
         try {
-            const g = req.session.gebruiker!;
+            const g    = req.session.gebruiker!;
             const naam: string =
                 [g.voornaam, g.achternaam].filter((n): n is string => !!n).join(' ').trim()
                 || g.inlognaam
                 || g.gebruikersnaam;
             await this.actiesRepo.resolve(String(req.params['id']), naam);
             res.json({ status: 'success' });
-        } catch (err) { this.stuurFout(res, err); }
+        } catch (err) { next(err); }
     }
 
-    private async getBezoekers(req: Request, res: Response): Promise<void> {
+    private async getBezoekers(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistWaterbeheerder(req, res)) return;
         try {
             const datum = req.query.datum as string;
-            const dag = await this.daggegevensProvider.getDaggegevens(datum);
+            const dag   = await this.daggegevensProvider.getDaggegevens(datum);
             // Fire-and-forget: geen transactionele garantie vereist
             void this.actiesRepo.genereerBezoekers(datum, dag.bezoekers_vandaag ?? null);
             const totalen = await this.actiesRepo.genereerSpoelbeurt(datum);
@@ -93,14 +88,14 @@ export class MetingenController {
                 bezoekers_totaal_diep:   totalen.diep           ?? null,
                 bezoekers_totaal_ondiep: totalen.ondiep         ?? null,
             });
-        } catch (err) { this.stuurFout(res, err); }
+        } catch (err) { next(err); }
     }
 
-    private async unresolveActie(req: Request, res: Response): Promise<void> {
+    private async unresolveActie(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistWaterbeheerder(req, res)) return;
         try {
             await this.actiesRepo.unresolve(String(req.params['id']));
             res.json({ status: 'success' });
-        } catch (err) { this.stuurFout(res, err); }
+        } catch (err) { next(err); }
     }
 }

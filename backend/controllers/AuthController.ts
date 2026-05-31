@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import { IGebruikersRepository } from '../repositories/IGebruikersRepository';
 
 export class AuthController {
@@ -11,13 +11,13 @@ export class AuthController {
         this.router.get('/ingelogd',  this.ingelogd.bind(this));
     }
 
-    private async login(req: Request, res: Response): Promise<void> {
+    private async login(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
             const gebruiker = await this.gebruikersRepo.findByLogin(req.body.username, req.body.password);
             if (!gebruiker) { res.status(401).json({ error: 'Onjuiste inlognaam of wachtwoord' }); return; }
             req.session.gebruiker = gebruiker;
             res.json({ status: 'success', gebruiker });
-        } catch (err) { console.error(err); res.status(500).json({ error: (err as Error).message }); }
+        } catch (err) { next(err); }
     }
 
     private logout(req: Request, res: Response): void {

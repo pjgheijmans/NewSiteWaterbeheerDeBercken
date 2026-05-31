@@ -1,5 +1,6 @@
 import express, { Application, RequestHandler, Router } from 'express';
 import { Gebruiker } from '../../backend/types';
+import { errorHandler } from '../../backend/middleware/errorHandler';
 
 /** Standaard testgebruiker voor sessie-mocks. */
 export function maakTestGebruiker(taak = 'waterbeheerder'): Gebruiker {
@@ -37,5 +38,6 @@ export function maakTestApp(router: Router, taak: string | null = 'waterbeheerde
     app.use(express.json());
     app.use(maakSessieMiddleware(taak !== null ? maakTestGebruiker(taak) : null));
     app.use('/', router);
+    app.use(errorHandler);
     return app;
 }
