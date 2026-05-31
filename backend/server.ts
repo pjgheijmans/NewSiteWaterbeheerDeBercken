@@ -3,6 +3,7 @@ import path from 'path';
 import session from 'express-session';
 import pool from './repositories/db';
 import { maakMetingenRouter } from './routes/metingen';
+import { maakVerbruikRouter } from './routes/verbruik';
 
 // Resterende routes zijn nog .js — worden stap voor stap omgezet naar TypeScript
 /* eslint-disable @typescript-eslint/no-var-requires */
@@ -11,7 +12,6 @@ const authRoutes          = require('./routes/auth');
 const gebruikersRoutes    = require('./routes/gebruikers');
 const limietenRoutes      = require('./routes/limieten');
 const coordinatorenRoutes = require('./routes/coordinatoren');
-const verbruikRoutes      = require('./routes/verbruik');
 const trendRoutes         = require('./routes/trend');
 const databaseRoutes      = require('./routes/database');
 const logboekRoutes       = require('./routes/logboek');
@@ -37,7 +37,7 @@ app.use('/api/gebruikers',    gebruikersRoutes);
 app.use('/api/limieten',      limietenRoutes);
 app.use('/api',               maakMetingenRouter(pool));
 app.use('/api/coordinatoren', coordinatorenRoutes);
-app.use('/api/verbruik',      verbruikRoutes);
+app.use('/api/verbruik',      maakVerbruikRouter(pool));
 app.use('/api/trend',         trendRoutes);
 app.use('/api/database',      databaseRoutes);
 app.use('/api/logboek',       logboekRoutes);

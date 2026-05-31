@@ -1,5 +1,5 @@
 import { Pool, RowDataPacket } from 'mysql2/promise';
-import { Actie, MetingInput, BadTotalen, Drempelwaarden } from '../types';
+import { Actie, MetingInput, VerbruikInput, BadTotalen, Drempelwaarden } from '../types';
 import { IActiesRepository } from './IActiesRepository';
 
 export class ActiesRepository implements IActiesRepository {
@@ -109,7 +109,7 @@ export class ActiesRepository implements IActiesRepository {
         }
     }
 
-    async genereerVerbruik(datum: string, body: Record<string, unknown>): Promise<void> {
+    async genereerVerbruik(datum: string, body: VerbruikInput): Promise<void> {
         const d = await this.laadDrempelwaarden();
         const [bads] = await this.pool.execute<RowDataPacket[]>(
             'SELECT id FROM baden WHERE naam = ?', ['Diep']

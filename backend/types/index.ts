@@ -79,6 +79,39 @@ export interface BadTotalen {
     ondiep: number;
 }
 
+// ── Verbruik ──────────────────────────────────────────────────────────────────
+
+export interface VerbruikData {
+    datum?: string;
+    floculant?: number | null;
+    water_diep?: number | null;
+    water_ondiep?: number | null;
+    water_totaal?: number | null;
+    elektriciteit_nacht?: number | null;
+    elektriciteit_dag?: number | null;
+    gas?: number | null;
+    chemicalien_chloor?: number | null;
+    chemicalien_zwavelzuur?: number | null;
+}
+
+export interface VerbruikInput extends VerbruikData {
+    datum: string;
+}
+
+export interface VerwarmingData {
+    datum?: string;
+    verwarming_status_1?: boolean | number | null;
+    verwarming_status_2?: boolean | number | null;
+    verwarming_status_3?: boolean | number | null;
+    verwarming_status_4?: boolean | number | null;
+    verwarming_druk_ok?: boolean | number | null;
+    verwarming_visuele_controle?: boolean | number | null;
+}
+
+export interface VerwarmingInput extends VerwarmingData {
+    datum: string;
+}
+
 // ── Coordinatoren ─────────────────────────────────────────────────────────────
 
 export interface Daggegevens {
