@@ -253,3 +253,12 @@ export interface LogboekSaveResult {
     id: number;
     auteur: string | null;
 }
+
+// ── Session augmentation ───────────────────────────────────────────────────────
+// Placed here so ts-node always loads it (index.ts is imported by every controller).
+// Inside a module (file with exports), declare module = augmentation, not replacement.
+declare module 'express-session' {
+    interface SessionData {
+        gebruiker?: Gebruiker;
+    }
+}
