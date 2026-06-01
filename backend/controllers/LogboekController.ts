@@ -1,5 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { checkAuth, isWaterbeheerder } from '../middleware/auth';
+import { valideerBody } from '../middleware/valideer';
+import { logboekSchema } from '../validation/schemas';
 import { ILogboekService } from '../services/ILogboekService';
 
 export class LogboekController {
@@ -8,7 +10,7 @@ export class LogboekController {
     constructor(private readonly service: ILogboekService) {
         this.router = Router();
         this.router.get('/',       checkAuth, this.getByDatum.bind(this));
-        this.router.post('/',      checkAuth, this.save.bind(this));
+        this.router.post('/',      checkAuth, valideerBody(logboekSchema), this.save.bind(this));
         this.router.delete('/:id', checkAuth, this.deleteById.bind(this));
     }
 

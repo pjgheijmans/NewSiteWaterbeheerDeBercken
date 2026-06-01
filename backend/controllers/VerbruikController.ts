@@ -1,5 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { checkAuth, isWaterbeheerder } from '../middleware/auth';
+import { valideerBody } from '../middleware/valideer';
+import { verbruikSchema, verwarmingSchema } from '../validation/schemas';
 import { IVerbruikService } from '../services/IVerbruikService';
 import { VerbruikInput, VerwarmingInput } from '../types';
 
@@ -10,9 +12,9 @@ export class VerbruikController {
         this.router = Router();
         this.router.get('/diep-ondiep',        checkAuth, this.getVerbruik.bind(this));
         this.router.get('/diep-ondiep/vorige', checkAuth, this.getVorigeVerbruik.bind(this));
-        this.router.post('/diep-ondiep',       checkAuth, this.postVerbruik.bind(this));
+        this.router.post('/diep-ondiep',       checkAuth, valideerBody(verbruikSchema), this.postVerbruik.bind(this));
         this.router.get('/verwarmingssysteem',  checkAuth, this.getVerwarming.bind(this));
-        this.router.post('/verwarmingssysteem', checkAuth, this.postVerwarming.bind(this));
+        this.router.post('/verwarmingssysteem', checkAuth, valideerBody(verwarmingSchema), this.postVerwarming.bind(this));
     }
 
     private vereistWaterbeheerder(req: Request, res: Response): boolean {

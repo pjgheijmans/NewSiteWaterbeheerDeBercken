@@ -1,4 +1,6 @@
 import { Router, Request, Response, NextFunction } from 'express';
+import { valideerBody } from '../middleware/valideer';
+import { loginSchema } from '../validation/schemas';
 import { IAuthService } from '../services/IAuthService';
 
 export class AuthController {
@@ -6,7 +8,7 @@ export class AuthController {
 
     constructor(private readonly service: IAuthService) {
         this.router = Router();
-        this.router.post('/login',    this.login.bind(this));
+        this.router.post('/login',    valideerBody(loginSchema), this.login.bind(this));
         this.router.post('/logout',   this.logout.bind(this));
         this.router.get('/ingelogd',  this.ingelogd.bind(this));
     }
