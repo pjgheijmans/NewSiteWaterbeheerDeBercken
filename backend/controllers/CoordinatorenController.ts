@@ -1,18 +1,12 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { checkAuth, isWaterbeheerderOrCoordinator } from '../middleware/auth';
-import { ICoordinatorenRepository } from '../repositories/ICoordinatorenRepository';
-import { ICoordinatorenLogboekRepository } from '../repositories/ICoordinatorenLogboekRepository';
-import { IActiesRepository } from '../repositories/IActiesRepository';
-import { CoordinatorMetingInput, ChecklistInput, DaggegevensInput, Gebruiker } from '../types';
+import { ICoordinatorenService } from '../services/ICoordinatorenService';
+import { CoordinatorMetingInput, ChecklistInput, DaggegevensInput } from '../types';
 
 export class CoordinatorenController {
     readonly router: Router;
 
-    constructor(
-        private readonly coordRepo: ICoordinatorenRepository,
-        private readonly logboekRepo: ICoordinatorenLogboekRepository,
-        private readonly actiesRepo: IActiesRepository,
-    ) {
+    constructor(private readonly service: ICoordinatorenService) {
         this.router = Router();
         this.router.get('/',                  checkAuth, this.getMetingen.bind(this));
         this.router.post('/',                 checkAuth, this.postMeting.bind(this));
@@ -34,26 +28,17 @@ export class CoordinatorenController {
         return true;
     }
 
-    private berekenAuteur(g: Gebruiker): string {
-        return [g.voornaam, g.achternaam].filter((n): n is string => !!n).join(' ').trim()
-            || g.inlognaam
-            || g.gebruikersnaam;
-    }
-
     private async getMetingen(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistToegang(req, res)) return;
         try {
-            res.json(await this.coordRepo.getCoordinatoren(req.query.datum as string));
+            res.json(await this.service.getCoordinatoren(req.query.datum as string));
         } catch (err) { next(err); }
     }
 
     private async postMeting(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistToegang(req, res)) return;
         try {
-            const body   = req.body as CoordinatorMetingInput;
-            const bad_id = await this.coordRepo.getBadId(body.bad_naam);
-            const auteur = this.berekenAuteur(req.session.gebruiker!);
-            await this.coordRepo.saveMeting(bad_id, body, auteur);
+            await this.service.saveMeting(req.body as CoordinatorMetingInput, req.session.gebruiker!);
             res.json({ status: 'success' });
         } catch (err) { next(err); }
     }
@@ -61,7 +46,7 @@ export class CoordinatorenController {
     private async getChecklist(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistToegang(req, res)) return;
         try {
-            res.json(await this.coordRepo.getChecklist(req.query.datum as string));
+            res.json(await this.service.getChecklist(req.query.datum as string));
         } catch (err) { next(err); }
     }
 
@@ -69,7 +54,7 @@ export class CoordinatorenController {
         if (!this.vereistToegang(req, res)) return;
         try {
             const body = req.body as ChecklistInput & { datum: string };
-            await this.coordRepo.saveChecklist(body.datum, body);
+            await this.service.saveChecklist(body.datum, body);
             res.json({ status: 'success' });
         } catch (err) { next(err); }
     }
@@ -77,7 +62,7 @@ export class CoordinatorenController {
     private async getDaggegevens(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistToegang(req, res)) return;
         try {
-            res.json(await this.coordRepo.getDaggegevens(req.query.datum as string));
+            res.json(await this.service.getDaggegevens(req.query.datum as string));
         } catch (err) { next(err); }
     }
 
@@ -85,10 +70,7 @@ export class CoordinatorenController {
         if (!this.vereistToegang(req, res)) return;
         try {
             const body = req.body as DaggegevensInput & { datum: string };
-            await this.coordRepo.saveDaggegevens(body.datum, body);
-            // Fire-and-forget: geen transactionele garantie vereist
-            void this.actiesRepo.genereerBezoekers(body.datum, body.bezoekers_vandaag ?? null);
-            void this.actiesRepo.genereerSpoelbeurt(body.datum);
+            await this.service.saveDaggegevens(body.datum, body);
             res.json({ status: 'success' });
         } catch (err) { next(err); }
     }
@@ -102,7 +84,7 @@ export class CoordinatorenController {
             return;
         }
         try {
-            await this.coordRepo.deleteBlok(datum, tijdstip);
+            await this.service.deleteBlok(datum, tijdstip);
             res.json({ status: 'success' });
         } catch (err) { next(err); }
     }
@@ -110,7 +92,7 @@ export class CoordinatorenController {
     private async getLogboek(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistToegang(req, res)) return;
         try {
-            res.json(await this.logboekRepo.getByDatum(req.query.datum as string));
+            res.json(await this.service.getLogboek(req.query.datum as string));
         } catch (err) { next(err); }
     }
 
@@ -118,16 +100,15 @@ export class CoordinatorenController {
         if (!this.vereistToegang(req, res)) return;
         try {
             const { datum, tijdstip, tekst } = req.body as { datum: string; tijdstip: string; tekst?: string };
-            const auteur = this.berekenAuteur(req.session.gebruiker!);
-            const row    = await this.logboekRepo.save(datum, tijdstip, tekst ?? '', auteur);
-            res.json({ status: 'success', id: row?.id ?? null, auteur: row?.auteur ?? auteur });
+            const resultaat = await this.service.saveLogboek(datum, tijdstip, tekst ?? '', req.session.gebruiker!);
+            res.json({ status: 'success', id: resultaat.id, auteur: resultaat.auteur });
         } catch (err) { next(err); }
     }
 
     private async deleteLogboek(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistToegang(req, res)) return;
         try {
-            await this.logboekRepo.deleteById(String(req.params['id']));
+            await this.service.deleteLogboek(String(req.params['id']));
             res.json({ status: 'success' });
         } catch (err) { next(err); }
     }

@@ -1,10 +1,10 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { IGebruikersRepository } from '../repositories/IGebruikersRepository';
+import { IAuthService } from '../services/IAuthService';
 
 export class AuthController {
     readonly router: Router;
 
-    constructor(private readonly gebruikersRepo: IGebruikersRepository) {
+    constructor(private readonly service: IAuthService) {
         this.router = Router();
         this.router.post('/login',    this.login.bind(this));
         this.router.post('/logout',   this.logout.bind(this));
@@ -13,7 +13,7 @@ export class AuthController {
 
     private async login(req: Request, res: Response, next: NextFunction): Promise<void> {
         try {
-            const gebruiker = await this.gebruikersRepo.findByLogin(req.body.username, req.body.password);
+            const gebruiker = await this.service.login(req.body.username, req.body.password);
             if (!gebruiker) { res.status(401).json({ error: 'Onjuiste inlognaam of wachtwoord' }); return; }
             req.session.gebruiker = gebruiker;
             res.json({ status: 'success', gebruiker });

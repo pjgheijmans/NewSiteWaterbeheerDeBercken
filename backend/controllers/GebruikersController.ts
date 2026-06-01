@@ -1,12 +1,12 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { checkAuth, isAdminOrWaterbeheerder } from '../middleware/auth';
-import { IGebruikersRepository } from '../repositories/IGebruikersRepository';
+import { IGebruikersService } from '../services/IGebruikersService';
 import { GebruikerInput } from '../types';
 
 export class GebruikersController {
     readonly router: Router;
 
-    constructor(private readonly repo: IGebruikersRepository) {
+    constructor(private readonly service: IGebruikersService) {
         this.router = Router();
         this.router.get('/',       checkAuth, this.getAll.bind(this));
         this.router.post('/',      checkAuth, this.create.bind(this));
@@ -24,25 +24,25 @@ export class GebruikersController {
 
     private async getAll(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistToegang(req, res)) return;
-        try { res.json(await this.repo.getAll()); }
+        try { res.json(await this.service.getAll()); }
         catch (err) { next(err); }
     }
 
     private async create(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistToegang(req, res)) return;
-        try { await this.repo.create(req.body as GebruikerInput); res.json({ status: 'success' }); }
+        try { await this.service.create(req.body as GebruikerInput); res.json({ status: 'success' }); }
         catch (err) { next(err); }
     }
 
     private async update(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistToegang(req, res)) return;
-        try { await this.repo.update(String(req.params['id']), req.body as GebruikerInput); res.json({ status: 'success' }); }
+        try { await this.service.update(String(req.params['id']), req.body as GebruikerInput); res.json({ status: 'success' }); }
         catch (err) { next(err); }
     }
 
     private async remove(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistToegang(req, res)) return;
-        try { await this.repo.remove(String(req.params['id'])); res.json({ status: 'success' }); }
+        try { await this.service.remove(String(req.params['id'])); res.json({ status: 'success' }); }
         catch (err) { next(err); }
     }
 }
