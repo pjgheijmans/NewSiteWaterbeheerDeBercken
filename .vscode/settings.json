@@ -1,0 +1,8 @@
+{
+    // Jest-extensie (Orta.vscode-jest): toont teststatus in de Testing-zijbalk
+    // en met groene/rode pictogrammen naast elke test in de editor.
+    // "watch" voert de suite één keer uit bij het openen en houdt de
+    // testboom daarna live bij tijdens het bewerken.
+    "jest.runMode": "watch",
+    "jest.jestCommandLine": "npx jest"
+}

@@ -8,6 +8,7 @@
         "dev": "nodemon",
         "test": "jest",
         "test:unit": "jest test/unit",
+        "test:integration": "jest -c jest.integration.config.js",
         "test:coverage": "jest --coverage"
     },
     "dependencies": {
