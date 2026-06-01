@@ -49,6 +49,84 @@ graph TB
 `CoordinatorenRepository` implementeert — Interface Segregation: `MetingenService`
 ziet alleen wat het nodig heeft.
 
+### Klassendiagram — metingen
+
+De controller hangt af van een service-**interface**; de service van
+repository-**interfaces**. Concrete klassen (`..|>`) worden pas in de
+route-factory gekoppeld. Elk domein volgt ditzelfde patroon.
+
+```mermaid
+classDiagram
+    class MetingenController {
+        -service: IMetingenService
+        +router: Router
+    }
+
+    class IMetingenService {
+        <<interface>>
+        +getMetingen(datum) Meting[]
+        +saveMeting(body) void
+        +getActies(datum) Actie[]
+        +resolveActie(id, gebruiker) void
+        +unresolveActie(id) void
+        +getBezoekers(datum) BezoekersResultaat
+    }
+    class MetingenService {
+        -metingenRepo: IMetingenRepository
+        -actiesRepo: IActiesRepository
+        -daggegevensProvider: IDaggegevensProvider
+    }
+
+    class IMetingenRepository {
+        <<interface>>
+        +getMetingen(datum) Meting[]
+        +getBadId(naam) number
+        +saveGrootBadMeting(badId, data) void
+        +savePeuterbadMeting(badId, data) void
+    }
+    class IActiesRepository {
+        <<interface>>
+        +getActies(datum) Actie[]
+        +resolve(id, door) void
+        +unresolve(id) void
+        +genereer(badId, datum, naam, body) void
+        +genereerBezoekers(datum, aantal) void
+        +genereerSpoelbeurt(datum) BadTotalen
+    }
+    class IDaggegevensProvider {
+        <<interface>>
+        +getDaggegevens(datum) Daggegevens
+    }
+
+    class MetingenRepository
+    class ActiesRepository
+    class CoordinatorenRepository
+
+    MetingenController --> IMetingenService : gebruikt
+    MetingenService ..|> IMetingenService
+    MetingenService --> IMetingenRepository
+    MetingenService --> IActiesRepository
+    MetingenService --> IDaggegevensProvider
+    MetingenRepository ..|> IMetingenRepository
+    ActiesRepository ..|> IActiesRepository
+    CoordinatorenRepository ..|> IDaggegevensProvider
+```
+
+### Foutklasse
+
+```mermaid
+classDiagram
+    class Error
+    class AppError {
+        +status: number
+        +constructor(message, status)
+    }
+    AppError --|> Error
+```
+
+`AppError(message, status)` wordt door services/repositories geworpen en door de
+`errorHandler` vertaald naar de HTTP-statuscode; overige fouten worden 500.
+
 ---
 
 ## 3. Endpoints per domein

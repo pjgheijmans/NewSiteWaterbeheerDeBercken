@@ -5,8 +5,8 @@ in [`docs/architecture/`](architecture/).
 
 | Deel | Inhoud |
 |------|--------|
-| [Backend](architecture/backend.md)   | Gelaagde opbouw, request-lifecycle, middleware, endpoints, dependency injection |
-| [Frontend](architecture/frontend.md) | ES6-class modules en de `Application`-container |
+| [Backend](architecture/backend.md)   | Gelaagde opbouw, request-lifecycle, klassendiagram, middleware, endpoints, dependency injection |
+| [Frontend](architecture/frontend.md) | ES6-class modules, klassendiagram en de `Application`-container |
 | [Flows](architecture/flows.md)       | Sequencediagrammen: opstarten, acties, autosave |
 | [Database](architecture/database.md) | ER-diagram en tabellen |
 | [Testing](architecture/testing.md)   | Teststrategie per laag |
