@@ -1,17 +1,23 @@
 {
     // Jest-extensie (Orta.vscode-jest): toont teststatus in de Testing-zijbalk
     // en met groene/rode pictogrammen naast elke test in de editor.
-    // "watch" alleen voert bij het openen geen volledige run uit, waardoor
-    // niet-gewijzigde testbestanden niet in de testboom verschijnen.
-    // "runAllTestsOnStartup" draait daarom alle suites één keer bij het
-    // openen, zodat de VOLLEDIGE boom (services, repositories, validation,
-    // middleware, controllers) verschijnt; daarna blijft watch live bijwerken.
-    "jest.runMode": {
-        "type": "watch",
-        "runAllTestsOnStartup": true
-    },
-    "jest.jestCommandLine": "npx jest",
-    // Tijdelijk: uitgebreide logging in het "Jest (Workspace)" output-kanaal
-    // om te zien waarom niet alle testbestanden in de testboom verschijnen.
-    "jest.debugMode": true
+    //
+    // Twee "virtuele mappen" zodat zowel unit- als integratietests in het
+    // Testing-paneel verschijnen, elk met een eigen run-gedrag:
+    //   - "unit"        : draait via jest.config.js, watch-modus (live).
+    //   - "integratie"  : draait via jest.integration.config.js, on-demand
+    //                     (alleen wanneer je zelf op ▶ klikt) omdat deze een
+    //                     bereikbare MySQL vereist (docker compose up -d db).
+    "jest.virtualFolders": [
+        {
+            "name": "unit",
+            "jestCommandLine": "npx jest --config jest.config.js",
+            "runMode": "watch"
+        },
+        {
+            "name": "integratie",
+            "jestCommandLine": "npx jest --config jest.integration.config.js",
+            "runMode": "on-demand"
+        }
+    ]
 }

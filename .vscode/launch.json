@@ -34,6 +34,19 @@
             "console": "integratedTerminal",
             "internalConsoleOptions": "neverOpen",
             "cwd": "${workspaceFolder}"
+        },
+        {
+            // Integratietests: volledige stack tegen een echte MySQL.
+            // Vereist een bereikbare database (standaard de Docker-container
+            // op localhost:3306). Start eerst: docker compose up -d db
+            "type": "node",
+            "request": "launch",
+            "name": "Jest: integratietests",
+            "program": "${workspaceFolder}/node_modules/jest/bin/jest.js",
+            "args": ["--runInBand", "-c", "jest.integration.config.js"],
+            "console": "integratedTerminal",
+            "internalConsoleOptions": "neverOpen",
+            "cwd": "${workspaceFolder}"
         }
     ]
 }
