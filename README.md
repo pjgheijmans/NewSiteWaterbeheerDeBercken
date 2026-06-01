@@ -1,73 +1,53 @@
 # Digitale Dagstaat Zwembad
 
-Node.js/Express backend met MySQL database voor het bijhouden van dagelijkse zwembadmetingen. De applicatie draait in Docker en serveert een multi-file frontend via HTML partials.
+TypeScript/Express-backend met MySQL-database voor het bijhouden van dagelijkse
+zwembadmetingen. De applicatie draait in Docker en serveert een vanilla-JS-frontend
+(ES6-klassen) via HTML-partials.
+
+De backend is gelaagd opgezet (routes → controllers → services → repositories) met
+dependency injection, centrale foutafhandeling en Zod-validatie. Zie
+[`docs/architecture.md`](docs/architecture.md) voor de volledige architectuur met
+diagrammen.
 
 ---
 
 ## Projectstructuur
 
 ```
-├── backend/
-│   ├── server.js                       # Entry point: wacht op DB, voert init.sql uit, start server
+├── backend/                            # TypeScript
+│   ├── server.ts                       # Entry point: pool, wacht op DB, runInitSql, routes, listen
+│   ├── errors.ts                       # AppError(message, status)
+│   ├── auteur.ts                       # bepaalAuteur(gebruiker) — gedeelde helper
+│   ├── types/index.ts                  # Domeintypes + express-session augmentatie
 │   ├── middleware/
-│   │   └── auth.js                     # checkAuth + rol-hulpfuncties (isWaterbeheerder, etc.)
-│   ├── repositories/                   # Database-laag (één bestand per domein)
-│   │   ├── db.js                       # MySQL connectie pool (gedeeld)
-│   │   ├── acties.js                   # Acties genereren, ophalen, oplossen, heropenen
-│   │   ├── coordinatoren.js            # Coördinator metingen, checklist, daggegevens
-│   │   ├── coordinatoren_logboek.js    # Coördinator logboek (aparte tabel)
-│   │   ├── database.js                 # Truncate, CSV export/import, init.sql uitvoeren
-│   │   ├── gebruikers.js               # CRUD gebruikersaccounts
-│   │   ├── limieten.js                 # Richtwaarden + standaardwaarden
-│   │   ├── logboek.js                  # Waterbeheerder logboek
-│   │   ├── metingen.js                 # Meetwaarden Diep/Ondiep/Peuterbad
-│   │   ├── trend.js                    # Aggregatie voor trendgrafieken
-│   │   └── verbruik.js                 # Verbruik + verwarmingssysteem
-│   └── routes/                         # Express routers (één bestand per domein)
-│       ├── auth.js                     # /api/login, /api/logout, /api/ingelogd
-│       ├── coordinatoren.js            # /api/coordinatoren/*
-│       ├── database.js                 # /api/database/*
-│       ├── frontend.js                 # HTML-partials samenvoegen en serveren
-│       ├── gebruikers.js               # /api/gebruikers
-│       ├── limieten.js                 # /api/limieten
-│       ├── logboek.js                  # /api/logboek (waterbeheerder)
-│       ├── metingen.js                 # /api/metingen, /api/acties, /api/bezoekers
-│       ├── trend.js                    # /api/trend/*
-│       └── verbruik.js                 # /api/verbruik/*
-├── frontend/
-│   ├── css/
-│   │   └── style.css                   # Alle stijlen (inclusief responsive)
-│   ├── js/                             # Modules, elk geladen via <script> in head.html
-│   │   ├── api.js                      # apiCall() helper (fetch + foutafhandeling)
-│   │   ├── app.js                      # Initialisatie, globale input-listener voor autosave
-│   │   ├── auth.js                     # Login/logout UI + rolwisseling
-│   │   ├── database.js                 # Database beheer UI
-│   │   ├── gebruikers.js               # Gebruikersbeheer UI + autosave
-│   │   ├── limieten.js                 # Limieten UI + autosave
-│   │   ├── logboek.js                  # Logboek blokken (waterbeheer + coördinatoren)
-│   │   ├── metingen.js                 # Meetwaarden, acties, bezoekers, tab-navigatie
-│   │   ├── nav.js                      # Datumnavigatie
-│   │   ├── opslaan.js                  # Centrale autosave-logica (debounce 1,2 s)
-│   │   ├── state.js                    # Gedeelde toestand (datum, rol, actieve tabs)
-│   │   ├── trend.js                    # Trendanalyse UI + Chart.js
-│   │   ├── ui.js                       # Hulpfuncties (toonBericht, limiet-check, etc.)
-│   │   └── verbruik.js                 # Verbruik + verwarmingssysteem UI
-│   └── partials/                       # HTML-fragmenten samengesteld door frontend.js
-│       ├── head.html                   # <head> + alle <script>-tags
-│       ├── nav.html                    # Hoofd-navigatiebalk
-│       ├── login.html                  # Loginscherm
-│       ├── dagstaat.html               # Dagstaat-pagina (alle tabs)
-│       ├── dashboard-open.html         # Dashboard openstaande acties
-│       ├── database.html               # Database beheer pagina
-│       ├── gebruikers.html             # Gebruikersbeheer pagina
-│       ├── limieten.html               # Limieten pagina
-│       ├── trendanalyse.html           # Trendanalyse pagina
-│       └── footer.html                 # Sluit body/html af
-├── data/                               # CSV-bestanden voor import/export
+│   │   ├── auth.ts                     # checkAuth + rol-hulpfuncties
+│   │   ├── valideer.ts                 # valideerBody(schema) — Zod-validatie
+│   │   └── errorHandler.ts             # Centrale foutafhandeling (4xx/5xx)
+│   ├── validation/schemas.ts           # Zod-schema's per domein
+│   ├── routes/<domein>.ts              # Factory: repositories → service → controller
+│   ├── controllers/<X>Controller.ts    # HTTP: rolcontrole, request→service, response
+│   ├── services/I<X>Service.ts + <X>Service.ts   # Bedrijfslogica
+│   └── repositories/                   # Database-laag (interface + implementatie per domein)
+│       ├── db.ts                       # Gedeelde mysql2-pool
+│       └── <X>Repository.ts            # SQL per domein
+├── frontend/                           # Vanilla JS (ES6-klassen, geen bundler)
+│   ├── css/style.css
+│   ├── js/                             # Eén klasse per bestand, geladen via <script>
+│   │   ├── app.js                      # Application-container (DI) + window.* globals
+│   │   ├── state.js                    # AppState — gedeelde toestand
+│   │   ├── api.js · ui.js · nav.js · auth.js
+│   │   ├── metingen.js · verbruik.js · opslaan.js · logboek.js
+│   │   └── gebruikers.js · database.js · trend.js · limieten.js
+│   └── partials/                       # HTML-fragmenten, samengevoegd door FrontendController
+├── test/                               # Jest + ts-jest + Supertest
+│   ├── helpers/                        # testApp.ts, mockPool.ts
+│   └── unit/                           # errors, middleware, validation, controllers, services, repositories
+├── docs/architecture.md + docs/architecture/   # Architectuurdocumentatie
 ├── init.sql                            # Database schema + standaard data
-├── docker-compose.yml                  # MySQL + Node.js service definitie (met healthcheck)
-├── Dockerfile                          # Container image voor de Node-app
-└── package.json                        # NPM afhankelijkheden
+├── docker-compose.yml                  # MySQL + Node-service (met healthcheck)
+├── Dockerfile                          # Container image (nodemon + ts-node)
+├── tsconfig.json · tsconfig.test.json · jest.config.js · nodemon.json
+└── package.json
 ```
 
 ---
@@ -96,11 +76,12 @@ Standaard limieten en testgebruikers worden ingesteld via `INSERT IGNORE` in `in
 
 ## Authenticatie & sessies
 
-De applicatie gebruikt **express-session** voor sessiebeheer.
+De applicatie gebruikt **express-session** voor sessiebeheer. De secret komt uit
+`SESSION_SECRET` met een fallback-default:
 
-```javascript
+```typescript
 app.use(session({
-    secret: 'zwembad_geheim_98765',
+    secret: process.env.SESSION_SECRET || 'zwembad_geheim_98765',
     resave: false,
     saveUninitialized: false,
     cookie: { maxAge: 2 * 60 * 60 * 1000 }  // 2 uur
@@ -115,7 +96,11 @@ app.use(session({
 | `coordinator`    | Coördinator metingen, checklijst, daggegevens, logboek        |
 | `Administrator`  | Gebruikersbeheer, limieten, database beheer, trendanalyse     |
 
-> In productie: gebruik een willekeurige lange string als secret via een omgevingsvariabele (`process.env.SESSION_SECRET`).
+`checkAuth` (middleware) dwingt een geldige sessie af (401); de rolcontrole zit in
+de controllers (403). Muterende endpoints valideren de body met Zod (400).
+
+> In productie: gebruik een willekeurige lange string als secret via
+> `process.env.SESSION_SECRET`.
 
 ---
 
@@ -136,7 +121,7 @@ app.use(session({
 | POST         | `/api/acties/:id/resolve`                 | Actie als opgelost markeren                       |
 | POST         | `/api/acties/:id/unresolve`               | Actie heropenen (ongedaan maken)                  |
 | GET          | `/api/bezoekers`                          | Bezoekersaantal + cumulatief sinds spoelbeurt ophalen; triggert actiecheck |
-| GET/POST     | `/api/coordinatoren/metingen`             | Coördinator meetblokken                           |
+| GET/POST     | `/api/coordinatoren`                      | Coördinator meetblokken                           |
 | DELETE       | `/api/coordinatoren`                      | Coördinator meetblok verwijderen                  |
 | GET/POST     | `/api/coordinatoren/checklist`            | Dagelijkse checklijst                             |
 | GET/POST     | `/api/coordinatoren/daggegevens`          | Luchttemperatuur & bezoekers                      |
@@ -159,7 +144,7 @@ app.use(session({
 
 ## Acties-systeem
 
-Acties worden automatisch aangemaakt of verwijderd na het opslaan van meetwaarden, verbruiksdata of bezoekersaantallen. Er zijn negen regels:
+Acties worden automatisch aangemaakt of verwijderd na het opslaan van meetwaarden, verbruiksdata of bezoekersaantallen. Er zijn tien regels:
 
 | Actie-type                    | Triggerconditie                                                              |
 |-------------------------------|------------------------------------------------------------------------------|
@@ -172,6 +157,7 @@ Acties worden automatisch aangemaakt of verwijderd na het opslaan van meetwaarde
 | `filter_spoelen_spoelbeurt` Ondiep| Cumulatief bezoekers Ondiep > drempelwaarde sinds laatste spoelbeurt    |
 | `chloor_bestellen`                | Chloorvoorraad < minimumdrempelwaarde                                    |
 | `zwavelzuur_bestellen`            | Zwavelzuurvoorraad < minimumdrempelwaarde                                |
+| `floculant_bijvullen`             | Floculant < minimumdrempelwaarde                                         |
 
 **Instelbare drempelwaarden** (via Limieten-pagina, groep "Actie-drempelwaarden"):
 
@@ -184,6 +170,7 @@ Acties worden automatisch aangemaakt of verwijderd na het opslaan van meetwaarde
 | `actie_flow_peuterbad` | 4 m³/h    | Min flow Peuterbad                             |
 | `actie_chloor_min`     | 200 L     | Min chloorvoorraad                             |
 | `actie_zwavelzuur_min` | 50 L      | Min zwavelzuurvoorraad                         |
+| `actie_floculant_min`  | 10        | Min floculant                                  |
 | `actie_bezoekers_max`  | 750       | Max aantal bezoekers per dag                   |
 | `actie_spoelbeurt_max` | 1500      | Max cumulatief bezoekers sinds laatste spoelbeurt |
 
@@ -232,8 +219,8 @@ Autosave geldt voor: dagstaat meetwaarden, verbruik, verwarmingssysteem, coördi
 
 ## Vereisten
 
-- Docker
-- Docker Compose
+- Docker + Docker Compose (aanbevolen)
+- Node.js 20+ (alleen voor lokaal ontwikkelen/tests buiten Docker)
 
 ---
 
@@ -246,7 +233,7 @@ docker compose up -d
 - Webapplicatie: `http://localhost:3000`
 - MySQL: `localhost:3306`
 
-De `db`-service heeft een healthcheck. De `web`-container start pas als MySQL gereed is. Bij de eerste start (leeg volume) voert MySQL `init.sql` uit via `/docker-entrypoint-initdb.d/`. Bij elke start voert de Node-server ook zelf `init.sql` uit (`CREATE TABLE IF NOT EXISTS`, `INSERT IGNORE`) zodat het schema altijd compleet is.
+De `db`-service heeft een healthcheck. De `web`-container start pas als MySQL gereed is. Bij de eerste start (leeg volume) voert MySQL `init.sql` uit via `/docker-entrypoint-initdb.d/`. Bij elke start voert de Node-server ook zelf `init.sql` uit (`CREATE TABLE IF NOT EXISTS`, `INSERT IGNORE`) zodat het schema altijd compleet is. In de container draait de app via `nodemon` + `ts-node` (hot reload).
 
 ---
 
@@ -267,14 +254,18 @@ De `db`-service heeft een healthcheck. De `web`-container start pas als MySQL ge
 
 ---
 
-## Handmatig starten (zonder Docker)
+## Lokaal ontwikkelen (zonder Docker)
+
+Vereist een draaiende MySQL-server. NPM-scripts:
 
 ```bash
 npm install
-node backend/server.js
+npm run dev      # nodemon + ts-node (hot reload)
+npm run build    # tsc → dist/
+npm start        # node dist/backend/server.js (na build)
 ```
 
-Vereist een lokale MySQL-server met:
+MySQL-instellingen (of via omgevingsvariabelen `DB_HOST`, `DB_USER`, `DB_PASSWORD`, `DB_NAME`):
 
 | Instelling | Waarde              |
 |------------|---------------------|
@@ -283,17 +274,27 @@ Vereist een lokale MySQL-server met:
 | password   | `geheim_wachtwoord` |
 | database   | `zwembad_status`    |
 
-Of stel omgevingsvariabelen in:
+---
+
+## Tests
+
+Unit-tests met Jest + ts-jest + Supertest; geen database nodig (alle I/O gemockt).
 
 ```bash
-DB_HOST=... DB_USER=... DB_PASSWORD=... DB_NAME=... node backend/server.js
+npm run test           # alle tests
+npm run test:unit      # unit-tests
+npm run test:coverage  # met coverage-rapport
 ```
+
+Elke laag wordt getest met een mock van de laag eronder: controllers mocken de
+service, services mocken de repositories, repositories mocken de `mysql2`-pool.
+Zie [`docs/architecture/testing.md`](docs/architecture/testing.md).
 
 ---
 
 ## CSV import/export
 
-Exportbestanden worden opgeslagen in de `data/` map. Het formaat gebruikt puntkomma (`;`) als scheidingsteken (Excel-compatibel voor Europa).
+Het formaat gebruikt puntkomma (`;`) als scheidingsteken (Excel-compatibel voor Europa).
 
 Beschikbare tabellen via Database Beheer in de UI:
 
@@ -333,7 +334,7 @@ Grafieken worden weergegeven via [Chart.js](https://www.chartjs.org/) (geladen v
 
 ## Opmerkingen
 
-- De frontend bestaat uit HTML-partials in `frontend/partials/` en losse JS-modules in `frontend/js/`. Ze worden door `backend/routes/frontend.js` samengevoegd en als één pagina geserveerd.
+- De frontend bestaat uit HTML-partials in `frontend/partials/` en losse JS-modules (ES6-klassen) in `frontend/js/`. Ze worden door de `FrontendController` (`backend/controllers/FrontendController.ts`) samengevoegd en als één pagina geserveerd.
 - `init.sql` is de enige bron van standaardwaarden voor limieten en testgebruikers.
 - Chloor gebonden wordt berekend (totaal − vrij) en niet opgeslagen in de database.
 - Coördinator meetblokken ondersteunen meerdere metingen per dag, elk met een instelbaar tijdstip.
