@@ -1,5 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { checkAuth, isAdminOrWaterbeheerder } from '../middleware/auth';
+import { valideerBody } from '../middleware/valideer';
+import { gebruikerSchema } from '../validation/schemas';
 import { IGebruikersService } from '../services/IGebruikersService';
 import { GebruikerInput } from '../types';
 
@@ -9,8 +11,8 @@ export class GebruikersController {
     constructor(private readonly service: IGebruikersService) {
         this.router = Router();
         this.router.get('/',       checkAuth, this.getAll.bind(this));
-        this.router.post('/',      checkAuth, this.create.bind(this));
-        this.router.put('/:id',    checkAuth, this.update.bind(this));
+        this.router.post('/',      checkAuth, valideerBody(gebruikerSchema), this.create.bind(this));
+        this.router.put('/:id',    checkAuth, valideerBody(gebruikerSchema), this.update.bind(this));
         this.router.delete('/:id', checkAuth, this.remove.bind(this));
     }
 

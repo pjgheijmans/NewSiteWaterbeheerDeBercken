@@ -1,5 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { checkAuth, isWaterbeheerder } from '../middleware/auth';
+import { valideerBody } from '../middleware/valideer';
+import { metingSchema } from '../validation/schemas';
 import { IMetingenService } from '../services/IMetingenService';
 import { MetingInput } from '../types';
 
@@ -9,7 +11,7 @@ export class MetingenController {
     constructor(private readonly service: IMetingenService) {
         this.router = Router();
         this.router.get('/metingen',              checkAuth, this.getMetingen.bind(this));
-        this.router.post('/metingen',             checkAuth, this.postMeting.bind(this));
+        this.router.post('/metingen',             checkAuth, valideerBody(metingSchema), this.postMeting.bind(this));
         this.router.get('/acties',                checkAuth, this.getActies.bind(this));
         this.router.post('/acties/:id/resolve',   checkAuth, this.resolveActie.bind(this));
         this.router.get('/bezoekers',             checkAuth, this.getBezoekers.bind(this));

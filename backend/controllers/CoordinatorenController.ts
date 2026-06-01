@@ -1,5 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { checkAuth, isWaterbeheerderOrCoordinator } from '../middleware/auth';
+import { valideerBody } from '../middleware/valideer';
+import { coordinatorMetingSchema, checklistSchema, daggegevensSchema, logboekSchema } from '../validation/schemas';
 import { ICoordinatorenService } from '../services/ICoordinatorenService';
 import { CoordinatorMetingInput, ChecklistInput, DaggegevensInput } from '../types';
 
@@ -9,14 +11,14 @@ export class CoordinatorenController {
     constructor(private readonly service: ICoordinatorenService) {
         this.router = Router();
         this.router.get('/',                  checkAuth, this.getMetingen.bind(this));
-        this.router.post('/',                 checkAuth, this.postMeting.bind(this));
+        this.router.post('/',                 checkAuth, valideerBody(coordinatorMetingSchema), this.postMeting.bind(this));
         this.router.get('/checklist',         checkAuth, this.getChecklist.bind(this));
-        this.router.post('/checklist',        checkAuth, this.postChecklist.bind(this));
+        this.router.post('/checklist',        checkAuth, valideerBody(checklistSchema), this.postChecklist.bind(this));
         this.router.get('/daggegevens',       checkAuth, this.getDaggegevens.bind(this));
-        this.router.post('/daggegevens',      checkAuth, this.postDaggegevens.bind(this));
+        this.router.post('/daggegevens',      checkAuth, valideerBody(daggegevensSchema), this.postDaggegevens.bind(this));
         this.router.delete('/',               checkAuth, this.deleteBlok.bind(this));
         this.router.get('/logboek',           checkAuth, this.getLogboek.bind(this));
-        this.router.post('/logboek',          checkAuth, this.postLogboek.bind(this));
+        this.router.post('/logboek',          checkAuth, valideerBody(logboekSchema), this.postLogboek.bind(this));
         this.router.delete('/logboek/:id',    checkAuth, this.deleteLogboek.bind(this));
     }
 
