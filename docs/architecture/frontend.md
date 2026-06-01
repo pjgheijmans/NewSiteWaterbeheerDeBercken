@@ -49,6 +49,84 @@ Alleen de functies die HTML `onclick`-handlers nodig hebben staan op `window`
 (bv. `wisselRol`, `veranderDatum`, `voegNieuwBlokToe`, `losActieGroepOp`). Alle
 overige communicatie loopt via de container, niet via globals.
 
+### Klassendiagram
+
+`Application` bezit (`*--`) alle modules als singletons; elke module krijgt
+`app` in de constructor en roept andere modules aan via `this.app` (`-->`).
+
+```mermaid
+classDiagram
+    class Application {
+        +state: AppState
+        +api: ApiClient
+        +ui: UIManager
+        +nav: NavModule
+        +auth: AuthModule
+        +metingen: MetingenModule
+        +verbruik: VerbruikModule
+        +opslaan: OpslaanModule
+        +logboek: LogboekModule
+        +gebruikers: GebruikersModule
+        +database: DatabaseModule
+        +trend: TrendModule
+        +limieten: LimietenModule
+    }
+
+    class AppState {
+        +centraleDatum
+        +huidigeRol
+        +actieveLimieten
+        +ingelogdeGebruiker
+        +timers
+    }
+    class ApiClient {
+        +call(url, options) Response
+        +parseNumberValue(id) number
+    }
+    class UIManager {
+        +toonBericht(tekst, type)
+        +valideerVeld(el, param)
+        +setAutoSaveStatus(status)
+    }
+    class AuthModule {
+        +start()
+        +verwerkLogin()
+        +wisselRol(rol)
+    }
+    class MetingenModule {
+        +laadMetingen()
+        +laadActies(datum)
+        +bouwTabelOp(data)
+    }
+    class OpslaanModule {
+        +scheduleAutoSave()
+        +verwerkCentraleOpslaan(autoSave)
+    }
+
+    Application *-- AppState
+    Application *-- ApiClient
+    Application *-- UIManager
+    Application *-- AuthModule
+    Application *-- MetingenModule
+    Application *-- OpslaanModule
+    Application *-- NavModule
+    Application *-- VerbruikModule
+    Application *-- LogboekModule
+    Application *-- GebruikersModule
+    Application *-- DatabaseModule
+    Application *-- TrendModule
+    Application *-- LimietenModule
+
+    AuthModule --> Application : this.app
+    MetingenModule --> Application : this.app
+    OpslaanModule --> Application : this.app
+```
+
+> Alleen een representatieve set methoden is getoond; `NavModule`,
+> `VerbruikModule`, `LogboekModule`, `GebruikersModule`, `DatabaseModule`,
+> `TrendModule` en `LimietenModule` volgen hetzelfde patroon (constructor met
+> `app`, aanroepen via `this.app`).
+
 ---
 
 ## 3. Verantwoordelijkheden per module
