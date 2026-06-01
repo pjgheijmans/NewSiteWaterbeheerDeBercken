@@ -1,12 +1,12 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { checkAuth, isAdminOrWaterbeheerder } from '../middleware/auth';
-import { ILimietenRepository } from '../repositories/ILimietenRepository';
+import { ILimietenService } from '../services/ILimietenService';
 import { LimietInput } from '../types';
 
 export class LimietenController {
     readonly router: Router;
 
-    constructor(private readonly repo: ILimietenRepository) {
+    constructor(private readonly service: ILimietenService) {
         this.router = Router();
         this.router.get('/',         this.getAll.bind(this));
         this.router.get('/defaults', this.getDefaults.bind(this));
@@ -14,19 +14,19 @@ export class LimietenController {
     }
 
     private async getAll(_req: Request, res: Response, next: NextFunction): Promise<void> {
-        try { res.json(await this.repo.getAll()); }
+        try { res.json(await this.service.getAll()); }
         catch (err) { next(err); }
     }
 
     private getDefaults(_req: Request, res: Response): void {
-        res.json(this.repo.getDefaults());
+        res.json(this.service.getDefaults());
     }
 
     private async save(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!isAdminOrWaterbeheerder(req.session.gebruiker!.taak)) {
             res.status(403).json({ error: 'Geen toegang' }); return;
         }
-        try { await this.repo.save(req.body as LimietInput); res.json({ status: 'success' }); }
+        try { await this.service.save(req.body as LimietInput); res.json({ status: 'success' }); }
         catch (err) { next(err); }
     }
 }

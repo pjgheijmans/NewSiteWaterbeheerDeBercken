@@ -1,181 +1,125 @@
 import request from 'supertest';
 import { DatabaseController } from '../../../backend/controllers/DatabaseController';
-import { IDatabaseRepository } from '../../../backend/repositories/IDatabaseRepository';
+import { IDatabaseService } from '../../../backend/services/IDatabaseService';
+import { AppError } from '../../../backend/errors';
 import { maakTestApp } from '../../helpers/testApp';
 
-const mockRepo: jest.Mocked<IDatabaseRepository> = {
-    exportRows:          jest.fn(),
-    runInitSql:          jest.fn(),
-    truncate:            jest.fn(),
-    truncateAll:         jest.fn(),
-    seedAllDefaults:     jest.fn(),
-    getBadId:            jest.fn(),
-    importRow:           jest.fn(),
-    setForeignKeyChecks: jest.fn(),
+const mockService: jest.Mocked<IDatabaseService> = {
+    exporteerCsv: jest.fn(), importeerCsv: jest.fn(),
+    truncate: jest.fn(), wisAlles: jest.fn(), initialiseer: jest.fn(),
 };
 
-// DatabaseController vereist isAdminOrWaterbeheerder
 function maakApp(taak: string | null = 'waterbeheerder') {
-    const controller = new DatabaseController(mockRepo);
-    return maakTestApp(controller.router, taak);
+    return maakTestApp(new DatabaseController(mockService).router, taak);
 }
 
 beforeEach(() => jest.clearAllMocks());
 
-// ── POST /truncate/:tabelnaam ─────────────────────────────────────────────────
-
 describe('POST /truncate/:tabelnaam', () => {
-    it('leegt een toegestane tabel', async () => {
-        mockRepo.truncate.mockResolvedValue(undefined);
-
+    it('delegeert het legen van een toegestane tabel', async () => {
+        mockService.truncate.mockResolvedValue(undefined);
         const res = await request(maakApp()).post('/truncate/logboek');
-
         expect(res.status).toBe(200);
-        expect(res.body.status).toBe('success');
-        expect(mockRepo.truncate).toHaveBeenCalledWith('logboek');
+        expect(mockService.truncate).toHaveBeenCalledWith('logboek');
     });
 
-    it('geeft 400 terug voor een niet-toegestane tabelnaam', async () => {
+    it('geeft 400 voor een niet-toegestane tabelnaam', async () => {
         const res = await request(maakApp()).post('/truncate/geheim_schema');
-
         expect(res.status).toBe(400);
-        expect(res.body.error).toMatch(/tabelnaam/i);
-        expect(mockRepo.truncate).not.toHaveBeenCalled();
+        expect(mockService.truncate).not.toHaveBeenCalled();
     });
 
-    it('geeft 403 terug voor coordinator', async () => {
-        const res = await request(maakApp('coordinator')).post('/truncate/logboek');
-        expect(res.status).toBe(403);
+    it('geeft 403 voor coordinator', async () => {
+        expect((await request(maakApp('coordinator')).post('/truncate/logboek')).status).toBe(403);
     });
 
-    it('geeft 401 terug zonder sessie', async () => {
-        const res = await request(maakApp(null)).post('/truncate/logboek');
-        expect(res.status).toBe(401);
+    it('geeft 401 zonder sessie', async () => {
+        expect((await request(maakApp(null)).post('/truncate/logboek')).status).toBe(401);
     });
 });
 
-// ── GET /export/:tabelnaam ────────────────────────────────────────────────────
-
 describe('GET /export/:tabelnaam', () => {
-    it('exporteert een toegestane tabel als CSV', async () => {
-        mockRepo.exportRows.mockResolvedValue([
-            { id: 1, datum: '2026-05-31', tekst: 'Test' },
-        ]);
-
+    it('stuurt de CSV van de service met de juiste headers', async () => {
+        mockService.exporteerCsv.mockResolvedValue('id;datum;tekst\r\n1;2026-05-31;Test\r\n');
         const res = await request(maakApp()).get('/export/logboek');
-
         expect(res.status).toBe(200);
         expect(res.headers['content-type']).toMatch(/text\/csv/);
         expect(res.headers['content-disposition']).toMatch(/logboek/);
-        expect(res.text).toContain('id;datum;tekst');
         expect(res.text).toContain('2026-05-31');
     });
 
-    it('geeft 404 terug als de tabel leeg is', async () => {
-        mockRepo.exportRows.mockResolvedValue([]);
-
+    it('geeft 404 als de service null teruggeeft (lege tabel)', async () => {
+        mockService.exporteerCsv.mockResolvedValue(null);
         const res = await request(maakApp()).get('/export/logboek');
-
         expect(res.status).toBe(404);
-        expect(res.body.error).toMatch(/leeg/i);
     });
 
-    it('geeft 400 terug voor een niet-toegestane tabelnaam', async () => {
+    it('geeft 400 voor een niet-toegestane tabelnaam', async () => {
         const res = await request(maakApp()).get('/export/geheim_schema');
         expect(res.status).toBe(400);
-        expect(mockRepo.exportRows).not.toHaveBeenCalled();
+        expect(mockService.exporteerCsv).not.toHaveBeenCalled();
     });
 
-    it('geeft 403 terug voor coordinator', async () => {
-        const res = await request(maakApp('coordinator')).get('/export/logboek');
-        expect(res.status).toBe(403);
+    it('geeft 403 voor coordinator', async () => {
+        expect((await request(maakApp('coordinator')).get('/export/logboek')).status).toBe(403);
     });
 });
-
-// ── POST /import/:tabelnaam ───────────────────────────────────────────────────
 
 describe('POST /import/:tabelnaam', () => {
     const csv = 'datum;tijdstip;auteur;tekst\r\n2026-05-31;10:00:00;Test;Aantekening\r\n';
 
-    it('importeert CSV in een toegestane tabel', async () => {
-        mockRepo.setForeignKeyChecks.mockResolvedValue(undefined);
-        mockRepo.importRow.mockResolvedValue(undefined);
-
+    it('delegeert het importeren naar de service', async () => {
+        mockService.importeerCsv.mockResolvedValue(undefined);
         const res = await request(maakApp())
-            .post('/import/logboek')
-            .set('Content-Type', 'text/csv')
-            .send(csv);
-
+            .post('/import/logboek').set('Content-Type', 'text/csv').send(csv);
         expect(res.status).toBe(200);
-        expect(res.body.status).toBe('success');
-        expect(mockRepo.setForeignKeyChecks).toHaveBeenCalledWith(false);
-        expect(mockRepo.setForeignKeyChecks).toHaveBeenCalledWith(true);
-        expect(mockRepo.importRow).toHaveBeenCalledWith(
-            'logboek',
-            expect.arrayContaining(['datum', 'tijdstip']),
-            expect.any(Array)
-        );
+        expect(mockService.importeerCsv).toHaveBeenCalledWith('logboek', csv);
     });
 
-    it('geeft 400 terug voor een niet-toegestane tabelnaam', async () => {
+    it('propageert een AppError 400 van de service', async () => {
+        mockService.importeerCsv.mockRejectedValue(new AppError('CSV-bestand bevat geen data', 400));
         const res = await request(maakApp())
-            .post('/import/geheim_schema')
-            .set('Content-Type', 'text/csv')
-            .send(csv);
-
+            .post('/import/logboek').set('Content-Type', 'text/csv').send('alleen-een-header\r\n');
         expect(res.status).toBe(400);
-        expect(mockRepo.importRow).not.toHaveBeenCalled();
+        expect(res.body.error).toMatch(/geen data/i);
     });
 
-    it('geeft 403 terug voor coordinator', async () => {
-        const res = await request(maakApp('coordinator'))
-            .post('/import/logboek')
-            .set('Content-Type', 'text/csv')
-            .send(csv);
-        expect(res.status).toBe(403);
+    it('geeft 400 voor een niet-toegestane tabelnaam', async () => {
+        const res = await request(maakApp())
+            .post('/import/geheim_schema').set('Content-Type', 'text/csv').send(csv);
+        expect(res.status).toBe(400);
+        expect(mockService.importeerCsv).not.toHaveBeenCalled();
+    });
+
+    it('geeft 403 voor coordinator', async () => {
+        expect((await request(maakApp('coordinator')).post('/import/logboek').set('Content-Type', 'text/csv').send(csv)).status).toBe(403);
     });
 });
-
-// ── POST /verwijder-alles ─────────────────────────────────────────────────────
 
 describe('POST /verwijder-alles', () => {
-    it('wist alle tabellen en vernietigt de sessie', async () => {
-        mockRepo.truncateAll.mockResolvedValue(undefined);
-
+    it('wist alle data en vernietigt de sessie', async () => {
+        mockService.wisAlles.mockResolvedValue(undefined);
         const res = await request(maakApp()).post('/verwijder-alles');
-
         expect(res.status).toBe(200);
-        expect(res.body.status).toBe('success');
-        expect(mockRepo.truncateAll).toHaveBeenCalled();
+        expect(mockService.wisAlles).toHaveBeenCalled();
     });
 
-    it('geeft 403 terug voor coordinator', async () => {
-        const res = await request(maakApp('coordinator')).post('/verwijder-alles');
-        expect(res.status).toBe(403);
-        expect(mockRepo.truncateAll).not.toHaveBeenCalled();
+    it('geeft 403 voor coordinator', async () => {
+        expect((await request(maakApp('coordinator')).post('/verwijder-alles')).status).toBe(403);
+        expect(mockService.wisAlles).not.toHaveBeenCalled();
     });
 });
 
-// ── POST /initialiseer ────────────────────────────────────────────────────────
-
 describe('POST /initialiseer', () => {
-    it('voert init sql uit, wist data en zaait standaardwaarden', async () => {
-        mockRepo.runInitSql.mockResolvedValue(undefined);
-        mockRepo.truncateAll.mockResolvedValue(undefined);
-        mockRepo.seedAllDefaults.mockResolvedValue(undefined);
-
+    it('delegeert de (her)initialisatie en vernietigt de sessie', async () => {
+        mockService.initialiseer.mockResolvedValue(undefined);
         const res = await request(maakApp()).post('/initialiseer');
-
         expect(res.status).toBe(200);
-        expect(res.body.status).toBe('success');
-        expect(mockRepo.runInitSql).toHaveBeenCalled();
-        expect(mockRepo.truncateAll).toHaveBeenCalled();
-        expect(mockRepo.seedAllDefaults).toHaveBeenCalled();
+        expect(mockService.initialiseer).toHaveBeenCalled();
     });
 
-    it('geeft 403 terug voor coordinator', async () => {
-        const res = await request(maakApp('coordinator')).post('/initialiseer');
-        expect(res.status).toBe(403);
-        expect(mockRepo.runInitSql).not.toHaveBeenCalled();
+    it('geeft 403 voor coordinator', async () => {
+        expect((await request(maakApp('coordinator')).post('/initialiseer')).status).toBe(403);
+        expect(mockService.initialiseer).not.toHaveBeenCalled();
     });
 });

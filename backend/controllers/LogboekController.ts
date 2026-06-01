@@ -1,12 +1,11 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { checkAuth, isWaterbeheerder } from '../middleware/auth';
-import { ILogboekRepository } from '../repositories/ILogboekRepository';
-import { Gebruiker } from '../types';
+import { ILogboekService } from '../services/ILogboekService';
 
 export class LogboekController {
     readonly router: Router;
 
-    constructor(private readonly repo: ILogboekRepository) {
+    constructor(private readonly service: ILogboekService) {
         this.router = Router();
         this.router.get('/',       checkAuth, this.getByDatum.bind(this));
         this.router.post('/',      checkAuth, this.save.bind(this));
@@ -21,15 +20,9 @@ export class LogboekController {
         return true;
     }
 
-    private berekenAuteur(g: Gebruiker): string {
-        return [g.voornaam, g.achternaam].filter((n): n is string => !!n).join(' ').trim()
-            || g.inlognaam
-            || g.gebruikersnaam;
-    }
-
     private async getByDatum(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistWaterbeheerder(req, res)) return;
-        try { res.json(await this.repo.getByDatum(req.query.datum as string)); }
+        try { res.json(await this.service.getByDatum(req.query.datum as string)); }
         catch (err) { next(err); }
     }
 
@@ -37,15 +30,14 @@ export class LogboekController {
         if (!this.vereistWaterbeheerder(req, res)) return;
         try {
             const { datum, tijdstip, tekst } = req.body as { datum: string; tijdstip: string; tekst?: string };
-            const auteur = this.berekenAuteur(req.session.gebruiker!);
-            const row    = await this.repo.save(datum, tijdstip, tekst ?? '', auteur);
-            res.json({ status: 'success', id: row?.id ?? null, auteur: row?.auteur ?? auteur });
+            const resultaat = await this.service.save(datum, tijdstip, tekst ?? '', req.session.gebruiker!);
+            res.json({ status: 'success', id: resultaat.id, auteur: resultaat.auteur });
         } catch (err) { next(err); }
     }
 
     private async deleteById(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistWaterbeheerder(req, res)) return;
-        try { await this.repo.deleteById(String(req.params['id'])); res.json({ status: 'success' }); }
+        try { await this.service.deleteById(String(req.params['id'])); res.json({ status: 'success' }); }
         catch (err) { next(err); }
     }
 }

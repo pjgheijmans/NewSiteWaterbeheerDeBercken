@@ -1,11 +1,11 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { checkAuth, isWaterbeheerder } from '../middleware/auth';
-import { ITrendRepository } from '../repositories/ITrendRepository';
+import { ITrendService } from '../services/ITrendService';
 
 export class TrendController {
     readonly router: Router;
 
-    constructor(private readonly repo: ITrendRepository) {
+    constructor(private readonly service: ITrendService) {
         this.router = Router();
         this.router.get('/metingen', checkAuth, this.getMetingen.bind(this));
         this.router.get('/verbruik', checkAuth, this.getVerbruik.bind(this));
@@ -21,13 +21,13 @@ export class TrendController {
 
     private async getMetingen(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistWaterbeheerder(req, res)) return;
-        try { res.json(await this.repo.getMetingenTrend(req.query.van as string, req.query.tot as string)); }
+        try { res.json(await this.service.getMetingenTrend(req.query.van as string, req.query.tot as string)); }
         catch (err) { next(err); }
     }
 
     private async getVerbruik(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistWaterbeheerder(req, res)) return;
-        try { res.json(await this.repo.getVerbruikTrend(req.query.van as string, req.query.tot as string)); }
+        try { res.json(await this.service.getVerbruikTrend(req.query.van as string, req.query.tot as string)); }
         catch (err) { next(err); }
     }
 }

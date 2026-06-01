@@ -79,6 +79,13 @@ export interface BadTotalen {
     ondiep: number;
 }
 
+/** Resultaat van de bezoekers-endpoint: dagtelling plus cumulatieve totalen per bad. */
+export interface BezoekersResultaat {
+    bezoekers_vandaag: number | null;
+    bezoekers_totaal_diep: number | null;
+    bezoekers_totaal_ondiep: number | null;
+}
+
 // ── Gebruikers ────────────────────────────────────────────────────────────────
 
 export interface GebruikerRecord {
@@ -252,6 +259,12 @@ export interface LogboekEntry {
 export interface LogboekSaveResult {
     id: number;
     auteur: string | null;
+}
+
+/** Resultaat dat de service teruggeeft na het opslaan van een logboekregel. */
+export interface LogboekOpslaanResultaat {
+    id: number | null;
+    auteur: string;
 }
 
 // ── Session augmentation ───────────────────────────────────────────────────────
