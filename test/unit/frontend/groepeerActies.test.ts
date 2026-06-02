@@ -8,6 +8,7 @@
 // metingen.js is plain frontend-JS (geen DOM op top-level); de module.exports-
 // guard onderaan het bestand maakt de klasse importeerbaar in Node/Jest.
 // eslint-disable-next-line @typescript-eslint/no-var-requires
+export {}; // markeer als module zodat top-level consts niet botsen met andere testbestanden
 const MetingenModule = require('../../../frontend/js/metingen.js');
 
 interface Actie { id: number; bad_naam: string; actie_type: string; opgelost: boolean; }
