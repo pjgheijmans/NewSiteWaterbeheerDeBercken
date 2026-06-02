@@ -124,7 +124,7 @@ class MetingenModule {
             'verwarmingssysteem':    [],
             'bezoekers':             ['filter_spoelen_bezoekers|Diep','filter_spoelen_bezoekers|Ondiep','filter_spoelen_spoelbeurt|Diep','filter_spoelen_spoelbeurt|Ondiep'],
             'peuterbad-meetwaarden': ['filter_spoelen_druk|Peuterbad','filter_spoelen_flow|Peuterbad'],
-            'peuterbad-verbruik':    [],
+            'peuterbad-verbruik':    ['chloor_peuterbad_bijvullen|Peuterbad','zwavelzuur_peuterbad_bijvullen|Peuterbad'],
         };
     }
 
@@ -143,7 +143,29 @@ class MetingenModule {
             'chloor_bestellen|Diep':             ['chemicalien-chloor'],
             'zwavelzuur_bestellen|Diep':         ['chemicalien-zwavelzuur'],
             'floculant_bijvullen|Diep':          ['floculant'],
+            'chloor_peuterbad_bijvullen|Peuterbad':     ['peuterbad-chemicalien-chloor'],
+            'zwavelzuur_peuterbad_bijvullen|Peuterbad': ['peuterbad-chemicalien-zwavelzuur'],
         };
+    }
+
+    /**
+     * Groepeer acties tot één rij per bad per "soort": alle filter_spoelen_*
+     * redenen (druk, flow, bezoekers, spoelbeurt, gebonden) van eenzelfde bad
+     * vallen samen onder één groep, zodat het scherm één "Filter spoelen"-actie
+     * per bad toont met alle redenen en één checkbox die de hele groep oplost.
+     * Niet-filter-acties blijven elk hun eigen groep. Pure functie (geen DOM).
+     * @param {Array<{id:number,bad_naam:string,actie_type:string,opgelost:boolean}>} acties
+     * @returns {Array<{sleutel:string,bad_naam:string,items:Array}>}
+     */
+    static groepeerActies(acties) {
+        const groepSleutel = a => `${a.bad_naam}|${a.actie_type.startsWith('filter_spoelen') ? 'filter_spoelen' : a.actie_type}`;
+        const map = new Map();
+        (Array.isArray(acties) ? acties : []).forEach(a => {
+            const k = groepSleutel(a);
+            if (!map.has(k)) map.set(k, { sleutel: k, bad_naam: a.bad_naam, items: [] });
+            map.get(k).items.push(a);
+        });
+        return [...map.values()];
     }
 
     _updateSubtabBadges(actieGroepen) {
@@ -173,22 +195,16 @@ class MetingenModule {
             const acties = await res.json();
             if (!Array.isArray(acties)) return;
 
-            const groepSleutel = a => `${a.bad_naam}|${a.actie_type.startsWith('filter_spoelen') ? 'filter_spoelen' : a.actie_type}`;
-            const actieGroepen = new Map();
-            acties.forEach(a => {
-                const k = groepSleutel(a);
-                if (!actieGroepen.has(k)) actieGroepen.set(k, { bad_naam: a.bad_naam, items: [] });
-                actieGroepen.get(k).items.push(a);
-            });
-            const openGroepen   = [...actieGroepen.values()].filter(g => !g.items.every(a => a.opgelost));
-            const geslotenGroepen = [...actieGroepen.values()].filter(g => g.items.every(a => a.opgelost));
+            const actieGroepen = MetingenModule.groepeerActies(acties);
+            const openGroepen     = actieGroepen.filter(g => !g.items.every(a => a.opgelost));
+            const geslotenGroepen = actieGroepen.filter(g =>  g.items.every(a => a.opgelost));
 
             // Tab badge
             const tabBtn = document.getElementById('tab-acties');
             if (tabBtn) {
-                tabBtn.textContent = actieGroepen.size === 0 ? 'Acties'
-                    : openGroepen.length > 0 ? `Acties (${openGroepen.length} ⚠ / ${actieGroepen.size})`
-                    : `Acties (${actieGroepen.size} ✓)`;
+                tabBtn.textContent = actieGroepen.length === 0 ? 'Acties'
+                    : openGroepen.length > 0 ? `Acties (${openGroepen.length} ⚠ / ${actieGroepen.length})`
+                    : `Acties (${actieGroepen.length} ✓)`;
                 tabBtn.classList.toggle('acties-actief', openGroepen.length > 0);
             }
 
@@ -659,4 +675,10 @@ class MetingenModule {
         const btnRij  = blokkContainer.lastElementChild;
         blokkContainer.insertBefore(this._maakBlokElement(tijdstip, [], auteur), btnRij);
     }
+}
+
+// Node/Jest: exporteer de klasse zodat pure helpers (zoals groepeerActies)
+// los te testen zijn. In de browser bestaat `module` niet en wordt dit genegeerd.
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = MetingenModule;
 }

@@ -97,6 +97,9 @@ INSERT IGNORE INTO limieten (parameter_naam, min_waarde, max_waarde) VALUES
 ('actie_bezoekers_max', 0.00, 750.00),
 ('actie_spoelbeurt_max', 0.00, 1500.00),
 ('actie_floculant_min', 0.00, 10.00),
+('actie_gebonden_chloor_max', 0.00, 1.00),
+('actie_chloor_peuterbad_min', 0.00, 10.00),
+('actie_zwavelzuur_peuterbad_min', 0.00, 5.00),
 ('seizoen_begin', 0.00, 20260425.00),
 ('seizoen_eind', 0.00, 20260901.00);
 

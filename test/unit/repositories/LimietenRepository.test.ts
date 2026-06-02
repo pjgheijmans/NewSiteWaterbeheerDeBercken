@@ -51,9 +51,9 @@ describe('getAll — normalisatie van aliassen', () => {
 });
 
 describe('getDefaults', () => {
-    it('geeft alle 31 standaardparameters synchroon terug', () => {
+    it('geeft alle 34 standaardparameters synchroon terug', () => {
         const defaults = repo.getDefaults();
-        expect(Object.keys(defaults)).toHaveLength(31);
+        expect(Object.keys(defaults)).toHaveLength(34);
         expect(defaults['ph_waarde']).toEqual({ min: 6.8, max: 7.6 });
         // getDefaults raakt de database niet aan
         expect(pool.execute).not.toHaveBeenCalled();
@@ -69,9 +69,9 @@ describe('save', () => {
 });
 
 describe('seedDefaults', () => {
-    it('voegt alle 31 standaardlimieten met INSERT IGNORE toe', async () => {
+    it('voegt alle 34 standaardlimieten met INSERT IGNORE toe', async () => {
         await repo.seedDefaults();
-        expect(pool.execute).toHaveBeenCalledTimes(31);
+        expect(pool.execute).toHaveBeenCalledTimes(34);
         expect(sqlVan(pool.execute)).toMatch(/INSERT IGNORE/i);
     });
 });

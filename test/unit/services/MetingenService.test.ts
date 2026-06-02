@@ -12,6 +12,7 @@ const actiesRepo: jest.Mocked<IActiesRepository> = {
     getActies: jest.fn(), resolve: jest.fn(), unresolve: jest.fn(),
     genereer: jest.fn(), genereerVerbruik: jest.fn(),
     genereerBezoekers: jest.fn(), genereerSpoelbeurt: jest.fn(),
+    genereerCoordinatoren: jest.fn(),
 };
 const daggegevensProvider: jest.Mocked<IDaggegevensProvider> = { getDaggegevens: jest.fn() };
 

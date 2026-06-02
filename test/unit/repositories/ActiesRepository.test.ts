@@ -68,6 +68,35 @@ describe('genereer — Diep/Ondiep drempelwaarden', () => {
         expect(paramsVan(pool.execute, 1)[3]).toBe('filter_spoelen_flow');
         expect(sqlVan(pool.execute, 1)).toMatch(/INSERT INTO acties/i);
     });
+
+    it('hanteert een aparte flow-drempel per bad: dezelfde flow triggert Diep wel, Ondiep niet', async () => {
+        pool.execute.mockResolvedValue(resultaat([]));
+        // Diep: flow 100 < 250 → actie
+        await repo.genereer(1, '2026-05-31', 'Diep', { datum: '2026-05-31', bad_naam: 'Diep', flow: 100 } as any);
+        expect(sqlVan(pool.execute, 1)).toMatch(/INSERT INTO acties/i);
+        expect(paramsVan(pool.execute, 1)[3]).toBe('filter_spoelen_flow');
+
+        pool.execute.mockClear();
+        // Ondiep: flow 100 >= 75 → geen actie (DELETE)
+        await repo.genereer(2, '2026-05-31', 'Ondiep', { datum: '2026-05-31', bad_naam: 'Ondiep', flow: 100 } as any);
+        expect(sqlVan(pool.execute, 1)).toMatch(/DELETE FROM acties/i);
+        expect(paramsVan(pool.execute, 1)).toEqual([2, '2026-05-31', 'filter_spoelen_flow']);
+    });
+});
+
+describe('genereer — Peuterbad meetwaarden', () => {
+    it('maakt filterdruk- (>1.0) en flow-acties (<4) aan op de peuterbad-drempels', async () => {
+        pool.execute.mockResolvedValue(resultaat([]));
+        await repo.genereer(3, '2026-05-31', 'Peuterbad', {
+            datum: '2026-05-31', bad_naam: 'Peuterbad',
+            filter_druk_in: 1.5, // > 1.0 → actie
+            flow: 2,             // < 4  → actie
+        } as any);
+        const drukCall = pool.execute.mock.calls.find(c => Array.isArray(c[1]) && c[1][3] === 'filter_spoelen_druk');
+        const flowCall = pool.execute.mock.calls.find(c => Array.isArray(c[1]) && c[1][3] === 'filter_spoelen_flow');
+        expect(String(drukCall![0])).toMatch(/INSERT INTO acties/i);
+        expect(String(flowCall![0])).toMatch(/INSERT INTO acties/i);
+    });
 });
 
 describe('genereerVerbruik', () => {
@@ -91,6 +120,20 @@ describe('genereerVerbruik', () => {
         await repo.genereerVerbruik('2026-05-31', { datum: '2026-05-31', chemicalien_chloor: 100 } as any);
         expect(pool.execute).toHaveBeenCalledTimes(2); // stopt na lege baden-query
     });
+
+    it('maakt zwavelzuur- (<50) en floculant-acties (<10) aan onder hun drempels', async () => {
+        pool.execute
+            .mockResolvedValueOnce(resultaat([]))            // laadDrempelwaarden
+            .mockResolvedValueOnce(resultaat([{ id: 1 }]))   // SELECT id FROM baden 'Diep'
+            .mockResolvedValue(resultaat([]));
+        await repo.genereerVerbruik('2026-05-31', {
+            datum: '2026-05-31', chemicalien_zwavelzuur: 30, floculant: 5,
+        } as any);
+        const zwavelCall = pool.execute.mock.calls.find(c => Array.isArray(c[1]) && c[1][3] === 'zwavelzuur_bestellen');
+        const flocCall   = pool.execute.mock.calls.find(c => Array.isArray(c[1]) && c[1][3] === 'floculant_bijvullen');
+        expect(String(zwavelCall![0])).toMatch(/INSERT INTO acties/i);
+        expect(String(flocCall![0])).toMatch(/INSERT INTO acties/i);
+    });
 });
 
 describe('genereerBezoekers', () => {
@@ -99,6 +142,18 @@ describe('genereerBezoekers', () => {
         await repo.genereerBezoekers('2026-05-31', null);
         // alleen laadDrempelwaarden, geen baden-query
         expect(pool.execute).toHaveBeenCalledTimes(1);
+    });
+
+    it('maakt een bezoekers-actie aan voor zowel Diep als Ondiep boven de drempel (750)', async () => {
+        pool.execute
+            .mockResolvedValueOnce(resultaat([]))                                                   // laadDrempelwaarden
+            .mockResolvedValueOnce(resultaat([{ id: 1, naam: 'Diep' }, { id: 2, naam: 'Ondiep' }])) // baden
+            .mockResolvedValue(resultaat([]));
+        await repo.genereerBezoekers('2026-05-31', 800); // > 750
+        const diepCall   = pool.execute.mock.calls.find(c => Array.isArray(c[1]) && c[1][3] === 'filter_spoelen_bezoekers' && c[1][0] === 1);
+        const ondiepCall = pool.execute.mock.calls.find(c => Array.isArray(c[1]) && c[1][3] === 'filter_spoelen_bezoekers' && c[1][0] === 2);
+        expect(String(diepCall![0])).toMatch(/INSERT INTO acties/i);
+        expect(String(ondiepCall![0])).toMatch(/INSERT INTO acties/i);
     });
 });
 
@@ -116,5 +171,119 @@ describe('genereerSpoelbeurt', () => {
 
         const totalen = await repo.genereerSpoelbeurt('2026-05-31');
         expect(totalen).toEqual({ diep: 2000, ondiep: 500 });
+    });
+
+    it('telt per bad onafhankelijk: Diep reset op zijn eigen spoelbeurt, Ondiep telt door', async () => {
+        pool.execute
+            .mockResolvedValueOnce(resultaat([]))                                                   // laadDrempelwaarden → max 1500
+            .mockResolvedValueOnce(resultaat([{ id: 1, naam: 'Diep' }, { id: 2, naam: 'Ondiep' }])) // baden
+            .mockResolvedValueOnce(resultaat([{ datum_schoon: '2026-05-20' }]))                     // Diep: eigen lastClean
+            .mockResolvedValueOnce(resultaat([{ totaal: '800' }]))                                  // Diep: 800 sinds reset < 1500
+            .mockResolvedValueOnce(resultaat([]))                                                   // Diep: stelIn DELETE
+            .mockResolvedValueOnce(resultaat([]))                                                   // Ondiep: GEEN lastClean
+            .mockResolvedValueOnce(resultaat([{ totaal: '2000' }]))                                 // Ondiep: 2000 (alles) > 1500
+            .mockResolvedValueOnce(resultaat([]));                                                  // Ondiep: stelIn INSERT
+
+        const totalen = await repo.genereerSpoelbeurt('2026-05-31');
+
+        // Aparte tellers → aparte uitkomsten
+        expect(totalen).toEqual({ diep: 800, ondiep: 2000 });
+
+        // Diep telt met ZIJN bad_id en reset-venster (datum > lastClean)
+        expect(paramsVan(pool.execute, 2)).toEqual([1, '2026-05-31']);
+        expect(sqlVan(pool.execute, 3)).toMatch(/datum > \? AND datum <= \?/i);
+        expect(paramsVan(pool.execute, 3)).toEqual(['2026-05-20', '2026-05-31']);
+        expect(sqlVan(pool.execute, 4)).toMatch(/DELETE FROM acties/i); // Diep < drempel → geen actie
+
+        // Ondiep telt met ZIJN bad_id en zonder reset (geen lastClean)
+        expect(paramsVan(pool.execute, 5)).toEqual([2, '2026-05-31']);
+        expect(sqlVan(pool.execute, 6)).not.toMatch(/datum > \?/i);
+        expect(paramsVan(pool.execute, 6)).toEqual(['2026-05-31']);
+        expect(sqlVan(pool.execute, 7)).toMatch(/INSERT INTO acties/i); // Ondiep > drempel → actie
+        expect(paramsVan(pool.execute, 7)[3]).toBe('filter_spoelen_spoelbeurt');
+    });
+});
+
+describe('genereer — Peuterbad chemicaliën', () => {
+    it('maakt een chloor-bijvul-actie aan onder de peuterbad-drempel (10)', async () => {
+        pool.execute.mockResolvedValue(resultaat([]));
+        await repo.genereer(3, '2026-05-31', 'Peuterbad', {
+            datum: '2026-05-31', bad_naam: 'Peuterbad', chemicalien_chloor: 8, // < 10 → actief
+        } as any);
+        const chloorCall = pool.execute.mock.calls.find(c => Array.isArray(c[1]) && c[1][3] === 'chloor_peuterbad_bijvullen');
+        expect(chloorCall).toBeDefined();
+        expect(String(chloorCall![0])).toMatch(/INSERT INTO acties/i);
+    });
+
+    it('verwijdert de zwavelzuur-bijvul-actie boven de peuterbad-drempel (5)', async () => {
+        pool.execute.mockResolvedValue(resultaat([]));
+        await repo.genereer(3, '2026-05-31', 'Peuterbad', {
+            datum: '2026-05-31', bad_naam: 'Peuterbad', chemicalien_zwavelzuur: 9, // >= 5 → inactief
+        } as any);
+        const zwavelCall = pool.execute.mock.calls.find(c => Array.isArray(c[1]) && c[1][2] === 'zwavelzuur_peuterbad_bijvullen');
+        expect(zwavelCall).toBeDefined();
+        expect(String(zwavelCall![0])).toMatch(/DELETE FROM acties/i);
+    });
+});
+
+describe('genereerCoordinatoren', () => {
+    it('maakt een gebonden-chloor-actie aan boven de drempel en een peuterbad-aftap-actie als gebruikt', async () => {
+        pool.execute
+            .mockResolvedValueOnce(resultaat([]))                                              // laadDrempelwaarden → gebonden_max 1
+            .mockResolvedValueOnce(resultaat([{ id: 3, naam: 'Peuterbad' }]))                  // baden
+            .mockResolvedValueOnce(resultaat([{ gebonden_max: '1.50', gebruikt: 1 }]))         // aggregatie Peuterbad
+            .mockResolvedValue(resultaat([]));                                                 // stelIn calls
+
+        await repo.genereerCoordinatoren('2026-05-31');
+
+        const gebondenCall = pool.execute.mock.calls.find(c => Array.isArray(c[1]) && c[1][3] === 'filter_spoelen_gebonden');
+        expect(gebondenCall).toBeDefined();
+        expect(String(gebondenCall![0])).toMatch(/INSERT INTO acties/i);
+
+        const aftapCall = pool.execute.mock.calls.find(c => Array.isArray(c[1]) && c[1][3] === 'peuterbad_aftappen');
+        expect(aftapCall).toBeDefined();
+        expect(String(aftapCall![0])).toMatch(/INSERT INTO acties/i);
+    });
+
+    it('verwijdert de gebonden-chloor-actie als de waarde onder de drempel ligt', async () => {
+        pool.execute
+            .mockResolvedValueOnce(resultaat([]))                                              // laadDrempelwaarden
+            .mockResolvedValueOnce(resultaat([{ id: 1, naam: 'Diep' }]))                       // baden
+            .mockResolvedValueOnce(resultaat([{ gebonden_max: '0.40', gebruikt: null }]))      // aggregatie Diep
+            .mockResolvedValue(resultaat([]));
+
+        await repo.genereerCoordinatoren('2026-05-31');
+
+        const gebondenCall = pool.execute.mock.calls.find(c => Array.isArray(c[1]) && c[1][2] === 'filter_spoelen_gebonden');
+        expect(gebondenCall).toBeDefined();
+        expect(String(gebondenCall![0])).toMatch(/DELETE FROM acties/i);
+    });
+
+    it('verwijdert de peuterbad-aftap-actie als het bad niet is gebruikt', async () => {
+        pool.execute
+            .mockResolvedValueOnce(resultaat([]))                                          // laadDrempelwaarden
+            .mockResolvedValueOnce(resultaat([{ id: 3, naam: 'Peuterbad' }]))              // baden
+            .mockResolvedValueOnce(resultaat([{ gebonden_max: '0.10', gebruikt: 0 }]))     // aggregatie
+            .mockResolvedValue(resultaat([]));
+        await repo.genereerCoordinatoren('2026-05-31');
+        const aftapCall = pool.execute.mock.calls.find(c => Array.isArray(c[1]) && c[1][2] === 'peuterbad_aftappen');
+        expect(aftapCall).toBeDefined();
+        expect(String(aftapCall![0])).toMatch(/DELETE FROM acties/i);
+    });
+
+    it('genereert gebonden-chloor voor elk bad maar aftappen uitsluitend voor Peuterbad', async () => {
+        pool.execute
+            .mockResolvedValueOnce(resultaat([]))                                          // laadDrempelwaarden
+            .mockResolvedValueOnce(resultaat([{ id: 1, naam: 'Diep' }, { id: 2, naam: 'Ondiep' }, { id: 3, naam: 'Peuterbad' }]))
+            .mockResolvedValue(resultaat([{ gebonden_max: '0.50', gebruikt: 0 }]));        // aggregaties + stelIn
+
+        await repo.genereerCoordinatoren('2026-05-31');
+
+        const gebondenCalls = pool.execute.mock.calls.filter(c => Array.isArray(c[1]) &&
+            (c[1][2] === 'filter_spoelen_gebonden' || c[1][3] === 'filter_spoelen_gebonden'));
+        const aftapCalls = pool.execute.mock.calls.filter(c => Array.isArray(c[1]) &&
+            (c[1][2] === 'peuterbad_aftappen' || c[1][3] === 'peuterbad_aftappen'));
+        expect(gebondenCalls).toHaveLength(3); // Diep, Ondiep, Peuterbad
+        expect(aftapCalls).toHaveLength(1);    // alleen Peuterbad
     });
 });

@@ -43,6 +43,9 @@ export class ActiesRepository implements IActiesRepository {
             actie_bezoekers_max:  750,
             actie_spoelbeurt_max: 1500,
             actie_floculant_min:  10,
+            actie_gebonden_chloor_max:      1,
+            actie_chloor_peuterbad_min:     10,
+            actie_zwavelzuur_peuterbad_min: 5,
         };
         try {
             const [rows] = await this.pool.execute<RowDataPacket[]>(
@@ -105,6 +108,20 @@ export class ActiesRepository implements IActiesRepository {
                 await this.stelIn(bad_id, datum, 'filter_spoelen_flow',
                     `Flow Peuterbad onder ${d.actie_flow_peuterbad} m³/h — Filter spoelen`,
                     flow < d.actie_flow_peuterbad);
+            }
+
+            const chloorPeuter = parseFloat(String(b.chemicalien_chloor ?? NaN));
+            if (!isNaN(chloorPeuter)) {
+                await this.stelIn(bad_id, datum, 'chloor_peuterbad_bijvullen',
+                    `Chloorvoorraad Peuterbad ${chloorPeuter} < ${d.actie_chloor_peuterbad_min} — Vat bijvullen`,
+                    chloorPeuter < d.actie_chloor_peuterbad_min);
+            }
+
+            const zwavelzuurPeuter = parseFloat(String(b.chemicalien_zwavelzuur ?? NaN));
+            if (!isNaN(zwavelzuurPeuter)) {
+                await this.stelIn(bad_id, datum, 'zwavelzuur_peuterbad_bijvullen',
+                    `Zwavelzuurvoorraad Peuterbad ${zwavelzuurPeuter} < ${d.actie_zwavelzuur_peuterbad_min} — Vat bijvullen`,
+                    zwavelzuurPeuter < d.actie_zwavelzuur_peuterbad_min);
             }
         }
     }
@@ -192,5 +209,40 @@ export class ActiesRepository implements IActiesRepository {
                 totaal > d.actie_spoelbeurt_max);
         }
         return totalen as unknown as BadTotalen;
+    }
+
+    /**
+     * Acties op basis van coordinator-metingen, geaggregeerd over de hele dag
+     * (er zijn meerdere meetblokken per dag):
+     *  - gebonden chloor (= chloor_totaal − chloor_vrij) boven de drempel → Filter spoelen, per bad
+     *  - Peuterbad gebruikt op enig moment vandaag → Peuterbad water aftappen
+     */
+    async genereerCoordinatoren(datum: string): Promise<void> {
+        const d = await this.laadDrempelwaarden();
+        const [bads] = await this.pool.execute<RowDataPacket[]>(
+            "SELECT id, naam FROM baden WHERE naam IN ('Diep', 'Ondiep', 'Peuterbad')"
+        );
+        for (const bad of bads as Array<{ id: number; naam: string }>) {
+            const [rows] = await this.pool.execute<RowDataPacket[]>(
+                `SELECT MAX(chloor_totaal - chloor_vrij) AS gebonden_max,
+                        MAX(bad_gebruikt)                AS gebruikt
+                 FROM metingen_coordinatoren WHERE bad_id = ? AND datum = ?`,
+                [bad.id, datum]
+            );
+            const rij = rows[0] as { gebonden_max: string | null; gebruikt: number | null };
+
+            const gebonden = parseFloat(String(rij?.gebonden_max ?? NaN));
+            if (!isNaN(gebonden)) {
+                await this.stelIn(bad.id, datum, 'filter_spoelen_gebonden',
+                    `Gebonden chloor ${bad.naam} ${gebonden.toFixed(2)} > ${d.actie_gebonden_chloor_max} mg/l — Filter spoelen`,
+                    gebonden > d.actie_gebonden_chloor_max);
+            }
+
+            if (bad.naam === 'Peuterbad') {
+                await this.stelIn(bad.id, datum, 'peuterbad_aftappen',
+                    `Peuterbad is vandaag gebruikt — Peuterbad water aftappen`,
+                    Number(rij?.gebruikt) === 1);
+            }
+        }
     }
 }
