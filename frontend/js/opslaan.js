@@ -101,7 +101,8 @@ class OpslaanModule {
         const refreshNaOpslaan = () => {
             if (!autoSave) this.app.metingen.laadMetingen();
             else if (huidigeRol === 'waterbeheer') {
-                this.app.verbruik.laadEnBerekenVerbruik();
+                if (huidigeBadPagina === 'peuterbad') this.app.verbruik.laadEnBerekenPeuterbadVerbruik();
+                else                                   this.app.verbruik.laadEnBerekenVerbruik();
                 this.app.metingen.laadActies(document.getElementById('centraleDatum').value);
             }
         };
@@ -162,19 +163,20 @@ class OpslaanModule {
 
         // Peuterbad
         if (huidigeRol === 'waterbeheer' && huidigeBadPagina === 'peuterbad') {
-            const phEl    = document.getElementById('peuterbad-ph');
-            const chloorEl = document.getElementById('peuterbad-chloor');
-            const leeg     = !phEl?.value || !chloorEl?.value;
             const payload  = {
                 datum, bad_naam: 'Peuterbad',
                 ph_waarde:    api.parseNumberValue('peuterbad-ph'),
                 chloor_waarde:api.parseNumberValue('peuterbad-chloor'),
                 flow:         api.parseNumberValue('peuterbad-flow'),
                 filter_druk:  api.parseNumberValue('peuterbad-filterdruk'),
-                water:        document.getElementById('peuterbad-water').value,
-                chemicalien_chloor:     document.getElementById('peuterbad-chemicalien-chloor').value,
-                chemicalien_zwavelzuur: document.getElementById('peuterbad-chemicalien-zwavelzuur').value,
+                water:                  api.parseNumberValue('peuterbad-water'),
+                chemicalien_chloor:     api.parseNumberValue('peuterbad-chemicalien-chloor'),
+                chemicalien_zwavelzuur: api.parseNumberValue('peuterbad-chemicalien-zwavelzuur'),
             };
+            // Waarschuwing alleen over de velden van de actieve subtab, niet over de andere subtab
+            const leeg = this.app.state.huidigePeuterbadSubtab === 'verbruik'
+                ? (payload.water == null || payload.chemicalien_chloor == null || payload.chemicalien_zwavelzuur == null)
+                : (payload.ph_waarde == null || payload.chloor_waarde == null);
             try {
                 const res = await api.call('/api/metingen', {
                     method: 'POST',
