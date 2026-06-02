@@ -7,6 +7,20 @@ class OpslaanModule {
         this.app = app;
     }
 
+    /**
+     * Bepaal of een peuterbad-opslag onvolledig is voor de actieve subtab.
+     * Pure functie: op de Verbruik-subtab tellen water + beide chemicaliën,
+     * op Meetwaarden tellen pH + chloor. Een waarde is "leeg" als ze null is.
+     * @param {string} subtab - 'verbruik' of 'meetwaarden'
+     * @param {{water:?number, chemicalien_chloor:?number, chemicalien_zwavelzuur:?number, ph_waarde:?number, chloor_waarde:?number}} payload
+     * @returns {boolean}
+     */
+    static peuterbadOnvolledig(subtab, payload) {
+        return subtab === 'verbruik'
+            ? (payload.water == null || payload.chemicalien_chloor == null || payload.chemicalien_zwavelzuur == null)
+            : (payload.ph_waarde == null || payload.chloor_waarde == null);
+    }
+
     /** Verbind auto-save listeners aan de dagstaat-sectie. */
     wireAutoSave() {
         const sectie = document.getElementById('sectie-dagstaat');
@@ -174,9 +188,7 @@ class OpslaanModule {
                 chemicalien_zwavelzuur: api.parseNumberValue('peuterbad-chemicalien-zwavelzuur'),
             };
             // Waarschuwing alleen over de velden van de actieve subtab, niet over de andere subtab
-            const leeg = this.app.state.huidigePeuterbadSubtab === 'verbruik'
-                ? (payload.water == null || payload.chemicalien_chloor == null || payload.chemicalien_zwavelzuur == null)
-                : (payload.ph_waarde == null || payload.chloor_waarde == null);
+            const leeg = OpslaanModule.peuterbadOnvolledig(this.app.state.huidigePeuterbadSubtab, payload);
             try {
                 const res = await api.call('/api/metingen', {
                     method: 'POST',
@@ -209,4 +221,9 @@ class OpslaanModule {
             else         opError('Niet alle blokken konden worden opgeslagen.');
         }
     }
+}
+
+// Node/Jest: maak de klasse importeerbaar. In de browser bestaat `module` niet.
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = OpslaanModule;
 }

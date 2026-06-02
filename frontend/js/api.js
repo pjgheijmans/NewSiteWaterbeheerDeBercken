@@ -30,3 +30,8 @@ class ApiClient {
         return Number.isNaN(parsed) ? null : parsed;
     }
 }
+
+// Node/Jest: maak de klasse importeerbaar. In de browser bestaat `module` niet.
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = ApiClient;
+}

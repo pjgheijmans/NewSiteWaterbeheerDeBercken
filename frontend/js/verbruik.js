@@ -7,6 +7,21 @@ class VerbruikModule {
         this.app = app;
     }
 
+    /**
+     * Bereken het dagverbruik als verschil van twee meterstanden.
+     * Pure functie: '-' als de huidige stand ontbreekt/niet-numeriek is,
+     * anders afgeronde huidige stand minus afgeronde vorige stand (vorige = 0 indien leeg).
+     * @param {number|string|null|undefined} huidig
+     * @param {number|string|null|undefined} vorige
+     * @returns {string}
+     */
+    static berekenVerbruik(huidig, vorige) {
+        const h = parseFloat(huidig);
+        if (isNaN(h)) return '-';
+        const v = parseFloat(vorige) || 0;
+        return String(Math.round(h) - Math.round(v));
+    }
+
     /** Laad verbruik- en verwarmingssysteem-velden voor de geselecteerde datum. */
     async laadWaterbeheerVelden() {
         const datum = document.getElementById('centraleDatum').value;
@@ -87,12 +102,9 @@ class VerbruikModule {
             const vorige = await vorigeRes.json();
 
             const berekenEnZet = (veldId, dbSleutel) => {
-                const h  = parseFloat(huidig[dbSleutel]);
-                const v  = parseFloat(vorige[dbSleutel]) || 0;
                 const el = document.getElementById(`${veldId}-verbruik`);
                 if (!el) return;
-                if (isNaN(h)) { el.value = '-'; return; }
-                el.value = String(Math.round(h) - Math.round(v));
+                el.value = VerbruikModule.berekenVerbruik(huidig[dbSleutel], vorige[dbSleutel]);
             };
 
             ['water-diep','water-ondiep','water-totaal','elektriciteit-nacht',
@@ -120,13 +132,16 @@ class VerbruikModule {
             const berekenEnZet = (veldId, sleutel) => {
                 const el = document.getElementById(`${veldId}-verbruik`);
                 if (!el) return;
-                const h = parseFloat(huidig[sleutel]);
-                const v = parseFloat(vorige[sleutel]) || 0;
-                el.value = isNaN(h) ? '-' : String(Math.round(h) - Math.round(v));
+                el.value = VerbruikModule.berekenVerbruik(huidig[sleutel], vorige[sleutel]);
             };
             berekenEnZet('peuterbad-water',                 'water');
             berekenEnZet('peuterbad-chemicalien-chloor',    'chemicalien_chloor');
             berekenEnZet('peuterbad-chemicalien-zwavelzuur','chemicalien_zwavelzuur');
         } catch (f) { console.error('Fout bij laden peuterbad-verbruik:', f); }
     }
+}
+
+// Node/Jest: maak de klasse importeerbaar. In de browser bestaat `module` niet.
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = VerbruikModule;
 }
