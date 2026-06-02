@@ -100,4 +100,33 @@ class VerbruikModule {
                 .forEach(id => berekenEnZet(id, id.replace(/-/g, '_')));
         } catch (f) { console.error('Fout bij laden verbruik:', f); }
     }
+
+    /** Laad peuterbad-meterstanden (huidig − vorige dag) en vul de peuterbad-verbruikvelden. */
+    async laadEnBerekenPeuterbadVerbruik() {
+        const datum = document.getElementById('centraleDatum').value;
+        if (!datum) return;
+        const d = new Date(datum);
+        d.setDate(d.getDate() - 1);
+        const vorigeDatum = d.toISOString().split('T')[0];
+        try {
+            const [huidigRes, vorigeRes] = await Promise.all([
+                this.app.api.call(`/api/metingen?datum=${datum}`),
+                this.app.api.call(`/api/metingen?datum=${vorigeDatum}`),
+            ]);
+            const vindPeuter = arr => (Array.isArray(arr) ? arr.find(m => m.bad_naam === 'Peuterbad') : null) || {};
+            const huidig = vindPeuter(await huidigRes.json());
+            const vorige = vindPeuter(await vorigeRes.json());
+
+            const berekenEnZet = (veldId, sleutel) => {
+                const el = document.getElementById(`${veldId}-verbruik`);
+                if (!el) return;
+                const h = parseFloat(huidig[sleutel]);
+                const v = parseFloat(vorige[sleutel]) || 0;
+                el.value = isNaN(h) ? '-' : String(Math.round(h) - Math.round(v));
+            };
+            berekenEnZet('peuterbad-water',                 'water');
+            berekenEnZet('peuterbad-chemicalien-chloor',    'chemicalien_chloor');
+            berekenEnZet('peuterbad-chemicalien-zwavelzuur','chemicalien_zwavelzuur');
+        } catch (f) { console.error('Fout bij laden peuterbad-verbruik:', f); }
+    }
 }

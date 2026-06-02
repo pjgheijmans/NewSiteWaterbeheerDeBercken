@@ -44,7 +44,7 @@ class MetingenModule {
             document.getElementById(`subtab-peuterbad-${s}`).classList.toggle('actief', s === subtab);
             document.getElementById(`peuterbad-${s}-content`).style.display = (s === subtab) ? 'block' : 'none';
         });
-        if (subtab === 'verbruik') this.app.verbruik.laadEnBerekenVerbruik();
+        if (subtab === 'verbruik') this.app.verbruik.laadEnBerekenPeuterbadVerbruik();
     }
 
     wisselCoordSubtab(subtab) {
