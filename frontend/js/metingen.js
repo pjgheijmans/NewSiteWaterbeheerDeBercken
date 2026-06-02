@@ -124,7 +124,7 @@ class MetingenModule {
             'verwarmingssysteem':    [],
             'bezoekers':             ['filter_spoelen_bezoekers|Diep','filter_spoelen_bezoekers|Ondiep','filter_spoelen_spoelbeurt|Diep','filter_spoelen_spoelbeurt|Ondiep'],
             'peuterbad-meetwaarden': ['filter_spoelen_druk|Peuterbad','filter_spoelen_flow|Peuterbad'],
-            'peuterbad-verbruik':    [],
+            'peuterbad-verbruik':    ['chloor_peuterbad_bijvullen|Peuterbad','zwavelzuur_peuterbad_bijvullen|Peuterbad'],
         };
     }
 
@@ -143,6 +143,8 @@ class MetingenModule {
             'chloor_bestellen|Diep':             ['chemicalien-chloor'],
             'zwavelzuur_bestellen|Diep':         ['chemicalien-zwavelzuur'],
             'floculant_bijvullen|Diep':          ['floculant'],
+            'chloor_peuterbad_bijvullen|Peuterbad':     ['peuterbad-chemicalien-chloor'],
+            'zwavelzuur_peuterbad_bijvullen|Peuterbad': ['peuterbad-chemicalien-zwavelzuur'],
         };
     }
 

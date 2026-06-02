@@ -24,6 +24,8 @@ export class CoordinatorenService implements ICoordinatorenService {
     async saveMeting(body: CoordinatorMetingInput, gebruiker: Gebruiker): Promise<void> {
         const bad_id = await this.coordRepo.getBadId(body.bad_naam);
         await this.coordRepo.saveMeting(bad_id, body, bepaalAuteur(gebruiker));
+        // Fire-and-forget: gebonden-chloor- en peuterbad-aftappen-acties (geen transactionele garantie vereist)
+        void this.actiesRepo.genereerCoordinatoren(body.datum);
     }
 
     getChecklist(datum: string): Promise<Checklist> {
@@ -45,8 +47,10 @@ export class CoordinatorenService implements ICoordinatorenService {
         void this.actiesRepo.genereerSpoelbeurt(datum);
     }
 
-    deleteBlok(datum: string, tijdstip: string): Promise<void> {
-        return this.coordRepo.deleteBlok(datum, tijdstip);
+    async deleteBlok(datum: string, tijdstip: string): Promise<void> {
+        await this.coordRepo.deleteBlok(datum, tijdstip);
+        // Fire-and-forget: leid gebonden-chloor- en aftap-acties opnieuw af nu een blok weg is
+        void this.actiesRepo.genereerCoordinatoren(datum);
     }
 
     getLogboek(datum: string): Promise<LogboekEntry[]> {

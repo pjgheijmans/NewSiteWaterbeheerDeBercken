@@ -16,6 +16,7 @@ const actiesRepo: jest.Mocked<IActiesRepository> = {
     getActies: jest.fn(), resolve: jest.fn(), unresolve: jest.fn(),
     genereer: jest.fn(), genereerVerbruik: jest.fn(),
     genereerBezoekers: jest.fn(), genereerSpoelbeurt: jest.fn(),
+    genereerCoordinatoren: jest.fn(),
 };
 
 const service = new CoordinatorenService(coordRepo, logboekRepo, actiesRepo);
@@ -30,6 +31,20 @@ describe('saveMeting', () => {
         await service.saveMeting({ datum: DATUM, bad_naam: 'Diep' }, gebruiker);
         expect(coordRepo.getBadId).toHaveBeenCalledWith('Diep');
         expect(coordRepo.saveMeting).toHaveBeenCalledWith(1, expect.objectContaining({ bad_naam: 'Diep' }), 'Co Ord');
+    });
+
+    it('triggert fire-and-forget coordinator-actiegeneratie', async () => {
+        coordRepo.getBadId.mockResolvedValue(1);
+        await service.saveMeting({ datum: DATUM, bad_naam: 'Peuterbad' }, gebruiker);
+        expect(actiesRepo.genereerCoordinatoren).toHaveBeenCalledWith(DATUM);
+    });
+});
+
+describe('deleteBlok', () => {
+    it('verwijdert het blok en leidt de coordinator-acties opnieuw af', async () => {
+        await service.deleteBlok(DATUM, '10:00:00');
+        expect(coordRepo.deleteBlok).toHaveBeenCalledWith(DATUM, '10:00:00');
+        expect(actiesRepo.genereerCoordinatoren).toHaveBeenCalledWith(DATUM);
     });
 });
 

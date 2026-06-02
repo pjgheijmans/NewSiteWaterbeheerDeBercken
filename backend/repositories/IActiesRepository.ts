@@ -8,4 +8,5 @@ export interface IActiesRepository {
     genereerVerbruik(datum: string, body: VerbruikInput): Promise<void>;
     genereerBezoekers(datum: string, bezoekers_vandaag: number | null): Promise<void>;
     genereerSpoelbeurt(datum: string): Promise<BadTotalen>;
+    genereerCoordinatoren(datum: string): Promise<void>;
 }
