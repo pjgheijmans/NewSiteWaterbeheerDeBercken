@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { checkAuth, isAdminOrWaterbeheerder } from '../middleware/auth';
+import { checkAuth, isAdmin } from '../middleware/auth';
 import { valideerBody } from '../middleware/valideer';
 import { limietSchema } from '../validation/schemas';
 import { ILimietenService } from '../services/ILimietenService';
@@ -10,8 +10,8 @@ export class LimietenController {
 
     constructor(private readonly service: ILimietenService) {
         this.router = Router();
-        this.router.get('/',         this.getAll.bind(this));
-        this.router.get('/defaults', this.getDefaults.bind(this));
+        this.router.get('/',         checkAuth, this.getAll.bind(this));
+        this.router.get('/defaults', checkAuth, this.getDefaults.bind(this));
         this.router.post('/', checkAuth, valideerBody(limietSchema), this.save.bind(this));
     }
 
@@ -25,7 +25,7 @@ export class LimietenController {
     }
 
     private async save(req: Request, res: Response, next: NextFunction): Promise<void> {
-        if (!isAdminOrWaterbeheerder(req.session.gebruiker!.taak)) {
+        if (!isAdmin(req.session.gebruiker!.taak)) {
             res.status(403).json({ error: 'Geen toegang' }); return;
         }
         try { await this.service.save(req.body as LimietInput); res.json({ status: 'success' }); }

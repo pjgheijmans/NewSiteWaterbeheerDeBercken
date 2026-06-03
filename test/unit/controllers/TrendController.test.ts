@@ -30,6 +30,11 @@ describe('GET /metingen', () => {
         expect(mockService.getMetingenTrend).not.toHaveBeenCalled();
     });
 
+    it('geeft 403 voor Administrator (trend is voorbehouden aan waterbeheerder)', async () => {
+        expect((await request(maakApp('Administrator')).get('/metingen?van=2026-05-01&tot=2026-05-31')).status).toBe(403);
+        expect(mockService.getMetingenTrend).not.toHaveBeenCalled();
+    });
+
     it('geeft 401 zonder sessie', async () => {
         expect((await request(maakApp(null)).get('/metingen?van=2026-05-01&tot=2026-05-31')).status).toBe(401);
     });

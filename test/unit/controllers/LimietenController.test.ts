@@ -13,42 +13,50 @@ function maakApp(taak: string | null = 'waterbeheerder') {
 
 beforeEach(() => jest.clearAllMocks());
 
-describe('GET / (geen auth)', () => {
-    it('geeft de limietenmap terug zonder sessie', async () => {
+describe('GET / (login vereist, elke rol)', () => {
+    it('geeft de limietenmap terug voor een ingelogde gebruiker', async () => {
         mockService.getAll.mockResolvedValue({ ph_waarde: { min: 6.8, max: 7.6 } });
-        const res = await request(maakApp(null)).get('/');
+        const res = await request(maakApp('coordinator')).get('/');
         expect(res.status).toBe(200);
         expect(res.body.ph_waarde).toEqual({ min: 6.8, max: 7.6 });
     });
 
+    it('geeft 401 zonder sessie', async () => {
+        expect((await request(maakApp(null)).get('/')).status).toBe(401);
+    });
+
     it('geeft 500 bij een fout in de service', async () => {
         mockService.getAll.mockRejectedValue(new Error('DB fout'));
-        expect((await request(maakApp(null)).get('/')).status).toBe(500);
+        expect((await request(maakApp('waterbeheerder')).get('/')).status).toBe(500);
     });
 });
 
-describe('GET /defaults (geen auth)', () => {
-    it('geeft de standaardwaarden synchroon terug', async () => {
+describe('GET /defaults (login vereist)', () => {
+    it('geeft de standaardwaarden terug voor een ingelogde gebruiker', async () => {
         mockService.getDefaults.mockReturnValue({ ph_waarde: { min: 6.8, max: 7.6 } });
-        const res = await request(maakApp(null)).get('/defaults');
+        const res = await request(maakApp('waterbeheerder')).get('/defaults');
         expect(res.status).toBe(200);
         expect(mockService.getDefaults).toHaveBeenCalled();
     });
+
+    it('geeft 401 zonder sessie', async () => {
+        expect((await request(maakApp(null)).get('/defaults')).status).toBe(401);
+    });
 });
 
-describe('POST /', () => {
+describe('POST / (alleen Administrator)', () => {
     const payload = { parameter_naam: 'ph_waarde', min_waarde: 6.8, max_waarde: 7.6 };
 
-    it('slaat op voor waterbeheerder', async () => {
+    it('slaat op voor Administrator', async () => {
         mockService.save.mockResolvedValue(undefined);
-        const res = await request(maakApp('waterbeheerder')).post('/').send(payload);
+        const res = await request(maakApp('Administrator')).post('/').send(payload);
         expect(res.status).toBe(200);
         expect(mockService.save).toHaveBeenCalledWith(payload);
     });
 
-    it('slaat op voor Administrator', async () => {
-        mockService.save.mockResolvedValue(undefined);
-        expect((await request(maakApp('Administrator')).post('/').send(payload)).status).toBe(200);
+    it('geeft 403 voor waterbeheerder', async () => {
+        expect((await request(maakApp('waterbeheerder')).post('/').send(payload)).status).toBe(403);
+        expect(mockService.save).not.toHaveBeenCalled();
     });
 
     it('geeft 403 voor coordinator', async () => {

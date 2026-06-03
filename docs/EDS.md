@@ -397,16 +397,20 @@ best-effort (EPS §5.4). No dedicated breakpoints are formally specified.
 |`metingen.ts`|`/api`|`GET/POST /metingen`, `GET /acties`, `POST /acties/:id/resolve`, `POST /acties/:id/unresolve`, `GET /bezoekers`|waterbeheerder|
 |`coordinatoren.ts`|`/api/coordinatoren`|`GET/POST /`, `DELETE /`, `GET/POST /checklist`, `GET/POST /daggegevens`, `GET/POST /logboek`, `DELETE /logboek/:id`|waterbeheerder or coördinator|
 |`verbruik.ts`|`/api/verbruik`|`GET/POST /diep-ondiep`, `GET /diep-ondiep/vorige`, `GET/POST /verwarmingssysteem`|waterbeheerder|
-|`limieten.ts`|`/api/limieten`|`GET /`, `GET /defaults`, `POST /`|read: any session · write: admin/waterbeheerder|
+|`limieten.ts`|`/api/limieten`|`GET /`, `GET /defaults`, `POST /`|read: authenticated (any role) · write: **Administrator only**|
 |`logboek.ts`|`/api/logboek`|`GET /`, `POST /`, `DELETE /:id`|waterbeheerder|
 |`gebruikers.ts`|`/api/gebruikers`|`GET /`, `POST /`, `PUT /:id`, `DELETE /:id`|admin/waterbeheerder|
 |`database.ts`|`/api/database`|`POST /truncate/:tabel`, `POST /verwijder-alles`, `POST /initialiseer`, `GET /export/:tabel`, `POST /import/:tabel`|admin/waterbeheerder|
 |`trend.ts`|`/api/trend`|`GET /metingen`, `GET /verbruik`|waterbeheerder|
 |`frontend.ts`|`/`|`GET /` — assemble HTML partials|—|
 
-> **Role policy note (EPS R-006).** The "Role" column reflects the current backend
-> role helpers. The exact policy for who may read/write Limieten and Trend is to be
-> confirmed; `limieten` read is currently open to any authenticated session.
+> **Role policy (EPS R-006, resolved 2026-06-03).** Trend (`/api/trend/*`) is
+> **Waterbeheerder only** (strict `isWaterbeheerder`; Administrators and Coördinators
+> receive 403). Limieten reads (`GET /`, `/defaults`) require authentication and are
+> allowed for **any role** (the dagstaat field-validation and season bounds depend on
+> them); the Limieten management screen and writes (`POST /`) are **Administrator
+> only** (`isAdmin`). The nav (`auth.js`) matches: the Limieten button is hidden from
+> Waterbeheerder and the Trend button from Administrator.
 
 ### 5.2 Authentication & Session Model
 
@@ -729,7 +733,7 @@ Current counts (indicative): ~305 unit (incl. ~41 frontend) + 17 integration.
 |R-004|No browser E2E coverage|Medium|Medium|Add a Playwright smoke test for W1–W3; wire into CI|Low|
 |R-009|Action generation is non-transactional (DD-009)|Low|Low|Recomputed on next save/delete; acceptable for derived state|Accepted|
 |R-005|Accessibility (WCAG AA) unverified|Low|Medium|Audit if public-sector rules apply|Open|
-|R-006|Role access to Limieten/Trend not finalised|Medium|Medium|Confirm policy; tighten role helpers + nav gating|Open|
+|R-006|~~Role access to Limieten/Trend not finalised~~ **RESOLVED 2026-06-03**|—|—|Policy confirmed & enforced: TRD waterbeheerder-only; LIM read any-role / edit Administrator-only; backend guards + nav aligned; tests added|Closed|
 |R-010|`looseObject` schemas accept unknown fields|Low|Low|Tighten to specific shapes if abuse becomes a concern|Accepted|
 
 -----
@@ -749,9 +753,9 @@ Current counts (indicative): ~305 unit (incl. ~41 frontend) + 17 integration.
 |WB-005 (consumption deltas)|§5.4, §6.2 (`berekenVerbruik`)|Derived, jsdom-tested|
 |CO-001..004 (coordinator rounds)|§4.3 (UI-006..009), §5.1, §7.3|metingen_coordinatoren + checklist + daggegevens + logboek|
 |ACT-001..005 (actions)|§3 (DD-009/014), §4.3 (UI-005), §7 (ActiesRepository)|Per-reason rows, grouped client-side; fire-and-forget; regenerate on save/delete|
-|LIM-001/002 (limits)|§4.3 (UI-010), §5.1, §7.3|limieten table incl. thresholds + season|
+|LIM-001..003 (limits)|§4.3 (UI-010), §5.1, §7.3|limieten table incl. thresholds + season; read any-role, edit Administrator-only (R-006)|
 |ADM-001..004 (users/database)|§4.3 (UI-011/012), §5.1, §7|gebruikers + database routers; CSV; danger zone|
-|TRD-001 (trends)|§4.3 (UI-013), §5.1 (`/api/trend`), §6.2 (TrendModule)|Chart.js over a date range|
+|TRD-001 (trends)|§4.3 (UI-013), §5.1 (`/api/trend`), §6.2 (TrendModule)|Chart.js over a date range; Waterbeheerder only (R-006)|
 
 -----
 
