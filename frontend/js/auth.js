@@ -67,12 +67,13 @@ class AuthModule {
         let beginRol = 'waterbeheer';
         if (gebruiker.taak === 'waterbeheerder') {
             Object.keys(knoppen).forEach(k => { knoppen[k] = true; });
+            knoppen.limieten = false; // limieten beheren is voorbehouden aan Administrator
             beginRol = 'waterbeheer';
         } else if (gebruiker.taak === 'Administrator') {
             knoppen.limieten     = true;
             knoppen.gebruikers   = true;
             knoppen.database     = true;
-            knoppen.trendanalyse = true;
+            knoppen.trendanalyse = false; // trendanalyse is voorbehouden aan waterbeheerder
             beginRol = 'limieten';
         } else {
             knoppen.coordinatoren = true;

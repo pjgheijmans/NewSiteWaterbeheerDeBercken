@@ -22,6 +22,11 @@ export function isWaterbeheerder(taak: string): boolean {
     return taak === 'waterbeheerder';
 }
 
+/** Controleer of de rol strikt Administrator is. */
+export function isAdmin(taak: string): boolean {
+    return taak === 'Administrator';
+}
+
 /** Controleer of de rol waterbeheerder of coordinator is. */
 export function isWaterbeheerderOrCoordinator(taak: string): boolean {
     return taak === 'waterbeheerder' || taak === 'coordinator';

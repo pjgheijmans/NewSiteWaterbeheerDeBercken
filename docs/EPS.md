@@ -171,13 +171,16 @@ Priority uses MoSCoW (Must / Should / Could). "Impl." = met by the current build
 |Actor|Description|Primary responsibilities|Access (blocks)|
 |-----|-----------|------------------------|---------------|
 |Unauthenticated user|Anyone reaching the app without a valid session|Log in|AUTH (login only)|
-|**Waterbeheerder**|Technical water manager|Daily water measurements, consumption, heating checks, log; handle corrective actions|AUTH, GEN, WB, ACT, TRD\*|
-|**Coördinator**|Pool coordinator on shift|Timed measurement rounds, checklist, daily data (air temp, visitors), log|AUTH, GEN, CO, TRD\*|
-|**Administrator**|System administrator|Everything above, plus user management, limit management and database management|All blocks|
+|**Waterbeheerder**|Technical water manager|Daily water measurements, consumption, heating checks, log; handle corrective actions; view trends|AUTH, GEN, WB, ACT, TRD|
+|**Coördinator**|Pool coordinator on shift|Timed measurement rounds, checklist, daily data (air temp, visitors), log|AUTH, GEN, CO|
+|**Administrator**|System administrator|User management, limit/threshold management and database management|AUTH, LIM, ADM|
 
-\* Access of Waterbeheerder/Coördinator to **LIM** (limits) and **TRD** (trends) is
-governed by role policy and is an **open item to confirm** (see §9, R-006). The
-table reflects the intended policy.
+**Confirmed role policy (resolves R-006).** **Trendanalyse (TRD)** is restricted to
+**Waterbeheerder only** (not Administrator, not Coördinator). **Limieten (LIM):**
+*reading* limit values requires authentication but is allowed for **any role**
+(the dagstaat field-validation and season-bound navigation depend on it);
+*managing/editing* limits is **Administrator only**. Reflected in the access column
+above, the LIM/TRD blocks, the screen table (§3.9) and the modes (§3.12).
 
 ### 3.1 Authentication & Session (AUTH)
 
@@ -261,8 +264,9 @@ to the triggering save (no transactional guarantee between save and action).
 
 |ID|Requirement|Priority|Impl.|
 |--|-----------|--------|-----|
-|LIM-001|Manage the central limit values (min/max per parameter) and the action thresholds, and the season window.|Must|Yes|
-|LIM-002|Restore the standard default limit/threshold values on request.|Should|Yes|
+|LIM-001|Manage the central limit values (min/max per parameter) and the action thresholds, and the season window. **Editing is Administrator-only.**|Must|Yes|
+|LIM-002|Restore the standard default limit/threshold values on request (Administrator).|Should|Yes|
+|LIM-003|Reading limit values requires authentication and is permitted for any role (needed by GEN-002/004).|Must|Yes|
 
 ### 3.7 Administration (ADM)
 
@@ -279,7 +283,7 @@ Actor: Administrator.
 
 |ID|Requirement|Priority|Impl.|
 |--|-----------|--------|-----|
-|TRD-001|Display historical trend charts for measurements and consumption over a user-chosen date range, for both bath groups.|Should|Yes|
+|TRD-001|Display historical trend charts for measurements and consumption over a user-chosen date range, for both bath groups. **Waterbeheerder only.**|Should|Yes|
 
 ### 3.9 User Interface — Screens & Views
 
@@ -294,10 +298,10 @@ Actor: Administrator.
 |UI-007|Coördinatoren → Checklist|CO|Coördinator, Administrator|
 |UI-008|Coördinatoren → Daggegevens|CO|Coördinator, Administrator|
 |UI-009|Coördinatoren → Logboek|CO|Coördinator, Administrator|
-|UI-010|Limieten|LIM|Per role policy (R-006)|
+|UI-010|Limieten|LIM|Administrator|
 |UI-011|Gebruikers Beheer|ADM|Administrator|
 |UI-012|Database Beheer|ADM|Administrator|
-|UI-013|Trendanalyse|TRD|Per role policy (R-006)|
+|UI-013|Trendanalyse|TRD|Waterbeheerder|
 
 ### 3.10 Key User Workflows
 
@@ -338,9 +342,9 @@ table, clear a table, or reset the database (double confirmation). *(ADM-002..00
 |Mode|Description|Entry Condition|Exit Condition|
 |----|-----------|---------------|--------------|
 |Unauthenticated|Only the login screen is available|App opened, no valid session|Successful login|
-|Waterbeheer|WB + ACT + TRD blocks|Login as Waterbeheerder (or Administrator)|Logout / role switch|
-|Coördinator|CO + TRD blocks|Login as Coördinator (or Administrator)|Logout / role switch|
-|Administrator|All blocks incl. ADM, LIM|Login as Administrator|Logout|
+|Waterbeheer|WB + ACT + TRD blocks|Login as Waterbeheerder|Logout / role switch|
+|Coördinator|CO blocks|Login as Coördinator|Logout / role switch|
+|Administrator|LIM + ADM blocks|Login as Administrator|Logout|
 
 ### 3.13 Functional Constraints
 
@@ -557,7 +561,7 @@ Methods: Test (T) · Analysis (A) · Inspection (I) · Demonstration (D).
 |R-003|Hardcoded default session secret|Require `SESSION_SECRET` in production deployment|
 |R-004|Browser E2E coverage absent|Add an automated end-to-end smoke test for W1–W3|
 |R-005|Accessibility (WCAG AA) unverified|Audit and remediate if public-sector accessibility rules apply|
-|R-006|Role access to Limieten (LIM) and Trendanalyse (TRD) not yet confirmed|Confirm which roles may view/edit limits and trends, then lock down|
+|R-006|~~Role access to Limieten (LIM) and Trendanalyse (TRD) not yet confirmed~~ **RESOLVED 2026-06-03**|Policy confirmed and enforced: TRD = Waterbeheerder only; LIM read = any authenticated role, LIM edit = Administrator only (see §3.0)|
 
 -----
 
