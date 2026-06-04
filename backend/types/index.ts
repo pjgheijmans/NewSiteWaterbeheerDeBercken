@@ -89,6 +89,13 @@ export interface BezoekersResultaat {
     bezoekers_totaal_ondiep: number | null;
 }
 
+/** Resultaat van de gebonden-chloor-endpoint: dagmaximum (chloor_totaal − chloor_vrij) per bad. */
+export interface GebondenChloorResultaat {
+    diep: number | null;
+    ondiep: number | null;
+    peuterbad: number | null;
+}
+
 // ── Gebruikers ────────────────────────────────────────────────────────────────
 
 export interface GebruikerRecord {

@@ -16,7 +16,7 @@ const actiesRepo: jest.Mocked<IActiesRepository> = {
     getActies: jest.fn(), resolve: jest.fn(), unresolve: jest.fn(),
     genereer: jest.fn(), genereerVerbruik: jest.fn(),
     genereerBezoekers: jest.fn(), genereerSpoelbeurt: jest.fn(),
-    genereerCoordinatoren: jest.fn(),
+    genereerCoordinatoren: jest.fn(), getGebondenChloorMax: jest.fn(),
 };
 
 const service = new CoordinatorenService(coordRepo, logboekRepo, actiesRepo);

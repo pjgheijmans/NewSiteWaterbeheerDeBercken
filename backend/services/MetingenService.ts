@@ -3,7 +3,7 @@ import { IActiesRepository } from '../repositories/IActiesRepository';
 import { IDaggegevensProvider } from '../repositories/IDaggegevensProvider';
 import { IMetingenService } from './IMetingenService';
 import { bepaalAuteur } from '../auteur';
-import { Meting, MetingInput, Actie, Gebruiker, BezoekersResultaat } from '../types';
+import { Meting, MetingInput, Actie, Gebruiker, BezoekersResultaat, GebondenChloorResultaat } from '../types';
 
 /**
  * Bedrijfslogica voor metingen en acties.
@@ -52,5 +52,12 @@ export class MetingenService implements IMetingenService {
             bezoekers_totaal_diep:   totalen.diep          ?? null,
             bezoekers_totaal_ondiep: totalen.ondiep        ?? null,
         };
+    }
+
+    async getGebondenChloor(datum: string): Promise<GebondenChloorResultaat> {
+        // Fire-and-forget: herleid de gebonden-chloor-acties op basis van de
+        // huidige coordinator-metingen (geen transactionele garantie vereist).
+        void this.actiesRepo.genereerCoordinatoren(datum);
+        return this.actiesRepo.getGebondenChloorMax(datum);
     }
 }

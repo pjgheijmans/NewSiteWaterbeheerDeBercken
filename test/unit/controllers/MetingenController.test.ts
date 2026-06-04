@@ -12,6 +12,7 @@ const mockService: jest.Mocked<IMetingenService> = {
     resolveActie:   jest.fn(),
     unresolveActie: jest.fn(),
     getBezoekers:   jest.fn(),
+    getGebondenChloor: jest.fn(),
 };
 
 function maakApp(taak: string | null = 'waterbeheerder') {
@@ -131,6 +132,21 @@ describe('GET /bezoekers', () => {
 
     it('geeft 403 bij verkeerde rol', async () => {
         const res = await request(maakApp('coordinator')).get(`/bezoekers?datum=${DATUM}`);
+        expect(res.status).toBe(403);
+    });
+});
+
+describe('GET /gebonden-chloor', () => {
+    it('geeft het gebonden-chloor-resultaat van de service terug', async () => {
+        mockService.getGebondenChloor.mockResolvedValue({ diep: 0.85, ondiep: 0.4, peuterbad: null });
+        const res = await request(maakApp()).get(`/gebonden-chloor?datum=${DATUM}`);
+        expect(res.status).toBe(200);
+        expect(res.body).toEqual({ diep: 0.85, ondiep: 0.4, peuterbad: null });
+        expect(mockService.getGebondenChloor).toHaveBeenCalledWith(DATUM);
+    });
+
+    it('geeft 403 bij verkeerde rol', async () => {
+        const res = await request(maakApp('coordinator')).get(`/gebonden-chloor?datum=${DATUM}`);
         expect(res.status).toBe(403);
     });
 });

@@ -1,5 +1,5 @@
 import { Pool, RowDataPacket } from 'mysql2/promise';
-import { Actie, MetingInput, VerbruikInput, BadTotalen, Drempelwaarden } from '../types';
+import { Actie, MetingInput, VerbruikInput, BadTotalen, Drempelwaarden, GebondenChloorResultaat } from '../types';
 import { IActiesRepository } from './IActiesRepository';
 
 export class ActiesRepository implements IActiesRepository {
@@ -244,5 +244,31 @@ export class ActiesRepository implements IActiesRepository {
                     Number(rij?.gebruikt) === 1);
             }
         }
+    }
+
+    /**
+     * Dagmaximum gebonden chloor (= MAX(chloor_totaal − chloor_vrij)) per bad,
+     * berekend over alle coordinator-meetblokken van die dag. Dit is dezelfde
+     * waarde waarop genereerCoordinatoren de filter_spoelen_gebonden-actie baseert,
+     * zodat de waterbeheer-weergave en de actiemarkering bij elkaar passen.
+     */
+    async getGebondenChloorMax(datum: string): Promise<GebondenChloorResultaat> {
+        const [rows] = await this.pool.execute<RowDataPacket[]>(
+            `SELECT b.naam AS bad_naam, MAX(m.chloor_totaal - m.chloor_vrij) AS gebonden_max
+             FROM baden b
+             LEFT JOIN metingen_coordinatoren m ON m.bad_id = b.id AND m.datum = ?
+             WHERE b.naam IN ('Diep', 'Ondiep', 'Peuterbad')
+             GROUP BY b.id, b.naam`,
+            [datum]
+        );
+        const resultaat: GebondenChloorResultaat = { diep: null, ondiep: null, peuterbad: null };
+        for (const r of rows as Array<{ bad_naam: string; gebonden_max: string | null }>) {
+            const v   = parseFloat(String(r.gebonden_max ?? NaN));
+            const val = isNaN(v) ? null : v;
+            if      (r.bad_naam === 'Diep')      resultaat.diep      = val;
+            else if (r.bad_naam === 'Ondiep')    resultaat.ondiep    = val;
+            else if (r.bad_naam === 'Peuterbad') resultaat.peuterbad = val;
+        }
+        return resultaat;
     }
 }

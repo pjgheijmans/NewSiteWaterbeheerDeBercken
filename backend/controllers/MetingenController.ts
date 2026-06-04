@@ -15,6 +15,7 @@ export class MetingenController {
         this.router.get('/acties',                checkAuth, this.getActies.bind(this));
         this.router.post('/acties/:id/resolve',   checkAuth, this.resolveActie.bind(this));
         this.router.get('/bezoekers',             checkAuth, this.getBezoekers.bind(this));
+        this.router.get('/gebonden-chloor',       checkAuth, this.getGebondenChloor.bind(this));
         this.router.post('/acties/:id/unresolve', checkAuth, this.unresolveActie.bind(this));
     }
 
@@ -61,6 +62,13 @@ export class MetingenController {
         if (!this.vereistWaterbeheerder(req, res)) return;
         try {
             res.json(await this.service.getBezoekers(req.query.datum as string));
+        } catch (err) { next(err); }
+    }
+
+    private async getGebondenChloor(req: Request, res: Response, next: NextFunction): Promise<void> {
+        if (!this.vereistWaterbeheerder(req, res)) return;
+        try {
+            res.json(await this.service.getGebondenChloor(req.query.datum as string));
         } catch (err) { next(err); }
     }
 

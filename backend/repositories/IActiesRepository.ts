@@ -1,4 +1,4 @@
-import { Actie, MetingInput, VerbruikInput, BadTotalen } from '../types';
+import { Actie, MetingInput, VerbruikInput, BadTotalen, GebondenChloorResultaat } from '../types';
 
 export interface IActiesRepository {
     getActies(datum: string): Promise<Actie[]>;
@@ -9,4 +9,6 @@ export interface IActiesRepository {
     genereerBezoekers(datum: string, bezoekers_vandaag: number | null): Promise<void>;
     genereerSpoelbeurt(datum: string): Promise<BadTotalen>;
     genereerCoordinatoren(datum: string): Promise<void>;
+    /** Dagmaximum gebonden chloor (chloor_totaal − chloor_vrij) per bad. */
+    getGebondenChloorMax(datum: string): Promise<GebondenChloorResultaat>;
 }

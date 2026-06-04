@@ -83,6 +83,7 @@ class MetingenModule {
             this._bouwTabelOp(this.app.state.gecachteData);
             if (huidigeRol === 'waterbeheer') {
                 await this.laadBezoekers();
+                await this.laadGebondenChloor();
                 this.laadActies(datum);
                 await this.app.verbruik.laadEnBerekenVerbruik();
             }
@@ -104,6 +105,27 @@ class MetingenModule {
         } catch (f) { console.error('Fout bij laden bezoekers:', f); }
     }
 
+    /**
+     * Laadt het berekende dagmaximum gebonden chloor per bad (afgeleid van de
+     * coordinator-metingen) en toont het read-only in de waterbeheer-tabs. De
+     * actiemarkering bij deze velden wordt door laadActies geplaatst.
+     */
+    async laadGebondenChloor() {
+        const datum = document.getElementById('centraleDatum').value;
+        if (!datum) return;
+        try {
+            const res  = await this.app.api.call(`/api/gebonden-chloor?datum=${datum}`);
+            const data = await res.json();
+            const fmt  = v => (v === null || v === undefined || isNaN(v)) ? '' : Number(v).toFixed(2);
+            const elDiep      = document.getElementById('gebonden-chloor-diep');
+            const elOndiep    = document.getElementById('gebonden-chloor-ondiep');
+            const elPeuterbad = document.getElementById('gebonden-chloor-peuterbad');
+            if (elDiep)      elDiep.value      = fmt(data.diep);
+            if (elOndiep)    elOndiep.value    = fmt(data.ondiep);
+            if (elPeuterbad) elPeuterbad.value = fmt(data.peuterbad);
+        } catch (f) { console.error('Fout bij laden gebonden chloor:', f); }
+    }
+
     // ── Acties ────────────────────────────────────────────────────────────
 
     static get SUBTAB_LABELS() {
@@ -119,11 +141,11 @@ class MetingenModule {
 
     static get SUBTAB_ACTIE_MAP() {
         return {
-            'meetwaarden':           ['filter_spoelen_druk|Diep','filter_spoelen_druk|Ondiep','filter_spoelen_flow|Diep','filter_spoelen_flow|Ondiep'],
+            'meetwaarden':           ['filter_spoelen_druk|Diep','filter_spoelen_druk|Ondiep','filter_spoelen_flow|Diep','filter_spoelen_flow|Ondiep','filter_spoelen_gebonden|Diep','filter_spoelen_gebonden|Ondiep'],
             'verbruik':              ['chloor_bestellen|Diep','zwavelzuur_bestellen|Diep','floculant_bijvullen|Diep'],
             'verwarmingssysteem':    [],
             'bezoekers':             ['filter_spoelen_bezoekers|Diep','filter_spoelen_bezoekers|Ondiep','filter_spoelen_spoelbeurt|Diep','filter_spoelen_spoelbeurt|Ondiep'],
-            'peuterbad-meetwaarden': ['filter_spoelen_druk|Peuterbad','filter_spoelen_flow|Peuterbad'],
+            'peuterbad-meetwaarden': ['filter_spoelen_druk|Peuterbad','filter_spoelen_flow|Peuterbad','filter_spoelen_gebonden|Peuterbad'],
             'peuterbad-verbruik':    ['chloor_peuterbad_bijvullen|Peuterbad','zwavelzuur_peuterbad_bijvullen|Peuterbad'],
         };
     }
@@ -136,6 +158,9 @@ class MetingenModule {
             'filter_spoelen_flow|Diep':          ['flow-diep'],
             'filter_spoelen_flow|Ondiep':        ['flow-ondiep'],
             'filter_spoelen_flow|Peuterbad':     ['peuterbad-flow'],
+            'filter_spoelen_gebonden|Diep':      ['gebonden-chloor-diep'],
+            'filter_spoelen_gebonden|Ondiep':    ['gebonden-chloor-ondiep'],
+            'filter_spoelen_gebonden|Peuterbad': ['gebonden-chloor-peuterbad'],
             'filter_spoelen_bezoekers|Diep':     ['bezoekers-vandaag-display'],
             'filter_spoelen_bezoekers|Ondiep':   ['bezoekers-vandaag-display'],
             'filter_spoelen_spoelbeurt|Diep':    ['bezoekers-spoelbeurt-diep-display'],
