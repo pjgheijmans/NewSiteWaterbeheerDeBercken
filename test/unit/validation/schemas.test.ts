@@ -1,6 +1,6 @@
 import {
     metingSchema, verbruikSchema, coordinatorMetingSchema, logboekSchema,
-    gebruikerSchema, limietSchema, loginSchema,
+    gebruikerSchema, gebruikerUpdateSchema, limietSchema, loginSchema,
 } from '../../../backend/validation/schemas';
 
 const DATUM = '2026-05-31';
@@ -62,6 +62,18 @@ describe('gebruikerSchema', () => {
     it('weigert een leeg inlognaam of wachtwoord', () => {
         expect(gebruikerSchema.safeParse({ ...geldig, inlognaam: '' }).success).toBe(false);
         expect(gebruikerSchema.safeParse({ ...geldig, wachtwoord: '' }).success).toBe(false);
+    });
+});
+
+describe('gebruikerUpdateSchema', () => {
+    const basis = { voornaam: 'Jan', achternaam: 'J', inlognaam: 'jj', taak: 'coordinator' };
+
+    it('staat een ontbrekend wachtwoord toe (ongewijzigd laten)', () => {
+        expect(gebruikerUpdateSchema.safeParse(basis).success).toBe(true);
+    });
+
+    it('accepteert ook een meegegeven wachtwoord', () => {
+        expect(gebruikerUpdateSchema.safeParse({ ...basis, wachtwoord: 'nieuw' }).success).toBe(true);
     });
 });
 

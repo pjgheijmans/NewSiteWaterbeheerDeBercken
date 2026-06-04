@@ -17,6 +17,7 @@ beforeEach(() => {
     gebruikersRepo = {
         findByLogin: jest.fn(), getAll: jest.fn(), create: jest.fn(),
         update: jest.fn(), remove: jest.fn(), seedDefaults: jest.fn(),
+        hashBestaandeWachtwoorden: jest.fn(),
     };
     repo = new DatabaseRepository(pool as unknown as Pool, limietenRepo, gebruikersRepo);
 });

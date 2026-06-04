@@ -108,7 +108,8 @@ spoelbeurt, etc.).
 |DD-014|Each backwash reason is its own action row; the frontend groups them per bath|§3, §4|
 |DD-015|Frontend classes carry `module.exports` guards; tested with Jest + jsdom|§9.3|
 |DD-016|Combined chlorine and consumption deltas are derived, not stored|§5.4|
-|DD-017|Known security gaps (plaintext passwords, default session secret) accepted for the isolated build, tracked for remediation|§10|
+|DD-017|Default session secret accepted for the isolated build, tracked for remediation (R-003)|§10|
+|DD-018|Password hashing with Node's built-in scrypt (no external dependency); legacy plaintext upgraded on login + startup migration|§5.2, §7.2|
 
 ### 2.3 Architecture Overview
 
@@ -176,7 +177,8 @@ graph LR
 |DD-014|Per-reason action rows, grouped client-side|Backend stays simple (one row per `actie_type`); UI shows one card per bath|Merge reasons server-side|Grouping logic lives in the client|
 |DD-015|`module.exports` guards + jsdom tests|Frontend classes become unit-testable without a bundler|No frontend tests; Cypress only|A guard line per file; script-mode `export {}` in tests|
 |DD-016|Combined chlorine & deltas derived|Single source of truth; no stored duplication to keep consistent|Persist computed columns|Recomputed on read|
-|DD-017|Accept plaintext passwords & default session secret in the current build|Internal/isolated deployment; speed of iteration|Hash now; mandatory secret|Security debt — see §10 R-002/R-003|
+|DD-017|Accept the default session secret in the current build|Internal/isolated deployment; speed of iteration|Mandatory secret/fail-fast|Security debt — see §10 R-003|
+|DD-018|Hash passwords with Node's built-in `crypto.scrypt` (format `scrypt$N$salt$hash`); verify supports legacy plaintext; upgrade on login + a startup migration|Zero new dependency (works on Alpine; avoids the container `node_modules` gotcha); secure KDF; smooth migration of existing rows|bcrypt/argon2 (native build on Alpine); accept plaintext (rejected)|Hand-rolled format string; scrypt cost fixed at N=16384|
 
 ### 3.2 Decision Narratives (selected)
 
@@ -425,8 +427,13 @@ best-effort (EPS §5.4). No dedicated breakpoints are formally specified.
   gate handlers (403).
 - **Logout:** `POST /api/logout` destroys the session. **Status:** `GET
   /api/ingelogd` reports the current user for client bootstrap.
-- **Known gaps:** passwords are stored and compared in plain text; the session
-  secret has a hardcoded default (see §10 / EPS AUTH-005, R-002, R-003).
+- **Password storage:** passwords are hashed with `crypto.scrypt` via
+  `backend/wachtwoord.ts` (`hashWachtwoord`/`verifieerWachtwoord`/`isGehasht`).
+  `findByLogin` fetches by login name and verifies in code (so per-row salts work);
+  `getAll` never returns the hash; create/update/seed hash on write; legacy plaintext
+  is upgraded on login and by a startup migration (`hashBestaandeWachtwoorden`).
+  (R-002 resolved.) **Open gap:** the session secret still has a hardcoded default
+  (§10 / EPS R-003).
 
 ### 5.3 Internal Interfaces
 
@@ -727,7 +734,7 @@ Current counts (indicative): ~305 unit (incl. ~41 frontend) + 17 integration.
 
 |ID|Risk|Likelihood|Impact|Mitigation|Residual|
 |--|----|----------|------|----------|--------|
-|R-002|Passwords stored in plain text (AUTH-005 unmet)|High (present)|High|Hash with bcrypt/argon2; migrate seed accounts; never log credentials|None once done|
+|R-002|~~Passwords stored in plain text~~ **RESOLVED 2026-06-04**|—|—|Done: scrypt hashing (`wachtwoord.ts`); verify+upgrade legacy on login; startup migration; hash never sent to client|Closed|
 |R-003|Hardcoded default session secret|High (present)|High|Require `SESSION_SECRET` in production; fail fast if unset|Low|
 |R-001|No defined DB backup schedule|Medium|High|Automate `mysqldump`/volume snapshots; document restore|Low|
 |R-004|No browser E2E coverage|Medium|Medium|Add a Playwright smoke test for W1–W3; wire into CI|Low|
@@ -743,7 +750,7 @@ Current counts (indicative): ~305 unit (incl. ~41 frontend) + 17 integration.
 |EPS block / requirement|Design section(s)|Notes|
 |-----------------------|-----------------|-----|
 |AUTH-001..004 (login/session/roles/logout)|§5.2, §7.4|express-session + checkAuth/role helpers|
-|AUTH-005 (credential security)|§5.2, §10 R-002|Not met — remediation tracked|
+|AUTH-005 (credential security)|§5.2 (DD-018)|Met — scrypt hashing; unit + integration tested|
 |GEN-001/002 (date scoping, season bounds)|§4.4, §6.2 (NavModule)|Client date state + season limits|
 |GEN-003 (autosave + status)|§4.5, §6.2 (OpslaanModule), flows §3|1.2 s debounce (DD-010)|
 |GEN-004 (validation, comma)|§4.2, §6.2 (UIManager/ApiClient), §7.4|Zod + client validation|

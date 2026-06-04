@@ -11,10 +11,11 @@ import { maakApp } from './app';
 const PORT = parseInt(process.env.PORT || '3000', 10);
 
 // DatabaseRepository voor runInitSql() bij het opstarten.
+const gebruikersRepo = new GebruikersRepository(pool);
 const databaseRepo = new DatabaseRepository(
     pool,
     new LimietenRepository(pool),
-    new GebruikersRepository(pool),
+    gebruikersRepo,
 );
 
 async function waitForDb(maxAttempts = 15, intervalMs = 2000): Promise<void> {
@@ -33,6 +34,8 @@ async function waitForDb(maxAttempts = 15, intervalMs = 2000): Promise<void> {
 (async () => {
     await waitForDb();
     await databaseRepo.runInitSql();
+    // R-002: hash eventuele legacy plaintext-wachtwoorden (incl. de seed-accounts).
+    await gebruikersRepo.hashBestaandeWachtwoorden();
     const app = maakApp(pool);
     app.listen(PORT, () => console.log(`Server gestart op http://localhost:${PORT}`));
 })().catch((err: Error) => { console.error('Startfout:', err); process.exit(1); });
