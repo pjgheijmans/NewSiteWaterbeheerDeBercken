@@ -168,6 +168,50 @@ class MetingenModule {
         return [...map.values()];
     }
 
+    /**
+     * Zet (of verwijdert) een actiemarkering op een tab-knop. De knop houdt zijn
+     * normale label, zodat de actieve/inactieve styling intact blijft.
+     *
+     * - Pad-tabs (standaard): dezelfde ⚠-marker als bij de parameters — een
+     *   broodkruimel die het pad wijst, zonder aantal.
+     * - De Acties-tab (`toonAantal`): de "bestemming" toont een telpill met het
+     *   aantal openstaande actiegroepen, of een groene ✓ als alles is afgehandeld.
+     *
+     * @param {HTMLElement|null} btn
+     * @param {string} label - basislabel zonder telling
+     * @param {number} nOpen - aantal openstaande actiegroepen
+     * @param {number} nTotaal - totaal aantal actiegroepen (open + afgehandeld)
+     * @param {{markerKlasse?:string, toonAantal?:boolean}} [opties]
+     */
+    _zetActieBadge(btn, label, nOpen, nTotaal, opties = {}) {
+        const { markerKlasse = 'heeft-acties', toonAantal = false } = opties;
+        if (!btn) return;
+        btn.textContent = label;                       // wist tevens een oude marker
+        btn.classList.toggle(markerKlasse, nOpen > 0);
+
+        if (toonAantal) {
+            // Acties-tab: telpill met aantal (of ✓ als alles is afgehandeld).
+            if (nOpen === 0 && nTotaal === 0) return;
+            const badge = document.createElement('span');
+            badge.className   = nOpen > 0 ? 'actie-badge' : 'actie-badge actie-badge-opgelost';
+            badge.textContent = nOpen > 0 ? String(nOpen) : '✓';
+            badge.title       = nOpen > 0 ? `${nOpen} openstaande actie(s)` : 'Alle acties afgehandeld';
+            btn.appendChild(badge);
+            return;
+        }
+
+        // Pad-tabs: alleen een ⚠-marker bij openstaande acties, met dezelfde
+        // styling als de markering naast de parameters. Eigen class (geen
+        // 'actie-indicator') zodat de veldindicator-opschoning hieronder deze
+        // tab-markers niet meeneemt.
+        if (nOpen === 0) return;
+        const marker = document.createElement('span');
+        marker.className   = 'tab-actie-indicator';
+        marker.textContent = '⚠';
+        marker.title       = `${nOpen} openstaande actie(s) achter deze tab`;
+        btn.appendChild(marker);
+    }
+
     _updateSubtabBadges(actieGroepen) {
         const labels = MetingenModule.SUBTAB_LABELS;
         const kaart  = MetingenModule.SUBTAB_ACTIE_MAP;
@@ -175,17 +219,14 @@ class MetingenModule {
             const btn   = document.getElementById(`subtab-${subtab}`);
             if (!btn) return;
             const label = labels[subtab] || subtab;
-            if (!sleutels.length) { btn.textContent = label; btn.classList.remove('subtab-heeft-acties'); return; }
+            if (!sleutels.length) { this._zetActieBadge(btn, label, 0, 0, { markerKlasse: 'subtab-heeft-acties' }); return; }
             let nOpen = 0, nTotaal = 0;
             actieGroepen.forEach(groep => {
                 if (!groep.items.some(a => sleutels.includes(`${a.actie_type}|${a.bad_naam}`))) return;
                 nTotaal++;
                 if (!groep.items.every(a => a.opgelost)) nOpen++;
             });
-            btn.classList.toggle('subtab-heeft-acties', nOpen > 0);
-            if (nOpen > 0)        btn.textContent = `${label} ⚠ (${nOpen})`;
-            else if (nTotaal > 0) btn.textContent = `${label} ✓`;
-            else                  btn.textContent = label;
+            this._zetActieBadge(btn, label, nOpen, nTotaal, { markerKlasse: 'subtab-heeft-acties' });
         });
     }
 
@@ -199,21 +240,26 @@ class MetingenModule {
             const openGroepen     = actieGroepen.filter(g => !g.items.every(a => a.opgelost));
             const geslotenGroepen = actieGroepen.filter(g =>  g.items.every(a => a.opgelost));
 
-            // Tab badge
-            const tabBtn = document.getElementById('tab-acties');
-            if (tabBtn) {
-                tabBtn.textContent = actieGroepen.length === 0 ? 'Acties'
-                    : openGroepen.length > 0 ? `Acties (${openGroepen.length} ⚠ / ${actieGroepen.length})`
-                    : `Acties (${actieGroepen.length} ✓)`;
-                tabBtn.classList.toggle('acties-actief', openGroepen.length > 0);
-            }
+            // Acties-tab: de "luide" bestemming — behoudt de rode vulling en
+            // krijgt een telpill met het aantal openstaande actiegroepen.
+            this._zetActieBadge(
+                document.getElementById('tab-acties'),
+                'Acties', openGroepen.length, actieGroepen.length,
+                { markerKlasse: 'acties-actief', toonAantal: true },
+            );
 
-            // Nav badge
-            const navBtn = document.getElementById('btn-rol-waterbeheer');
-            if (navBtn) {
-                navBtn.textContent = openGroepen.length > 0 ? `Waterbeheer ⚠ (${openGroepen.length})` : 'Waterbeheer';
-                navBtn.classList.toggle('heeft-acties', openGroepen.length > 0);
-            }
+            // Wayfinding-broodkruimels: dezelfde ⚠-marker als bij de parameters
+            // op het pad ernaartoe (Waterbeheer → bad-pagina → subtab).
+            this._zetActieBadge(
+                document.getElementById('btn-rol-waterbeheer'),
+                'Waterbeheer', openGroepen.length, 0,
+            );
+
+            // Bad-paginatabs (zelfde niveau als Acties): ⚠ als er open acties zijn.
+            let openGroteBaden = 0, openPeuterbad = 0;
+            openGroepen.forEach(g => g.bad_naam === 'Peuterbad' ? openPeuterbad++ : openGroteBaden++);
+            this._zetActieBadge(document.getElementById('tab-grote-baden'), 'Diep / Ondiep', openGroteBaden, 0);
+            this._zetActieBadge(document.getElementById('tab-peuterbad'),   'Peuterbad',     openPeuterbad,  0);
 
             this._updateSubtabBadges(actieGroepen);
 
