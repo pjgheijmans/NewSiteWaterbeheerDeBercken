@@ -1,4 +1,4 @@
-import { Meting, MetingInput, Actie, Gebruiker, BezoekersResultaat } from '../types';
+import { Meting, MetingInput, Actie, Gebruiker, BezoekersResultaat, GebondenChloorResultaat } from '../types';
 
 export interface IMetingenService {
     getMetingen(datum: string): Promise<Meting[]>;
@@ -7,4 +7,5 @@ export interface IMetingenService {
     resolveActie(id: string, gebruiker: Gebruiker): Promise<void>;
     unresolveActie(id: string): Promise<void>;
     getBezoekers(datum: string): Promise<BezoekersResultaat>;
+    getGebondenChloor(datum: string): Promise<GebondenChloorResultaat>;
 }

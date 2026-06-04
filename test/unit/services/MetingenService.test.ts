@@ -12,7 +12,7 @@ const actiesRepo: jest.Mocked<IActiesRepository> = {
     getActies: jest.fn(), resolve: jest.fn(), unresolve: jest.fn(),
     genereer: jest.fn(), genereerVerbruik: jest.fn(),
     genereerBezoekers: jest.fn(), genereerSpoelbeurt: jest.fn(),
-    genereerCoordinatoren: jest.fn(),
+    genereerCoordinatoren: jest.fn(), getGebondenChloorMax: jest.fn(),
 };
 const daggegevensProvider: jest.Mocked<IDaggegevensProvider> = { getDaggegevens: jest.fn() };
 
@@ -79,6 +79,16 @@ describe('getBezoekers', () => {
         const result = await service.getBezoekers(DATUM);
         expect(result.bezoekers_vandaag).toBeNull();
         expect(actiesRepo.genereerBezoekers).toHaveBeenCalledWith(DATUM, null);
+    });
+});
+
+describe('getGebondenChloor', () => {
+    it('herleidt de coordinator-acties en geeft het dagmaximum per bad terug', async () => {
+        actiesRepo.getGebondenChloorMax.mockResolvedValue({ diep: 0.85, ondiep: 0.4, peuterbad: null });
+        const result = await service.getGebondenChloor(DATUM);
+        expect(result).toEqual({ diep: 0.85, ondiep: 0.4, peuterbad: null });
+        expect(actiesRepo.genereerCoordinatoren).toHaveBeenCalledWith(DATUM);
+        expect(actiesRepo.getGebondenChloorMax).toHaveBeenCalledWith(DATUM);
     });
 });
 

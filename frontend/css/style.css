@@ -362,6 +362,34 @@ input[type="text"].buiten-limiet {
     width: 80px;
 }
 
+/* Verbruik-tabellen: identieke kolombreedtes over de losse groep-tabellen
+   heen (vast eerste-kolombreedte + table-layout:fixed), zodat de Stand- en
+   Verbruik-velden uitlijnen ondanks verschillend lange labels. De groepen
+   blijven gescheiden in hun eigen categorie-box. */
+#subtab-verbruik-content .verbruik-tabel,
+#peuterbad-verbruik-content .verbruik-tabel {
+    table-layout: fixed;
+    width: 100%;
+    max-width: 420px;
+}
+#subtab-verbruik-content .verbruik-tabel th:first-child,
+#subtab-verbruik-content .verbruik-tabel td:first-child,
+#peuterbad-verbruik-content .verbruik-tabel th:first-child,
+#peuterbad-verbruik-content .verbruik-tabel td:first-child {
+    width: 160px;
+}
+
+/* Houd het invoerveld en de ⚠-actiemarkering altijd op één regel — anders
+   valt de marker onder het veld in smalle/vaste kolommen (zoals Verbruik).
+   Alleen de waarde-cellen; de label-cel (first-child) mag blijven afbreken. */
+#subtab-meetwaarden-content .categorie-tabel td:not(:first-child),
+#peuterbad-meetwaarden-content .categorie-tabel td:not(:first-child),
+#subtab-bezoekers-content .categorie-tabel td:not(:first-child),
+#subtab-verbruik-content .verbruik-tabel td:not(:first-child),
+#peuterbad-verbruik-content .verbruik-tabel td:not(:first-child) {
+    white-space: nowrap;
+}
+
 .status-melding {
     text-align: center;
     font-weight: bold;
@@ -542,13 +570,26 @@ input[type="text"].buiten-limiet {
         height: 20px;
     }
 
-    /* Override narrow fixed widths for desktop on mobile */
+    /* Houd invoervelden zo breed als het getal vereist (niet de hele cel),
+       zodat ze compact blijven én de ⚠-actiemarkering ernaast past i.p.v.
+       eronder te vallen. */
     #subtab-meetwaarden-content .categorie-tabel td input,
     #peuterbad-meetwaarden-content .categorie-tabel td input,
     #subtab-verbruik-content .categorie-tabel td input,
     #peuterbad-verbruik-content .categorie-tabel td input,
     #subtab-bezoekers-content .categorie-tabel td input {
-        width: 100%;
+        width: 84px;
+        max-width: 100%;
+    }
+
+    /* Smallere parameter-kolom op mobiel: lange labels mogen over twee regels
+       afbreken, zodat de getalvelden meer ruimte krijgen. Uitlijning blijft
+       behouden dankzij table-layout:fixed. */
+    #subtab-verbruik-content .verbruik-tabel th:first-child,
+    #subtab-verbruik-content .verbruik-tabel td:first-child,
+    #peuterbad-verbruik-content .verbruik-tabel th:first-child,
+    #peuterbad-verbruik-content .verbruik-tabel td:first-child {
+        width: 120px;
     }
 
     /* Compact waterbeheer tables on mobile */
