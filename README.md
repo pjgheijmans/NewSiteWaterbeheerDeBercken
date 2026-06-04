@@ -92,11 +92,16 @@ app.use(session({
 
 **Rollen:**
 
-| Rol              | Toegang                                                       |
-|------------------|---------------------------------------------------------------|
-| `waterbeheerder` | Dagstaat (meetwaarden, verbruik, bezoekers, logboek, acties)  |
-| `coordinator`    | Coördinator metingen, checklijst, daggegevens, logboek        |
-| `Administrator`  | Gebruikersbeheer, limieten, database beheer, trendanalyse     |
+| Rol              | Toegang                                                                                     |
+|------------------|---------------------------------------------------------------------------------------------|
+| `waterbeheerder` | Dagstaat (meetwaarden, verbruik, bezoekers, logboek, acties), coördinator-metingen, trendanalyse, gebruikersbeheer, database beheer |
+| `coordinator`    | Coördinator-metingen, checklijst, daggegevens, logboek                                      |
+| `Administrator`  | Limieten, gebruikersbeheer, database beheer                                                 |
+
+> **Limieten & trendanalyse (zie R-006):** trendanalyse is voorbehouden aan
+> `waterbeheerder`. Limietwaarden worden voor veldvalidatie en seizoengrenzen door
+> elke ingelogde rol *gelezen*, maar het beheerscherm en het *bewerken* van limieten
+> is voorbehouden aan `Administrator`.
 
 `checkAuth` (middleware) dwingt een geldige sessie af (401); de rolcontrole zit in
 de controllers (403). Muterende endpoints valideren de body met Zod (400).
