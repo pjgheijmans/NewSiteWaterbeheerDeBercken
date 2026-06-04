@@ -58,7 +58,8 @@ npm start        # node dist/backend/server.js
 ## Non-obvious gotchas
 
 - **CSV export**: semicolon-delimited (`;`) for EU Excel compatibility.
-- **Session secret**: hardcoded default `zwembad_geheim_98765`; override with `SESSION_SECRET` env var in production.
+- **Session secret**: `bepaalSessionSecret()` (`backend/config.ts`) requires `SESSION_SECRET`; under `NODE_ENV=production` it throws if unset (fail fast), otherwise dev/test use a labelled fallback. `docker-compose.yml` sets a dev value.
+- **Passwords**: hashed with `crypto.scrypt` via `backend/wachtwoord.ts`; `findByLogin` verifies in code and upgrades legacy plaintext on login; a startup migration (`hashBestaandeWachtwoorden`) hashes any remaining plaintext.
 - **Action generation**: fire-and-forget after a measurement save — no transactional guarantee between the save and the generated action.
 - **Coordinator visitor count**: cumulative since the last resolved `filter_spoelen_spoelbeurt` action.
 - **init.sql warnings**: a few SQL statements in `init.sql` produce syntax warnings on startup — these are pre-existing and non-fatal.

@@ -76,12 +76,14 @@ Standaard limieten en testgebruikers worden ingesteld via `INSERT IGNORE` in `in
 
 ## Authenticatie & sessies
 
-De applicatie gebruikt **express-session** voor sessiebeheer. De secret komt uit
-`SESSION_SECRET` met een fallback-default:
+De applicatie gebruikt **express-session** voor sessiebeheer. De secret wordt
+bepaald door `bepaalSessionSecret()` (`backend/config.ts`): in productie
+(`NODE_ENV=production`) is `SESSION_SECRET` **verplicht** en weigert de app te
+starten als die ontbreekt; in dev/test geldt een gemarkeerde fallback.
 
 ```typescript
 app.use(session({
-    secret: process.env.SESSION_SECRET || 'zwembad_geheim_98765',
+    secret: bepaalSessionSecret(),          // verplicht in productie (fail fast)
     resave: false,
     saveUninitialized: false,
     cookie: { maxAge: 2 * 60 * 60 * 1000 }  // 2 uur
