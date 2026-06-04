@@ -18,6 +18,7 @@ import { maakDatabaseRouter }      from './routes/database';
 import { maakLogboekRouter }       from './routes/logboek';
 import { maakFrontendRouter }      from './routes/frontend';
 import { errorHandler }           from './middleware/errorHandler';
+import { bepaalSessionSecret }    from './config';
 
 /**
  * Stelt de volledige Express-applicatie samen rond een gegeven connection pool.
@@ -29,7 +30,7 @@ export function maakApp(pool: Pool): Express {
 
     app.use(express.json());
     app.use(session({
-        secret: process.env.SESSION_SECRET || 'zwembad_geheim_98765',
+        secret: bepaalSessionSecret(),
         resave: false,
         saveUninitialized: false,
         cookie: { maxAge: 2 * 60 * 60 * 1000 },

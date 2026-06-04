@@ -108,7 +108,7 @@ spoelbeurt, etc.).
 |DD-014|Each backwash reason is its own action row; the frontend groups them per bath|§3, §4|
 |DD-015|Frontend classes carry `module.exports` guards; tested with Jest + jsdom|§9.3|
 |DD-016|Combined chlorine and consumption deltas are derived, not stored|§5.4|
-|DD-017|Default session secret accepted for the isolated build, tracked for remediation (R-003)|§10|
+|DD-017|Session secret required in production (`SESSION_SECRET`); fail fast if unset, dev/test fallback only|§5.2, §8.2|
 |DD-018|Password hashing with Node's built-in scrypt (no external dependency); legacy plaintext upgraded on login + startup migration|§5.2, §7.2|
 
 ### 2.3 Architecture Overview
@@ -177,7 +177,7 @@ graph LR
 |DD-014|Per-reason action rows, grouped client-side|Backend stays simple (one row per `actie_type`); UI shows one card per bath|Merge reasons server-side|Grouping logic lives in the client|
 |DD-015|`module.exports` guards + jsdom tests|Frontend classes become unit-testable without a bundler|No frontend tests; Cypress only|A guard line per file; script-mode `export {}` in tests|
 |DD-016|Combined chlorine & deltas derived|Single source of truth; no stored duplication to keep consistent|Persist computed columns|Recomputed on read|
-|DD-017|Accept the default session secret in the current build|Internal/isolated deployment; speed of iteration|Mandatory secret/fail-fast|Security debt — see §10 R-003|
+|DD-017|Require `SESSION_SECRET` in production via `bepaalSessionSecret()` (fail fast under `NODE_ENV=production`); dev/test use a labelled fallback|No insecure default reaches production; dev/tests keep working without config|Always require (breaks dev); keep insecure default (rejected)|Relies on `NODE_ENV=production` being set in the deployment|
 |DD-018|Hash passwords with Node's built-in `crypto.scrypt` (format `scrypt$N$salt$hash`); verify supports legacy plaintext; upgrade on login + a startup migration|Zero new dependency (works on Alpine; avoids the container `node_modules` gotcha); secure KDF; smooth migration of existing rows|bcrypt/argon2 (native build on Alpine); accept plaintext (rejected)|Hand-rolled format string; scrypt cost fixed at N=16384|
 
 ### 3.2 Decision Narratives (selected)
@@ -416,9 +416,11 @@ best-effort (EPS §5.4). No dedicated breakpoints are formally specified.
 
 ### 5.2 Authentication & Session Model
 
-- **Mechanism:** `express-session` with `secret = process.env.SESSION_SECRET ||
-  'zwembad_geheim_98765'`, `resave: false`, `saveUninitialized: false`, cookie
-  `maxAge = 2 h`.
+- **Mechanism:** `express-session` with `secret = bepaalSessionSecret()`
+  (`backend/config.ts`), `resave: false`, `saveUninitialized: false`, cookie
+  `maxAge = 2 h`. `bepaalSessionSecret` returns `SESSION_SECRET` if set; under
+  `NODE_ENV=production` it **throws if unset** (fail fast, no insecure default);
+  in dev/test it falls back to a labelled value. (R-003 resolved.)
 - **Login:** `POST /api/login` validates `{username, password}` (Zod), looks up the
   user, and stores `req.session.gebruiker` (typed via a `declare module
   'express-session'` augmentation in `backend/types/index.ts`).
@@ -432,8 +434,8 @@ best-effort (EPS §5.4). No dedicated breakpoints are formally specified.
   `findByLogin` fetches by login name and verifies in code (so per-row salts work);
   `getAll` never returns the hash; create/update/seed hash on write; legacy plaintext
   is upgraded on login and by a startup migration (`hashBestaandeWachtwoorden`).
-  (R-002 resolved.) **Open gap:** the session secret still has a hardcoded default
-  (§10 / EPS R-003).
+  (R-002 resolved.) The session secret is now required in production (R-003 resolved;
+  see §5.2 / `bepaalSessionSecret`).
 
 ### 5.3 Internal Interfaces
 
@@ -679,7 +681,8 @@ throws `AppError(…, 400)` on invalid input.
 |`DB_PASSWORD`|MySQL password|`geheim_wachtwoord` (dev)|
 |`DB_NAME`|Database name|`zwembad_status`|
 |`PORT`|App port|`3000`|
-|`SESSION_SECRET`|Session signing secret|**override in production** (default is insecure — R-003)|
+|`SESSION_SECRET`|Session signing secret|**Required in production** (`NODE_ENV=production` → app fails fast if unset); dev/test fallback only|
+|`NODE_ENV`|Runtime mode|Set to `production` in production (enforces SESSION_SECRET)|
 
 ### 8.3 CI/CD Pipeline
 
@@ -735,7 +738,7 @@ Current counts (indicative): ~305 unit (incl. ~41 frontend) + 17 integration.
 |ID|Risk|Likelihood|Impact|Mitigation|Residual|
 |--|----|----------|------|----------|--------|
 |R-002|~~Passwords stored in plain text~~ **RESOLVED 2026-06-04**|—|—|Done: scrypt hashing (`wachtwoord.ts`); verify+upgrade legacy on login; startup migration; hash never sent to client|Closed|
-|R-003|Hardcoded default session secret|High (present)|High|Require `SESSION_SECRET` in production; fail fast if unset|Low|
+|R-003|~~Hardcoded default session secret~~ **RESOLVED 2026-06-04**|—|—|Done: `bepaalSessionSecret()` requires `SESSION_SECRET` under `NODE_ENV=production` (fail fast); dev/test fallback; compose sets a dev value|Closed|
 |R-001|No defined DB backup schedule|Medium|High|Automate `mysqldump`/volume snapshots; document restore|Low|
 |R-004|No browser E2E coverage|Medium|Medium|Add a Playwright smoke test for W1–W3; wire into CI|Low|
 |R-009|Action generation is non-transactional (DD-009)|Low|Low|Recomputed on next save/delete; acceptable for derived state|Accepted|

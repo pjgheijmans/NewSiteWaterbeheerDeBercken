@@ -33,6 +33,9 @@ services:
       - DB_PASSWORD=geheim_wachtwoord
       - DB_NAME=zwembad_status
       - PORT=3000
+      # Lokale dev-secret. In productie MOET deze via een eigen geheim worden gezet
+      # (en NODE_ENV=production), anders weigert de app te starten.
+      - SESSION_SECRET=lokaal-dev-secret-wijzig-in-productie
     volumes:
       - .:/app
       - /app/node_modules

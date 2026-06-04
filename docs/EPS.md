@@ -499,8 +499,9 @@ table, clear a table, or reset the database (double confirmation). *(ADM-002..00
   - Passwords are hashed with scrypt (AUTH-005 met; R-002 resolved 2026-06-04).
     Legacy plaintext values are upgraded to a hash on the next login and by a
     one-time startup migration.
-  - **Open:** the session secret still has a hardcoded default that must be
-    overridden in production via `SESSION_SECRET` (see R-003).
+  - The session secret is **required in production**: with `NODE_ENV=production`
+    the app fails fast at startup if `SESSION_SECRET` is unset (no insecure default).
+    Dev/test fall back to a clearly-marked value. (R-003 resolved 2026-06-04.)
 
 ### 7.3 Design Constraints
 
@@ -549,8 +550,8 @@ Methods: Test (T) · Analysis (A) · Inspection (I) · Demonstration (D).
 - [ ] UI performance targets met on the target LAN environment.
 - [ ] All screens render and function on target desktop/tablet viewports.
 - [x] Passwords hashed (AUTH-005 / R-002 resolved).
-- [ ] No critical or high OWASP vulnerabilities; the session-secret default (R-003)
-      resolved before any non-isolated deployment.
+- [x] Session secret required in production (R-003 resolved).
+- [ ] No critical or high OWASP vulnerabilities remaining (ongoing review).
 - [ ] A defined database backup procedure is in place (R-001).
 
 -----
@@ -561,7 +562,7 @@ Methods: Test (T) · Analysis (A) · Inspection (I) · Demonstration (D).
 |--|----|--------------|
 |R-001|No defined DB backup schedule (relies on Docker volume + manual CSV)|Define and automate periodic backups|
 |R-002|~~Passwords stored in plain text (AUTH-005)~~ **RESOLVED 2026-06-04**|Done: scrypt hashing on create/update/seed; legacy plaintext upgraded on login + startup migration|
-|R-003|Hardcoded default session secret|Require `SESSION_SECRET` in production deployment|
+|R-003|~~Hardcoded default session secret~~ **RESOLVED 2026-06-04**|Done: `SESSION_SECRET` required under `NODE_ENV=production` (fail fast); dev/test fallback only|
 |R-004|Browser E2E coverage absent|Add an automated end-to-end smoke test for W1–W3|
 |R-005|Accessibility (WCAG AA) unverified|Audit and remediate if public-sector accessibility rules apply|
 |R-006|~~Role access to Limieten (LIM) and Trendanalyse (TRD) not yet confirmed~~ **RESOLVED 2026-06-03**|Policy confirmed and enforced: TRD = Waterbeheerder only; LIM read = any authenticated role, LIM edit = Administrator only (see §3.0)|
