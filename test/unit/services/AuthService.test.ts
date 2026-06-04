@@ -5,6 +5,7 @@ import { maakTestGebruiker } from '../../helpers/testApp';
 const repo: jest.Mocked<IGebruikersRepository> = {
     findByLogin: jest.fn(), getAll: jest.fn(), create: jest.fn(),
     update: jest.fn(), remove: jest.fn(), seedDefaults: jest.fn(),
+    hashBestaandeWachtwoorden: jest.fn(),
 };
 const service = new AuthService(repo);
 beforeEach(() => jest.clearAllMocks());

@@ -7,4 +7,5 @@ export interface IGebruikersRepository {
     update(id: string, data: GebruikerInput): Promise<void>;
     remove(id: string): Promise<void>;
     seedDefaults(): Promise<void>;
+    hashBestaandeWachtwoorden(): Promise<void>;
 }

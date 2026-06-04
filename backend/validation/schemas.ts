@@ -40,6 +40,11 @@ export const gebruikerSchema = z.object({
     taak:       z.enum(['waterbeheerder', 'coordinator', 'Administrator']),
 });
 
+// Bij wijzigen mag het wachtwoord leeg blijven (= ongewijzigd laten).
+export const gebruikerUpdateSchema = gebruikerSchema.extend({
+    wachtwoord: z.string().optional(),
+});
+
 // ── Limieten (strikt) ─────────────────────────────────────────────────────────
 export const limietSchema = z.object({
     parameter_naam: z.string().min(1, 'is verplicht'),

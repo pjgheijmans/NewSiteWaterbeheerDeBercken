@@ -190,7 +190,7 @@ above, the LIM/TRD blocks, the screen table (§3.9) and the modes (§3.12).
 |AUTH-002|On successful login the system shall establish a server-side session and keep the user signed in across requests until logout/expiry.|Must|Yes|
 |AUTH-003|The system shall restrict navigation and operations according to the user's role (Waterbeheerder / Coördinator / Administrator).|Must|Yes|
 |AUTH-004|A user shall be able to log out, ending the session.|Must|Yes|
-|AUTH-005|User credentials shall be stored securely (hashed, non-reversible).|Should|**No — see §7.2 / R-002**|
+|AUTH-005|User credentials shall be stored securely (hashed, non-reversible).|Should|Yes (scrypt; legacy plaintext upgraded on login + at startup)|
 
 ### 3.2 Common / Cross-cutting (GEN)
 
@@ -495,10 +495,12 @@ table, clear a table, or reset the database (double confirmation). *(ADM-002..00
   Visitor data is aggregate counts only — no customer PII.
 - **GDPR:** staff-account data must be limited to what is necessary and accounts
   must be removable (supported via ADM-001).
-- **Known security gaps to remediate** (tracked as risks, not yet met):
-  - Passwords are stored in plain text (AUTH-005 not met; see R-002).
-  - The session secret has a hardcoded default that must be overridden in
-    production via `SESSION_SECRET` (see R-003).
+- **Security status:**
+  - Passwords are hashed with scrypt (AUTH-005 met; R-002 resolved 2026-06-04).
+    Legacy plaintext values are upgraded to a hash on the next login and by a
+    one-time startup migration.
+  - **Open:** the session secret still has a hardcoded default that must be
+    overridden in production via `SESSION_SECRET` (see R-003).
 
 ### 7.3 Design Constraints
 
@@ -521,7 +523,7 @@ Methods: Test (T) · Analysis (A) · Inspection (I) · Demonstration (D).
 |Requirement(s)|Method|Notes|
 |--------------|------|-----|
 |AUTH-001..004|T|Auth middleware + integration tests|
-|AUTH-005|I|Currently fails inspection — see R-002|
+|AUTH-005|T|Met — scrypt hashing; unit (`wachtwoord.test`, GebruikersRepository) + integration (login) tests|
 |GEN-001/002/005|T / D|Integration upsert tests; demonstrate date scoping & season bounds|
 |GEN-003/004|T / D|jsdom save-flow tests; limit-validation behaviour|
 |WB-001..004, WB-006/008|T / D|Repository + integration tests; demonstrate save & reload|
@@ -546,8 +548,9 @@ Methods: Test (T) · Analysis (A) · Inspection (I) · Demonstration (D).
 - [ ] Saved data reloads identically across sessions (durability).
 - [ ] UI performance targets met on the target LAN environment.
 - [ ] All screens render and function on target desktop/tablet viewports.
-- [ ] No critical or high OWASP vulnerabilities; AUTH-005 (password hashing) and the
-      session-secret default (R-003) resolved before any non-isolated deployment.
+- [x] Passwords hashed (AUTH-005 / R-002 resolved).
+- [ ] No critical or high OWASP vulnerabilities; the session-secret default (R-003)
+      resolved before any non-isolated deployment.
 - [ ] A defined database backup procedure is in place (R-001).
 
 -----
@@ -557,7 +560,7 @@ Methods: Test (T) · Analysis (A) · Inspection (I) · Demonstration (D).
 |ID|Item|Recommendation|
 |--|----|--------------|
 |R-001|No defined DB backup schedule (relies on Docker volume + manual CSV)|Define and automate periodic backups|
-|R-002|Passwords stored in plain text (AUTH-005)|Hash passwords (e.g. bcrypt/argon2); migrate seed accounts|
+|R-002|~~Passwords stored in plain text (AUTH-005)~~ **RESOLVED 2026-06-04**|Done: scrypt hashing on create/update/seed; legacy plaintext upgraded on login + startup migration|
 |R-003|Hardcoded default session secret|Require `SESSION_SECRET` in production deployment|
 |R-004|Browser E2E coverage absent|Add an automated end-to-end smoke test for W1–W3|
 |R-005|Accessibility (WCAG AA) unverified|Audit and remediate if public-sector accessibility rules apply|

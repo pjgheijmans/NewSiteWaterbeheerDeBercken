@@ -4,6 +4,7 @@ import { IGebruikersRepository } from '../../../backend/repositories/IGebruikers
 const repo: jest.Mocked<IGebruikersRepository> = {
     findByLogin: jest.fn(), getAll: jest.fn(), create: jest.fn(),
     update: jest.fn(), remove: jest.fn(), seedDefaults: jest.fn(),
+    hashBestaandeWachtwoorden: jest.fn(),
 };
 const service = new GebruikersService(repo);
 beforeEach(() => jest.clearAllMocks());

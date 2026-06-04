@@ -96,7 +96,8 @@ export interface GebruikerRecord {
     voornaam: string;
     achternaam: string;
     inlognaam: string;
-    wachtwoord: string;
+    /** Optioneel: getAll() levert het (gehashte) wachtwoord niet mee terug. */
+    wachtwoord?: string;
     taak: string;
 }
 

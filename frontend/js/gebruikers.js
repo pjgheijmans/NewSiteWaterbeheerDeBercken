@@ -47,7 +47,7 @@ class GebruikersModule {
                     <td><input type="text" class="g-v" value="${g.voornaam}"></td>
                     <td><input type="text" class="g-a" value="${g.achternaam}"></td>
                     <td><input type="text" class="g-i" value="${g.inlognaam}"></td>
-                    <td><input type="text" class="g-w" value="${g.wachtwoord}"></td>
+                    <td><input type="password" class="g-w" value="" placeholder="•••• (ongewijzigd)"></td>
                     <td><select class="g-t">
                         <option value="waterbeheerder" ${g.taak === 'waterbeheerder' ? 'selected' : ''}>Waterbeheerder</option>
                         <option value="coordinator"    ${g.taak === 'coordinator'    ? 'selected' : ''}>Coördinator</option>

@@ -1,7 +1,7 @@
 import { Router, Request, Response, NextFunction } from 'express';
 import { checkAuth, isAdminOrWaterbeheerder } from '../middleware/auth';
 import { valideerBody } from '../middleware/valideer';
-import { gebruikerSchema } from '../validation/schemas';
+import { gebruikerSchema, gebruikerUpdateSchema } from '../validation/schemas';
 import { IGebruikersService } from '../services/IGebruikersService';
 import { GebruikerInput } from '../types';
 
@@ -12,7 +12,7 @@ export class GebruikersController {
         this.router = Router();
         this.router.get('/',       checkAuth, this.getAll.bind(this));
         this.router.post('/',      checkAuth, valideerBody(gebruikerSchema), this.create.bind(this));
-        this.router.put('/:id',    checkAuth, valideerBody(gebruikerSchema), this.update.bind(this));
+        this.router.put('/:id',    checkAuth, valideerBody(gebruikerUpdateSchema), this.update.bind(this));
         this.router.delete('/:id', checkAuth, this.remove.bind(this));
     }
 
