@@ -337,10 +337,10 @@ input[type="text"].buiten-limiet {
     color: white;
 }
 
+/* Pad-tabs naar de parameters: rustige broodkruimel — geen rode vulling,
+   alleen een iets zwaarder label naast de telbadge. */
 .subtab-btn.subtab-heeft-acties {
-    background: #dc3545 !important;
-    color: white !important;
-    animation: actie-pulse 2s ease-in-out infinite;
+    font-weight: 700;
 }
 
 
@@ -378,15 +378,18 @@ input[type="text"].buiten-limiet {
 }
 
 /* ── Acties ── */
+/* De Acties-tab blijft het enige "luide" signaal: rode vulling + pulse. */
 .tab-btn.acties-actief {
     background: #dc3545 !important;
     color: white !important;
     animation: actie-pulse 2s ease-in-out infinite;
 }
 
-.hoofd-nav button.heeft-acties {
-    background: #dc3545 !important;
-    animation: actie-pulse 2s ease-in-out infinite;
+/* Pad-tabs (hoofdnav + bad-paginatabs): geen rode vulling meer, alleen een
+   iets zwaarder label naast de telbadge die het pad markeert. */
+.hoofd-nav button.heeft-acties,
+.tab-btn.heeft-acties {
+    font-weight: 700;
 }
 
 @keyframes actie-pulse {
@@ -394,7 +397,37 @@ input[type="text"].buiten-limiet {
     50%       { opacity: .75; }
 }
 
-.actie-indicator {
+/* Telbadge (pill) — rustige wegwijzer op de pad-tabs en op de Acties-tab. */
+.actie-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-width: 18px;
+    height: 18px;
+    padding: 0 6px;
+    margin-left: 6px;
+    background: #dc3545;
+    color: #fff;
+    border-radius: 9px;
+    font-size: 11px;
+    font-weight: 700;
+    line-height: 1;
+    vertical-align: middle;
+    box-sizing: border-box;
+}
+
+.actie-badge.actie-badge-opgelost {
+    background: #28a745;
+}
+
+/* Op de rode Acties-tab keert de badge om voor leesbaarheid. */
+.tab-btn.acties-actief .actie-badge {
+    background: #fff;
+    color: #dc3545;
+}
+
+.actie-indicator,
+.tab-actie-indicator {
     display: inline-flex;
     align-items: center;
     justify-content: center;
