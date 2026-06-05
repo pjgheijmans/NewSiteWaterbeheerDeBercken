@@ -135,6 +135,26 @@ h1 {
     letter-spacing: -0.01em;
 }
 
+/* Logo zwembad De Bercken: kleine afgeronde tegel naast de titel in de app-bar
+   (de lichtblauwe vierkante achtergrond van het logo leest zo als een badge). */
+.app-logo {
+    height: 44px;
+    width: 44px;
+    object-fit: contain;
+    border-radius: 10px;
+    flex-shrink: 0;
+}
+
+/* Groter logo boven het inlogformulier. */
+.login-logo {
+    display: block;
+    width: 96px;
+    height: 96px;
+    object-fit: contain;
+    border-radius: 16px;
+    margin: 0 auto 14px;
+}
+
 /* Login Scherm */
 .login-box {
     max-width: 400px;
@@ -193,7 +213,7 @@ h1 {
 
 /* Dunne scheidslijn tussen aangrenzende knoppen. */
 .hoofd-nav button:not(:last-child) {
-    box-shadow: inset -1px 0 0 rgba(255, 255, 255, .14);
+    border-right: 1px solid rgba(255, 255, 255, .14);
 }
 
 /* Alleen de uiteinden van de balk afronden. */
@@ -281,7 +301,7 @@ h1 {
 }
 
 .tab-btn:not(:last-child) {
-    box-shadow: inset -1px 0 0 var(--rand);
+    border-right: 1px solid var(--rand);
 }
 
 .tab-btn:first-child {
@@ -571,7 +591,7 @@ input[type="text"].buiten-limiet {
 }
 
 .subtab-btn:not(:last-child) {
-    box-shadow: inset -1px 0 0 var(--rand);
+    border-right: 1px solid var(--rand);
 }
 
 .subtab-btn:first-child {
@@ -732,6 +752,71 @@ input[type="text"].buiten-limiet {
 
 .actie-indicator.actie-indicator-opgelost {
     background: var(--kleur-succes);
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   Diepte / 3D-accenten — subtiele schaduwlijnen voor reliëf (licht van boven),
+   passend bij de frosted-glass look. Bewust ingetogen.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+/* Invoervelden duidelijk verdiept (ingedrukt). */
+td input[type="number"],
+td input[type="text"],
+td select,
+.veld-item input,
+.veld-item select,
+.login-box input {
+    box-shadow: inset 0 1px 3px rgba(15, 23, 42, .15);
+}
+
+/* Losse knoppen sterker opgetild + duidelijk ingedrukt bij klikken. */
+.btn-centraal-opslaan,
+.datum-navigatie button {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 3px 7px rgba(15, 23, 42, .28);
+}
+.btn-centraal-opslaan:active,
+.datum-navigatie button:active {
+    transform: translateY(1px);
+    box-shadow: inset 0 3px 6px rgba(15, 23, 42, .35);
+}
+
+/* Categorie-kaarten zweven hoger boven het glas. */
+.categorie-box {
+    box-shadow: 0 2px 4px rgba(15, 23, 42, .06), 0 14px 30px rgba(15, 23, 42, .14);
+}
+
+/* Het verbonden paginapaneel komt eveneens omhoog. */
+#waterbeheer-grote-baden-content,
+#waterbeheer-peuterbad-content,
+#waterbeheer-acties-content,
+#waterbeheer-logboek-content {
+    box-shadow: 0 10px 26px rgba(15, 23, 42, .12);
+}
+
+/* App-bar zweeft sterker boven de inhoud. */
+.app-bar {
+    box-shadow: 0 6px 22px rgba(15, 23, 42, .30);
+}
+
+/* Gegraveerde scheidslijn onder groepskoppen: donkere rand + lichte highlight. */
+.categorie-box h3 {
+    box-shadow: 0 1px 0 rgba(255, 255, 255, .85);
+}
+
+/* Segmented controls met reliëf: segmenten opgetild, actief segment ingedrukt. */
+.hoofd-nav button {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), inset 0 -2px 3px rgba(0, 0, 0, .20);
+}
+.hoofd-nav button.actief {
+    box-shadow: inset 0 2px 5px rgba(0, 0, 0, .35);
+}
+.tab-btn,
+.subtab-btn {
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8), inset 0 -2px 3px rgba(15, 23, 42, .07);
+}
+.tab-btn.actief,
+.subtab-btn.actief {
+    box-shadow: inset 0 2px 5px rgba(15, 23, 42, .28);
 }
 
 /* ── Responsive ── */
