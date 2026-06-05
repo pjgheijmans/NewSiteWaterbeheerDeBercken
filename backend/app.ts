@@ -57,6 +57,7 @@ export function maakApp(pool: Pool): Express {
     app.use('/', maakFrontendRouter());
 
     // process.cwd() werkt zowel in dev (ts-node) als in prod (node dist/...)
+    // Serveert ook frontend/images/ op /images/...
     app.use(express.static(path.join(process.cwd(), 'frontend')));
 
     // ── Centrale foutafhandeling (na alle routes) ─────────────────────────────────
