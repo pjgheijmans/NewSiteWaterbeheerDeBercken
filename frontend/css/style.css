@@ -803,20 +803,48 @@ td select,
     box-shadow: 0 1px 0 rgba(255, 255, 255, .85);
 }
 
-/* Segmented controls met reliëf: segmenten opgetild, actief segment ingedrukt. */
+/* Segmented controls met sterk reliëf: geëxtrudeerde 'toetsen' (verticaal
+   verloop + schaduwlijnen), het actieve segment duidelijk ingedrukt. */
 .hoofd-nav button {
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .12), inset 0 -2px 3px rgba(0, 0, 0, .20);
+    background: linear-gradient(180deg, #3f4e64 0%, #283340 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .16),
+        inset 0 -2px 2px rgba(0, 0, 0, .35),
+        0 2px 3px rgba(0, 0, 0, .28);
 }
-.hoofd-nav button.actief {
-    box-shadow: inset 0 2px 5px rgba(0, 0, 0, .35);
+.hoofd-nav button:hover {
+    background: linear-gradient(180deg, #4a5a72 0%, #313d4d 100%);
 }
+.hoofd-nav button.actief,
+.hoofd-nav button.actief:hover {
+    background: linear-gradient(180deg, var(--kleur-primair-donker) 0%, var(--kleur-primair) 100%);
+    box-shadow:
+        inset 0 2px 6px rgba(0, 0, 0, .45),
+        inset 0 -1px 1px rgba(255, 255, 255, .12);
+}
+
 .tab-btn,
 .subtab-btn {
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .8), inset 0 -2px 3px rgba(15, 23, 42, .07);
+    background: linear-gradient(180deg, #ffffff 0%, #dbe3ec 100%);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, .95),
+        inset 0 -2px 2px rgba(15, 23, 42, .10),
+        0 2px 3px rgba(15, 23, 42, .14);
+}
+.tab-btn:hover,
+.subtab-btn:hover {
+    background: linear-gradient(180deg, #ffffff 0%, #cbd6e2 100%);
+    color: var(--tekst);
 }
 .tab-btn.actief,
-.subtab-btn.actief {
-    box-shadow: inset 0 2px 5px rgba(15, 23, 42, .28);
+.tab-btn.actief:hover,
+.subtab-btn.actief,
+.subtab-btn.actief:hover {
+    background: linear-gradient(180deg, var(--kleur-primair-donker) 0%, var(--kleur-primair) 100%);
+    color: #fff;
+    box-shadow:
+        inset 0 2px 6px rgba(0, 0, 0, .35),
+        inset 0 -1px 1px rgba(255, 255, 255, .15);
 }
 
 /* ── Responsive ── */
