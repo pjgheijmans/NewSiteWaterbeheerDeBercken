@@ -1,142 +1,363 @@
+/* ───────────────────────────────────────────────────────────────────────────
+   Ontwerp-tokens — één bron voor kleur, typografie, ruimte en schaduw.
+   Pas de huisstijl hier aan; de rest van de stylesheet verwijst naar deze
+   variabelen. Rustiger, modern blauw als primaire kleur.
+   ─────────────────────────────────────────────────────────────────────────── */
+:root {
+    /* Primair (rustig, modern blauw) */
+    --kleur-primair:        #2563eb;
+    --kleur-primair-donker: #1d4ed8;
+    --kleur-primair-licht:  #eff6ff;
+
+    /* Status */
+    --kleur-succes:         #16a34a;
+    --kleur-succes-donker:  #15803d;
+    --kleur-gevaar:         #dc3545;
+    --kleur-gevaar-donker:  #bd2130;
+    --kleur-info:           #0891b2;
+
+    /* Navigatie (koel donker leien-grijs) */
+    --nav-bg:               #1e293b;
+    --nav-knop:             #334155;
+
+    /* Tekst & oppervlak */
+    --tekst:                #1f2937;
+    --tekst-dof:            #64748b;
+    --kop:                  #0f172a;
+    --rand:                 #e2e8f0;
+    --rand-sterk:           #cbd5e1;
+    --opp:                  #ffffff;
+    --opp-dof:              #f8fafc;
+    --kop-bg:               #f1f5f9;
+
+    /* Vorm & diepte */
+    --radius:               10px;
+    --radius-sm:            6px;
+    --schaduw:              0 1px 3px rgba(15, 23, 42, .08), 0 1px 2px rgba(15, 23, 42, .06);
+    --schaduw-zwaar:        0 10px 25px rgba(15, 23, 42, .10);
+
+    /* Typografie — modern system-font-stack */
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+    box-sizing: border-box;
+}
+
 body {
-    font-family: Arial, sans-serif;
+    font-family: var(--font);
     margin: 20px;
-    background-color: #f4f7f6;
-    color: #333;
+    color: var(--tekst);
+    line-height: 1.5;
+    -webkit-font-smoothing: antialiased;
+
+    /* Vervaagd wateroppervlak als achtergrond: een sterke lichte sluier over de
+       foto zodat het subtiel blijft en de witte werkkaart goed leesbaar blijft.
+       Pas de overlay-alfawaarden aan om de foto sterker of zwakker te tonen. */
+    background-color: var(--opp-dof);
+    background-image:
+        linear-gradient(rgba(255, 255, 255, .42), rgba(239, 246, 255, .52)),
+        url(/images/zwembad_water_oppervlakte.jpg);
+    background-size: cover;
+    background-position: center;
+    background-attachment: fixed;
+    background-repeat: no-repeat;
+}
+
+/* Knoppen/velden erven de moderne letter en krijgen vloeiende overgangen. */
+button,
+input,
+select,
+textarea {
+    font-family: inherit;
+}
+
+button {
+    transition: background-color .15s ease, color .15s ease,
+                box-shadow .15s ease, border-color .15s ease;
+}
+
+/* Duidelijke, toegankelijke focus-indicator i.p.v. de standaard browser-ring. */
+:where(button, a, input, select, textarea):focus-visible {
+    outline: 2px solid var(--kleur-primair);
+    outline-offset: 2px;
+}
+
+input:focus,
+select:focus,
+textarea:focus {
+    outline: none;
+    border-color: var(--kleur-primair);
+    box-shadow: 0 0 0 3px var(--kleur-primair-licht);
+}
+
+/* Respecteer de systeemvoorkeur voor minder beweging (o.a. de actie-pulse). */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .001ms !important;
+    }
 }
 
 .container {
+    --pad: 28px;
     max-width: 1050px;
     margin: 0 auto;
-    background: white;
-    padding: 25px;
-    border-radius: 8px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    /* Frosted glass: doorschijnend wit met blur, zodat het wateroppervlak er
+       zacht doorheen schemert terwijl de werkkaart leesbaar blijft. */
+    background: rgba(255, 255, 255, .58);
+    -webkit-backdrop-filter: blur(16px) saturate(1.3);
+    backdrop-filter: blur(16px) saturate(1.3);
+    border: 1px solid rgba(255, 255, 255, .6);
+    padding: var(--pad);
+    border-radius: var(--radius);
+    box-shadow: var(--schaduw-zwaar);
 }
 
 .header-box {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    border-bottom: 2px solid #eee;
-    padding-bottom: 10px;
-    margin-bottom: 15px;
+    border-bottom: 1px solid var(--rand);
+    padding-bottom: 14px;
+    margin-bottom: 20px;
 }
 
 h1 {
     margin: 0;
-    color: #0056b3;
+    color: var(--kop);
+    font-size: 24px;
+    letter-spacing: -0.01em;
 }
 
 /* Login Scherm */
 .login-box {
     max-width: 400px;
     margin: 80px auto;
-    padding: 30px;
-    background: white;
-    border-radius: 8px;
-    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+    padding: 32px;
+    background: var(--opp);
+    border-radius: var(--radius);
+    box-shadow: var(--schaduw-zwaar);
     text-align: center;
 }
 
 .login-box input {
     width: 100%;
-    padding: 10px;
+    padding: 11px;
     margin: 10px 0;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    box-sizing: border-box;
+    border: 1px solid var(--rand-sterk);
+    border-radius: var(--radius-sm);
 }
 
 .login-box button {
     width: 100%;
     padding: 12px;
-    background: #28a745;
+    background: var(--kleur-primair);
     color: white;
     border: none;
-    border-radius: 4px;
-    font-weight: bold;
+    border-radius: var(--radius-sm);
+    font-weight: 600;
     cursor: pointer;
 }
 
-/* Navigatie */
+.login-box button:hover {
+    background: var(--kleur-primair-donker);
+}
+
+/* Navigatie — als één aaneengesloten balk (segmented control): de knoppen
+   raken elkaar, alleen de buitenste hoeken zijn rond, met dunne scheidslijnen. */
 .hoofd-nav {
     display: flex;
-    gap: 10px;
+    gap: 0;
     margin-bottom: 20px;
-    background: #343a40;
-    padding: 10px;
-    border-radius: 6px;
+    background: var(--nav-bg);
+    padding: 8px;
+    border-radius: var(--radius-sm);
 }
 
 .hoofd-nav button {
     padding: 10px 20px;
-    font-size: 16px;
+    font-size: 15px;
     border: none;
-    border-radius: 4px;
-    background: #495057;
+    border-radius: 0;
+    background: var(--nav-knop);
     color: #fff;
     cursor: pointer;
-    font-weight: bold;
+    font-weight: 600;
+}
+
+/* Dunne scheidslijn tussen aangrenzende knoppen. */
+.hoofd-nav button:not(:last-child) {
+    box-shadow: inset -1px 0 0 rgba(255, 255, 255, .14);
+}
+
+/* Alleen de uiteinden van de balk afronden. */
+.hoofd-nav button:first-child {
+    border-top-left-radius: var(--radius-sm);
+    border-bottom-left-radius: var(--radius-sm);
+}
+
+.hoofd-nav button:last-child {
+    border-top-right-radius: var(--radius-sm);
+    border-bottom-right-radius: var(--radius-sm);
+}
+
+.hoofd-nav button:hover {
+    background: #475569;
 }
 
 .hoofd-nav button.actief {
-    background: #28a745;
+    background: var(--kleur-primair);
+}
+
+.hoofd-nav button.actief:hover {
+    background: var(--kleur-primair-donker);
 }
 
 .logout-btn {
-    background: #dc3545 !important;
+    background: var(--kleur-gevaar) !important;
     margin-left: auto;
 }
 
+.logout-btn:hover {
+    background: var(--kleur-gevaar-donker) !important;
+}
+
+/* ───────────────────────────────────────────────────────────────────────────
+   App-bar — gekleurde, vastgezette navigatiezone bovenaan: titel + rolnav +
+   paginatabs als één geheel, los van de witte invoerzone eronder. Bloedt tot
+   de containerranden via de --pad-variabele en blijft sticky bij scrollen.
+   ─────────────────────────────────────────────────────────────────────────── */
+.app-bar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    margin: calc(-1 * var(--pad)) calc(-1 * var(--pad)) 20px;
+    padding: 14px var(--pad);
+    background: var(--nav-bg);
+    border-radius: var(--radius) var(--radius) 0 0;
+    box-shadow: var(--schaduw);
+}
+
+.app-bar .header-box {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 12px;
+    color: #fff;
+}
+
+.app-bar .header-box h1 {
+    color: #fff;
+}
+
+.app-bar .hoofd-nav {
+    background: transparent;
+    padding: 0;
+    margin-bottom: 0;
+}
+
+/* Paginatabs als aaneengesloten balk (segmented control) die direct op het
+   inhoudspaneel rust, zodat de actieve tab in het paneel 'opengaat'. */
 .menu-tabs {
     display: flex;
-    gap: 5px;
-    margin-bottom: 20px;
-    border-bottom: 2px solid #007BFF;
+    gap: 0;
+    margin-bottom: 0;
 }
 
 .tab-btn {
-    padding: 12px 25px;
+    padding: 12px 24px;
     font-size: 15px;
-    font-weight: bold;
+    font-weight: 600;
     border: none;
-    background: #e9ecef;
-    color: #495057;
-    border-radius: 5px 5px 0 0;
+    background: var(--kop-bg);
+    color: var(--tekst-dof);
+    border-radius: 0;
     cursor: pointer;
 }
 
-.tab-btn.actief {
-    background: #007BFF;
+.tab-btn:not(:last-child) {
+    box-shadow: inset -1px 0 0 var(--rand);
+}
+
+.tab-btn:first-child {
+    border-top-left-radius: var(--radius-sm);
+    border-bottom-left-radius: var(--radius-sm);
+}
+
+.tab-btn:last-child {
+    border-top-right-radius: var(--radius-sm);
+    border-bottom-right-radius: var(--radius-sm);
+}
+
+.tab-btn:hover {
+    background: var(--rand);
+    color: var(--tekst);
+}
+
+.tab-btn.actief,
+.tab-btn.actief:hover {
+    background: var(--kleur-primair);
     color: white;
+    /* Onderhoeken recht zodat de actieve tab naadloos in het paneel overgaat. */
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+}
+
+/* Inhoudspaneel dat 'hangt' aan de geselecteerde paginatab: de subtabs en
+   velden zitten erin, zodat zichtbaar is dat de subkeuze uit de paginakeuze
+   volgt. De blauwe bovenrand sluit aan op de actieve (blauwe) tab. */
+#waterbeheer-grote-baden-content,
+#waterbeheer-peuterbad-content,
+#waterbeheer-acties-content,
+#waterbeheer-logboek-content {
+    border: 1px solid rgba(255, 255, 255, .6);
+    border-top: 3px solid var(--kleur-primair);
+    border-radius: 0 0 var(--radius) var(--radius);
+    padding: 16px;
+    background: transparent;
+}
+
+/* Eerste subtab-balk binnen het paneel hoeft geen extra ruimte erboven. */
+#waterbeheer-grote-baden-content > .subtab-nav:first-child,
+#waterbeheer-peuterbad-content > .subtab-nav:first-child {
+    margin-top: 0;
 }
 
 .datum-navigatie {
     display: flex;
     align-items: center;
-    justify-content: space-between;
-    margin-bottom: 25px;
-    background: #e9ecef;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 24px;
+    background: var(--kop-bg);
     padding: 10px 15px;
-    border-radius: 5px;
+    border-radius: var(--radius-sm);
 }
 
 .datum-navigatie button {
     padding: 10px 20px;
-    font-weight: bold;
-    background-color: #007BFF;
+    font-weight: 600;
+    background-color: var(--kleur-primair);
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
 }
 
+.datum-navigatie button:hover {
+    background-color: var(--kleur-primair-donker);
+}
+
 .datum-navigatie input[type="date"] {
-    padding: 8px;
+    padding: 9px;
     font-size: 16px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    border: 1px solid var(--rand-sterk);
+    border-radius: var(--radius-sm);
     text-align: center;
 }
 
@@ -149,61 +370,79 @@ table {
 th,
 td {
     padding: 12px;
-    border: 1px solid #dee2e6;
+    border: 1px solid var(--rand);
     text-align: left;
     vertical-align: middle;
 }
 
 th {
-    background-color: #007BFF;
-    color: white;
+    background-color: var(--kop-bg);
+    color: var(--tekst);
     font-weight: 600;
+    border-bottom: 2px solid var(--rand-sterk);
+    font-size: 13px;
+    letter-spacing: .02em;
+    text-transform: uppercase;
 }
 
 td input[type="number"],
 td input[type="text"],
 td select {
     width: 100%;
-    padding: 6px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    padding: 7px;
+    border: 1px solid var(--rand-sterk);
+    border-radius: var(--radius-sm);
     font-size: 14px;
-    box-sizing: border-box;
 }
 
 .actie-container {
     display: flex;
     justify-content: flex-end;
     margin-top: 15px;
-    border-top: 1px solid #eee;
+    border-top: 1px solid var(--rand);
     padding-top: 15px;
 }
 
 .btn-centraal-opslaan {
-    padding: 12px 30px;
-    background-color: #28a745;
+    padding: 12px 28px;
+    background-color: var(--kleur-succes);
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
-    font-size: 16px;
-    font-weight: bold;
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.btn-centraal-opslaan:hover {
+    background-color: var(--kleur-succes-donker);
 }
 
 .categorie-box {
-    border: 1px solid #dee2e6;
-    border-radius: 8px;
-    background: #fbfcfd;
-    padding: 18px;
+    border: 1px solid rgba(255, 255, 255, .6);
+    border-radius: var(--radius);
+    background: rgba(255, 255, 255, .22);
+    padding: 20px;
     margin-bottom: 20px;
     overflow-x: auto;
 }
 
 .categorie-box h3 {
     margin-top: 0;
-    margin-bottom: 14px;
-    color: #0056b3;
-    font-size: 20px;
+    margin-bottom: 16px;
+    color: var(--kop);
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+    padding-bottom: 12px;
+    border-bottom: 1px solid var(--rand);
+}
+
+/* Parameternamen overal in dezelfde stijl. Sommige tabellen (Verbruik,
+   Bezoekers, Peuterbad) zetten hun rijlabels in <b>; trek dat gelijk met de
+   normale weergave van Meetwaarden. Alleen de groepskoppen (h3) blijven vet. */
+.categorie-tabel td b {
+    font-weight: normal;
 }
 
 .categorie-tabel {
@@ -241,10 +480,9 @@ td select {
 .veld-item select {
     width: 100%;
     padding: 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
+    border: 1px solid var(--rand-sterk);
+    border-radius: var(--radius-sm);
     font-size: 14px;
-    box-sizing: border-box;
 }
 
 .checkbox-grid {
@@ -258,9 +496,9 @@ td select {
     align-items: center;
     gap: 10px;
     padding: 10px;
-    background: #ffffff;
-    border: 1px solid #dee2e6;
-    border-radius: 6px;
+    background: var(--opp);
+    border: 1px solid var(--rand);
+    border-radius: var(--radius-sm);
 }
 
 .checkbox-item input {
@@ -271,16 +509,16 @@ td select {
 /* Gevaar / Database wissen knop */
 .btn-wissen-gevaar {
     padding: 10px 20px;
-    background-color: #dc3545;
+    background-color: var(--kleur-gevaar);
     color: white;
     border: none;
-    border-radius: 4px;
+    border-radius: var(--radius-sm);
     cursor: pointer;
-    font-weight: bold;
+    font-weight: 600;
 }
 
 .btn-wissen-gevaar:hover {
-    background-color: #bd2130;
+    background-color: var(--kleur-gevaar-donker);
 }
 
 .buiten-limiet {
@@ -310,30 +548,50 @@ input[type="text"].buiten-limiet {
 }
 
 #acties-tabel input[type="checkbox"]:checked {
-    accent-color: #28a745;
+    accent-color: var(--kleur-succes);
 }
 
+/* Subtabs als aaneengesloten balk (segmented control), net als de paginatabs. */
 .subtab-nav {
     display: flex;
-    gap: 4px;
+    gap: 0;
     margin-top: 10px;
     margin-bottom: 16px;
-    border-bottom: 2px solid #6c757d;
 }
 
 .subtab-btn {
     padding: 8px 20px;
     font-size: 14px;
-    font-weight: bold;
+    font-weight: 600;
     border: none;
-    background: #e9ecef;
-    color: #6c757d;
-    border-radius: 4px 4px 0 0;
+    background: var(--kop-bg);
+    color: var(--tekst-dof);
+    border-radius: 0;
     cursor: pointer;
 }
 
-.subtab-btn.actief {
-    background: #6c757d;
+.subtab-btn:not(:last-child) {
+    box-shadow: inset -1px 0 0 var(--rand);
+}
+
+.subtab-btn:first-child {
+    border-top-left-radius: var(--radius-sm);
+    border-bottom-left-radius: var(--radius-sm);
+}
+
+.subtab-btn:last-child {
+    border-top-right-radius: var(--radius-sm);
+    border-bottom-right-radius: var(--radius-sm);
+}
+
+.subtab-btn:hover {
+    background: var(--rand);
+    color: var(--tekst);
+}
+
+.subtab-btn.actief,
+.subtab-btn.actief:hover {
+    background: var(--kleur-primair);
     color: white;
 }
 
@@ -398,7 +656,7 @@ input[type="text"].buiten-limiet {
 }
 
 .succes {
-    color: #28a745;
+    color: var(--kleur-succes);
 }
 
 .fout {
@@ -445,7 +703,7 @@ input[type="text"].buiten-limiet {
 }
 
 .actie-badge.actie-badge-opgelost {
-    background: #28a745;
+    background: var(--kleur-succes);
 }
 
 /* Op de rode Acties-tab keert de badge om voor leesbaarheid. */
@@ -473,7 +731,7 @@ input[type="text"].buiten-limiet {
 }
 
 .actie-indicator.actie-indicator-opgelost {
-    background: #28a745;
+    background: var(--kleur-succes);
 }
 
 /* ── Responsive ── */
@@ -491,7 +749,7 @@ input[type="text"].buiten-limiet {
         flex-wrap: nowrap;
         overflow-x: auto;
         -webkit-overflow-scrolling: touch;
-        gap: 6px;
+        gap: 0;
     }
     .hoofd-nav button {
         flex-shrink: 0;
@@ -508,7 +766,7 @@ input[type="text"].buiten-limiet {
     body { margin: 8px; }
 
     .container {
-        padding: 12px;
+        --pad: 12px;
         border-radius: 6px;
     }
 
@@ -534,25 +792,43 @@ input[type="text"].buiten-limiet {
         font-size: 13px;
     }
 
-    /* Date navigation: icon-only buttons flanking the date field */
+    /* Paginatabs sluiten aan op het paneel; subtabs compacter op mobiel */
+    .menu-tabs {
+        margin-bottom: 0;
+    }
+    .subtab-nav {
+        margin-top: 4px;
+        margin-bottom: 10px;
+    }
+    #waterbeheer-grote-baden-content,
+    #waterbeheer-peuterbad-content,
+    #waterbeheer-acties-content,
+    #waterbeheer-logboek-content {
+        padding: 10px;
+    }
+
+    /* Date navigation: compacte, lage balk met icoonknoppen rond het datumveld */
     .datum-navigatie {
         justify-content: center;
         gap: 6px;
         flex-wrap: nowrap;
+        padding: 3px 10px;
+        margin-bottom: 10px;
     }
     .datum-navigatie .nav-label {
         display: none;
     }
     .datum-navigatie button {
         flex: 0 0 auto;
-        padding: 10px 16px;
-        font-size: 18px;
+        padding: 4px 13px;
+        font-size: 15px;
         min-width: 0;
     }
     .datum-navigatie input[type="date"] {
-        flex: 1;
-        max-width: 175px;
-        font-size: 15px;
+        flex: 0 1 auto;
+        max-width: 150px;
+        min-height: 30px;
+        font-size: 14px !important;
         text-align: center;
     }
 
@@ -592,6 +868,13 @@ input[type="text"].buiten-limiet {
         width: 120px;
     }
 
+    /* Parameter-tekst kleiner op mobiel, in lijn met de menu-/tabtekst (13px) —
+       zowel tabelcellen als de checkbox-rijen (o.a. Verwarmingssysteem). */
+    .categorie-tabel td,
+    .checkbox-item {
+        font-size: 13px;
+    }
+
     /* Compact waterbeheer tables on mobile */
     #waterbeheer-grote-baden-content .categorie-tabel th,
     #waterbeheer-grote-baden-content .categorie-tabel td,
@@ -625,52 +908,17 @@ input[type="text"].buiten-limiet {
 /* ── 600 px: phone — coordinator block tables become cards ── */
 @media (max-width: 600px) {
 
-    /* ---- Coordinator measurement blocks: card-row layout ---- */
-    .coord-tabel thead {
-        display: none;
+    /* Coördinator-meetblokken: houd ook in portret de normale tabel mét
+       kolomkop (zoals in liggende weergave) i.p.v. een kaart-layout per rij.
+       De omliggende .categorie-box (overflow-x:auto) zorgt voor horizontaal
+       scrollen, zodat de volledige tabel zichtbaar blijft. Vaste veldbreedtes
+       voorkomen dat de kolommen platgedrukt worden. */
+    .coord-tabel td input {
+        width: 72px;
     }
-    .coord-tabel tr {
-        display: block;
-        background: white;
-        border: 1px solid #dee2e6;
-        border-radius: 6px;
-        margin-bottom: 10px;
-        overflow: hidden;
-    }
-    .coord-tabel td {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        gap: 8px;
-        border: none;
-        border-bottom: 1px solid #f0f0f0;
-        padding: 8px 10px;
-    }
-    .coord-tabel td:last-child {
-        border-bottom: none;
-    }
-    /* Pool name row: full-width header */
-    .coord-tabel td:first-child {
-        background: #e9ecef;
-        font-size: 15px;
-        justify-content: center;
-    }
-    .coord-tabel td:first-child::before { display: none; }
-    /* Label before each value cell */
-    .coord-tabel td[data-label]::before {
-        content: attr(data-label);
-        font-weight: 600;
-        font-size: 13px;
-        color: #555;
-        flex-shrink: 0;
-        min-width: 120px;
-    }
-    .coord-tabel td input,
     .coord-tabel td select {
-        flex: 1;
         width: auto;
-        min-width: 70px;
-        max-width: 160px;
+        min-width: 90px;
     }
 
     /* Limieten boxes: single column */
@@ -716,6 +964,6 @@ input[type="text"].buiten-limiet {
         padding: 16px;
     }
     body { margin: 4px; }
-    .container { padding: 8px; }
+    .container { --pad: 8px; }
     th, td { padding: 7px; }
 }
