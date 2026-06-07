@@ -96,6 +96,55 @@ export interface GebondenChloorResultaat {
     peuterbad: number | null;
 }
 
+// ── Rondetaken ──────────────────────────────────────────────────────────────────
+
+/** Urgentie van een rondetaak; bepaalt sortering en de ⚠-markering op de tab. */
+export type RondetaakPrioriteit = 'kritiek' | 'normaal';
+
+/** Bad-pagina waaronder een rondetaak/taak wordt getoond. */
+export type TaakPagina = 'grote-baden' | 'peuterbad';
+
+/** Vaste catalogus-definitie van een rondetaak (staat in code, niet in de DB). */
+export interface RondetaakDefinitie {
+    sleutel: string;
+    gebied: string;
+    label: string;
+    prioriteit: RondetaakPrioriteit;
+    /** Bad-pagina waaronder de taak hoort (Diep/Ondiep delen 'grote-baden'). */
+    pagina: TaakPagina;
+}
+
+/** Een rondetaak voor een specifieke dag: catalogus-definitie + voltooiingsstatus. */
+export interface Rondetaak extends RondetaakDefinitie {
+    voltooid: boolean;
+    voltooid_op: string | null;
+    voltooid_door: string | null;
+}
+
+/** Herkomst van een taak-item: een rondetaak (checkbox) of geaggregeerde acties (alarm). */
+export type TaakBron =
+    | { type: 'rondetaak'; sleutel: string }
+    | { type: 'actie'; ids: number[] };
+
+/**
+ * Samengesteld taak-item voor de "Taken"-weergave: de unie van rondetaken en
+ * (drempel)acties, per bad-pagina gegroepeerd. 'alarm' = een getriggerde actie
+ * die uitgevoerd MOET worden; 'kritiek'/'normaal' komen van de rondetaakcatalogus.
+ */
+export interface TaakItem {
+    sleutel: string;
+    pagina: TaakPagina;
+    gebied: string;
+    label: string;
+    prioriteit: RondetaakPrioriteit | 'alarm';
+    voltooid: boolean;
+    voltooid_op: string | null;
+    voltooid_door: string | null;
+    reden: string | null;
+    must: boolean;
+    bron: TaakBron;
+}
+
 // ── Gebruikers ────────────────────────────────────────────────────────────────
 
 export interface GebruikerRecord {

@@ -99,8 +99,10 @@ describe('Fix #3 — Verbruik-subtab berekent peuterbad-verbruik', () => {
         document.body.innerHTML = `
             <button id="subtab-peuterbad-meetwaarden"></button>
             <button id="subtab-peuterbad-verbruik"></button>
+            <button id="subtab-peuterbad-taken"></button>
             <div id="peuterbad-meetwaarden-content"></div>
-            <div id="peuterbad-verbruik-content"></div>`;
+            <div id="peuterbad-verbruik-content"></div>
+            <div id="peuterbad-taken-content"></div>`;
         const app = maakApp();
         new MetingenModule(app).wisselPeuterbadSubtab('verbruik');
 

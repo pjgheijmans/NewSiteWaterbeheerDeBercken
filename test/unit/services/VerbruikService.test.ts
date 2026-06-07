@@ -8,6 +8,7 @@ const verbruikRepo: jest.Mocked<IVerbruikRepository> = {
 };
 const actiesRepo: jest.Mocked<IActiesRepository> = {
     getActies: jest.fn(), resolve: jest.fn(), unresolve: jest.fn(),
+    resolveFilterSpoelen: jest.fn(), unresolveFilterSpoelen: jest.fn(),
     genereer: jest.fn(), genereerVerbruik: jest.fn(),
     genereerBezoekers: jest.fn(), genereerSpoelbeurt: jest.fn(),
     genereerCoordinatoren: jest.fn(), getGebondenChloorMax: jest.fn(),

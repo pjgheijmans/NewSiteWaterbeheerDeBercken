@@ -9,7 +9,7 @@ const ORDER = [
 
 const JS_FILES = [
     'state', 'api', 'ui', 'limieten', 'auth',
-    'metingen', 'verbruik', 'opslaan', 'logboek',
+    'metingen', 'taken', 'verbruik', 'opslaan', 'logboek',
     'gebruikers', 'database', 'nav', 'trend', 'app',
 ];
 
