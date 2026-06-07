@@ -89,6 +89,8 @@ classDiagram
         +getActies(datum) Actie[]
         +resolve(id, door) void
         +unresolve(id) void
+        +resolveFilterSpoelen(bad, datum, door) void
+        +unresolveFilterSpoelen(bad, datum) void
         +genereer(badId, datum, naam, body) void
         +genereerBezoekers(datum, aantal) void
         +genereerSpoelbeurt(datum) BadTotalen
@@ -111,6 +113,23 @@ classDiagram
     ActiesRepository ..|> IActiesRepository
     CoordinatorenRepository ..|> IDaggegevensProvider
 ```
+
+### Rondetaken en Taken
+
+Twee domeinen verzorgen de dagelijkse takenweergave:
+
+- **`rondetaken`** — vaste dagelijkse onderhoudstaken. De catalogus (welke taken,
+  per `gebied` en `pagina`, met `prioriteit` kritiek/normaal) staat in code in
+  `RondetakenRepository`; alleen voltooiingen worden bewaard in
+  `rondetaken_voltooid`. Een filter-rondetaak afvinken lost via
+  `ActiesRepository.resolveFilterSpoelen` ook de openstaande `filter_spoelen_*`-
+  acties van dat bad op (eenrichtingskoppeling).
+- **`taken`** — een **read-only compositie** die `RondetakenRepository` en
+  `ActiesRepository` samenvoegt tot één `TaakItem[]` per bad-pagina:
+  `filter_spoelen_*`-acties vouwen samen op de filter-rondetaak, overige acties
+  worden losse alarm-rijen (chemicaliën onder "Algemeen"). Het veld `must`
+  markeert wat verplicht is (open alarm of kritieke rondetaak). Schrijfacties
+  lopen via de bestaande `/api/rondetaken`- en `/api/acties`-endpoints.
 
 ### Foutklasse
 
@@ -135,6 +154,8 @@ classDiagram
 |---|---|---|---|
 | `auth.ts` | `/api` | `POST /login`, `POST /logout`, `GET /ingelogd` | — / sessie |
 | `metingen.ts` | `/api` | `GET/POST /metingen`, `GET /acties`, `POST /acties/:id/resolve`, `POST /acties/:id/unresolve`, `GET /bezoekers` | waterbeheerder |
+| `rondetaken.ts` | `/api/rondetaken` | `GET /`, `POST /:sleutel/voltooi`, `POST /:sleutel/heropen` | waterbeheerder |
+| `taken.ts` | `/api/taken` | `GET /` — samengestelde taken-/actielijst per bad-pagina | waterbeheerder |
 | `coordinatoren.ts` | `/api/coordinatoren` | `GET/POST /`, `DELETE /`, `GET/POST /checklist`, `GET/POST /daggegevens`, `GET/POST /logboek`, `DELETE /logboek/:id` | waterbeheerder of coördinator |
 | `verbruik.ts` | `/api/verbruik` | `GET/POST /diep-ondiep`, `GET /diep-ondiep/vorige`, `GET/POST /verwarmingssysteem` | waterbeheerder |
 | `limieten.ts` | `/api/limieten` | `GET /`, `GET /defaults`, `POST /` | lezen: vrij · schrijven: admin/waterbeheerder |
@@ -196,8 +217,10 @@ graph TB
 
 - **Actiegeneratie** is fire-and-forget na een meting/daggegevens-save — geen
   transactionele garantie tussen de save en de gegenereerde actie.
-- **Spoelbeurt-totaal** is cumulatief sinds de laatst opgeloste
-  `filter_spoelen_spoelbeurt`-actie (zie `ActiesRepository`).
+- **Spoelbeurt-totaal** is cumulatief sinds de laatste filterreiniging — de
+  meest recente van een opgeloste `filter_spoelen_spoelbeurt`-actie óf een
+  afgevinkte filter-rondetaak (`diep_filter`/`ondiep_filter`) — zie
+  `ActiesRepository.berekenSpoelbeurtTotaal`.
 - **CSV-export/-import** zit in `DatabaseService`: puntkomma-gescheiden voor
   EU-Excel; import vertaalt `bad_naam` → `bad_id` voor metingen-tabellen en
   schakelt foreign-key-checks tijdelijk uit.

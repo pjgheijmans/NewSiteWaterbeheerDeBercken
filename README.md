@@ -36,7 +36,7 @@ diagrammen.
 │   │   ├── app.js                      # Application-container (DI) + window.* globals
 │   │   ├── state.js                    # AppState — gedeelde toestand
 │   │   ├── api.js · ui.js · nav.js · auth.js
-│   │   ├── metingen.js · verbruik.js · opslaan.js · logboek.js
+│   │   ├── metingen.js · taken.js · verbruik.js · opslaan.js · logboek.js
 │   │   └── gebruikers.js · database.js · trend.js · limieten.js
 │   └── partials/                       # HTML-fragmenten, samengevoegd door FrontendController
 ├── test/                               # Jest + ts-jest + Supertest
@@ -69,6 +69,7 @@ diagrammen.
 | `limieten`                          | Min/max richtwaarden + actie-drempelwaarden per parameter                     |
 | `gebruikers`                        | Inlogaccounts: waterbeheerder, coordinator, Administrator                     |
 | `acties`                            | Automatisch gegenereerde acties/alarmen per bad en datum                      |
+| `rondetaken_voltooid`               | Afgevinkte dagelijkse rondetaken per dag (catalogus staat in code)            |
 
 Standaard limieten en testgebruikers worden ingesteld via `INSERT IGNORE` in `init.sql`. Er is geen aparte seed-stap nodig.
 
@@ -94,7 +95,7 @@ app.use(session({
 
 | Rol              | Toegang                                                                                     |
 |------------------|---------------------------------------------------------------------------------------------|
-| `waterbeheerder` | Dagstaat (meetwaarden, verbruik, bezoekers, logboek, acties), coördinator-metingen, trendanalyse, gebruikersbeheer, database beheer |
+| `waterbeheerder` | Dagstaat (meetwaarden, verbruik, bezoekers, logboek, taken), coördinator-metingen, trendanalyse, gebruikersbeheer, database beheer |
 | `coordinator`    | Coördinator-metingen, checklijst, daggegevens, logboek                                      |
 | `Administrator`  | Limieten, gebruikersbeheer, database beheer                                                 |
 
@@ -127,6 +128,10 @@ de controllers (403). Muterende endpoints valideren de body met Zod (400).
 | GET          | `/api/acties`                             | Acties voor een datum ophalen                     |
 | POST         | `/api/acties/:id/resolve`                 | Actie als opgelost markeren                       |
 | POST         | `/api/acties/:id/unresolve`               | Actie heropenen (ongedaan maken)                  |
+| GET          | `/api/rondetaken`                         | Rondetaken (met dagstatus) voor een datum ophalen |
+| POST         | `/api/rondetaken/:sleutel/voltooi`        | Rondetaak afvinken                                |
+| POST         | `/api/rondetaken/:sleutel/heropen`        | Rondetaak heropenen                               |
+| GET          | `/api/taken`                              | Samengestelde taken-/actielijst per bad-pagina    |
 | GET          | `/api/bezoekers`                          | Bezoekersaantal + cumulatief sinds spoelbeurt ophalen; triggert actiecheck |
 | GET/POST     | `/api/coordinatoren`                      | Coördinator meetblokken                           |
 | DELETE       | `/api/coordinatoren`                      | Coördinator meetblok verwijderen                  |
@@ -149,9 +154,9 @@ de controllers (403). Muterende endpoints valideren de body met Zod (400).
 
 ---
 
-## Acties-systeem
+## Acties & taken
 
-Acties worden automatisch aangemaakt of verwijderd na het opslaan van meetwaarden, verbruiksdata of bezoekersaantallen. Er zijn tien regels:
+Acties (drempelalarmen) worden automatisch aangemaakt of verwijderd na het opslaan van meetwaarden, verbruiksdata of bezoekersaantallen. Ze worden samen met de **dagelijkse rondetaken** getoond in de **Taken**-subtab per bad-pagina (geen aparte Acties-tab). De `TakenService` stelt deze weergave server-side samen. Er zijn tien actie-regels:
 
 | Actie-type                    | Triggerconditie                                                              |
 |-------------------------------|------------------------------------------------------------------------------|
@@ -181,17 +186,18 @@ Acties worden automatisch aangemaakt of verwijderd na het opslaan van meetwaarde
 | `actie_bezoekers_max`  | 750       | Max aantal bezoekers per dag                   |
 | `actie_spoelbeurt_max` | 1500      | Max cumulatief bezoekers sinds laatste spoelbeurt |
 
-**Weergave in de UI:**
-- Rood badge op de **Waterbeheer**-navigatieknop met aantal openstaande acties
-- Rood badge op de **Acties**-tab en op relevante **subtabs** (Meetwaarden, Verbruik, Bezoekers)
-- ⚠-indicatoren naast de betreffende invoervelden
-- Acties met dezelfde handeling (bijv. meerdere redenen voor filter spoelen) worden gecombineerd in één tabelrij met alle redenen onder elkaar
+**Weergave in de UI (Taken-subtab):**
+- ⚠-badge op de **bad-paginatab** (Diep/Ondiep, Peuterbad) en de **Taken-subtab** zodra er verplichte taken openstaan
+- ⚠-indicatoren naast de betreffende invoervelden (op basis van open acties)
+- In de Taken-subtab staan **Verplicht vandaag** (open alarmen + kritieke rondetaken zoals regelaars en spraypark-filters) en **Overige taken** (overige optionele rondetaken)
+- `filter_spoelen`-acties van een bad vallen samen op de filtertaak van dat bad (één rij met alle redenen); facility-brede chemicaliën-alarmen staan onder **Algemeen**
 
-**Acties oplossen en heropenen:**
-- Waterbeheerder markeert actie als uitgevoerd via een checkbox in de Acties-tab
-- Opgelost door en tijdstip worden vastgelegd
-- Een opgeloste actie kan worden heropend door de checkbox uit te vinken
-- De cumulatieve bezoekersteller voor spoelbeurt reset automatisch vanaf de dag na het oplossen
+**Rondetaken** vormen de vaste dagelijkse checklist (regelaars, filters, haarfilters, douches, spraypark, …). De catalogus staat in code (`RondetakenRepository`); per dag worden alleen de afgevinkte taken bewaard, dus elke nieuwe dag begint leeg.
+
+**Oplossen en heropenen:**
+- Afvinken gebeurt via de checkbox in de Taken-subtab. Een **filtertaak** afvinken lost ook de bijbehorende `filter_spoelen`-acties van dat bad op; losse alarmen (bijv. chloor bestellen) los je direct op
+- Opgelost/uitgevoerd door en tijdstip worden vastgelegd; uitvinken heropent
+- De cumulatieve bezoekersteller voor spoelbeurt telt vanaf de **meest recente reiniging** — een opgeloste `filter_spoelen_spoelbeurt`-actie óf een afgevinkte filter-rondetaak
 
 ---
 
@@ -205,7 +211,7 @@ De **Bezoekers**-subtab in de waterbeheer Diep/Ondiep sectie toont:
 | Bezoekers sinds spoelbeurt Diep   | Automatisch berekend: som dagelijks sinds laatste spoelbeurt |
 | Bezoekers sinds spoelbeurt Ondiep | Automatisch berekend: som dagelijks sinds laatste spoelbeurt |
 
-De cumulatieve tellers worden per bad bijgehouden op basis van de opgeloste `filter_spoelen_spoelbeurt`-acties. Zodra de coördinator het bezoekersaantal opslaat of een waterbeheerder de Bezoekers-subtab bekijkt, worden de actieregels gecontroleerd.
+De cumulatieve tellers worden per bad bijgehouden vanaf de meest recente reiniging — een opgeloste `filter_spoelen_spoelbeurt`-actie óf een afgevinkte filter-rondetaak (`diep_filter`/`ondiep_filter`). Zodra de coördinator het bezoekersaantal opslaat of een waterbeheerder de Bezoekers-subtab bekijkt, worden de actieregels gecontroleerd.
 
 ---
 

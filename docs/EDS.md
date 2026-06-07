@@ -220,9 +220,12 @@ directly. Accepted given the app's modest UI and the solo-developer constraint.
 
 **Decision.** After a measurement/consumption/coordinator save, the relevant
 `ActiesRepository.genereer*` method runs **fire-and-forget** and writes one row per
-`(bad_id, datum, actie_type)` (upsert if active, delete-if-unresolved if not). The
-frontend groups all `filter_spoelen_*` rows for a bath into one card carrying every
-reason, resolved together.
+`(bad_id, datum, actie_type)` (upsert if active, delete-if-unresolved if not).
+`TakenService` then composes these actions with the rondetaken catalogue
+**server-side**: all `filter_spoelen_*` actions for a bath fold onto that bath's
+filter rondetaak (one row carrying every reason), the rest become standalone alarm
+rows. Ticking the filter rondetaak resolves those actions
+(`resolveFilterSpoelen`).
 
 **Rationale.** Keeps saves fast and the backend simple (no cross-table
 transaction), while the user still sees a single "Filter spoelen" action per bath
@@ -291,32 +294,37 @@ central date picker drives all dagstaat data.
 ```
 
 #### Waterbeheer → Diep/Ondiep (UI-002)
-Tabs: Meetwaarden · Verbruik · Verwarmingssysteem · Bezoekers; plus the page-level
-tabs Diep/Ondiep · Peuterbad · Logboek · Acties.
+Tabs: Meetwaarden · Verbruik · Verwarmingssysteem · Bezoekers · Taken; plus the
+page-level tabs Diep/Ondiep · Peuterbad · Logboek.
 - **Meetwaarden:** per bath (Diep, Ondiep) pH, chloor, temp, flow, filterdruk in/out.
 - **Verbruik:** water (diep/ondiep/totaal), electricity (night/day), gas, flocculant,
   chemicals; each with a read-only daily-consumption (today − previous) cell.
 - **Verwarmingssysteem:** status/inspection checkboxes.
 - **Bezoekers:** today's count and cumulative-since-backwash (from coordinator data).
-Action `⚠`/`✓` markers attach to the relevant inputs; the Acties tab shows a badge.
+Action `⚠`/`✓` markers attach to the relevant inputs; a ⚠ badge appears on the
+page tab and the Taken subtab when must-do tasks are open.
 
 #### Waterbeheer → Peuterbad (UI-003)
-Subtabs Meetwaarden (pH, chloor, filterdruk, flow) and Verbruik (water, chemicals
-chloor/zwavelzuur, each with consumption cell).
+Subtabs Meetwaarden (pH, chloor, filterdruk, flow), Verbruik (water, chemicals
+chloor/zwavelzuur, each with consumption cell) and Taken.
 
 #### Waterbeheer → Logboek (UI-004) / Coördinatoren → Logboek (UI-009)
 Timestamped free-text entries for the day; add and delete.
 
-#### Waterbeheer → Acties (UI-005)
-Table: Bad · Actie · Reden(en) · Uitgevoerd (checkbox). Open actions grouped per
-bath (filter backwash reasons merged); resolved ones shown struck-through with who/
-when. Checkbox resolves/reopens the whole group.
+#### Waterbeheer → Taken (UI-005)
+Each bath page (Diep/Ondiep, Peuterbad) has a **Taken** subtab split into two
+sections: **Verplicht vandaag** (open alarms + critical rondetaken — regelaars,
+spraypark filters) and **Overige taken** (remaining optional rondetaken). Each row:
+Gebied · Taak · Reden · Uitgevoerd (checkbox); done rows struck-through with who/
+when. `filter_spoelen_*` alarms fold onto the bath's filter row (one row, marked
+MUST with the reason); ticking it also clears those actions. Facility-wide chemical
+alarms group under **Algemeen**. There is no separate global Acties tab.
 
 ```
-┌ Openstaande acties (n) ─────────────────────────────────┐
-│ Bad     │ Actie          │ Reden            │ Uitgevoerd │
-│ Diep    │ Filter spoelen │ Druk > … <br> Flow < … │  [ ]  │
-│ Peuterbad│ Vat bijvullen │ Chloor 8 < 10    │  [ ]       │
+┌ Verplicht vandaag (n) ──────────────────────────────────┐
+│ Gebied   │ Taak             │ Reden          │ Uitgevoerd │
+│ Diep     │ Diep filter ger… │ Flow < …       │  [ ]       │
+│ Spraypark│ Filters spraypa… │                │  [ ]       │
 └─────────────────────────────────────────────────────────┘
 ```
 
@@ -397,6 +405,8 @@ best-effort (EPS §5.4). No dedicated breakpoints are formally specified.
 |----------------|-----|---------|----|
 |`auth.ts`|`/api`|`POST /login`, `POST /logout`, `GET /ingelogd`|— / session|
 |`metingen.ts`|`/api`|`GET/POST /metingen`, `GET /acties`, `POST /acties/:id/resolve`, `POST /acties/:id/unresolve`, `GET /bezoekers`|waterbeheerder|
+|`rondetaken.ts`|`/api/rondetaken`|`GET /`, `POST /:sleutel/voltooi`, `POST /:sleutel/heropen`|waterbeheerder|
+|`taken.ts`|`/api/taken`|`GET /` — composed task list (rondetaken + acties) per bath page|waterbeheerder|
 |`coordinatoren.ts`|`/api/coordinatoren`|`GET/POST /`, `DELETE /`, `GET/POST /checklist`, `GET/POST /daggegevens`, `GET/POST /logboek`, `DELETE /logboek/:id`|waterbeheerder or coördinator|
 |`verbruik.ts`|`/api/verbruik`|`GET/POST /diep-ondiep`, `GET /diep-ondiep/vorige`, `GET/POST /verwarmingssysteem`|waterbeheerder|
 |`limieten.ts`|`/api/limieten`|`GET /`, `GET /defaults`, `POST /`|read: authenticated (any role) · write: **Administrator only**|
@@ -500,7 +510,8 @@ frontend/
     ├── state.js     (AppState)        ├── api.js      (ApiClient)
     ├── ui.js        (UIManager)       ├── auth.js     (AuthModule)
     ├── nav.js       (NavModule)       ├── metingen.js (MetingenModule)
-    ├── verbruik.js  (VerbruikModule)  ├── opslaan.js  (OpslaanModule)
+    ├── taken.js     (TakenModule)     ├── verbruik.js (VerbruikModule)
+    ├── opslaan.js   (OpslaanModule)
     ├── logboek.js   ├── gebruikers.js ├── database.js
     ├── trend.js     ├── limieten.js   └── app.js      (Application + window.*)
 ```
@@ -516,6 +527,7 @@ graph TB
     App --> Auth["AuthModule"]
     App --> Nav["NavModule"]
     App --> Met["MetingenModule"]
+    App --> Taken["TakenModule"]
     App --> Verb["VerbruikModule"]
     App --> Save["OpslaanModule (1.2s debounce)"]
     App --> Log["LogboekModule"]
@@ -532,7 +544,8 @@ graph TB
 |`UIManager`|Toasts, field validation against limits, autosave-status indicator|
 |`NavModule`|Date navigation bounded by the season window|
 |`AuthModule`|Login/logout, activate dashboard, switch role|
-|`MetingenModule`|Load/render measurements; action badges & field markers; coordinator blocks; `groepeerActies`|
+|`MetingenModule`|Load/render measurements; ⚠/✓ field markers from open/resolved actions; coordinator blocks|
+|`TakenModule`|Per-bath Taken subtab composed from `/api/taken`: "Verplicht vandaag" (must) vs "Overige taken"; toggle via rondetaken/acties endpoints; ⚠ tab/subtab badges|
 |`VerbruikModule`|Load/save consumption & heating; `berekenVerbruik` deltas (Diep/Ondiep + Peuterbad)|
 |`OpslaanModule`|All autosave orchestration (central + per block); `peuterbadOnvolledig`|
 |`LogboekModule`|Log entries for water-management and coordinators|
@@ -544,8 +557,9 @@ graph TB
 ### 6.3 Data Fetching Strategy
 
 On-demand `fetch` via `ApiClient`; no client cache or websockets. Loading a date
-triggers parallel fetches (metingen, acties, bezoekers, verbruik+vorige). Autosave
-posts the edited section then refreshes derived views (actions, consumption).
+triggers parallel fetches (metingen, acties for field markers, taken for badges,
+bezoekers, verbruik+vorige). Autosave posts the edited section then refreshes
+derived views (field markers, task badges, consumption).
 
 -----
 
@@ -630,6 +644,7 @@ erDiagram
     VERBRUIK_DIEP_ONDIEP { int id PK  date datum  int floculant  int water_diep  int water_ondiep  int water_totaal  int elektriciteit_nacht  int elektriciteit_dag  int gas  int chemicalien_chloor  int chemicalien_zwavelzuur }
     VERWARMINGS_SYSTEEM { int id PK  date datum  bool verwarming_status_1  bool verwarming_status_2  bool verwarming_status_3  bool verwarming_status_4  bool verwarming_druk_ok  bool verwarming_visuele_controle }
     ACTIES { int id PK  int bad_id FK  date datum  varchar beschrijving  varchar actie_type  bool opgelost  datetime opgelost_op  varchar opgelost_door }
+    RONDETAKEN_VOLTOOID { int id PK  varchar taak_sleutel  date datum  datetime voltooid_op  varchar voltooid_door }
     LIMIETEN { int id PK  varchar parameter_naam  decimal min_waarde  decimal max_waarde }
     GEBRUIKERS { int id PK  varchar voornaam  varchar achternaam  varchar inlognaam  varchar wachtwoord  enum taak }
     LOGBOEK { int id PK  date datum  datetime tijdstip  varchar auteur  text tekst }
@@ -638,9 +653,12 @@ erDiagram
 
 **Uniqueness/keys of note:** `metingen_diep_ondiep (bad_id, datum)`,
 `metingen_peuterbad (bad_id, datum)`, `metingen_coordinatoren (bad_id, datum,
-tijdstip)`, `acties (bad_id, datum, actie_type)`, `limieten.parameter_naam`,
-`gebruikers.inlognaam`; daily tables unique on `datum`. `LIMIETEN` also stores the
-action thresholds (`actie_*`) and the season window (`seizoen_begin/eind` as YYYYMMDD).
+tijdstip)`, `acties (bad_id, datum, actie_type)`, `rondetaken_voltooid
+(taak_sleutel, datum)`, `limieten.parameter_naam`, `gebruikers.inlognaam`; daily
+tables unique on `datum`. `LIMIETEN` also stores the action thresholds (`actie_*`)
+and the season window (`seizoen_begin/eind` as YYYYMMDD). `RONDETAKEN_VOLTOOID`
+stores only daily completions; the task catalogue itself lives in code
+(`RondetakenRepository`), so it has no `bad_id` FK.
 
 ### 7.4 Middleware Stack
 
@@ -719,11 +737,11 @@ pure, testable helpers (see §9.3). Schema changes go in `init.sql` only.
 |Test type|Tool|Scope|
 |---------|----|-----|
 |Unit (backend)|Jest + ts-jest|Each layer mocks the layer below (controller↔IService, service↔IRepository, repository↔mock pool); plus AppError, auth middleware, errorHandler, Zod schemas & wiring|
-|Unit (frontend)|Jest (node + jsdom)|Pure helpers in node env (`groepeerActies`, `berekenVerbruik`, `peuterbadOnvolledig`, limieten conversions); DOM flows under `@jest-environment jsdom` (peuterbad save payload, consumption calc, coordinator-block save). Classes exposed via a browser-ignored `module.exports` guard (DD-015)|
+|Unit (frontend)|Jest (node + jsdom)|Pure helpers in node env (`berekenVerbruik`, `peuterbadOnvolledig`, limieten conversions); DOM flows under `@jest-environment jsdom` (peuterbad save payload, consumption calc, coordinator-block save). Classes exposed via a browser-ignored `module.exports` guard (DD-015)|
 |Integration|Jest + Supertest + MySQL|Full stack against an isolated `zwembad_status_test` DB (`jest.integration.config.js`); `npm test` stays DB-free|
 |E2E|—|**Gap:** no automated browser smoke test yet (R-004)|
 
-Current counts (indicative): ~305 unit (incl. ~41 frontend) + 17 integration.
+Current counts (indicative): ~353 unit (incl. frontend jsdom) + 17 integration.
 
 ### 9.4 Known Constraints
 
@@ -762,7 +780,7 @@ Current counts (indicative): ~305 unit (incl. ~41 frontend) + 17 integration.
 |WB-001..008 (water log)|§4.3 (UI-002/003/004), §5.1, §7.2/7.3|metingen + verbruik + verwarming + logboek|
 |WB-005 (consumption deltas)|§5.4, §6.2 (`berekenVerbruik`)|Derived, jsdom-tested|
 |CO-001..004 (coordinator rounds)|§4.3 (UI-006..009), §5.1, §7.3|metingen_coordinatoren + checklist + daggegevens + logboek|
-|ACT-001..005 (actions)|§3 (DD-009/014), §4.3 (UI-005), §7 (ActiesRepository)|Per-reason rows, grouped client-side; fire-and-forget; regenerate on save/delete|
+|ACT-001..005 (actions)|§3 (DD-009/014), §4.3 (UI-005), §7 (ActiesRepository, TakenService)|Composed server-side into per-bath Taken (Verplicht vs Overige); fire-and-forget generation; filter rondetaak ↔ `filter_spoelen` sync|
 |LIM-001..003 (limits)|§4.3 (UI-010), §5.1, §7.3|limieten table incl. thresholds + season; read any-role, edit Administrator-only (R-006)|
 |ADM-001..004 (users/database)|§4.3 (UI-011/012), §5.1, §7|gebruikers + database routers; CSV; danger zone|
 |TRD-001 (trends)|§4.3 (UI-013), §5.1 (`/api/trend`), §6.2 (TrendModule)|Chart.js over a date range; Waterbeheerder only (R-006)|
