@@ -7,7 +7,7 @@ in [`docs/architecture/`](architecture/).
 |------|--------|
 | [Backend](architecture/backend.md)   | Gelaagde opbouw, request-lifecycle, klassendiagram, middleware, endpoints, dependency injection |
 | [Frontend](architecture/frontend.md) | ES6-class modules, klassendiagram en de `Application`-container |
-| [Flows](architecture/flows.md)       | Sequencediagrammen: opstarten, acties, autosave |
+| [Flows](architecture/flows.md)       | Sequencediagrammen: opstarten, acties &amp; taken, autosave |
 | [Database](architecture/database.md) | ER-diagram en tabellen |
 | [Testing](architecture/testing.md)   | Teststrategie per laag |
 
@@ -124,10 +124,9 @@ graph LR
     end
 
     subgraph WB_Tab["Dagstaat — Waterbeheer"]
-        WB1["Diep/Ondiep\n• Meetwaarden\n• Verbruik\n• Verwarmingssysteem\n• Bezoekers"]
-        WB2["Peuterbad\n• Meetwaarden\n• Verbruik"]
+        WB1["Diep/Ondiep\n• Meetwaarden\n• Verbruik\n• Verwarmingssysteem\n• Bezoekers\n• Taken"]
+        WB2["Peuterbad\n• Meetwaarden\n• Verbruik\n• Taken"]
         WB3["Logboek"]
-        WB4["Acties"]
     end
 
     subgraph CO_Tab["Dagstaat — Coördinatoren"]
@@ -144,7 +143,7 @@ graph LR
         AD4["Trendanalyse\n(Chart.js)"]
     end
 
-    WB --> WB1 & WB2 & WB3 & WB4
+    WB --> WB1 & WB2 & WB3
     CO --> CO1 & CO2 & CO3 & CO4
     AD --> AD1 & AD2 & AD3 & AD4
 ```

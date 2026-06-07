@@ -21,7 +21,8 @@ graph TB
     App --> UI["UIManager\ntoonBericht · valideerVeld\nzetInputValue · setAutoSaveStatus"]
     App --> Auth["AuthModule\nstart · verwerkLogin/Logout\nwisselRol"]
     App --> Nav["NavModule\nveranderDatum · begrensSeizoenDatum"]
-    App --> Met["MetingenModule\nlaadMetingen · laadActies\nbouwtabel · coordinator-blokken"]
+    App --> Met["MetingenModule\nlaadMetingen · bouwtabel\nveldindicatoren · coordinator-blokken"]
+    App --> Taken["TakenModule\nlaadBadTaken · toggle\nVerplicht/Overige + ⚠-badges"]
     App --> Verb["VerbruikModule\nladen · opslaan · berekenen"]
     App --> Save["OpslaanModule\nscheduleAutoSave (1.2s debounce)\nverwerkCentraleOpslaan"]
     App --> Log["LogboekModule"]
@@ -46,7 +47,7 @@ graph LR
 ```
 
 Alleen de functies die HTML `onclick`-handlers nodig hebben staan op `window`
-(bv. `wisselRol`, `veranderDatum`, `voegNieuwBlokToe`, `losActieGroepOp`). Alle
+(bv. `wisselRol`, `veranderDatum`, `voegNieuwBlokToe`, `toggleTaak`). Alle
 overige communicatie loopt via de container, niet via globals.
 
 ### Klassendiagram
@@ -63,6 +64,7 @@ classDiagram
         +nav: NavModule
         +auth: AuthModule
         +metingen: MetingenModule
+        +taken: TakenModule
         +verbruik: VerbruikModule
         +opslaan: OpslaanModule
         +logboek: LogboekModule
@@ -98,6 +100,11 @@ classDiagram
         +laadActies(datum)
         +bouwTabelOp(data)
     }
+    class TakenModule {
+        +laadBadTaken(pagina, datum)
+        +werkBadgeBij(datum)
+        +toggle(sleutel, voltooid)
+    }
     class OpslaanModule {
         +scheduleAutoSave()
         +verwerkCentraleOpslaan(autoSave)
@@ -108,6 +115,7 @@ classDiagram
     Application *-- UIManager
     Application *-- AuthModule
     Application *-- MetingenModule
+    Application *-- TakenModule
     Application *-- OpslaanModule
     Application *-- NavModule
     Application *-- VerbruikModule
@@ -119,6 +127,7 @@ classDiagram
 
     AuthModule --> Application : this.app
     MetingenModule --> Application : this.app
+    TakenModule --> Application : this.app
     OpslaanModule --> Application : this.app
 ```
 
@@ -138,7 +147,8 @@ classDiagram
 | `UIManager` | Statusberichten, veldvalidatie tegen limieten, auto-save-indicator |
 | `NavModule` | Datumnavigatie met begrenzing op de seizoengrenzen |
 | `AuthModule` | Inloggen/uitloggen, dashboard activeren, rol wisselen |
-| `MetingenModule` | Metingen laden/tonen, actie-badges en -indicatoren, coördinator-blokken |
+| `MetingenModule` | Metingen laden/tonen, ⚠/✓-veldindicatoren bij de meetwaarden, coördinator-blokken |
+| `TakenModule` | Taken-subtab per bad: "Verplicht vandaag" vs "Overige taken"; afvinken via rondetaken-/acties-endpoints; ⚠-badges op tabs/subtabs |
 | `VerbruikModule` | Verbruik/verwarming laden, opslaan, dagdelta berekenen |
 | `OpslaanModule` | Alle auto-save-orkestratie (centraal + per blok), 1.2 s debounce |
 | `LogboekModule` | Logboekblokken voor waterbeheer en coördinatoren |

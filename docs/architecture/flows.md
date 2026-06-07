@@ -59,7 +59,7 @@ sequenceDiagram
         Met->>Svc: MetingenService.getActies(datum)
         Svc->>DB: getActies()
         DB-->>B: acties
-        Note over B: badges + veldindicatoren bijwerken
+        Note over B: ⚠/✓-veldindicatoren bij de meetwaarden;\nGET /api/taken voor de tab-/subtab-badges
     end
 
     B->>Met: GET /api/verbruik/diep-ondiep (+ /vorige)
@@ -68,7 +68,7 @@ sequenceDiagram
 
 ---
 
-## 2. Acties aanmaken en oplossen
+## 2. Acties genereren · Taken weergeven en afvinken
 
 ```mermaid
 sequenceDiagram
@@ -98,21 +98,26 @@ sequenceDiagram
     Note over WB,Svc: Trigger via bezoekers (coördinator-daggegevens)
     Note over Svc: CoordinatorenService.saveDaggegevens()\n→ genereerBezoekers() + genereerSpoelbeurt() (fire-and-forget)
 
-    Note over WB,FE: Acties weergeven
-    WB->>FE: Acties-/bezoekers-subtab openen
-    FE->>Ctrl: GET /api/acties?datum=...
-    Ctrl->>Svc: getActies(datum)
-    Svc->>Repo: SELECT acties JOIN baden
-    Repo-->>FE: acties
-    FE-->>WB: groepeer filter_spoelen_* per bad\n⚠ badges + veldindicatoren
+    Note over WB,FE: Taken weergeven (per bad)
+    WB->>FE: Taken-subtab openen
+    FE->>Ctrl: GET /api/taken?datum=...
+    Ctrl->>Svc: TakenService.getTaken(datum)
+    Svc->>Repo: getRondetaken() + getActies()
+    Note over Svc: filter_spoelen_* vouwen samen op de filtertaak;\noverige acties → losse rijen; must = alarm of kritiek
+    Repo-->>FE: TaakItem[]
+    FE-->>WB: secties "Verplicht vandaag" / "Overige taken"\n+ ⚠-badges op tabs/subtabs
 
-    Note over WB,Svc: Oplossen / heropenen
+    Note over WB,Svc: Afvinken / heropenen
     WB->>FE: Checkbox aan/uit
-    FE->>Ctrl: POST /api/acties/:id/resolve | /unresolve
-    Ctrl->>Svc: resolveActie(id, gebruiker) | unresolveActie(id)
-    Note over Svc: bepaalAuteur(gebruiker) voor opgelost_door
-    Svc->>Repo: UPDATE acties SET opgelost = ...
-    FE->>Ctrl: GET /api/acties (refresh)
+    alt rondetaak (incl. filtertaak)
+        FE->>Ctrl: POST /api/rondetaken/:sleutel/voltooi | /heropen
+        Ctrl->>Svc: RondetakenService.voltooi/heropen
+        Note over Svc: filtertaak → ook resolveFilterSpoelen(bad, datum)
+    else losse actie (bv. chloor bestellen)
+        FE->>Ctrl: POST /api/acties/:id/resolve | /unresolve
+        Ctrl->>Svc: resolveActie(id, gebruiker) | unresolveActie(id)
+    end
+    FE->>Ctrl: GET /api/taken (refresh)
     Ctrl-->>FE: bijgewerkte lijst
 ```
 
@@ -140,7 +145,7 @@ sequenceDiagram
         Save->>Ctrl: POST /api/metingen [Diep + Ondiep]
         Ctrl->>Svc: MetingenService.saveMeting()
         Svc->>DB: save + genereer acties
-        Save->>Ctrl: GET /api/acties (badges verversen)
+        Save->>Ctrl: GET /api/acties (veldindicatoren) + GET /api/taken (badges)
     else Waterbeheer — verbruik/verwarming
         Save->>Ctrl: POST /api/verbruik/diep-ondiep (+ /verwarmingssysteem)
         Ctrl->>Svc: VerbruikService.saveVerbruik() / saveVerwarming()

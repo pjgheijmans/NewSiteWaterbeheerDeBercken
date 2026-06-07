@@ -109,6 +109,13 @@ erDiagram
         datetime opgelost_op
         varchar opgelost_door
     }
+    RONDETAKEN_VOLTOOID {
+        int id PK
+        varchar taak_sleutel
+        date datum
+        datetime voltooid_op
+        varchar voltooid_door
+    }
     LIMIETEN {
         int id PK
         varchar parameter_naam
@@ -130,9 +137,14 @@ erDiagram
     BADEN ||--o{ ACTIES : "heeft"
 ```
 
+> `RONDETAKEN_VOLTOOID` heeft geen `bad_id`-FK: de rondetaakcatalogus (welke
+> taken er bestaan, per gebied/pagina) staat in code (`RondetakenRepository`).
+> De tabel bewaart enkel de afgevinkte taken per dag, uniek op
+> `(taak_sleutel, datum)` — een nieuwe dag = geen rijen = alles weer onafgevinkt.
+
 ## Toegang
 
 Alle tabellen worden uitsluitend benaderd via de repositories
 (`backend/repositories/`), die de gedeelde `mysql2`-pool uit `db.ts` gebruiken.
 `LIMIETEN` en `GEBRUIKERS` worden bij een verse database voorzien van
-standaardwaarden via `seedDefaults()` (31 limieten, 2 gebruikers).
+standaardwaarden via `seedDefaults()` (34 limieten, 2 gebruikers).

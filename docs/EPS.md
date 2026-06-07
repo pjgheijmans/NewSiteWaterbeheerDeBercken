@@ -334,8 +334,9 @@ table, clear a table, or reset the database (double confirmation). *(ADM-002..00
   Gebruikers Beheer, Database Beheer, Trendanalyse); items shown/enabled per role.
 - Within Waterbeheer and Coördinatoren, **tabs and subtabs** group the data areas.
 - A single **central date selector** sets the active day for all dagstaat data.
-- The Acties tab and the Waterbeheer nav item carry **badges** for open-action
-  counts.
+- The per-bath **Taken** subtab and its bath page tab (Diep/Ondiep, Peuterbad)
+  carry **⚠ badges** when must-do tasks (open alarms or critical rondetaken) are
+  open.
 
 ### 3.12 Modes of Operation
 
