@@ -55,6 +55,12 @@ export const limietSchema = z.object({
     max_waarde:     z.number(),
 });
 
+// ── Actie-teksten (strikt) ────────────────────────────────────────────────────
+export const actieTekstSchema = z.object({
+    actie_sleutel: z.string().min(1, 'is verplicht'),
+    sjabloon:      z.string().min(1, 'is verplicht'),
+});
+
 // ── Auth ────────────────────────────────────────────────────────────────────
 export const loginSchema = z.object({
     username: z.string().min(1, 'is verplicht'),

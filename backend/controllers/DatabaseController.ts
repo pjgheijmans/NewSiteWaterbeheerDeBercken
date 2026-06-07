@@ -2,9 +2,9 @@ import express, { Router, Request, Response, NextFunction } from 'express';
 import { checkAuth, isAdminOrWaterbeheerder } from '../middleware/auth';
 import { IDatabaseService } from '../services/IDatabaseService';
 
-const TRUNC_TABLES  = ['logboek','coordinatoren_logboek','metingen_diep_ondiep','metingen_coordinatoren','coordinatoren_checklist','coordinatoren_daggegevens','metingen_peuterbad','verbruik_diep_ondiep','verwarmings_systeem_diep_ondiep','acties','limieten','gebruikers'];
-const EXPORT_TABLES = ['logboek','coordinatoren_logboek','metingen_diep_ondiep','metingen_peuterbad','metingen_coordinatoren','coordinatoren_checklist','coordinatoren_daggegevens','verbruik_diep_ondiep','verwarmings_systeem_diep_ondiep','acties','limieten','gebruikers'];
-const IMPORT_TABLES = ['logboek','metingen_diep_ondiep','metingen_coordinatoren','coordinatoren_checklist','coordinatoren_daggegevens','metingen_peuterbad','verbruik_diep_ondiep','verwarmings_systeem_diep_ondiep','limieten','gebruikers'];
+const TRUNC_TABLES  = ['logboek','coordinatoren_logboek','metingen_diep_ondiep','metingen_coordinatoren','coordinatoren_checklist','coordinatoren_daggegevens','metingen_peuterbad','verbruik_diep_ondiep','verwarmings_systeem_diep_ondiep','acties','limieten','actie_teksten','gebruikers'];
+const EXPORT_TABLES = ['logboek','coordinatoren_logboek','metingen_diep_ondiep','metingen_peuterbad','metingen_coordinatoren','coordinatoren_checklist','coordinatoren_daggegevens','verbruik_diep_ondiep','verwarmings_systeem_diep_ondiep','acties','limieten','actie_teksten','gebruikers'];
+const IMPORT_TABLES = ['logboek','metingen_diep_ondiep','metingen_coordinatoren','coordinatoren_checklist','coordinatoren_daggegevens','metingen_peuterbad','verbruik_diep_ondiep','verwarmings_systeem_diep_ondiep','limieten','actie_teksten','gebruikers'];
 
 export class DatabaseController {
     readonly router: Router;

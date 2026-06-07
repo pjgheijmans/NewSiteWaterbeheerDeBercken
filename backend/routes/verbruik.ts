@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { Pool } from 'mysql2/promise';
 import { VerbruikRepository } from '../repositories/VerbruikRepository';
 import { ActiesRepository } from '../repositories/ActiesRepository';
+import { ActieTekstenRepository } from '../repositories/ActieTekstenRepository';
 import { VerbruikService } from '../services/VerbruikService';
 import { VerbruikController } from '../controllers/VerbruikController';
 
@@ -11,7 +12,7 @@ import { VerbruikController } from '../controllers/VerbruikController';
  */
 export function maakVerbruikRouter(pool: Pool): Router {
     const verbruikRepo = new VerbruikRepository(pool);
-    const actiesRepo   = new ActiesRepository(pool);
+    const actiesRepo   = new ActiesRepository(pool, new ActieTekstenRepository(pool));
     const service      = new VerbruikService(verbruikRepo, actiesRepo);
     const controller   = new VerbruikController(service);
     return controller.router;

@@ -10,6 +10,7 @@ import { DatabaseRepository }   from './repositories/DatabaseRepository';
 import { maakAuthRouter }          from './routes/auth';
 import { maakGebruikersRouter }    from './routes/gebruikers';
 import { maakLimietenRouter }      from './routes/limieten';
+import { maakActieTekstenRouter }  from './routes/actieteksten';
 import { maakMetingenRouter }      from './routes/metingen';
 import { maakCoordinatorenRouter } from './routes/coordinatoren';
 import { maakVerbruikRouter }      from './routes/verbruik';
@@ -48,6 +49,7 @@ export function maakApp(pool: Pool): Express {
     app.use('/api',               maakAuthRouter(pool));
     app.use('/api/gebruikers',    maakGebruikersRouter(pool));
     app.use('/api/limieten',      maakLimietenRouter(pool));
+    app.use('/api/actieteksten',  maakActieTekstenRouter(pool));
     app.use('/api',               maakMetingenRouter(pool));
     app.use('/api/coordinatoren', maakCoordinatorenRouter(pool));
     app.use('/api/verbruik',      maakVerbruikRouter(pool));

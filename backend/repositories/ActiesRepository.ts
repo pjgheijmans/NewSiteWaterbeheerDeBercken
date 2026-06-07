@@ -1,10 +1,22 @@
 import { Pool, RowDataPacket } from 'mysql2/promise';
 import { Actie, MetingInput, VerbruikInput, BadTotalen, Drempelwaarden, GebondenChloorResultaat } from '../types';
 import { IActiesRepository } from './IActiesRepository';
+import { IActieTekstenRepository } from './IActieTekstenRepository';
+import { ActieTekstenRepository } from './ActieTekstenRepository';
 import { RondetakenRepository } from './RondetakenRepository';
 
 export class ActiesRepository implements IActiesRepository {
-    constructor(private readonly pool: Pool) {}
+    constructor(
+        private readonly pool: Pool,
+        private readonly actieTekstenRepo: IActieTekstenRepository,
+    ) {}
+
+    /** Render een actie-sjabloon (uit de DB) met de gegeven plaatshouderwaarden. */
+    private _tekst(
+        sjablonen: Record<string, string>, sleutel: string, params: Record<string, string | number>
+    ): string {
+        return ActieTekstenRepository.render(sjablonen[sleutel] ?? '', params);
+    }
 
     async getActies(datum: string): Promise<Actie[]> {
         const [rows] = await this.pool.execute<RowDataPacket[]>(
@@ -99,6 +111,7 @@ export class ActiesRepository implements IActiesRepository {
 
     async genereer(bad_id: number, datum: string, bad_naam: string, body: MetingInput): Promise<void> {
         const d = await this.laadDrempelwaarden();
+        const t = await this.actieTekstenRepo.getSjablonen();
         // Sensorwaarden komen uit JSON body; cast naar Record voor runtime parseFloat
         const b = body as unknown as Record<string, unknown>;
         const drukIn  = parseFloat(String(b.filter_druk_in  ?? b.filter_druk ?? NaN));
@@ -108,13 +121,13 @@ export class ActiesRepository implements IActiesRepository {
         if (bad_naam === 'Diep' || bad_naam === 'Ondiep') {
             if (!isNaN(drukIn) && !isNaN(drukUit)) {
                 await this.stelIn(bad_id, datum, 'filter_spoelen_druk',
-                    `Filterdruk verschil ${bad_naam} > ${d.actie_druk_verschil} bar — Filter spoelen`,
+                    this._tekst(t, 'filter_spoelen_druk', { bad: bad_naam, drempel: d.actie_druk_verschil }),
                     drukIn - drukUit > d.actie_druk_verschil);
             }
             const flowMin = bad_naam === 'Diep' ? d.actie_flow_diep : d.actie_flow_ondiep;
             if (!isNaN(flow)) {
                 await this.stelIn(bad_id, datum, 'filter_spoelen_flow',
-                    `Flow ${bad_naam} onder ${flowMin} m³/h — Filter spoelen`,
+                    this._tekst(t, 'filter_spoelen_flow', { bad: bad_naam, drempel: flowMin }),
                     flow < flowMin);
             }
         }
@@ -122,26 +135,26 @@ export class ActiesRepository implements IActiesRepository {
         if (bad_naam === 'Peuterbad') {
             if (!isNaN(drukIn)) {
                 await this.stelIn(bad_id, datum, 'filter_spoelen_druk',
-                    `Filterdruk Peuterbad > ${d.actie_druk_peuterbad} bar — Filter spoelen`,
+                    this._tekst(t, 'filter_spoelen_druk_peuter', { drempel: d.actie_druk_peuterbad }),
                     drukIn > d.actie_druk_peuterbad);
             }
             if (!isNaN(flow)) {
                 await this.stelIn(bad_id, datum, 'filter_spoelen_flow',
-                    `Flow Peuterbad onder ${d.actie_flow_peuterbad} m³/h — Filter spoelen`,
+                    this._tekst(t, 'filter_spoelen_flow_peuter', { drempel: d.actie_flow_peuterbad }),
                     flow < d.actie_flow_peuterbad);
             }
 
             const chloorPeuter = parseFloat(String(b.chemicalien_chloor ?? NaN));
             if (!isNaN(chloorPeuter)) {
                 await this.stelIn(bad_id, datum, 'chloor_peuterbad_bijvullen',
-                    `Chloorvoorraad Peuterbad ${chloorPeuter} < ${d.actie_chloor_peuterbad_min} — Vat bijvullen`,
+                    this._tekst(t, 'chloor_peuterbad_bijvullen', { waarde: chloorPeuter, drempel: d.actie_chloor_peuterbad_min }),
                     chloorPeuter < d.actie_chloor_peuterbad_min);
             }
 
             const zwavelzuurPeuter = parseFloat(String(b.chemicalien_zwavelzuur ?? NaN));
             if (!isNaN(zwavelzuurPeuter)) {
                 await this.stelIn(bad_id, datum, 'zwavelzuur_peuterbad_bijvullen',
-                    `Zwavelzuurvoorraad Peuterbad ${zwavelzuurPeuter} < ${d.actie_zwavelzuur_peuterbad_min} — Vat bijvullen`,
+                    this._tekst(t, 'zwavelzuur_peuterbad_bijvullen', { waarde: zwavelzuurPeuter, drempel: d.actie_zwavelzuur_peuterbad_min }),
                     zwavelzuurPeuter < d.actie_zwavelzuur_peuterbad_min);
             }
         }
@@ -154,25 +167,26 @@ export class ActiesRepository implements IActiesRepository {
         );
         if (!bads.length) return;
         const bad_id = (bads[0] as { id: number }).id;
+        const t = await this.actieTekstenRepo.getSjablonen();
 
         const chloor = parseFloat(String(body.chemicalien_chloor));
         if (!isNaN(chloor)) {
             await this.stelIn(bad_id, datum, 'chloor_bestellen',
-                `Chloorvoorraad onder ${d.actie_chloor_min} liter — Chloor bestellen`,
+                this._tekst(t, 'chloor_bestellen', { drempel: d.actie_chloor_min }),
                 chloor < d.actie_chloor_min);
         }
 
         const zwavelzuur = parseFloat(String(body.chemicalien_zwavelzuur));
         if (!isNaN(zwavelzuur)) {
             await this.stelIn(bad_id, datum, 'zwavelzuur_bestellen',
-                `Zwavelzuurvoorraad onder ${d.actie_zwavelzuur_min} liter — Zwavelzuur bestellen`,
+                this._tekst(t, 'zwavelzuur_bestellen', { drempel: d.actie_zwavelzuur_min }),
                 zwavelzuur < d.actie_zwavelzuur_min);
         }
 
         const floculant = parseFloat(String(body.floculant));
         if (!isNaN(floculant)) {
             await this.stelIn(bad_id, datum, 'floculant_bijvullen',
-                `Floculant ${floculant} < ${d.actie_floculant_min} — Vul floculant bij`,
+                this._tekst(t, 'floculant_bijvullen', { waarde: floculant, drempel: d.actie_floculant_min }),
                 floculant < d.actie_floculant_min);
         }
     }
@@ -185,9 +199,10 @@ export class ActiesRepository implements IActiesRepository {
         const [bads] = await this.pool.execute<RowDataPacket[]>(
             "SELECT id, naam FROM baden WHERE naam IN ('Diep', 'Ondiep')"
         );
+        const t = await this.actieTekstenRepo.getSjablonen();
         for (const bad of bads as Array<{ id: number; naam: string }>) {
             await this.stelIn(bad.id, datum, 'filter_spoelen_bezoekers',
-                `Aantal bezoekers ${aantal} > ${d.actie_bezoekers_max} — Filter spoelen`,
+                this._tekst(t, 'filter_spoelen_bezoekers', { waarde: aantal, drempel: d.actie_bezoekers_max }),
                 aantal > d.actie_bezoekers_max);
         }
     }
@@ -234,13 +249,14 @@ export class ActiesRepository implements IActiesRepository {
         );
         // Koppeling met de Rondetaken-filtertaak per bad: een afgevinkte
         // rondetaak telt mee als reinigingsmoment (zie berekenSpoelbeurtTotaal).
+        const t = await this.actieTekstenRepo.getSjablonen();
         const totalen: Record<string, number> = {};
         for (const bad of bads as Array<{ id: number; naam: string }>) {
             const sleutel = RondetakenRepository.filterSleutelVoorBad(bad.naam) ?? '';
             const totaal  = await this.berekenSpoelbeurtTotaal(bad.id, datum, sleutel);
             totalen[bad.naam.toLowerCase()] = totaal;
             await this.stelIn(bad.id, datum, 'filter_spoelen_spoelbeurt',
-                `Aantal bezoekers sinds spoelbeurt ${bad.naam} ${totaal} > ${d.actie_spoelbeurt_max} — Filter spoelen`,
+                this._tekst(t, 'filter_spoelen_spoelbeurt', { bad: bad.naam, waarde: totaal, drempel: d.actie_spoelbeurt_max }),
                 totaal > d.actie_spoelbeurt_max);
         }
         return totalen as unknown as BadTotalen;
@@ -257,6 +273,7 @@ export class ActiesRepository implements IActiesRepository {
         const [bads] = await this.pool.execute<RowDataPacket[]>(
             "SELECT id, naam FROM baden WHERE naam IN ('Diep', 'Ondiep', 'Peuterbad')"
         );
+        const t = await this.actieTekstenRepo.getSjablonen();
         for (const bad of bads as Array<{ id: number; naam: string }>) {
             const [rows] = await this.pool.execute<RowDataPacket[]>(
                 `SELECT MAX(chloor_totaal - chloor_vrij) AS gebonden_max,
@@ -269,13 +286,13 @@ export class ActiesRepository implements IActiesRepository {
             const gebonden = parseFloat(String(rij?.gebonden_max ?? NaN));
             if (!isNaN(gebonden)) {
                 await this.stelIn(bad.id, datum, 'filter_spoelen_gebonden',
-                    `Gebonden chloor ${bad.naam} ${gebonden.toFixed(2)} > ${d.actie_gebonden_chloor_max} mg/l — Filter spoelen`,
+                    this._tekst(t, 'filter_spoelen_gebonden', { bad: bad.naam, waarde: gebonden.toFixed(2), drempel: d.actie_gebonden_chloor_max }),
                     gebonden > d.actie_gebonden_chloor_max);
             }
 
             if (bad.naam === 'Peuterbad') {
                 await this.stelIn(bad.id, datum, 'peuterbad_aftappen',
-                    `Peuterbad is vandaag gebruikt — Peuterbad water aftappen`,
+                    this._tekst(t, 'peuterbad_aftappen', {}),
                     Number(rij?.gebruikt) === 1);
             }
         }

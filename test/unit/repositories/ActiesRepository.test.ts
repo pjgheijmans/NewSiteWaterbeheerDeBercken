@@ -1,13 +1,25 @@
 import { Pool } from 'mysql2/promise';
 import { ActiesRepository } from '../../../backend/repositories/ActiesRepository';
+import { ActieTekstenRepository } from '../../../backend/repositories/ActieTekstenRepository';
+import { IActieTekstenRepository } from '../../../backend/repositories/IActieTekstenRepository';
 import { maakMockPool, resultaat, paramsVan, sqlVan, MockPool } from '../../helpers/mockPool';
 
 let pool: MockPool;
 let repo: ActiesRepository;
+let actieTekstenRepo: jest.Mocked<IActieTekstenRepository>;
+
+// Standaard-sjablonen als sleutel→sjabloon-map (zonder DB) voor de mock-repo.
+const standaardSjablonen: Record<string, string> = {};
+new ActieTekstenRepository({} as unknown as Pool).getDefaults()
+    .forEach(t => { standaardSjablonen[t.actie_sleutel] = t.sjabloon; });
 
 beforeEach(() => {
     pool = maakMockPool();
-    repo = new ActiesRepository(pool as unknown as Pool);
+    actieTekstenRepo = {
+        getAll: jest.fn(), getDefaults: jest.fn(), save: jest.fn(), seedDefaults: jest.fn(),
+        getSjablonen: jest.fn().mockResolvedValue(standaardSjablonen),
+    };
+    repo = new ActiesRepository(pool as unknown as Pool, actieTekstenRepo);
 });
 
 describe('getActies', () => {

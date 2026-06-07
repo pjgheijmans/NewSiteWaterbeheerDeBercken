@@ -96,6 +96,31 @@ describe('POST /import/:tabelnaam', () => {
     });
 });
 
+describe('actie_teksten is opgenomen in de whitelists', () => {
+    it('mag geëxporteerd worden', async () => {
+        mockService.exporteerCsv.mockResolvedValue('actie_sleutel;sjabloon\r\nchloor_bestellen;Chloor bestellen\r\n');
+        const res = await request(maakApp()).get('/export/actie_teksten');
+        expect(res.status).toBe(200);
+        expect(mockService.exporteerCsv).toHaveBeenCalledWith('actie_teksten');
+    });
+
+    it('mag geïmporteerd worden', async () => {
+        const csv = 'actie_sleutel;sjabloon\r\nchloor_bestellen;Chloor bestellen\r\n';
+        mockService.importeerCsv.mockResolvedValue(undefined);
+        const res = await request(maakApp())
+            .post('/import/actie_teksten').set('Content-Type', 'text/csv').send(csv);
+        expect(res.status).toBe(200);
+        expect(mockService.importeerCsv).toHaveBeenCalledWith('actie_teksten', csv);
+    });
+
+    it('mag geleegd worden (reset naar standaardteksten)', async () => {
+        mockService.truncate.mockResolvedValue(undefined);
+        const res = await request(maakApp()).post('/truncate/actie_teksten');
+        expect(res.status).toBe(200);
+        expect(mockService.truncate).toHaveBeenCalledWith('actie_teksten');
+    });
+});
+
 describe('POST /verwijder-alles', () => {
     it('wist alle data en vernietigt de sessie', async () => {
         mockService.wisAlles.mockResolvedValue(undefined);
