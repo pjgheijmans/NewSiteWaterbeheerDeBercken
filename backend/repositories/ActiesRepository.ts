@@ -1,6 +1,7 @@
 import { Pool, RowDataPacket } from 'mysql2/promise';
 import { Actie, MetingInput, VerbruikInput, BadTotalen, Drempelwaarden, GebondenChloorResultaat } from '../types';
 import { IActiesRepository } from './IActiesRepository';
+import { RondetakenRepository } from './RondetakenRepository';
 
 export class ActiesRepository implements IActiesRepository {
     constructor(private readonly pool: Pool) {}
@@ -28,6 +29,26 @@ export class ActiesRepository implements IActiesRepository {
         await this.pool.execute(
             'UPDATE acties SET opgelost = FALSE, opgelost_op = NULL, opgelost_door = NULL WHERE id = ?',
             [id]
+        );
+    }
+
+    /** Resolve alle open filter_spoelen_*-acties voor een bad op een datum (rondetaak-koppeling). */
+    async resolveFilterSpoelen(bad_naam: string, datum: string, door: string | null): Promise<void> {
+        await this.pool.execute(
+            `UPDATE acties a JOIN baden b ON a.bad_id = b.id
+             SET a.opgelost = TRUE, a.opgelost_op = NOW(), a.opgelost_door = ?
+             WHERE b.naam = ? AND a.datum = ? AND a.actie_type LIKE 'filter_spoelen%' AND a.opgelost = FALSE`,
+            [door, bad_naam, datum]
+        );
+    }
+
+    /** Heropen alle filter_spoelen_*-acties voor een bad op een datum (rondetaak-koppeling). */
+    async unresolveFilterSpoelen(bad_naam: string, datum: string): Promise<void> {
+        await this.pool.execute(
+            `UPDATE acties a JOIN baden b ON a.bad_id = b.id
+             SET a.opgelost = FALSE, a.opgelost_op = NULL, a.opgelost_door = NULL
+             WHERE b.naam = ? AND a.datum = ? AND a.actie_type LIKE 'filter_spoelen%' AND a.opgelost = TRUE`,
+            [bad_naam, datum]
         );
     }
 
@@ -171,25 +192,36 @@ export class ActiesRepository implements IActiesRepository {
         }
     }
 
-    private async berekenSpoelbeurtTotaal(bad_id: number, datum: string): Promise<number> {
-        const [lastClean] = await this.pool.execute<RowDataPacket[]>(
-            `SELECT datum AS datum_schoon
-             FROM acties
-             WHERE bad_id = ? AND actie_type = 'filter_spoelen_spoelbeurt' AND opgelost = TRUE
-               AND datum < ?
-             ORDER BY datum DESC LIMIT 1`,
-            [bad_id, datum]
+    /**
+     * Aantal bezoekers sinds de laatste filterreiniging voor dit bad. Een
+     * "reiniging" kan uit twee bronnen komen: een opgeloste
+     * filter_spoelen_spoelbeurt-actie (Acties-tab) óf een afgevinkte
+     * filter-rondetaak (diep_filter / ondiep_filter). De meest recente van de
+     * twee, strikt vóór `datum`, bepaalt vanaf welke dag de dagtotalen tellen.
+     */
+    private async berekenSpoelbeurtTotaal(
+        bad_id: number, datum: string, rondetaakSleutel: string
+    ): Promise<number> {
+        const [ankerRows] = await this.pool.execute<RowDataPacket[]>(
+            `SELECT MAX(d) AS anker FROM (
+                 SELECT MAX(datum) AS d FROM acties
+                   WHERE bad_id = ? AND actie_type = 'filter_spoelen_spoelbeurt'
+                     AND opgelost = TRUE AND datum < ?
+                 UNION ALL
+                 SELECT MAX(datum) AS d FROM rondetaken_voltooid
+                   WHERE taak_sleutel = ? AND datum < ?
+             ) t`,
+            [bad_id, datum, rondetaakSleutel, datum]
         );
+        const anker = (ankerRows[0] as { anker: string | null } | undefined)?.anker ?? null;
 
         const [totaalRows] = await this.pool.execute<RowDataPacket[]>(
-            lastClean.length > 0
+            anker
                 ? `SELECT COALESCE(SUM(bezoekers_vandaag), 0) AS totaal
                    FROM coordinatoren_daggegevens WHERE datum > ? AND datum <= ?`
                 : `SELECT COALESCE(SUM(bezoekers_vandaag), 0) AS totaal
                    FROM coordinatoren_daggegevens WHERE datum <= ?`,
-            lastClean.length > 0
-                ? [(lastClean[0] as { datum_schoon: string }).datum_schoon, datum]
-                : [datum]
+            anker ? [anker, datum] : [datum]
         );
 
         return parseFloat(String((totaalRows[0] as { totaal: string }).totaal)) || 0;
@@ -200,9 +232,12 @@ export class ActiesRepository implements IActiesRepository {
         const [bads] = await this.pool.execute<RowDataPacket[]>(
             "SELECT id, naam FROM baden WHERE naam IN ('Diep', 'Ondiep')"
         );
+        // Koppeling met de Rondetaken-filtertaak per bad: een afgevinkte
+        // rondetaak telt mee als reinigingsmoment (zie berekenSpoelbeurtTotaal).
         const totalen: Record<string, number> = {};
         for (const bad of bads as Array<{ id: number; naam: string }>) {
-            const totaal = await this.berekenSpoelbeurtTotaal(bad.id, datum);
+            const sleutel = RondetakenRepository.filterSleutelVoorBad(bad.naam) ?? '';
+            const totaal  = await this.berekenSpoelbeurtTotaal(bad.id, datum, sleutel);
             totalen[bad.naam.toLowerCase()] = totaal;
             await this.stelIn(bad.id, datum, 'filter_spoelen_spoelbeurt',
                 `Aantal bezoekers sinds spoelbeurt ${bad.naam} ${totaal} > ${d.actie_spoelbeurt_max} — Filter spoelen`,

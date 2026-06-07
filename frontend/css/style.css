@@ -333,7 +333,6 @@ h1 {
    volgt. De blauwe bovenrand sluit aan op de actieve (blauwe) tab. */
 #waterbeheer-grote-baden-content,
 #waterbeheer-peuterbad-content,
-#waterbeheer-acties-content,
 #waterbeheer-logboek-content {
     border: 1px solid rgba(255, 255, 255, .6);
     border-top: 3px solid var(--kleur-primair);
@@ -788,7 +787,6 @@ td select,
 /* Het verbonden paginapaneel komt eveneens omhoog. */
 #waterbeheer-grote-baden-content,
 #waterbeheer-peuterbad-content,
-#waterbeheer-acties-content,
 #waterbeheer-logboek-content {
     box-shadow: 0 10px 26px rgba(15, 23, 42, .12);
 }
@@ -915,7 +913,6 @@ td select,
     }
     #waterbeheer-grote-baden-content,
     #waterbeheer-peuterbad-content,
-    #waterbeheer-acties-content,
     #waterbeheer-logboek-content {
         padding: 10px;
     }

@@ -33,6 +33,22 @@ describe('resolve / unresolve', () => {
     });
 });
 
+describe('filter_spoelen ↔ rondetaak koppeling', () => {
+    it('resolveFilterSpoelen resolved alle open filter_spoelen-acties van een bad', async () => {
+        await repo.resolveFilterSpoelen('Diep', '2026-05-31', 'Jan');
+        expect(sqlVan(pool.execute)).toMatch(/opgelost = TRUE/i);
+        expect(sqlVan(pool.execute)).toMatch(/filter_spoelen%/i);
+        expect(paramsVan(pool.execute)).toEqual(['Jan', 'Diep', '2026-05-31']);
+    });
+
+    it('unresolveFilterSpoelen heropent de filter_spoelen-acties van een bad', async () => {
+        await repo.unresolveFilterSpoelen('Ondiep', '2026-05-31');
+        expect(sqlVan(pool.execute)).toMatch(/opgelost = FALSE/i);
+        expect(sqlVan(pool.execute)).toMatch(/filter_spoelen%/i);
+        expect(paramsVan(pool.execute)).toEqual(['Ondiep', '2026-05-31']);
+    });
+});
+
 describe('genereer — Diep/Ondiep drempelwaarden', () => {
     it('maakt een filterdruk-actie aan als het verschil de drempel overschrijdt', async () => {
         // call 0 = laadDrempelwaarden SELECT → leeg → defaults (druk_verschil 0.40)
@@ -162,10 +178,10 @@ describe('genereerSpoelbeurt', () => {
         pool.execute
             .mockResolvedValueOnce(resultaat([]))                                  // laadDrempelwaarden → spoelbeurt_max 1500
             .mockResolvedValueOnce(resultaat([{ id: 1, naam: 'Diep' }, { id: 2, naam: 'Ondiep' }])) // baden
-            .mockResolvedValueOnce(resultaat([]))                                  // Diep: lastClean leeg
+            .mockResolvedValueOnce(resultaat([{ anker: null }]))                   // Diep: anker (geen reiniging)
             .mockResolvedValueOnce(resultaat([{ totaal: '2000' }]))                // Diep: totaal 2000 > 1500
             .mockResolvedValueOnce(resultaat([]))                                  // Diep: stelIn INSERT
-            .mockResolvedValueOnce(resultaat([]))                                  // Ondiep: lastClean leeg
+            .mockResolvedValueOnce(resultaat([{ anker: null }]))                   // Ondiep: anker (geen reiniging)
             .mockResolvedValueOnce(resultaat([{ totaal: '500' }]))                 // Ondiep: totaal 500 < 1500
             .mockResolvedValueOnce(resultaat([]));                                 // Ondiep: stelIn DELETE
 
@@ -177,10 +193,10 @@ describe('genereerSpoelbeurt', () => {
         pool.execute
             .mockResolvedValueOnce(resultaat([]))                                                   // laadDrempelwaarden → max 1500
             .mockResolvedValueOnce(resultaat([{ id: 1, naam: 'Diep' }, { id: 2, naam: 'Ondiep' }])) // baden
-            .mockResolvedValueOnce(resultaat([{ datum_schoon: '2026-05-20' }]))                     // Diep: eigen lastClean
+            .mockResolvedValueOnce(resultaat([{ anker: '2026-05-20' }]))                            // Diep: eigen anker
             .mockResolvedValueOnce(resultaat([{ totaal: '800' }]))                                  // Diep: 800 sinds reset < 1500
             .mockResolvedValueOnce(resultaat([]))                                                   // Diep: stelIn DELETE
-            .mockResolvedValueOnce(resultaat([]))                                                   // Ondiep: GEEN lastClean
+            .mockResolvedValueOnce(resultaat([{ anker: null }]))                                    // Ondiep: GEEN anker
             .mockResolvedValueOnce(resultaat([{ totaal: '2000' }]))                                 // Ondiep: 2000 (alles) > 1500
             .mockResolvedValueOnce(resultaat([]));                                                  // Ondiep: stelIn INSERT
 
@@ -189,18 +205,36 @@ describe('genereerSpoelbeurt', () => {
         // Aparte tellers → aparte uitkomsten
         expect(totalen).toEqual({ diep: 800, ondiep: 2000 });
 
-        // Diep telt met ZIJN bad_id en reset-venster (datum > lastClean)
-        expect(paramsVan(pool.execute, 2)).toEqual([1, '2026-05-31']);
+        // Diep telt met ZIJN bad_id + filter-rondetaaksleutel en reset-venster (datum > anker)
+        expect(paramsVan(pool.execute, 2)).toEqual([1, '2026-05-31', 'diep_filter', '2026-05-31']);
         expect(sqlVan(pool.execute, 3)).toMatch(/datum > \? AND datum <= \?/i);
         expect(paramsVan(pool.execute, 3)).toEqual(['2026-05-20', '2026-05-31']);
         expect(sqlVan(pool.execute, 4)).toMatch(/DELETE FROM acties/i); // Diep < drempel → geen actie
 
-        // Ondiep telt met ZIJN bad_id en zonder reset (geen lastClean)
-        expect(paramsVan(pool.execute, 5)).toEqual([2, '2026-05-31']);
+        // Ondiep telt met ZIJN bad_id + sleutel en zonder reset (geen anker)
+        expect(paramsVan(pool.execute, 5)).toEqual([2, '2026-05-31', 'ondiep_filter', '2026-05-31']);
         expect(sqlVan(pool.execute, 6)).not.toMatch(/datum > \?/i);
         expect(paramsVan(pool.execute, 6)).toEqual(['2026-05-31']);
         expect(sqlVan(pool.execute, 7)).toMatch(/INSERT INTO acties/i); // Ondiep > drempel → actie
         expect(paramsVan(pool.execute, 7)[3]).toBe('filter_spoelen_spoelbeurt');
+    });
+
+    it('betrekt de filter-rondetaak in het ankerpunt (meest recente reiniging telt)', async () => {
+        pool.execute
+            .mockResolvedValueOnce(resultaat([]))                                  // laadDrempelwaarden → max 1500
+            .mockResolvedValueOnce(resultaat([{ id: 1, naam: 'Diep' }]))           // baden (alleen Diep)
+            .mockResolvedValueOnce(resultaat([{ anker: '2026-05-25' }]))           // Diep: anker = rondetaak (recenter dan actie)
+            .mockResolvedValueOnce(resultaat([{ totaal: '300' }]))                 // Diep: 300 sinds 25e
+            .mockResolvedValueOnce(resultaat([]));                                 // Diep: stelIn DELETE
+
+        await repo.genereerSpoelbeurt('2026-05-31');
+
+        // De ankerquery kijkt naar zowel de opgeloste spoelbeurt-actie als de filter-rondetaak
+        expect(sqlVan(pool.execute, 2)).toMatch(/rondetaken_voltooid/i);
+        expect(sqlVan(pool.execute, 2)).toMatch(/filter_spoelen_spoelbeurt/i);
+        expect(paramsVan(pool.execute, 2)).toEqual([1, '2026-05-31', 'diep_filter', '2026-05-31']);
+        // Telt vanaf het (meest recente) ankerpunt
+        expect(paramsVan(pool.execute, 3)).toEqual(['2026-05-25', '2026-05-31']);
     });
 });
 

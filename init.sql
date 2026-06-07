@@ -175,6 +175,20 @@ CREATE TABLE IF NOT EXISTS acties (
 -- Migratie: voeg opgelost_door toe aan acties
 ALTER TABLE acties ADD COLUMN IF NOT EXISTS opgelost_door VARCHAR(100) NULL AFTER opgelost_op;
 
+-- Tabel voor rondetaken (dagelijkse onderhoudstaken tijdens een ronde).
+-- De takencatalogus zelf staat in code (RondetakenRepository); hier worden
+-- alleen de afgevinkte taken per dag bewaard. Een nieuwe dag = geen rijen =
+-- alles weer onafgevinkt.
+CREATE TABLE IF NOT EXISTS rondetaken_voltooid (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    taak_sleutel VARCHAR(50) NOT NULL,
+    datum DATE NOT NULL,
+    voltooid_op DATETIME NULL,
+    voltooid_door VARCHAR(100) NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE KEY unieke_rondetaak (taak_sleutel, datum)
+);
+
 -- Verbruik diep/ondiep: water, elektriciteit, gas, chemicaliën (gehele getallen)
 CREATE TABLE IF NOT EXISTS verbruik_diep_ondiep (
     id INT AUTO_INCREMENT PRIMARY KEY,

@@ -9,7 +9,6 @@
                 <button class="tab-btn actief" id="tab-grote-baden" onclick="wisselBadPagina('grote-baden')">Diep / Ondiep</button>
                 <button class="tab-btn" id="tab-peuterbad" onclick="wisselBadPagina('peuterbad')">Peuterbad</button>
                 <button class="tab-btn" id="tab-logboek" onclick="wisselBadPagina('logboek')">Logboek</button>
-                <button class="tab-btn" id="tab-acties" onclick="wisselBadPagina('acties')">Acties</button>
             </div>
 
             <div id="waterbeheer-grote-baden-content" style="display: none;">
@@ -18,6 +17,7 @@
                     <button class="subtab-btn" id="subtab-verbruik" onclick="wisselSubtab('verbruik')">Verbruik</button>
                     <button class="subtab-btn" id="subtab-verwarmingssysteem" onclick="wisselSubtab('verwarmingssysteem')">Verwarmingssysteem</button>
                     <button class="subtab-btn" id="subtab-bezoekers" onclick="wisselSubtab('bezoekers')">Bezoekers</button>
+                    <button class="subtab-btn" id="subtab-taken" onclick="wisselSubtab('taken')">Taken</button>
                 </div>
 
                 <div id="subtab-meetwaarden-content">
@@ -198,12 +198,17 @@
                         </div>
                     </div>
                 </div>
+
+                <div id="subtab-taken-content" style="display: none;">
+                    <div id="grote-baden-taken-inhoud"></div>
+                </div>
             </div>
 
             <div id="waterbeheer-peuterbad-content" style="display: none;">
                 <div class="subtab-nav">
                     <button class="subtab-btn actief" id="subtab-peuterbad-meetwaarden" onclick="wisselPeuterbadSubtab('meetwaarden')">Meetwaarden</button>
                     <button class="subtab-btn"        id="subtab-peuterbad-verbruik"    onclick="wisselPeuterbadSubtab('verbruik')">Verbruik</button>
+                    <button class="subtab-btn"        id="subtab-peuterbad-taken"       onclick="wisselPeuterbadSubtab('taken')">Taken</button>
                 </div>
 
                 <div id="peuterbad-meetwaarden-content">
@@ -277,10 +282,10 @@
                         </table>
                     </div>
                 </div>
-            </div>
 
-            <div id="waterbeheer-acties-content" style="display:none;">
-                <div id="acties-tab-inhoud"></div>
+                <div id="peuterbad-taken-content" style="display: none;">
+                    <div id="peuterbad-taken-inhoud"></div>
+                </div>
             </div>
 
             <div id="waterbeheer-logboek-content" style="display:none;">

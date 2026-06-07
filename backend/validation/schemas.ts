@@ -31,6 +31,9 @@ export const logboekSchema     = z.looseObject({
     tekst: z.string().optional(),
 });
 
+// ── Rondetaken ──────────────────────────────────────────────────────────────
+export const rondetaakToggleSchema = z.object({ datum });
+
 // ── Gebruikers (strikt) ─────────────────────────────────────────────────────
 export const gebruikerSchema = z.object({
     voornaam:   z.string(),

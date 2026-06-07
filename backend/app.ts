@@ -16,6 +16,8 @@ import { maakVerbruikRouter }      from './routes/verbruik';
 import { maakTrendRouter }         from './routes/trend';
 import { maakDatabaseRouter }      from './routes/database';
 import { maakLogboekRouter }       from './routes/logboek';
+import { maakRondetakenRouter }    from './routes/rondetaken';
+import { maakTakenRouter }         from './routes/taken';
 import { maakFrontendRouter }      from './routes/frontend';
 import { errorHandler }           from './middleware/errorHandler';
 import { bepaalSessionSecret }    from './config';
@@ -52,6 +54,8 @@ export function maakApp(pool: Pool): Express {
     app.use('/api/trend',         maakTrendRouter(pool));
     app.use('/api/database',      maakDatabaseRouter(databaseRepo));
     app.use('/api/logboek',       maakLogboekRouter(pool));
+    app.use('/api/rondetaken',    maakRondetakenRouter(pool));
+    app.use('/api/taken',         maakTakenRouter(pool));
 
     // Frontend: HTML-partials samenstellen (vóór static zodat / hier wordt afgehandeld)
     app.use('/', maakFrontendRouter());

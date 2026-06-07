@@ -15,20 +15,19 @@ class MetingenModule {
          'coordinatoren-daggegevens-content','coordinatoren-logboek-content'].forEach(id => {
             const el = document.getElementById(id); if (el) el.style.display = 'none';
         });
-        ['grote-baden','peuterbad','logboek','acties'].forEach(p => {
+        ['grote-baden','peuterbad','logboek'].forEach(p => {
             document.getElementById(`tab-${p}`)?.classList.toggle('actief', p === pagina);
         });
         document.getElementById('waterbeheer-grote-baden-content').style.display = (pagina === 'grote-baden') ? 'block' : 'none';
         document.getElementById('waterbeheer-peuterbad-content').style.display   = (pagina === 'peuterbad')   ? 'block' : 'none';
         document.getElementById('waterbeheer-logboek-content').style.display     = (pagina === 'logboek')     ? 'block' : 'none';
-        document.getElementById('waterbeheer-acties-content').style.display      = (pagina === 'acties')      ? 'block' : 'none';
         document.getElementById('tables-content').style.display = 'none';
         this.laadMetingen();
     }
 
     wisselSubtab(subtab) {
         this.app.state.huidigeSubtab = subtab;
-        ['meetwaarden','verbruik','verwarmingssysteem','bezoekers'].forEach(s => {
+        ['meetwaarden','verbruik','verwarmingssysteem','bezoekers','taken'].forEach(s => {
             document.getElementById(`subtab-${s}`).classList.toggle('actief', s === subtab);
             document.getElementById(`subtab-${s}-content`).style.display = (s === subtab) ? 'block' : 'none';
         });
@@ -36,15 +35,18 @@ class MetingenModule {
             this.app.verbruik.laadWaterbeheerVelden();
         if (subtab === 'bezoekers')
             this.laadBezoekers();
+        if (subtab === 'taken')
+            this.app.taken.laadBadTaken('grote-baden', document.getElementById('centraleDatum').value);
     }
 
     wisselPeuterbadSubtab(subtab) {
         this.app.state.huidigePeuterbadSubtab = subtab;
-        ['meetwaarden','verbruik'].forEach(s => {
+        ['meetwaarden','verbruik','taken'].forEach(s => {
             document.getElementById(`subtab-peuterbad-${s}`).classList.toggle('actief', s === subtab);
             document.getElementById(`peuterbad-${s}-content`).style.display = (s === subtab) ? 'block' : 'none';
         });
         if (subtab === 'verbruik') this.app.verbruik.laadEnBerekenPeuterbadVerbruik();
+        if (subtab === 'taken') this.app.taken.laadBadTaken('peuterbad', document.getElementById('centraleDatum').value);
     }
 
     wisselCoordSubtab(subtab) {
@@ -72,10 +74,6 @@ class MetingenModule {
         if (huidigeRol === 'waterbeheer' && huidigeBadPagina === 'logboek') {
             this.app.logboek.laadLogboek(datum); return;
         }
-        if (huidigeRol === 'waterbeheer' && huidigeBadPagina === 'acties') {
-            this.laadActies(datum); return;
-        }
-
         const endpoint = huidigeRol === 'waterbeheer' ? '/api/metingen' : '/api/coordinatoren';
         try {
             const res = await this.app.api.call(`${endpoint}?datum=${datum}`);
@@ -84,7 +82,8 @@ class MetingenModule {
             if (huidigeRol === 'waterbeheer') {
                 await this.laadBezoekers();
                 await this.laadGebondenChloor();
-                this.laadActies(datum);
+                this.laadActies(datum);                  // alleen nog de ⚠-veldindicatoren
+                this.app.taken.werkBadgeBij(datum);      // tab-/subtab-badges voor openstaande taken
                 await this.app.verbruik.laadEnBerekenVerbruik();
             }
         } catch { this.app.ui.toonBericht('Fout bij het ophalen van de gegevens.', 'fout'); }
@@ -126,29 +125,7 @@ class MetingenModule {
         } catch (f) { console.error('Fout bij laden gebonden chloor:', f); }
     }
 
-    // ── Acties ────────────────────────────────────────────────────────────
-
-    static get SUBTAB_LABELS() {
-        return {
-            'meetwaarden':           'Meetwaarden',
-            'verbruik':              'Verbruik',
-            'verwarmingssysteem':    'Verwarmingssysteem',
-            'bezoekers':             'Bezoekers',
-            'peuterbad-meetwaarden': 'Meetwaarden',
-            'peuterbad-verbruik':    'Verbruik',
-        };
-    }
-
-    static get SUBTAB_ACTIE_MAP() {
-        return {
-            'meetwaarden':           ['filter_spoelen_druk|Diep','filter_spoelen_druk|Ondiep','filter_spoelen_flow|Diep','filter_spoelen_flow|Ondiep','filter_spoelen_gebonden|Diep','filter_spoelen_gebonden|Ondiep'],
-            'verbruik':              ['chloor_bestellen|Diep','zwavelzuur_bestellen|Diep','floculant_bijvullen|Diep'],
-            'verwarmingssysteem':    [],
-            'bezoekers':             ['filter_spoelen_bezoekers|Diep','filter_spoelen_bezoekers|Ondiep','filter_spoelen_spoelbeurt|Diep','filter_spoelen_spoelbeurt|Ondiep'],
-            'peuterbad-meetwaarden': ['filter_spoelen_druk|Peuterbad','filter_spoelen_flow|Peuterbad','filter_spoelen_gebonden|Peuterbad'],
-            'peuterbad-verbruik':    ['chloor_peuterbad_bijvullen|Peuterbad','zwavelzuur_peuterbad_bijvullen|Peuterbad'],
-        };
-    }
+    // ── Acties (veldindicatoren) ────────────────────────────────────────────
 
     static get ACTIE_VELD_MAP() {
         return {
@@ -174,124 +151,19 @@ class MetingenModule {
     }
 
     /**
-     * Groepeer acties tot één rij per bad per "soort": alle filter_spoelen_*
-     * redenen (druk, flow, bezoekers, spoelbeurt, gebonden) van eenzelfde bad
-     * vallen samen onder één groep, zodat het scherm één "Filter spoelen"-actie
-     * per bad toont met alle redenen en één checkbox die de hele groep oplost.
-     * Niet-filter-acties blijven elk hun eigen groep. Pure functie (geen DOM).
-     * @param {Array<{id:number,bad_naam:string,actie_type:string,opgelost:boolean}>} acties
-     * @returns {Array<{sleutel:string,bad_naam:string,items:Array}>}
+     * Toont de ⚠/✓-veldindicatoren naast de meetwaarden op basis van de open/
+     * afgehandelde acties. De takenlijst zelf (incl. deze acties) wordt door de
+     * TakenModule gerenderd; deze methode beheert alleen de indicatoren bij de velden.
      */
-    static groepeerActies(acties) {
-        const groepSleutel = a => `${a.bad_naam}|${a.actie_type.startsWith('filter_spoelen') ? 'filter_spoelen' : a.actie_type}`;
-        const map = new Map();
-        (Array.isArray(acties) ? acties : []).forEach(a => {
-            const k = groepSleutel(a);
-            if (!map.has(k)) map.set(k, { sleutel: k, bad_naam: a.bad_naam, items: [] });
-            map.get(k).items.push(a);
-        });
-        return [...map.values()];
-    }
-
-    /**
-     * Zet (of verwijdert) een actiemarkering op een tab-knop. De knop houdt zijn
-     * normale label, zodat de actieve/inactieve styling intact blijft.
-     *
-     * - Pad-tabs (standaard): dezelfde ⚠-marker als bij de parameters — een
-     *   broodkruimel die het pad wijst, zonder aantal.
-     * - De Acties-tab (`toonAantal`): de "bestemming" toont een telpill met het
-     *   aantal openstaande actiegroepen, of een groene ✓ als alles is afgehandeld.
-     *
-     * @param {HTMLElement|null} btn
-     * @param {string} label - basislabel zonder telling
-     * @param {number} nOpen - aantal openstaande actiegroepen
-     * @param {number} nTotaal - totaal aantal actiegroepen (open + afgehandeld)
-     * @param {{markerKlasse?:string, toonAantal?:boolean}} [opties]
-     */
-    _zetActieBadge(btn, label, nOpen, nTotaal, opties = {}) {
-        const { markerKlasse = 'heeft-acties', toonAantal = false } = opties;
-        if (!btn) return;
-        btn.textContent = label;                       // wist tevens een oude marker
-        btn.classList.toggle(markerKlasse, nOpen > 0);
-
-        if (toonAantal) {
-            // Acties-tab: telpill met aantal (of ✓ als alles is afgehandeld).
-            if (nOpen === 0 && nTotaal === 0) return;
-            const badge = document.createElement('span');
-            badge.className   = nOpen > 0 ? 'actie-badge' : 'actie-badge actie-badge-opgelost';
-            badge.textContent = nOpen > 0 ? String(nOpen) : '✓';
-            badge.title       = nOpen > 0 ? `${nOpen} openstaande actie(s)` : 'Alle acties afgehandeld';
-            btn.appendChild(badge);
-            return;
-        }
-
-        // Pad-tabs: alleen een ⚠-marker bij openstaande acties, met dezelfde
-        // styling als de markering naast de parameters. Eigen class (geen
-        // 'actie-indicator') zodat de veldindicator-opschoning hieronder deze
-        // tab-markers niet meeneemt.
-        if (nOpen === 0) return;
-        const marker = document.createElement('span');
-        marker.className   = 'tab-actie-indicator';
-        marker.textContent = '⚠';
-        marker.title       = `${nOpen} openstaande actie(s) achter deze tab`;
-        btn.appendChild(marker);
-    }
-
-    _updateSubtabBadges(actieGroepen) {
-        const labels = MetingenModule.SUBTAB_LABELS;
-        const kaart  = MetingenModule.SUBTAB_ACTIE_MAP;
-        Object.entries(kaart).forEach(([subtab, sleutels]) => {
-            const btn   = document.getElementById(`subtab-${subtab}`);
-            if (!btn) return;
-            const label = labels[subtab] || subtab;
-            if (!sleutels.length) { this._zetActieBadge(btn, label, 0, 0, { markerKlasse: 'subtab-heeft-acties' }); return; }
-            let nOpen = 0, nTotaal = 0;
-            actieGroepen.forEach(groep => {
-                if (!groep.items.some(a => sleutels.includes(`${a.actie_type}|${a.bad_naam}`))) return;
-                nTotaal++;
-                if (!groep.items.every(a => a.opgelost)) nOpen++;
-            });
-            this._zetActieBadge(btn, label, nOpen, nTotaal, { markerKlasse: 'subtab-heeft-acties' });
-        });
-    }
-
     async laadActies(datum) {
         try {
             const res    = await this.app.api.call(`/api/acties?datum=${datum}`);
             const acties = await res.json();
             if (!Array.isArray(acties)) return;
 
-            const actieGroepen = MetingenModule.groepeerActies(acties);
-            const openGroepen     = actieGroepen.filter(g => !g.items.every(a => a.opgelost));
-            const geslotenGroepen = actieGroepen.filter(g =>  g.items.every(a => a.opgelost));
-
-            // Acties-tab: de "luide" bestemming — behoudt de rode vulling en
-            // krijgt een telpill met het aantal openstaande actiegroepen.
-            this._zetActieBadge(
-                document.getElementById('tab-acties'),
-                'Acties', openGroepen.length, actieGroepen.length,
-                { markerKlasse: 'acties-actief', toonAantal: true },
-            );
-
-            // Wayfinding-broodkruimels: dezelfde ⚠-marker als bij de parameters
-            // op het pad ernaartoe (Waterbeheer → bad-pagina → subtab).
-            this._zetActieBadge(
-                document.getElementById('btn-rol-waterbeheer'),
-                'Waterbeheer', openGroepen.length, 0,
-            );
-
-            // Bad-paginatabs (zelfde niveau als Acties): ⚠ als er open acties zijn.
-            let openGroteBaden = 0, openPeuterbad = 0;
-            openGroepen.forEach(g => g.bad_naam === 'Peuterbad' ? openPeuterbad++ : openGroteBaden++);
-            this._zetActieBadge(document.getElementById('tab-grote-baden'), 'Diep / Ondiep', openGroteBaden, 0);
-            this._zetActieBadge(document.getElementById('tab-peuterbad'),   'Peuterbad',     openPeuterbad,  0);
-
-            this._updateSubtabBadges(actieGroepen);
-
-            // Veldindicatoren
             document.querySelectorAll('.actie-indicator').forEach(el => el.remove());
             const veldKaart = MetingenModule.ACTIE_VELD_MAP;
-            const open    = acties.filter(a => !a.opgelost);
+            const open     = acties.filter(a => !a.opgelost);
             const gesloten = acties.filter(a =>  a.opgelost);
             open.forEach(actie => {
                 (veldKaart[`${actie.actie_type}|${actie.bad_naam}`] || []).forEach(inputId => {
@@ -313,81 +185,7 @@ class MetingenModule {
                     input.parentElement.appendChild(ind);
                 });
             });
-
-            // Tab-inhoud
-            const inhoud = document.getElementById('acties-tab-inhoud');
-            if (!inhoud) return;
-
-            const splitBeschrijving = b => {
-                const idx = b.lastIndexOf(' — ');
-                return idx === -1 ? { reden: b, actie: '' } : { reden: b.slice(0, idx), actie: b.slice(idx + 3) };
-            };
-            const rijGroep = groep => {
-                const alleOpgelost = groep.items.every(a => a.opgelost);
-                const ids   = groep.items.map(a => a.id);
-                const { actie } = splitBeschrijving(groep.items[0].beschrijving);
-                const reden = groep.items.map(a => splitBeschrijving(a.beschrijving).reden).join('<br>');
-                if (!alleOpgelost) return `
-                    <tr>
-                        <td><b>${groep.bad_naam}</b></td><td><b>${actie}</b></td><td>${reden}</td>
-                        <td style="text-align:center;">
-                            <input type="checkbox" onchange="losActieGroepOp(${JSON.stringify(ids)}, this.checked)"
-                                style="width:18px;height:18px;cursor:pointer;">
-                        </td>
-                    </tr>`;
-                const latest   = groep.items.reduce((a, b) => (String(a.opgelost_op) > String(b.opgelost_op)) ? a : b);
-                const tijdstip = latest.opgelost_op ? String(latest.opgelost_op).slice(0, 16).replace('T', ' ') : '';
-                const door     = latest.opgelost_door ? ` door ${latest.opgelost_door}` : '';
-                return `
-                    <tr style="background:#f0fff0;color:#555;">
-                        <td><b>${groep.bad_naam}</b></td>
-                        <td><span style="text-decoration:line-through;"><b>${actie}</b></span>
-                            <span style="font-size:12px;color:#28a745;display:block;">✓ Afgehandeld${door}${tijdstip ? ' om ' + tijdstip : ''}</span></td>
-                        <td><span style="text-decoration:line-through;">${reden}</span></td>
-                        <td style="text-align:center;">
-                            <input type="checkbox" checked onchange="losActieGroepOp(${JSON.stringify(ids)}, this.checked)"
-                                title="Vink uit om actie te heropenen" style="width:18px;height:18px;cursor:pointer;">
-                        </td>
-                    </tr>`;
-            };
-
-            if (acties.length === 0) {
-                inhoud.innerHTML = `<div class="categorie-box" style="color:#28a745;font-weight:bold;">✓ Geen openstaande acties voor deze dag.</div>`;
-                return;
-            }
-            inhoud.innerHTML = `
-                <div class="categorie-box">
-                    <h3 style="color:${openGroepen.length > 0 ? '#dc3545' : '#28a745'};">
-                        ${openGroepen.length > 0 ? `Openstaande acties (${openGroepen.length})` : '✓ Alle acties afgehandeld'}
-                    </h3>
-                    <table class="categorie-tabel">
-                        <thead><tr><th>Bad</th><th>Actie</th><th>Reden</th><th style="text-align:center;width:110px;">Uitgevoerd</th></tr></thead>
-                        <tbody>${openGroepen.map(rijGroep).join('')}${geslotenGroepen.map(rijGroep).join('')}</tbody>
-                    </table>
-                </div>`;
-        } catch (f) { console.error('Fout bij laden acties:', f); }
-    }
-
-    async losActieGroepOp(ids, opgelost) {
-        try {
-            const endpoint = opgelost ? 'resolve' : 'unresolve';
-            await Promise.all(ids.map(id => this.app.api.call(`/api/acties/${id}/${endpoint}`, { method: 'POST' })));
-            const datum = document.getElementById('centraleDatum').value;
-            await this.laadActies(datum);
-            this.app.ui.toonBericht(opgelost ? 'Actie gemarkeerd als opgelost!' : 'Actie heropend.', 'succes');
-        } catch (f) { console.error('Fout bij oplossen acties:', f); }
-    }
-
-    async losActieOp(actieId, opgelost) {
-        try {
-            const endpoint = opgelost ? `/api/acties/${actieId}/resolve` : `/api/acties/${actieId}/unresolve`;
-            const res = await this.app.api.call(endpoint, { method: 'POST' });
-            if (res.ok) {
-                const datum = document.getElementById('centraleDatum').value;
-                await this.laadActies(datum);
-                this.app.ui.toonBericht(opgelost ? 'Actie gemarkeerd als opgelost!' : 'Actie heropend.', 'succes');
-            }
-        } catch (f) { console.error('Fout bij oplossen actie:', f); }
+        } catch (f) { console.error('Fout bij laden veldindicatoren:', f); }
     }
 
     // ── Tabel renderen ────────────────────────────────────────────────────
@@ -401,7 +199,8 @@ class MetingenModule {
         const tBody = document.getElementById('dagstaatTbody');
         tKop.innerHTML = ''; tBody.innerHTML = '';
 
-        ['waterbeheer-logboek-content','waterbeheer-acties-content','coordinatoren-subtab-nav',
+        ['waterbeheer-logboek-content',
+         'coordinatoren-subtab-nav',
          'coordinatoren-blokken-content','coordinatoren-checklist-content',
          'coordinatoren-daggegevens-content','coordinatoren-logboek-content'].forEach(id => {
             const el = document.getElementById(id); if (el) el.style.display = 'none';
@@ -748,8 +547,8 @@ class MetingenModule {
     }
 }
 
-// Node/Jest: exporteer de klasse zodat pure helpers (zoals groepeerActies)
-// los te testen zijn. In de browser bestaat `module` niet en wordt dit genegeerd.
+// Node/Jest: exporteer de klasse zodat hij in jsdom-tests gebruikt kan worden.
+// In de browser bestaat `module` niet en wordt dit genegeerd.
 if (typeof module !== 'undefined' && module.exports) {
     module.exports = MetingenModule;
 }

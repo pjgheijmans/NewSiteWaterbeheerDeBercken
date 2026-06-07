@@ -17,6 +17,7 @@ class Application {
         this.database   = new DatabaseModule(this);
         this.verbruik   = new VerbruikModule(this);
         this.metingen   = new MetingenModule(this);
+        this.taken      = new TakenModule(this);
         this.opslaan    = new OpslaanModule(this);
         this.auth       = new AuthModule(this);
     }
@@ -42,8 +43,7 @@ window.wisselBadPagina          = (pagina)     => app.metingen.wisselBadPagina(p
 window.wisselSubtab             = (subtab)     => app.metingen.wisselSubtab(subtab);
 window.wisselCoordSubtab        = (subtab)     => app.metingen.wisselCoordSubtab(subtab);
 window.wisselPeuterbadSubtab    = (subtab)     => app.metingen.wisselPeuterbadSubtab(subtab);
-window.losActieGroepOp          = (ids, op)    => app.metingen.losActieGroepOp(ids, op);
-window.losActieOp               = (id, op)     => app.metingen.losActieOp(id, op);
+window.toggleTaak               = (sl, op)     => app.taken.toggle(sl, op);
 window.voegNieuwBlokToe         = ()           => app.metingen.voegNieuwBlokToe();
 
 window.wisselTrendTab           = (subtab)     => app.trend.wisselTrendTab(subtab);
