@@ -13,11 +13,11 @@ beforeEach(() => {
 const DATUM = '2026-05-31';
 
 describe('CATALOGUS', () => {
-    it('bevat de vier kritieke taken', () => {
+    it('bevat de vijf belangrijke (kritieke) taken', () => {
         const kritiek = RondetakenRepository.CATALOGUS.filter(t => t.prioriteit === 'kritiek').map(t => t.sleutel);
         expect(kritiek).toEqual(
-            expect.arrayContaining(['regelaar_diep', 'regelaar_ondiep', 'regelaar_peuterbad', 'filters_spraypark']));
-        expect(kritiek).toHaveLength(4);
+            expect.arrayContaining(['regelaar_diep', 'regelaar_ondiep', 'regelaar_peuterbad', 'filters_spraypark', 'douches_test']));
+        expect(kritiek).toHaveLength(5);
     });
 
     it('heeft unieke sleutels', () => {

@@ -45,7 +45,7 @@ describe('getTaken — samenstelling', () => {
         const items = await service.getTaken(DATUM);
         const diepFilter = items.find(i => i.sleutel === 'diep_filter')!;
         expect(diepFilter.prioriteit).toBe('alarm');
-        expect(diepFilter.must).toBe(true);
+        expect(diepFilter.categorie).toBe('verplicht');
         expect(diepFilter.reden).toBe('Flow Diep onder 250 m³/h');
         expect(diepFilter.bron).toEqual({ type: 'rondetaak', sleutel: 'diep_filter' });
     });
@@ -55,16 +55,16 @@ describe('getTaken — samenstelling', () => {
         expect(items.some(i => i.sleutel === 'actie:1')).toBe(false);
     });
 
-    it('markeert kritieke rondetaken als must, normale niet', async () => {
+    it('deelt kritieke rondetaken in als belangrijk, normale als overig', async () => {
         const items = await service.getTaken(DATUM);
-        expect(items.find(i => i.sleutel === 'regelaar_diep')!.must).toBe(true);
-        expect(items.find(i => i.sleutel === 'diep_haarfilter')!.must).toBe(false);
+        expect(items.find(i => i.sleutel === 'regelaar_diep')!.categorie).toBe('belangrijk');
+        expect(items.find(i => i.sleutel === 'diep_haarfilter')!.categorie).toBe('overig');
     });
 
-    it('laat de filter-rondetaak normaal zonder open alarm', async () => {
+    it('laat de filter-rondetaak normaal/overig zonder open alarm', async () => {
         const peuterFilter = (await service.getTaken(DATUM)).find(i => i.sleutel === 'peuterbad_filter')!;
         expect(peuterFilter.prioriteit).toBe('normaal');
-        expect(peuterFilter.must).toBe(false);
+        expect(peuterFilter.categorie).toBe('overig');
     });
 
     it('plaatst chemicaliën-acties in Algemeen op de grote-baden-pagina', async () => {
@@ -73,7 +73,7 @@ describe('getTaken — samenstelling', () => {
         expect(chloor.pagina).toBe('grote-baden');
         expect(chloor.label).toBe('Chloor bestellen');
         expect(chloor.reden).toBe('Chloorvoorraad onder 200 liter');
-        expect(chloor.must).toBe(true);
+        expect(chloor.categorie).toBe('verplicht');
         expect(chloor.bron).toEqual({ type: 'actie', ids: [2] });
     });
 
@@ -81,7 +81,7 @@ describe('getTaken — samenstelling', () => {
         const aftappen = (await service.getTaken(DATUM)).find(i => i.sleutel === 'actie:3')!;
         expect(aftappen.pagina).toBe('peuterbad');
         expect(aftappen.gebied).toBe('Peuterbad');
-        expect(aftappen.must).toBe(true);
+        expect(aftappen.categorie).toBe('verplicht');
     });
 });
 
@@ -93,6 +93,6 @@ describe('getTaken — opgeloste acties', () => {
         ]);
         const chloor = (await service.getTaken(DATUM)).find(i => i.sleutel === 'actie:9')!;
         expect(chloor.voltooid).toBe(true);
-        expect(chloor.must && !chloor.voltooid).toBe(false);
+        expect(chloor.categorie === 'verplicht' && !chloor.voltooid).toBe(false);
     });
 });
