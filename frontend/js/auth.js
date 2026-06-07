@@ -59,6 +59,7 @@ class AuthModule {
             waterbeheer:   false,
             coordinatoren: false,
             limieten:      false,
+            actieteksten:  false,
             gebruikers:    false,
             database:      false,
             trendanalyse:  false,
@@ -67,10 +68,12 @@ class AuthModule {
         let beginRol = 'waterbeheer';
         if (gebruiker.taak === 'waterbeheerder') {
             Object.keys(knoppen).forEach(k => { knoppen[k] = true; });
-            knoppen.limieten = false; // limieten beheren is voorbehouden aan Administrator
+            knoppen.limieten     = false; // limieten beheren is voorbehouden aan Administrator
+            knoppen.actieteksten = false; // actie-teksten beheren idem
             beginRol = 'waterbeheer';
         } else if (gebruiker.taak === 'Administrator') {
             knoppen.limieten     = true;
+            knoppen.actieteksten = true;
             knoppen.gebruikers   = true;
             knoppen.database     = true;
             knoppen.trendanalyse = false; // trendanalyse is voorbehouden aan waterbeheerder
@@ -94,7 +97,7 @@ class AuthModule {
      */
     wisselRol(rol) {
         this.app.state.huidigeRol = rol;
-        ['waterbeheer', 'coordinatoren', 'limieten', 'gebruikers', 'database', 'trendanalyse'].forEach(r => {
+        ['waterbeheer', 'coordinatoren', 'limieten', 'actieteksten', 'gebruikers', 'database', 'trendanalyse'].forEach(r => {
             const btn = document.getElementById(`btn-rol-${r}`);
             if (btn) btn.classList.toggle('actief', r === rol);
         });
@@ -102,6 +105,7 @@ class AuthModule {
         const isDagstaat = (rol === 'waterbeheer' || rol === 'coordinatoren');
         document.getElementById('sectie-dagstaat').style.display      = isDagstaat          ? 'block' : 'none';
         document.getElementById('sectie-limieten').style.display       = (rol === 'limieten')       ? 'block' : 'none';
+        document.getElementById('sectie-actieteksten').style.display   = (rol === 'actieteksten')   ? 'block' : 'none';
         document.getElementById('sectie-gebruikers').style.display     = (rol === 'gebruikers')     ? 'block' : 'none';
         document.getElementById('sectie-database').style.display       = (rol === 'database')       ? 'block' : 'none';
         document.getElementById('sectie-trendanalyse').style.display   = (rol === 'trendanalyse')   ? 'block' : 'none';
@@ -127,6 +131,8 @@ class AuthModule {
             this.app.gebruikers.laadGebruikers();
         } else if (rol === 'limieten') {
             this.app.limieten.laadLimietenVanServer();
+        } else if (rol === 'actieteksten') {
+            this.app.actieteksten.laadVanServer();
         } else if (rol === 'trendanalyse') {
             this.app.trend.initTrendDatums();
         }

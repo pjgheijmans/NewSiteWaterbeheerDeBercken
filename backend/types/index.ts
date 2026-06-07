@@ -180,6 +180,21 @@ export interface LimietInput {
     max_waarde: number;
 }
 
+// ── Actie-teksten ─────────────────────────────────────────────────────────────
+
+/** Tekst-sjabloon voor een gegenereerde actie. */
+export interface ActieTekst {
+    actie_sleutel: string;
+    sjabloon: string;
+    omschrijving: string | null;
+}
+
+/** Invoer voor het opslaan/wijzigen van één actie-sjabloon. */
+export interface ActieTekstInput {
+    actie_sleutel: string;
+    sjabloon: string;
+}
+
 // ── Trend ─────────────────────────────────────────────────────────────────────
 
 export interface TrendMetingRow {

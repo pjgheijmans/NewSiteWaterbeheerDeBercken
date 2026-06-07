@@ -175,6 +175,32 @@ CREATE TABLE IF NOT EXISTS acties (
 -- Migratie: voeg opgelost_door toe aan acties
 ALTER TABLE acties ADD COLUMN IF NOT EXISTS opgelost_door VARCHAR(100) NULL AFTER opgelost_op;
 
+-- Tabel voor de tekst-sjablonen van acties. De waterbeheerder kan de
+-- formulering van een actie aanpassen zonder code te wijzigen. Plaatshouders
+-- tussen accolades worden bij het genereren ingevuld: {bad} = badnaam,
+-- {drempel} = grenswaarde, {waarde} = gemeten waarde.
+CREATE TABLE IF NOT EXISTS actie_teksten (
+    actie_sleutel VARCHAR(60) PRIMARY KEY,
+    sjabloon      VARCHAR(255) NOT NULL,
+    omschrijving  VARCHAR(255) NULL
+);
+
+-- Standaard actie-sjablonen bij de eerste start (idempotent).
+INSERT IGNORE INTO actie_teksten (actie_sleutel, sjabloon, omschrijving) VALUES
+('filter_spoelen_druk',         'Filterdruk verschil {bad} > {drempel} bar — Filter spoelen', 'Diep/Ondiep: drukverschil in-uit te hoog'),
+('filter_spoelen_druk_peuter',  'Filterdruk Peuterbad > {drempel} bar — Filter spoelen',      'Peuterbad: filterdruk te hoog'),
+('filter_spoelen_flow',         'Flow {bad} onder {drempel} m³/h — Filter spoelen',           'Diep/Ondiep: flow te laag'),
+('filter_spoelen_flow_peuter',  'Flow Peuterbad onder {drempel} m³/h — Filter spoelen',       'Peuterbad: flow te laag'),
+('chloor_peuterbad_bijvullen',  'Chloorvoorraad Peuterbad {waarde} < {drempel} — Vat bijvullen',      'Peuterbad: chloorvat bijna leeg'),
+('zwavelzuur_peuterbad_bijvullen','Zwavelzuurvoorraad Peuterbad {waarde} < {drempel} — Vat bijvullen','Peuterbad: zwavelzuurvat bijna leeg'),
+('chloor_bestellen',            'Chloorvoorraad onder {drempel} liter — Chloor bestellen',    'Verbruik: chloorvoorraad te laag'),
+('zwavelzuur_bestellen',        'Zwavelzuurvoorraad onder {drempel} liter — Zwavelzuur bestellen','Verbruik: zwavelzuurvoorraad te laag'),
+('floculant_bijvullen',         'Floculant {waarde} < {drempel} — Vul floculant bij',         'Verbruik: floculant bijna op'),
+('filter_spoelen_bezoekers',    'Aantal bezoekers {waarde} > {drempel} — Filter spoelen',     'Dagbezoek boven de drempel'),
+('filter_spoelen_spoelbeurt',   'Aantal bezoekers sinds spoelbeurt {bad} {waarde} > {drempel} — Filter spoelen', 'Cumulatief bezoek sinds laatste spoelbeurt'),
+('filter_spoelen_gebonden',     'Gebonden chloor {bad} {waarde} > {drempel} mg/l — Filter spoelen', 'Coördinator: gebonden chloor te hoog'),
+('peuterbad_aftappen',          'Peuterbad is vandaag gebruikt — Peuterbad water aftappen',   'Peuterbad na gebruik aftappen');
+
 -- Tabel voor rondetaken (dagelijkse onderhoudstaken tijdens een ronde).
 -- De takencatalogus zelf staat in code (RondetakenRepository); hier worden
 -- alleen de afgevinkte taken per dag bewaard. Een nieuwe dag = geen rijen =

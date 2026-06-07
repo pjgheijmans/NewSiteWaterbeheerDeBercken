@@ -11,6 +11,7 @@ class Application {
         this.ui         = new UIManager(this);
         this.nav        = new NavModule(this);
         this.limieten   = new LimietenModule(this);
+        this.actieteksten = new ActieTekstenModule(this);
         this.trend      = new TrendModule(this);
         this.logboek    = new LogboekModule(this);
         this.gebruikers = new GebruikersModule(this);
@@ -51,6 +52,8 @@ window.laadTrendData            = ()           => app.trend.laadTrendData();
 
 window.laadStandaardLimieten    = ()           => app.limieten.laadStandaardLimieten();
 window.scheduleAutoSaveLimieten = ()           => app.limieten.scheduleAutoSaveLimieten();
+
+window.laadStandaardActieTeksten = ()          => app.actieteksten.laadStandaardActieTeksten();
 
 window.voegGebruikerToe         = ()           => app.gebruikers.voegGebruikerToe();
 window.verwijderGebruiker       = (id)         => app.gebruikers.verwijderGebruiker(id);

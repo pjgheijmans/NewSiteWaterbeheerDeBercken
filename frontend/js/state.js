@@ -30,6 +30,7 @@ class AppState {
         this.checklistAutoSaveTimer     = null;
         this.daggegevensAutoSaveTimer   = null;
         this.limietenAutoSaveTimer      = null;
+        this.actieTekstenAutoSaveTimer  = null;
         this.logboekTimers              = {};
         this.gebruikersSaveTimers       = {};
     }

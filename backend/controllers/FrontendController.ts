@@ -4,11 +4,11 @@ import { Router, Request, Response } from 'express';
 
 const ORDER = [
     'head', 'login', 'dashboard-open', 'nav',
-    'dagstaat', 'limieten', 'gebruikers', 'database', 'trendanalyse', 'footer',
+    'dagstaat', 'limieten', 'actieteksten', 'gebruikers', 'database', 'trendanalyse', 'footer',
 ];
 
 const JS_FILES = [
-    'state', 'api', 'ui', 'limieten', 'auth',
+    'state', 'api', 'ui', 'limieten', 'actieteksten', 'auth',
     'metingen', 'taken', 'verbruik', 'opslaan', 'logboek',
     'gebruikers', 'database', 'nav', 'trend', 'app',
 ];
