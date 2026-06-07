@@ -87,16 +87,25 @@ class TakenModule {
         return (a.voltooid ? 1 : 0) - (b.voltooid ? 1 : 0);
     }
 
+    /** Achtergrondtint per categorie voor een open (niet-afgehandelde) rij. */
+    static _categorieTint(categorie) {
+        if (categorie === 'verplicht')  return '#fff5f5'; // lichtrood
+        if (categorie === 'belangrijk') return '#fff9e6'; // lichtamber
+        return '';                                         // overig: geen tint
+    }
+
     _rij(item) {
         const done = item.voltooid;
         const tijd = item.voltooid_op ? String(item.voltooid_op).slice(0, 16).replace('T', ' ') : '';
         const door = item.voltooid_door ? ` door ${item.voltooid_door}` : '';
+        const nadruk = item.categorie === 'verplicht' || item.categorie === 'belangrijk';
         const labelCel = done
             ? `<span style="text-decoration:line-through;">${item.label}</span>
                <span style="font-size:12px;color:#28a745;display:block;">✓ Uitgevoerd${door}${tijd ? ' om ' + tijd : ''}</span>`
-            : (item.must ? `<b>${item.label}</b>` : item.label);
+            : (nadruk ? `<b>${item.label}</b>` : item.label);
         const reden = item.reden ? (done ? `<span style="text-decoration:line-through;">${item.reden}</span>` : item.reden) : '';
-        const rijStijl = done ? ' style="background:#f0fff0;color:#555;"' : (item.must ? ' style="background:#fff5f5;"' : '');
+        const tint = TakenModule._categorieTint(item.categorie);
+        const rijStijl = done ? ' style="background:#f0fff0;color:#555;"' : (tint ? ` style="background:${tint};"` : '');
         const sleutel  = String(item.sleutel).replace(/'/g, "\\'");
         return `
             <tr${rijStijl}>
@@ -124,10 +133,11 @@ class TakenModule {
     }
 
     /**
-     * Rendert de Taken-subtab als twee duidelijk gescheiden secties:
-     *  - "Verplicht vandaag" — alle must-taken (open alarmen + kritieke rondetaken);
+     * Rendert de Taken-subtab als drie duidelijk gescheiden secties:
+     *  - "Verplicht vandaag" — getriggerde alarmen die uitgevoerd moeten worden;
+     *  - "Belangrijk" — kritieke rondetaken (regelaars/spraypark): belangrijk, niet verplicht;
      *  - "Overige taken" — de overige (optionele) rondetaken.
-     * Beide gesorteerd op gebiedsvolgorde, open items eerst.
+     * Alle gesorteerd op gebiedsvolgorde, open items eerst.
      */
     _renderBad(pagina) {
         const id = pagina === 'peuterbad' ? 'peuterbad-taken-inhoud' : 'grote-baden-taken-inhoud';
@@ -137,22 +147,25 @@ class TakenModule {
             const g = TakenModule._gebiedIndex(pagina, a.gebied) - TakenModule._gebiedIndex(pagina, b.gebied);
             return g !== 0 ? g : TakenModule._openEerst(a, b);
         });
-        const must = items.filter(i => i.must);
-        const rest = items.filter(i => !i.must);
+        const verplicht  = items.filter(i => i.categorie === 'verplicht');
+        const belangrijk = items.filter(i => i.categorie === 'belangrijk');
+        const overig     = items.filter(i => i.categorie === 'overig');
         let html = '';
-        if (must.length) html += this._sectieBox('Verplicht vandaag', '#dc3545', must);
-        if (rest.length) html += this._sectieBox('Overige taken', '#0d6efd', rest);
+        if (verplicht.length)  html += this._sectieBox('Verplicht vandaag', '#dc3545', verplicht);
+        if (belangrijk.length) html += this._sectieBox('Belangrijk',        '#fd7e14', belangrijk);
+        if (overig.length)     html += this._sectieBox('Overige taken',     '#0d6efd', overig);
         el.innerHTML = html || `<div class="categorie-box" style="color:#28a745;">Geen taken voor deze dag.</div>`;
     }
 
     // ── Badges ──────────────────────────────────────────────────────────────
 
     _zetBadges() {
-        const openMust = this._items.filter(i => i.must && !i.voltooid);
+        // Alleen openstaande Verplicht-taken (echte alarmen) verdienen de ⚠-markering.
+        const openVerplicht = this._items.filter(i => i.categorie === 'verplicht' && !i.voltooid);
 
-        // Bad-paginatabs + Taken-subtabs: ⚠ als er open must-taken op die pagina staan.
-        const groteOpen = openMust.some(i => i.pagina === 'grote-baden');
-        const peuterOpen = openMust.some(i => i.pagina === 'peuterbad');
+        // Bad-paginatabs + Taken-subtabs: ⚠ als er open verplichte taken op die pagina staan.
+        const groteOpen = openVerplicht.some(i => i.pagina === 'grote-baden');
+        const peuterOpen = openVerplicht.some(i => i.pagina === 'peuterbad');
         this._zetMarker('tab-grote-baden', 'Diep / Ondiep', groteOpen);
         this._zetMarker('tab-peuterbad',   'Peuterbad',     peuterOpen);
         this._zetMarker('subtab-taken',          'Taken', groteOpen);

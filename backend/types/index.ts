@@ -104,6 +104,14 @@ export type RondetaakPrioriteit = 'kritiek' | 'normaal';
 /** Bad-pagina waaronder een rondetaak/taak wordt getoond. */
 export type TaakPagina = 'grote-baden' | 'peuterbad';
 
+/**
+ * Categorie waarin een taak-item in de "Taken"-weergave valt:
+ *  - 'verplicht'  = een getriggerde actie/alarm die uitgevoerd MOET worden;
+ *  - 'belangrijk' = een kritieke rondetaak (regelaars/spraypark): belangrijk, niet verplicht;
+ *  - 'overig'     = een normale rondetaak die tijdens een ronde kan gebeuren.
+ */
+export type TaakCategorie = 'verplicht' | 'belangrijk' | 'overig';
+
 /** Vaste catalogus-definitie van een rondetaak (staat in code, niet in de DB). */
 export interface RondetaakDefinitie {
     sleutel: string;
@@ -130,6 +138,7 @@ export type TaakBron =
  * Samengesteld taak-item voor de "Taken"-weergave: de unie van rondetaken en
  * (drempel)acties, per bad-pagina gegroepeerd. 'alarm' = een getriggerde actie
  * die uitgevoerd MOET worden; 'kritiek'/'normaal' komen van de rondetaakcatalogus.
+ * `categorie` bepaalt onder welke kop (Verplicht/Belangrijk/Overig) het item valt.
  */
 export interface TaakItem {
     sleutel: string;
@@ -141,7 +150,7 @@ export interface TaakItem {
     voltooid_op: string | null;
     voltooid_door: string | null;
     reden: string | null;
-    must: boolean;
+    categorie: TaakCategorie;
     bron: TaakBron;
 }
 

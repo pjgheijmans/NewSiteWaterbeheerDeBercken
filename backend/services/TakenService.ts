@@ -2,7 +2,7 @@ import { IRondetakenRepository } from '../repositories/IRondetakenRepository';
 import { IActiesRepository } from '../repositories/IActiesRepository';
 import { ITakenService } from './ITakenService';
 import { RondetakenRepository } from '../repositories/RondetakenRepository';
-import { TaakItem, TaakPagina } from '../types';
+import { TaakItem, TaakPagina, TaakCategorie } from '../types';
 
 /** Acties die niet aan één bad hangen maar facility-breed zijn → groep 'Algemeen'. */
 const ALGEMEEN_TYPES = new Set(['chloor_bestellen', 'zwavelzuur_bestellen', 'floculant_bijvullen']);
@@ -14,7 +14,10 @@ const ALGEMEEN_TYPES = new Set(['chloor_bestellen', 'zwavelzuur_bestellen', 'flo
  *
  * De filter_spoelen_*-acties van een bad worden samengevouwen op de bijbehorende
  * filter-rondetaak (één rij, geen duplicatie). Overige acties worden losse
- * alarm-rijen. `must` markeert wat in het globale overzicht hoort.
+ * alarm-rijen. `categorie` deelt elk item in onder Verplicht/Belangrijk/Overig:
+ *  - een getriggerd alarm → 'verplicht';
+ *  - een kritieke rondetaak (regelaars/spraypark) → 'belangrijk';
+ *  - een normale rondetaak → 'overig'.
  */
 export class TakenService implements ITakenService {
     constructor(
@@ -39,6 +42,10 @@ export class TakenService implements ITakenService {
                                      && a.actie_type.startsWith('filter_spoelen'))
                 : [];
             const heeftAlarm = filterAlarmen.length > 0;
+            // Een open alarm maakt de taak verplicht; anders bepaalt de
+            // rondetaakprioriteit of het belangrijk (kritiek) of overig (normaal) is.
+            const categorie: TaakCategorie =
+                heeftAlarm ? 'verplicht' : (rt.prioriteit === 'kritiek' ? 'belangrijk' : 'overig');
             items.push({
                 sleutel:       rt.sleutel,
                 pagina:        rt.pagina,
@@ -49,7 +56,7 @@ export class TakenService implements ITakenService {
                 voltooid_op:   rt.voltooid_op,
                 voltooid_door: rt.voltooid_door,
                 reden:         heeftAlarm ? filterAlarmen.map(a => TakenService._reden(a.beschrijving)).join('; ') : null,
-                must:          heeftAlarm || rt.prioriteit === 'kritiek',
+                categorie,
                 bron:          { type: 'rondetaak', sleutel: rt.sleutel },
             });
         }
@@ -68,7 +75,7 @@ export class TakenService implements ITakenService {
                 voltooid_op:   a.opgelost_op ? String(a.opgelost_op) : null,
                 voltooid_door: a.opgelost_door ?? null,
                 reden:         TakenService._reden(a.beschrijving),
-                must:          true,
+                categorie:     'verplicht',
                 bron:          { type: 'actie', ids: [a.id] },
             });
         }
