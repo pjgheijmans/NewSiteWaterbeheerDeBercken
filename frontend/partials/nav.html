@@ -5,8 +5,15 @@
                     <h1>Zwembad Dagstaat</h1>
                 </div>
                 <div style="display:flex; align-items:center; gap:12px;">
-                    <span id="welkom-tekst" style="font-weight:bold;"></span>
-                    <button class="logout-btn" onclick="verwerkLogout()" style="margin-left:0;">Uitloggen</button>
+                    <div class="gebruiker-menu" id="gebruiker-menu">
+                        <button type="button" class="gebruiker-trigger" onclick="toggleGebruikerMenu()" aria-haspopup="true" aria-expanded="false">
+                            <span id="welkom-tekst" style="font-weight:bold;"></span>
+                            <span class="gebruiker-caret">▾</span>
+                        </button>
+                        <div class="gebruiker-dropdown" id="gebruiker-dropdown" style="display:none;">
+                            <button type="button" class="gebruiker-menu-item" onclick="verwerkLogout()">Uitloggen</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 

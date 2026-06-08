@@ -143,6 +143,19 @@ CREATE TABLE IF NOT EXISTS coordinatoren_daggegevens (
     lucht_temperatuur DECIMAL(4,1) NULL,
     bezoekers_vandaag INT NULL,
     bezoekers_totaal_spoelbeurt INT NULL,
+    auteur VARCHAR(100) NULL,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+
+-- Migratie: registreer wie de temperatuur & bezoekers invulde
+ALTER TABLE coordinatoren_daggegevens ADD COLUMN IF NOT EXISTS auteur VARCHAR(100) NULL AFTER bezoekers_totaal_spoelbeurt;
+
+-- Wie was er op dienst bij waterbeheer (altijd 2 personen; één logt in, de ander
+-- wordt handmatig ingevuld). Eén record per dag.
+CREATE TABLE IF NOT EXISTS waterbeheer_dienst (
+    datum DATE PRIMARY KEY,
+    dienst_1 VARCHAR(100) NULL,
+    dienst_2 VARCHAR(100) NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
@@ -154,8 +167,12 @@ CREATE TABLE IF NOT EXISTS coordinatoren_checklist (
     proef_spraypark  TINYINT(1) NOT NULL DEFAULT 0,
     proef_douches    TINYINT(1) NOT NULL DEFAULT 0,
     proef_glijbaan   TINYINT(1) NOT NULL DEFAULT 0,
+    auteur VARCHAR(100) NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+-- Migratie: registreer wie de checklijst invulde
+ALTER TABLE coordinatoren_checklist ADD COLUMN IF NOT EXISTS auteur VARCHAR(100) NULL AFTER proef_glijbaan;
 
 -- Tabel voor acties/alarmen
 CREATE TABLE IF NOT EXISTS acties (

@@ -72,6 +72,16 @@
                         <td>—</td>
                         <td><button class="btn-wissen-gevaar" onclick="leegmakenTabel('acties')">Tabel Leegmaken</button></td>
                     </tr>
+                    <tr>
+                        <td><b>Dienst</b></td>
+                        <td>Bevat wie er per dag op dienst was bij waterbeheer (twee personen).</td>
+                        <td><button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px;" onclick="exporteerTabel('waterbeheer_dienst')">CSV Exporteren</button></td>
+                        <td>
+                            <button class="btn-centraal-opslaan" style="padding:8px 15px; font-size:14px; background-color:#17a2b8;" onclick="triggerImportBladeren('waterbeheer_dienst')">CSV Importeren</button>
+                            <input type="file" id="import-file-waterbeheer_dienst" accept=".csv" style="display:none;" onchange="verwerkCsvUpload(this, 'waterbeheer_dienst')">
+                        </td>
+                        <td><button class="btn-wissen-gevaar" onclick="leegmakenTabel('waterbeheer_dienst')">Tabel Leegmaken</button></td>
+                    </tr>
 
                     <!-- ── Coördinatoren ─────────────────────────────────── -->
                     <tr style="background:#0056b3; color:white;">

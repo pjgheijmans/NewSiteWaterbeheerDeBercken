@@ -52,14 +52,14 @@ describe('deleteBlok', () => {
 describe('saveDaggegevens', () => {
     it('slaat op en triggert fire-and-forget actiegeneratie', async () => {
         const body = { bezoekers_vandaag: 80, lucht_temperatuur: 22 };
-        await service.saveDaggegevens(DATUM, body);
-        expect(coordRepo.saveDaggegevens).toHaveBeenCalledWith(DATUM, body);
+        await service.saveDaggegevens(DATUM, body, gebruiker);
+        expect(coordRepo.saveDaggegevens).toHaveBeenCalledWith(DATUM, body, 'Co Ord');
         expect(actiesRepo.genereerBezoekers).toHaveBeenCalledWith(DATUM, 80);
         expect(actiesRepo.genereerSpoelbeurt).toHaveBeenCalledWith(DATUM);
     });
 
     it('geeft null door als de dagtelling ontbreekt', async () => {
-        await service.saveDaggegevens(DATUM, {});
+        await service.saveDaggegevens(DATUM, {}, gebruiker);
         expect(actiesRepo.genereerBezoekers).toHaveBeenCalledWith(DATUM, null);
     });
 });
@@ -87,7 +87,7 @@ describe('pass-through methoden', () => {
         logboekRepo.getByDatum.mockResolvedValue([]);
 
         await service.getCoordinatoren(DATUM);
-        await service.saveChecklist(DATUM, { proef_waterspeel: true });
+        await service.saveChecklist(DATUM, { proef_waterspeel: true }, gebruiker);
         await service.getChecklist(DATUM);
         await service.getDaggegevens(DATUM);
         await service.deleteBlok(DATUM, '10:00:00');
@@ -95,7 +95,7 @@ describe('pass-through methoden', () => {
         await service.deleteLogboek('3');
 
         expect(coordRepo.getCoordinatoren).toHaveBeenCalledWith(DATUM);
-        expect(coordRepo.saveChecklist).toHaveBeenCalledWith(DATUM, { proef_waterspeel: true });
+        expect(coordRepo.saveChecklist).toHaveBeenCalledWith(DATUM, { proef_waterspeel: true }, 'Co Ord');
         expect(coordRepo.deleteBlok).toHaveBeenCalledWith(DATUM, '10:00:00');
         expect(logboekRepo.getByDatum).toHaveBeenCalledWith(DATUM);
         expect(logboekRepo.deleteById).toHaveBeenCalledWith('3');

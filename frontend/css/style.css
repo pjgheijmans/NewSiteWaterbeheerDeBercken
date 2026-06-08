@@ -248,6 +248,57 @@ h1 {
     background: var(--kleur-gevaar-donker) !important;
 }
 
+/* Gebruikersmenu: klik op de naam → submenu (uitloggen, later wachtwoord wijzigen). */
+.gebruiker-menu {
+    position: relative;
+}
+.gebruiker-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: transparent;
+    border: none;
+    color: inherit;
+    font: inherit;
+    cursor: pointer;
+    padding: 4px 6px;
+    border-radius: 6px;
+}
+.gebruiker-trigger:hover {
+    background: rgba(255, 255, 255, .15);
+}
+.gebruiker-caret {
+    font-size: 12px;
+    opacity: .8;
+}
+.gebruiker-dropdown {
+    position: absolute;
+    right: 0;
+    top: 100%;
+    margin-top: 6px;
+    min-width: 170px;
+    background: #fff;
+    border: 1px solid var(--rand-sterk, #cbd5e1);
+    border-radius: 8px;
+    box-shadow: 0 8px 22px rgba(15, 23, 42, .22);
+    overflow: hidden;
+    z-index: 100;
+}
+.gebruiker-menu-item {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: none;
+    padding: 11px 14px;
+    font-size: 14px;
+    color: #334155;
+    cursor: pointer;
+}
+.gebruiker-menu-item:hover {
+    background: #f1f5f9;
+}
+
 /* ───────────────────────────────────────────────────────────────────────────
    App-bar — gekleurde, vastgezette navigatiezone bovenaan: titel + rolnav +
    paginatabs als één geheel, los van de witte invoerzone eronder. Bloedt tot
@@ -378,6 +429,18 @@ h1 {
     border: 1px solid var(--rand-sterk);
     border-radius: var(--radius-sm);
     text-align: center;
+}
+
+/* Kop: datumnavigatie met de kleine dienst-chip gecentreerd eronder. */
+.dagstaat-kop {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 24px;
+}
+.dagstaat-kop .datum-navigatie {
+    margin-bottom: 0;
 }
 
 table {
@@ -882,11 +945,18 @@ td select,
     }
 
     .header-box {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 4px;
+        flex-direction: row;
+        align-items: center;
+        gap: 8px;
     }
     h1 { font-size: 19px; }
+
+    /* Compacte ingelogd-zone op mobiel; menu opent links zodat het niet wegvalt. */
+    #welkom-tekst { font-size: 13px; }
+    .gebruiker-dropdown {
+        right: auto;
+        left: 0;
+    }
 
     /* Tab bars — scroll horizontally, never wrap */
     .menu-tabs,
@@ -940,6 +1010,11 @@ td select,
         min-height: 30px;
         font-size: 14px !important;
         text-align: center;
+    }
+
+    /* Kop compacter op mobiel (zelfde gecentreerde stapel als desktop). */
+    .dagstaat-kop {
+        margin-bottom: 10px;
     }
 
     /* Bigger touch targets for all inputs */

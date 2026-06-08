@@ -71,6 +71,10 @@ class MetingenModule {
         const datum = document.getElementById('centraleDatum').value;
         if (!datum) return;
 
+        // Dienstbalk (wie was op dienst) hoort bij de hele waterbeheer-weergave,
+        // dus laden vóór de logboek-afsplitsing hieronder.
+        if (huidigeRol === 'waterbeheer') this.app.dienst.laadDienst(datum);
+
         if (huidigeRol === 'waterbeheer' && huidigeBadPagina === 'logboek') {
             this.app.logboek.laadLogboek(datum); return;
         }
@@ -357,6 +361,7 @@ class MetingenModule {
             document.getElementById('proef-spraypark').checked  = !!d.proef_spraypark;
             document.getElementById('proef-douches').checked    = !!d.proef_douches;
             document.getElementById('proef-glijbaan').checked   = !!d.proef_glijbaan;
+            this._toonChecklistAuteur(d.auteur);
         } catch (e) { console.error('Fout bij laden checklist:', e); }
 
         const form = document.getElementById('coordinatoren-checklist-content');
@@ -387,9 +392,16 @@ class MetingenModule {
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
                 });
                 this.app.ui.setAutoSaveStatus(res.ok ? 'saved' : 'error');
-                if (!res.ok) this.app.ui.toonBericht('Fout bij opslaan checklist.', 'fout');
+                if (res.ok) this._toonChecklistAuteur(this._ingelogdeAuteur());
+                else        this.app.ui.toonBericht('Fout bij opslaan checklist.', 'fout');
             } catch (e) { this.app.ui.setAutoSaveStatus('error'); }
         }, 1200);
+    }
+
+    /** Toon "Ingevuld door X" onder de checklijst, of leeg als onbekend. */
+    _toonChecklistAuteur(auteur) {
+        const el = document.getElementById('checklist-auteur');
+        if (el) el.textContent = auteur ? `Ingevuld door ${auteur}` : '';
     }
 
     async _laadCoordDaggegevens(datum) {
@@ -399,6 +411,7 @@ class MetingenModule {
             const d   = await res.json();
             document.getElementById('coord-lucht-temp').value        = d.lucht_temperatuur ?? '';
             document.getElementById('coord-bezoekers-vandaag').value = d.bezoekers_vandaag ?? '';
+            this._toonDaggegevensAuteur(d.auteur);
         } catch (e) { console.error('Fout bij laden daggegevens:', e); }
 
         const form = document.getElementById('coordinatoren-daggegevens-content');
@@ -427,9 +440,22 @@ class MetingenModule {
                     method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload),
                 });
                 this.app.ui.setAutoSaveStatus(res.ok ? 'saved' : 'error');
-                if (!res.ok) this.app.ui.toonBericht('Fout bij opslaan daggegevens.', 'fout');
+                if (res.ok) this._toonDaggegevensAuteur(this._ingelogdeAuteur());
+                else        this.app.ui.toonBericht('Fout bij opslaan daggegevens.', 'fout');
             } catch (e) { this.app.ui.setAutoSaveStatus('error'); }
         }, 1200);
+    }
+
+    /** Toon "Ingevuld door X" onder de temperatuur & bezoekers, of leeg als onbekend. */
+    _toonDaggegevensAuteur(auteur) {
+        const el = document.getElementById('daggegevens-auteur');
+        if (el) el.textContent = auteur ? `Ingevuld door ${auteur}` : '';
+    }
+
+    /** Weergavenaam van de ingelogde gebruiker (voor de directe auteur-update na opslaan). */
+    _ingelogdeAuteur() {
+        const g = this.app.state.ingelogdeGebruiker;
+        return g ? ([g.voornaam, g.achternaam].filter(Boolean).join(' ').trim() || g.inlognaam) : '';
     }
 
     // ── Coordinator blokken ───────────────────────────────────────────────
