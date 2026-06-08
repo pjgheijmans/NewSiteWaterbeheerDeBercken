@@ -81,7 +81,7 @@ describe('checklist', () => {
         const body = { datum: DATUM, proef_waterspeel: 1, proef_spraypark: 0, proef_douches: 1, proef_glijbaan: 0 };
         const res = await request(maakApp()).post('/checklist').send(body);
         expect(res.status).toBe(200);
-        expect(mockService.saveChecklist).toHaveBeenCalledWith(DATUM, body);
+        expect(mockService.saveChecklist).toHaveBeenCalledWith(DATUM, body, expect.objectContaining({ taak: expect.any(String) }));
     });
 });
 
@@ -98,7 +98,7 @@ describe('daggegevens', () => {
         const body = { datum: DATUM, bezoekers_vandaag: 80, lucht_temperatuur: 22 };
         const res = await request(maakApp()).post('/daggegevens').send(body);
         expect(res.status).toBe(200);
-        expect(mockService.saveDaggegevens).toHaveBeenCalledWith(DATUM, body);
+        expect(mockService.saveDaggegevens).toHaveBeenCalledWith(DATUM, body, expect.objectContaining({ taak: expect.any(String) }));
     });
 });
 

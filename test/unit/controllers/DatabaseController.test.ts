@@ -121,6 +121,20 @@ describe('actie_teksten is opgenomen in de whitelists', () => {
     });
 });
 
+describe('waterbeheer_dienst is opgenomen in de whitelists', () => {
+    it('mag geëxporteerd, geïmporteerd en geleegd worden', async () => {
+        mockService.exporteerCsv.mockResolvedValue('datum;dienst_1;dienst_2\r\n2026-06-08;Jan;Piet\r\n');
+        mockService.importeerCsv.mockResolvedValue(undefined);
+        mockService.truncate.mockResolvedValue(undefined);
+
+        expect((await request(maakApp()).get('/export/waterbeheer_dienst')).status).toBe(200);
+        const imp = await request(maakApp())
+            .post('/import/waterbeheer_dienst').set('Content-Type', 'text/csv').send('datum;dienst_1\r\n2026-06-08;Jan\r\n');
+        expect(imp.status).toBe(200);
+        expect((await request(maakApp()).post('/truncate/waterbeheer_dienst')).status).toBe(200);
+    });
+});
+
 describe('POST /verwijder-alles', () => {
     it('wist alle data en vernietigt de sessie', async () => {
         mockService.wisAlles.mockResolvedValue(undefined);

@@ -32,16 +32,16 @@ export class CoordinatorenService implements ICoordinatorenService {
         return this.coordRepo.getChecklist(datum);
     }
 
-    saveChecklist(datum: string, body: ChecklistInput): Promise<void> {
-        return this.coordRepo.saveChecklist(datum, body);
+    saveChecklist(datum: string, body: ChecklistInput, gebruiker: Gebruiker): Promise<void> {
+        return this.coordRepo.saveChecklist(datum, body, bepaalAuteur(gebruiker));
     }
 
     getDaggegevens(datum: string): Promise<Daggegevens> {
         return this.coordRepo.getDaggegevens(datum);
     }
 
-    async saveDaggegevens(datum: string, body: DaggegevensInput): Promise<void> {
-        await this.coordRepo.saveDaggegevens(datum, body);
+    async saveDaggegevens(datum: string, body: DaggegevensInput, gebruiker: Gebruiker): Promise<void> {
+        await this.coordRepo.saveDaggegevens(datum, body, bepaalAuteur(gebruiker));
         // Fire-and-forget: geen transactionele garantie vereist
         void this.actiesRepo.genereerBezoekers(datum, body.bezoekers_vandaag ?? null);
         void this.actiesRepo.genereerSpoelbeurt(datum);

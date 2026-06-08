@@ -61,7 +61,7 @@ describe('getChecklist', () => {
     it('geeft standaardwaarden (alles 0) terug zonder rij', async () => {
         pool.execute.mockResolvedValue(resultaat([]));
         expect(await repo.getChecklist('2026-05-31')).toEqual({
-            proef_waterspeel: 0, proef_spraypark: 0, proef_douches: 0, proef_glijbaan: 0,
+            proef_waterspeel: 0, proef_spraypark: 0, proef_douches: 0, proef_glijbaan: 0, auteur: null,
         });
     });
 });
@@ -70,9 +70,9 @@ describe('saveChecklist', () => {
     it('zet booleans om naar 1/0', async () => {
         await repo.saveChecklist('2026-05-31', {
             proef_waterspeel: true, proef_spraypark: false, proef_douches: true, proef_glijbaan: false,
-        });
+        }, 'Co Ord');
         const params = paramsVan(pool.execute);
-        expect(params).toEqual(['2026-05-31', 1, 0, 1, 0]);
+        expect(params).toEqual(['2026-05-31', 1, 0, 1, 0, 'Co Ord']);
     });
 });
 
@@ -80,7 +80,7 @@ describe('getDaggegevens', () => {
     it('geeft null-defaults terug zonder rij', async () => {
         pool.execute.mockResolvedValue(resultaat([]));
         expect(await repo.getDaggegevens('2026-05-31')).toEqual({
-            lucht_temperatuur: null, bezoekers_vandaag: null, bezoekers_totaal_spoelbeurt: null,
+            lucht_temperatuur: null, bezoekers_vandaag: null, bezoekers_totaal_spoelbeurt: null, auteur: null,
         });
     });
 });

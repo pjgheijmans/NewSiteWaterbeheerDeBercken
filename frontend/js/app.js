@@ -12,6 +12,7 @@ class Application {
         this.nav        = new NavModule(this);
         this.limieten   = new LimietenModule(this);
         this.actieteksten = new ActieTekstenModule(this);
+        this.dienst     = new DienstModule(this);
         this.trend      = new TrendModule(this);
         this.logboek    = new LogboekModule(this);
         this.gebruikers = new GebruikersModule(this);
@@ -36,6 +37,7 @@ app.auth.start();
 
 window.verwerkLogin             = ()           => app.auth.verwerkLogin();
 window.verwerkLogout            = ()           => app.auth.verwerkLogout();
+window.toggleGebruikerMenu      = ()           => app.auth.toggleGebruikerMenu();
 window.wisselRol                = (rol)        => app.auth.wisselRol(rol);
 
 window.veranderDatum            = (dagen)      => app.nav.veranderDatum(dagen);
@@ -54,6 +56,8 @@ window.laadStandaardLimieten    = ()           => app.limieten.laadStandaardLimi
 window.scheduleAutoSaveLimieten = ()           => app.limieten.scheduleAutoSaveLimieten();
 
 window.laadStandaardActieTeksten = ()          => app.actieteksten.laadStandaardActieTeksten();
+
+window.toggleDienst             = ()           => app.dienst.toggleBewerk();
 
 window.voegGebruikerToe         = ()           => app.gebruikers.voegGebruikerToe();
 window.verwijderGebruiker       = (id)         => app.gebruikers.verwijderGebruiker(id);

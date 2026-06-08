@@ -39,6 +39,7 @@ class AuthModule {
 
     /** Log de huidige gebruiker uit en herstart de applicatie. */
     async verwerkLogout() {
+        this._zetGebruikerMenu(false);
         await this.app.api.call('/api/logout', { method: 'POST' });
         this.app.state.ingelogdeGebruiker = null;
         await this.start();
@@ -52,8 +53,8 @@ class AuthModule {
         this.app.state.ingelogdeGebruiker = gebruiker;
         document.getElementById('scherm-login').style.display    = 'none';
         document.getElementById('scherm-dashboard').style.display = 'block';
-        document.getElementById('welkom-tekst').innerText =
-            `Ingelogd: ${gebruiker.voornaam} (${gebruiker.taak})`;
+        const rolAfk = { waterbeheerder: 'WB', coordinator: 'CO', Administrator: 'AD' }[gebruiker.taak] || gebruiker.taak;
+        document.getElementById('welkom-tekst').innerText = `${gebruiker.voornaam} (${rolAfk})`;
 
         const knoppen = {
             waterbeheer:   false,
@@ -110,6 +111,7 @@ class AuthModule {
         document.getElementById('sectie-database').style.display       = (rol === 'database')       ? 'block' : 'none';
         document.getElementById('sectie-trendanalyse').style.display   = (rol === 'trendanalyse')   ? 'block' : 'none';
         document.getElementById('waterbeheer-tabs').style.display      = (rol === 'waterbeheer')    ? 'flex'  : 'none';
+        document.getElementById('waterbeheer-dienst-bar').style.display = (rol === 'waterbeheer')   ? 'block' : 'none';
 
         if (rol === 'waterbeheer') {
             ['coordinatoren-subtab-nav', 'coordinatoren-blokken-content',
@@ -135,6 +137,34 @@ class AuthModule {
             this.app.actieteksten.laadVanServer();
         } else if (rol === 'trendanalyse') {
             this.app.trend.initTrendDatums();
+        }
+    }
+
+    // ── Gebruikersmenu (naam → submenu) ──────────────────────────────────────
+
+    /** Klap het gebruikersmenu onder de naam open/dicht. */
+    toggleGebruikerMenu() {
+        const dd = document.getElementById('gebruiker-dropdown');
+        if (!dd) return;
+        const open = dd.style.display !== 'none' && dd.style.display !== '';
+        this._zetGebruikerMenu(!open);
+    }
+
+    /** Toon of verberg het gebruikersmenu en sluit het bij een klik erbuiten. */
+    _zetGebruikerMenu(open) {
+        const dd      = document.getElementById('gebruiker-dropdown');
+        const trigger = document.querySelector('.gebruiker-trigger');
+        if (!dd) return;
+        dd.style.display = open ? 'block' : 'none';
+        if (trigger) trigger.setAttribute('aria-expanded', open ? 'true' : 'false');
+        if (open && !this._sluitGebruikerMenu) {
+            this._sluitGebruikerMenu = (e) => {
+                if (!e.target.closest('#gebruiker-menu')) this._zetGebruikerMenu(false);
+            };
+            document.addEventListener('click', this._sluitGebruikerMenu);
+        } else if (!open && this._sluitGebruikerMenu) {
+            document.removeEventListener('click', this._sluitGebruikerMenu);
+            this._sluitGebruikerMenu = null;
         }
     }
 }

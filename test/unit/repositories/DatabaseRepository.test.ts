@@ -49,8 +49,8 @@ describe('truncate', () => {
 describe('truncateAll', () => {
     it('truncate alle datatabellen tussen FK-check toggles', async () => {
         await repo.truncateAll();
-        // 12 tabellen + 2 FK-toggles = 14 query-aanroepen
-        expect(pool.query).toHaveBeenCalledTimes(14);
+        // 13 tabellen + 2 FK-toggles = 15 query-aanroepen
+        expect(pool.query).toHaveBeenCalledTimes(15);
     });
 
     it('gaat door als één tabel een fout geeft', async () => {

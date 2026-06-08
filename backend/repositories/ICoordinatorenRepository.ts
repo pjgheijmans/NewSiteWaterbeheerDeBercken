@@ -7,7 +7,7 @@ export interface ICoordinatorenRepository extends IDaggegevensProvider {
     saveMeting(bad_id: number, data: CoordinatorMetingInput, auteur: string | null): Promise<void>;
     deleteBlok(datum: string, tijdstip: string): Promise<void>;
     getChecklist(datum: string): Promise<Checklist>;
-    saveChecklist(datum: string, data: ChecklistInput): Promise<void>;
+    saveChecklist(datum: string, data: ChecklistInput, auteur: string | null): Promise<void>;
     getDaggegevens(datum: string): Promise<Daggegevens>;
-    saveDaggegevens(datum: string, data: DaggegevensInput): Promise<void>;
+    saveDaggegevens(datum: string, data: DaggegevensInput, auteur: string | null): Promise<void>;
 }

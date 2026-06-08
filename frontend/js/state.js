@@ -31,6 +31,7 @@ class AppState {
         this.daggegevensAutoSaveTimer   = null;
         this.limietenAutoSaveTimer      = null;
         this.actieTekstenAutoSaveTimer  = null;
+        this.dienstAutoSaveTimer        = null;
         this.logboekTimers              = {};
         this.gebruikersSaveTimers       = {};
     }

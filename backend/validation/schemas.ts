@@ -61,6 +61,13 @@ export const actieTekstSchema = z.object({
     sjabloon:      z.string().min(1, 'is verplicht'),
 });
 
+// ── Waterbeheer-dienst ────────────────────────────────────────────────────────
+export const dienstSchema = z.object({
+    datum,
+    dienst_1: z.string().nullish(),
+    dienst_2: z.string().nullish(),
+});
+
 // ── Auth ────────────────────────────────────────────────────────────────────
 export const loginSchema = z.object({
     username: z.string().min(1, 'is verplicht'),

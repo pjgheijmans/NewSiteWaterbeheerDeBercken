@@ -1,8 +1,26 @@
 <div id="sectie-dagstaat">
-            <div class="datum-navigatie">
-                <button onclick="veranderDatum(-1)">◀<span class="nav-label"> Vorige Dag</span></button>
-                <input type="date" id="centraleDatum" onchange="pasSeizoenAan(); laadMetingen()">
-                <button onclick="veranderDatum(1)"><span class="nav-label">Volgende Dag </span>▶</button>
+            <div class="dagstaat-kop">
+                <div class="datum-navigatie">
+                    <button onclick="veranderDatum(-1)">◀<span class="nav-label"> Vorige Dag</span></button>
+                    <input type="date" id="centraleDatum" onchange="pasSeizoenAan(); laadMetingen()">
+                    <button onclick="veranderDatum(1)"><span class="nav-label">Volgende Dag </span>▶</button>
+                </div>
+
+                <div id="waterbeheer-dienst-bar" style="display:none;">
+                <button type="button" id="dienst-samenvatting" onclick="toggleDienst()"
+                    style="display:inline-flex; align-items:center; gap:8px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:16px; padding:6px 14px; cursor:pointer; font-size:14px; color:#334155;">
+                    <span>👥 Dienst:</span>
+                    <span id="dienst-samenvatting-tekst" style="font-weight:600;">—</span>
+                    <span id="dienst-toggle-icoon" style="opacity:.6;">▾</span>
+                </button>
+                <div id="dienst-bewerk" style="display:none; flex-wrap:wrap; align-items:center; gap:10px; margin-top:8px;">
+                    <input list="waterbeheerders-lijst" id="dienst-1" placeholder="Persoon 1" autocomplete="off" style="max-width:180px;">
+                    <span style="color:#888;">en</span>
+                    <input list="waterbeheerders-lijst" id="dienst-2" placeholder="Persoon 2" autocomplete="off" style="max-width:180px;">
+                    <datalist id="waterbeheerders-lijst"></datalist>
+                    <span id="dienstSaveStatus" style="font-size:14px; font-style:italic;"></span>
+                </div>
+            </div>
             </div>
 
             <div class="menu-tabs" id="waterbeheer-tabs">
@@ -325,6 +343,7 @@
                             <input type="number" id="coord-bezoekers-vandaag" min="0" step="1" placeholder="bijv. 120">
                         </div>
                     </div>
+                    <p id="daggegevens-auteur" style="font-size:13px; color:#888; margin:12px 0 0;"></p>
                 </div>
             </div>
 
@@ -337,6 +356,7 @@
                         <label class="checkbox-item"><input type="checkbox" id="proef-douches"> Bad douches</label>
                         <label class="checkbox-item"><input type="checkbox" id="proef-glijbaan"> Glijbaan</label>
                     </div>
+                    <p id="checklist-auteur" style="font-size:13px; color:#888; margin:12px 0 0;"></p>
                 </div>
             </div>
 

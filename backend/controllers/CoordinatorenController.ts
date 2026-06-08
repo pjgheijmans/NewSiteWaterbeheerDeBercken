@@ -56,7 +56,7 @@ export class CoordinatorenController {
         if (!this.vereistToegang(req, res)) return;
         try {
             const body = req.body as ChecklistInput & { datum: string };
-            await this.service.saveChecklist(body.datum, body);
+            await this.service.saveChecklist(body.datum, body, req.session.gebruiker!);
             res.json({ status: 'success' });
         } catch (err) { next(err); }
     }
@@ -72,7 +72,7 @@ export class CoordinatorenController {
         if (!this.vereistToegang(req, res)) return;
         try {
             const body = req.body as DaggegevensInput & { datum: string };
-            await this.service.saveDaggegevens(body.datum, body);
+            await this.service.saveDaggegevens(body.datum, body, req.session.gebruiker!);
             res.json({ status: 'success' });
         } catch (err) { next(err); }
     }

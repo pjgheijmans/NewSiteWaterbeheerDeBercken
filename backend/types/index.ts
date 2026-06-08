@@ -204,6 +204,21 @@ export interface ActieTekstInput {
     sjabloon: string;
 }
 
+// ── Waterbeheer-dienst ────────────────────────────────────────────────────────
+
+/** De twee personen die op een dag dienst hadden bij waterbeheer. */
+export interface WaterbeheerDienst {
+    dienst_1: string | null;
+    dienst_2: string | null;
+}
+
+/** Invoer voor het opslaan van de waterbeheer-dienst van een dag. */
+export interface WaterbeheerDienstInput {
+    datum: string;
+    dienst_1?: string | null;
+    dienst_2?: string | null;
+}
+
 // ── Trend ─────────────────────────────────────────────────────────────────────
 
 export interface TrendMetingRow {
@@ -283,6 +298,7 @@ export interface Daggegevens {
     lucht_temperatuur?: number | null;
     bezoekers_vandaag?: number | null;
     bezoekers_totaal_spoelbeurt?: number | null;
+    auteur?: string | null;
 }
 
 export interface DaggegevensInput {
@@ -324,6 +340,7 @@ export interface Checklist {
     proef_spraypark: boolean | number;
     proef_douches: boolean | number;
     proef_glijbaan: boolean | number;
+    auteur?: string | null;
 }
 
 export interface ChecklistInput {

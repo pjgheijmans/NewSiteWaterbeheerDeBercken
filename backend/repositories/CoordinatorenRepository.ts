@@ -74,46 +74,48 @@ export class CoordinatorenRepository implements ICoordinatorenRepository {
 
     async getChecklist(datum: string): Promise<Checklist> {
         const [rows] = await this.pool.execute<RowDataPacket[]>(
-            'SELECT proef_waterspeel, proef_spraypark, proef_douches, proef_glijbaan FROM coordinatoren_checklist WHERE datum = ?',
+            'SELECT proef_waterspeel, proef_spraypark, proef_douches, proef_glijbaan, auteur FROM coordinatoren_checklist WHERE datum = ?',
             [datum]
         );
-        return (rows[0] as Checklist) ?? { proef_waterspeel: 0, proef_spraypark: 0, proef_douches: 0, proef_glijbaan: 0 };
+        return (rows[0] as Checklist) ?? { proef_waterspeel: 0, proef_spraypark: 0, proef_douches: 0, proef_glijbaan: 0, auteur: null };
     }
 
-    async saveChecklist(datum: string, data: ChecklistInput): Promise<void> {
+    async saveChecklist(datum: string, data: ChecklistInput, auteur: string | null): Promise<void> {
         const { proef_waterspeel, proef_spraypark, proef_douches, proef_glijbaan } = data;
         await this.pool.execute<ResultSetHeader>(
-            `INSERT INTO coordinatoren_checklist (datum, proef_waterspeel, proef_spraypark, proef_douches, proef_glijbaan)
-             VALUES (?, ?, ?, ?, ?)
+            `INSERT INTO coordinatoren_checklist (datum, proef_waterspeel, proef_spraypark, proef_douches, proef_glijbaan, auteur)
+             VALUES (?, ?, ?, ?, ?, ?)
              ON DUPLICATE KEY UPDATE
                proef_waterspeel = VALUES(proef_waterspeel),
                proef_spraypark  = VALUES(proef_spraypark),
                proef_douches    = VALUES(proef_douches),
-               proef_glijbaan   = VALUES(proef_glijbaan)`,
+               proef_glijbaan   = VALUES(proef_glijbaan),
+               auteur           = VALUES(auteur)`,
             [datum,
              proef_waterspeel ? 1 : 0, proef_spraypark ? 1 : 0,
-             proef_douches ? 1 : 0, proef_glijbaan ? 1 : 0]
+             proef_douches ? 1 : 0, proef_glijbaan ? 1 : 0, auteur]
         );
     }
 
     async getDaggegevens(datum: string): Promise<Daggegevens> {
         const [rows] = await this.pool.execute<RowDataPacket[]>(
-            'SELECT lucht_temperatuur, bezoekers_vandaag, bezoekers_totaal_spoelbeurt FROM coordinatoren_daggegevens WHERE datum = ?',
+            'SELECT lucht_temperatuur, bezoekers_vandaag, bezoekers_totaal_spoelbeurt, auteur FROM coordinatoren_daggegevens WHERE datum = ?',
             [datum]
         );
-        return (rows[0] as Daggegevens) ?? { lucht_temperatuur: null, bezoekers_vandaag: null, bezoekers_totaal_spoelbeurt: null };
+        return (rows[0] as Daggegevens) ?? { lucht_temperatuur: null, bezoekers_vandaag: null, bezoekers_totaal_spoelbeurt: null, auteur: null };
     }
 
-    async saveDaggegevens(datum: string, data: DaggegevensInput): Promise<void> {
+    async saveDaggegevens(datum: string, data: DaggegevensInput, auteur: string | null): Promise<void> {
         const { lucht_temperatuur, bezoekers_vandaag, bezoekers_totaal_spoelbeurt } = data;
         await this.pool.execute<ResultSetHeader>(
-            `INSERT INTO coordinatoren_daggegevens (datum, lucht_temperatuur, bezoekers_vandaag, bezoekers_totaal_spoelbeurt)
-             VALUES (?, ?, ?, ?)
+            `INSERT INTO coordinatoren_daggegevens (datum, lucht_temperatuur, bezoekers_vandaag, bezoekers_totaal_spoelbeurt, auteur)
+             VALUES (?, ?, ?, ?, ?)
              ON DUPLICATE KEY UPDATE
                lucht_temperatuur           = VALUES(lucht_temperatuur),
                bezoekers_vandaag           = VALUES(bezoekers_vandaag),
-               bezoekers_totaal_spoelbeurt = VALUES(bezoekers_totaal_spoelbeurt)`,
-            [datum, lucht_temperatuur ?? null, bezoekers_vandaag ?? null, bezoekers_totaal_spoelbeurt ?? null]
+               bezoekers_totaal_spoelbeurt = VALUES(bezoekers_totaal_spoelbeurt),
+               auteur                      = VALUES(auteur)`,
+            [datum, lucht_temperatuur ?? null, bezoekers_vandaag ?? null, bezoekers_totaal_spoelbeurt ?? null, auteur]
         );
     }
 }
