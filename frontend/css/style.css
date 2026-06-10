@@ -520,6 +520,19 @@ td select {
     border-bottom: 1px solid var(--rand);
 }
 
+/* Inhoud van de tabbladen horizontaal centreren binnen de brede werkkaart:
+   smallere tabellen/grids komen in het midden i.p.v. tegen de linkerrand.
+   Volledige-breedte tabellen (width:100%) blijven onveranderd (auto = 0). */
+.categorie-tabel,
+.meet-grid,
+.meet-gebonden {
+    margin-left: auto;
+    margin-right: auto;
+}
+.verbruik-groepen {
+    justify-content: center;
+}
+
 /* Parameternamen overal in dezelfde stijl. Sommige tabellen (Verbruik,
    Bezoekers, Peuterbad) zetten hun rijlabels in <b>; trek dat gelijk met de
    normale weergave van Meetwaarden. Alleen de groepskoppen (h3) blijven vet. */
@@ -702,6 +715,141 @@ input[type="text"].buiten-limiet {
     width: 80px;
 }
 
+/* ── Meetwaarden Diep/Ondiep: responsieve grid met exact dezelfde tabelstijl
+   als Verbruik — transparante cellen op de frosted-glass categorie-box, met
+   1px var(--rand)-randen (border-collapse nagebootst). Mobiel: parameters als
+   rijen; ≥900px: getransponeerd. Inputs houden hun id's → opslag ongewijzigd. */
+.meet-grid,
+.meet-gebonden {
+    --meet-label-w: 8em;
+    --meet-val-w: 6.5em;
+}
+
+.meet-grid {
+    display: grid;
+    width: max-content;
+    max-width: 100%;
+    border-top: 1px solid var(--rand);
+    border-left: 1px solid var(--rand);
+    grid-template-columns: var(--meet-label-w) var(--meet-val-w) var(--meet-val-w);
+    grid-template-areas:
+        "cnr bdp bod"
+        "kph phd pho"
+        "kcl cld clo"
+        "kte ted teo"
+        "kfl fld flo"
+        "kin ind ino"
+        "kui uid uio";
+}
+.meet-grid > *,
+.meet-gebonden > * {
+    border-right: 1px solid var(--rand);
+    border-bottom: 1px solid var(--rand);
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    min-width: 0;
+}
+/* Koptekst-cellen krijgen de th-stijl (grijze kop, uppercase, 2px onderrand).
+   Welke labels de kop vormen wisselt met de transpositie: mobiel de baden,
+   op desktop de parameters. Zijlabels blijven normaal (zoals een gewone td). */
+.meet-corner,
+.meet-bad-kop {
+    background-color: var(--kop-bg);
+    font-weight: 600;
+    font-size: 13px;
+    letter-spacing: .02em;
+    text-transform: uppercase;
+    border-bottom: 2px solid var(--rand-sterk);
+}
+.meet-bad-kop { justify-content: center; }
+.meet-col-kop { font-weight: 400; }
+.meet-cel { gap: 4px; }
+.meet-cel input,
+.meet-gebonden-veld input {
+    flex: 1;
+    width: 100%;
+    min-width: 0;
+    padding: 7px;
+    border: 1px solid var(--rand-sterk);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+}
+
+/* Gebonden chloor sluit op mobiel als laatste rij aan op dezelfde kolommen;
+   de bovenrand komt van de tabel erboven (geen dubbele lijn). */
+.meet-gebonden {
+    display: grid;
+    width: max-content;
+    max-width: 100%;
+    border-left: 1px solid var(--rand);
+    grid-template-columns: var(--meet-label-w) var(--meet-val-w) var(--meet-val-w);
+}
+.meet-gebonden-label { font-weight: 600; }
+.meet-gebonden-veld  { gap: 6px; }
+.meet-gebonden-bad   { display: none; }   /* badnaam staat al in de kolomkop */
+.meet-gebonden-veld input {
+    background: rgba(255, 255, 255, .5);
+    cursor: not-allowed;
+}
+
+@media (min-width: 900px) {
+    .meet-grid {
+        grid-template-columns: var(--meet-label-w) repeat(6, minmax(var(--meet-val-w), max-content));
+        grid-template-areas:
+            "cnr kph kcl kte kfl kin kui"
+            "bdp phd cld ted fld ind uid"
+            "bod pho clo teo flo ino uio";
+    }
+    /* Parameters worden nu de kopcellen; baden worden gewone zijlabels. */
+    .meet-col-kop {
+        background-color: var(--kop-bg);
+        font-weight: 600;
+        font-size: 13px;
+        letter-spacing: .02em;
+        text-transform: uppercase;
+        border-bottom: 2px solid var(--rand-sterk);
+        justify-content: center;
+        text-align: center;
+    }
+    .meet-bad-kop {
+        background-color: transparent;
+        font-weight: 400;
+        font-size: inherit;
+        letter-spacing: normal;
+        text-transform: none;
+        border-bottom: 1px solid var(--rand);
+        justify-content: flex-start;
+    }
+
+    /* Gebonden chloor als losse regel onder de tabel. */
+    .meet-gebonden {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 8px 18px;
+        width: auto;
+        margin-top: 14px;
+        border: 0;
+        font-size: 14px;
+    }
+    .meet-gebonden > * { border: 0; padding: 0; }
+    .meet-gebonden-bad   { display: inline; color: #555; }
+    .meet-gebonden-veld  { display: inline-flex; }
+    .meet-gebonden-veld input { flex: 0 0 auto; width: 90px; }
+}
+
+/* Alleen mobiel (verticale weergave): compacter — verberg de groepskop en
+   krimp de celruimte rond de invoervelden. */
+@media (max-width: 899.98px) {
+    #categorie-opname-meetwaarden h3 { display: none; }
+    .meet-grid > *,
+    .meet-gebonden > * { padding: 4px 7px; }
+    .meet-cel input,
+    .meet-gebonden-veld input { padding: 6px; }
+}
+
 /* Verbruik-tabellen: identieke kolombreedtes over de losse groep-tabellen
    heen (vast eerste-kolombreedte + table-layout:fixed), zodat de Stand- en
    Verbruik-velden uitlijnen ondanks verschillend lange labels. De groepen
@@ -717,6 +865,22 @@ input[type="text"].buiten-limiet {
 #peuterbad-verbruik-content .verbruik-tabel th:first-child,
 #peuterbad-verbruik-content .verbruik-tabel td:first-child {
     width: 160px;
+}
+
+/* Verbruik diep/ondiep: op tablet/laptop de groepskaarten naast elkaar i.p.v.
+   onder elkaar, zodat de schermbreedte beter benut wordt. Mobiel blijft
+   gestapeld. De grid zit op een aparte wrapper, want de zichtbaarheid van
+   #subtab-verbruik-content wordt via een inline display gestuurd. */
+@media (min-width: 768px) {
+    .verbruik-groepen {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(340px, 420px));
+        gap: 16px 20px;
+        align-items: start;
+    }
+    .verbruik-groepen > .categorie-box {
+        margin: 0;
+    }
 }
 
 /* Houd het invoerveld en de ⚠-actiemarkering altijd op één regel — anders
@@ -825,6 +989,8 @@ input[type="text"].buiten-limiet {
 td input[type="number"],
 td input[type="text"],
 td select,
+.meet-cel input,
+.meet-gebonden-veld input,
 .veld-item input,
 .veld-item select,
 .login-box input {

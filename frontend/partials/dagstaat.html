@@ -41,56 +41,41 @@
                 <div id="subtab-meetwaarden-content">
                     <div class="categorie-box" id="categorie-opname-meetwaarden">
                         <h3>Opname meetwaarden</h3>
-                        <table class="categorie-tabel">
-                            <thead>
-                                <tr>
-                                    <th>Parameter</th>
-                                    <th>Diep</th>
-                                    <th>Ondiep</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <tr>
-                                    <td>pH</td>
-                                    <td><input type="number" id="ph-diep" step="0.01" data-param="ph_waarde" oninput="valideerVeld(this, 'ph_waarde')"></td>
-                                    <td><input type="number" id="ph-ondiep" step="0.01" data-param="ph_waarde" oninput="valideerVeld(this, 'ph_waarde')"></td>
-                                </tr>
-                                <tr>
-                                    <td>Chloor</td>
-                                    <td><input type="number" id="chloor-diep" step="0.01" data-param="chloor_waarde" oninput="valideerVeld(this, 'chloor_waarde')"></td>
-                                    <td><input type="number" id="chloor-ondiep" step="0.01" data-param="chloor_waarde" oninput="valideerVeld(this, 'chloor_waarde')"></td>
-                                </tr>
-                                <tr>
-                                    <td>Temperatuur</td>
-                                    <td><input type="number" id="temp-diep" step="0.1" data-param="watertemperatuur" oninput="valideerVeld(this, 'watertemperatuur')"></td>
-                                    <td><input type="number" id="temp-ondiep" step="0.1" data-param="watertemperatuur" oninput="valideerVeld(this, 'watertemperatuur')"></td>
-                                </tr>
-                                <tr>
-                                    <td>Flow</td>
-                                    <td><input type="number" step="1" id="flow-diep" data-param="flow_diep" oninput="valideerVeld(this, 'flow_diep')"></td>
-                                    <td><input type="number" step="1" id="flow-ondiep" data-param="flow_ondiep" oninput="valideerVeld(this, 'flow_ondiep')"></td>
-                                </tr>
-                                <tr>
-                                    <td>Filterdruk In</td>
-                                    <td><input type="number" id="filter-in-diep" step="0.01" data-param="filter_druk_in" oninput="valideerVeld(this, 'filter_druk_in')"></td>
-                                    <td><input type="number" id="filter-in-ondiep" step="0.01" data-param="filter_druk_in" oninput="valideerVeld(this, 'filter_druk_in')"></td>
-                                </tr>
-                                <tr>
-                                    <td>Filterdruk Uit</td>
-                                    <td><input type="number" id="filter-uit-diep" step="0.01" data-param="filter_druk_uit" oninput="valideerVeld(this, 'filter_druk_uit')"></td>
-                                    <td><input type="number" id="filter-uit-ondiep" step="0.01" data-param="filter_druk_uit" oninput="valideerVeld(this, 'filter_druk_uit')"></td>
-                                </tr>
-                                <tr>
-                                    <td>Gebonden chloor (dagmax)</td>
-                                    <td><input type="text" id="gebonden-chloor-diep" disabled style="background-color:#f0f0f0; cursor:not-allowed;"></td>
-                                    <td><input type="text" id="gebonden-chloor-ondiep" disabled style="background-color:#f0f0f0; cursor:not-allowed;"></td>
-                                </tr>
-                            </tbody>
-                        </table>
+                        <div class="meet-grid">
+                            <span class="meet-corner" style="grid-area:cnr;" aria-hidden="true"></span>
+                            <span class="meet-col-kop" style="grid-area:kph;">pH</span>
+                            <span class="meet-col-kop" style="grid-area:kcl;">Chloor</span>
+                            <span class="meet-col-kop" style="grid-area:kte;">Temperatuur</span>
+                            <span class="meet-col-kop" style="grid-area:kfl;">Flow</span>
+                            <span class="meet-col-kop" style="grid-area:kin;">Filterdruk In</span>
+                            <span class="meet-col-kop" style="grid-area:kui;">Filterdruk Uit</span>
+                            <span class="meet-bad-kop" style="grid-area:bdp;">Diep</span>
+                            <span class="meet-bad-kop" style="grid-area:bod;">Ondiep</span>
+
+                            <div class="meet-cel" style="grid-area:phd;"><input type="number" id="ph-diep" step="0.01" data-param="ph_waarde" oninput="valideerVeld(this, 'ph_waarde')"></div>
+                            <div class="meet-cel" style="grid-area:pho;"><input type="number" id="ph-ondiep" step="0.01" data-param="ph_waarde" oninput="valideerVeld(this, 'ph_waarde')"></div>
+                            <div class="meet-cel" style="grid-area:cld;"><input type="number" id="chloor-diep" step="0.01" data-param="chloor_waarde" oninput="valideerVeld(this, 'chloor_waarde')"></div>
+                            <div class="meet-cel" style="grid-area:clo;"><input type="number" id="chloor-ondiep" step="0.01" data-param="chloor_waarde" oninput="valideerVeld(this, 'chloor_waarde')"></div>
+                            <div class="meet-cel" style="grid-area:ted;"><input type="number" id="temp-diep" step="0.1" data-param="watertemperatuur" oninput="valideerVeld(this, 'watertemperatuur')"></div>
+                            <div class="meet-cel" style="grid-area:teo;"><input type="number" id="temp-ondiep" step="0.1" data-param="watertemperatuur" oninput="valideerVeld(this, 'watertemperatuur')"></div>
+                            <div class="meet-cel" style="grid-area:fld;"><input type="number" step="1" id="flow-diep" data-param="flow_diep" oninput="valideerVeld(this, 'flow_diep')"></div>
+                            <div class="meet-cel" style="grid-area:flo;"><input type="number" step="1" id="flow-ondiep" data-param="flow_ondiep" oninput="valideerVeld(this, 'flow_ondiep')"></div>
+                            <div class="meet-cel" style="grid-area:ind;"><input type="number" id="filter-in-diep" step="0.01" data-param="filter_druk_in" oninput="valideerVeld(this, 'filter_druk_in')"></div>
+                            <div class="meet-cel" style="grid-area:ino;"><input type="number" id="filter-in-ondiep" step="0.01" data-param="filter_druk_in" oninput="valideerVeld(this, 'filter_druk_in')"></div>
+                            <div class="meet-cel" style="grid-area:uid;"><input type="number" id="filter-uit-diep" step="0.01" data-param="filter_druk_uit" oninput="valideerVeld(this, 'filter_druk_uit')"></div>
+                            <div class="meet-cel" style="grid-area:uio;"><input type="number" id="filter-uit-ondiep" step="0.01" data-param="filter_druk_uit" oninput="valideerVeld(this, 'filter_druk_uit')"></div>
+                        </div>
+
+                        <div class="meet-gebonden">
+                            <span class="meet-gebonden-label">Gebonden chloor (dagmax)</span>
+                            <span class="meet-gebonden-veld"><span class="meet-gebonden-bad">Diep</span><input type="text" id="gebonden-chloor-diep" disabled></span>
+                            <span class="meet-gebonden-veld"><span class="meet-gebonden-bad">Ondiep</span><input type="text" id="gebonden-chloor-ondiep" disabled></span>
+                        </div>
                     </div>
                 </div>
 
                 <div id="subtab-verbruik-content" style="display: none;">
+                    <div class="verbruik-groepen">
                     <div class="categorie-box" id="categorie-water">
                         <h3>Water (m³)</h3>
                         <table class="categorie-tabel verbruik-tabel">
@@ -167,6 +152,7 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
                     </div>
                 </div>
 
