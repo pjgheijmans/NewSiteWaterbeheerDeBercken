@@ -152,6 +152,7 @@ class OpslaanModule {
                     flow:           api.parseNumberValue(`flow-${lb}`),
                     filter_druk_in: api.parseNumberValue(`filter-in-${lb}`),
                     filter_druk_uit:api.parseNumberValue(`filter-uit-${lb}`),
+                    kathodische_bescherming: api.parseNumberValue(`kath-${lb}`),
                 };
                 payload.filter_druk = payload.filter_druk_in ?? payload.filter_druk_uit ?? 0;
                 try {

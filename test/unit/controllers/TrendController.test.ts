@@ -17,7 +17,7 @@ describe('GET /metingen', () => {
     it('delegeert naar de service voor waterbeheerder', async () => {
         mockService.getMetingenTrend.mockResolvedValue([
             { datum: '2026-05-01', bad_naam: 'Diep', ph_waarde: 7.2, chloor_waarde: 1.0,
-              temperatuur: 28, flow: 300, filter_druk_in: 0.5, filter_druk_uit: 0.3 },
+              temperatuur: 28, flow: 300, filter_druk_in: 0.5, filter_druk_uit: 0.3, kathodische_bescherming: 1.2 },
         ]);
         const res = await request(maakApp()).get('/metingen?van=2026-05-01&tot=2026-05-31');
         expect(res.status).toBe(200);

@@ -18,6 +18,7 @@ export interface Meting {
     flow: number | null;
     filter_druk_in: number | null;
     filter_druk_uit: number | null;
+    kathodische_bescherming: number | null;
     water: number | null;
     chemicalien_chloor: number | null;
     chemicalien_zwavelzuur: number | null;
@@ -32,6 +33,7 @@ export interface GrootBadMetingInput {
     flow?: number | null;
     filter_druk_in?: number | null;
     filter_druk_uit?: number | null;
+    kathodische_bescherming?: number | null;
 }
 
 export interface PeuterbadMetingInput {
@@ -230,6 +232,7 @@ export interface TrendMetingRow {
     flow: number | null;
     filter_druk_in: number | null;
     filter_druk_uit: number | null;
+    kathodische_bescherming: number | null;
 }
 
 export interface TrendVerbruikRow {

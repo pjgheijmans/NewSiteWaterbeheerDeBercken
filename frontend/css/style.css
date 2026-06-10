@@ -739,7 +739,8 @@ input[type="text"].buiten-limiet {
         "kte ted teo"
         "kfl fld flo"
         "kin ind ino"
-        "kui uid uio";
+        "kui uid uio"
+        "kkb kbd kbo";
 }
 .meet-grid > *,
 .meet-gebonden > * {
@@ -795,11 +796,11 @@ input[type="text"].buiten-limiet {
 
 @media (min-width: 900px) {
     .meet-grid {
-        grid-template-columns: var(--meet-label-w) repeat(6, minmax(var(--meet-val-w), max-content));
+        grid-template-columns: var(--meet-label-w) repeat(7, minmax(var(--meet-val-w), max-content));
         grid-template-areas:
-            "cnr kph kcl kte kfl kin kui"
-            "bdp phd cld ted fld ind uid"
-            "bod pho clo teo flo ino uio";
+            "cnr kph kcl kte kfl kin kui kkb"
+            "bdp phd cld ted fld ind uid kbd"
+            "bod pho clo teo flo ino uio kbo";
     }
     /* Parameters worden nu de kopcellen; baden worden gewone zijlabels. */
     .meet-col-kop {

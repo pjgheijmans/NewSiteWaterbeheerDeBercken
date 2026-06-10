@@ -12,6 +12,7 @@ const DEFAULT_LIMIETEN: LimietInput[] = [
     { parameter_naam: 'filter_druk_in',         min_waarde: 0.20,  max_waarde: 1.50       },
     { parameter_naam: 'filter_druk_uit',        min_waarde: 0.20,  max_waarde: 1.50       },
     { parameter_naam: 'filter_druk_peuterbad',  min_waarde: 0.20,  max_waarde: 1.50       },
+    { parameter_naam: 'kathodische_bescherming',min_waarde: 0.20,  max_waarde: 2.50       },
     { parameter_naam: 'elektriciteit_nacht',    min_waarde: 0.00,  max_waarde: 500.00     },
     { parameter_naam: 'elektriciteit_dag',      min_waarde: 0.00,  max_waarde: 500.00     },
     { parameter_naam: 'gas',                    min_waarde: 0.00,  max_waarde: 500.00     },

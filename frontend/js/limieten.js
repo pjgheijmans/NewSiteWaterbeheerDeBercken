@@ -50,6 +50,7 @@ class LimietenModule {
             filter_druk_in:        'Filterdruk In (bar)',
             filter_druk_uit:       'Filterdruk Uit (bar)',
             filter_druk_peuterbad: 'Filterdruk (bar)',
+            kathodische_bescherming: 'Kathodische bescherming (V)',
             elektriciteit_nacht:   'Elektriciteit Nacht (kWh)',
             elektriciteit_dag:     'Elektriciteit Dag (kWh)',
             gas:                   'Gas (m³)',
@@ -82,7 +83,7 @@ class LimietenModule {
         return [
             { titel: 'Diep / Ondiep – Meetwaarden',
               info:  'pH, chloor en temperatuur gelden ook voor het Peuterbad.',
-              params: ['ph_waarde','chloor_waarde','watertemperatuur','flow_diep','flow_ondiep','filter_druk_in','filter_druk_uit'] },
+              params: ['ph_waarde','chloor_waarde','watertemperatuur','flow_diep','flow_ondiep','filter_druk_in','filter_druk_uit','kathodische_bescherming'] },
             { titel: 'Peuterbad – Meetwaarden',
               params: ['flow_peuterbad','filter_druk_peuterbad'] },
             { titel: 'Verbruik',
