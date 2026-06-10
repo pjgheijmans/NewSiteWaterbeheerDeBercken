@@ -540,7 +540,7 @@ class MetingenModule {
     }
 
     async _verwijderBlok(tijdstip) {
-        if (!confirm(`Blok ${String(tijdstip).slice(0, 5)} verwijderen?`)) return;
+        if (!(await this.app.ui.bevestig({ tekst: `Meetblok ${String(tijdstip).slice(0, 5)} verwijderen?`, bevestig: 'Verwijderen', gevaar: true }))) return;
         const datum = document.getElementById('centraleDatum').value;
         try {
             const res = await this.app.api.call(
