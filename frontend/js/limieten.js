@@ -133,7 +133,7 @@ class LimietenModule {
 
     /** Vul standaardwaarden in via de backend en sla direct op. */
     async laadStandaardLimieten() {
-        if (!confirm('Standaardwaarden invullen? Dit overschrijft de huidige waarden.')) return;
+        if (!(await this.app.ui.bevestig({ tekst: 'Standaardwaarden invullen? Dit overschrijft de huidige waarden.', bevestig: 'Invullen' }))) return;
         try {
             const res      = await this.app.api.call('/api/limieten/defaults');
             const defaults = await res.json();

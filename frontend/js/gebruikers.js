@@ -115,7 +115,7 @@ class GebruikersModule {
      * @param {number} id
      */
     async verwijderGebruiker(id) {
-        if (!confirm('Weet u zeker dat u deze gebruiker wilt wissen?')) return;
+        if (!(await this.app.ui.bevestig({ titel: 'Gebruiker wissen', tekst: 'Weet u zeker dat u deze gebruiker wilt wissen?', bevestig: 'Wissen', gevaar: true }))) return;
         const res = await this.app.api.call(`/api/gebruikers/${id}`, { method: 'DELETE' });
         if (res.ok) { this.app.ui.toonBericht('Gebruiker gewist.', 'succes'); this.laadGebruikers(); }
     }

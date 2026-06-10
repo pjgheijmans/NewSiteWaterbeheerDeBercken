@@ -142,7 +142,7 @@ class LogboekModule {
     async _verwijderBlok(el) {
         const id      = el.getAttribute('data-logboek-id');
         const apiBase = el.getAttribute('data-logboek-api') || '/api/logboek';
-        if (!confirm('Tekstblok verwijderen?')) return;
+        if (!(await this.app.ui.bevestig({ tekst: 'Dit tekstblok verwijderen?', bevestig: 'Verwijderen', gevaar: true }))) return;
         if (id) {
             try {
                 const res = await this.app.api.call(`${apiBase}/${id}`, { method: 'DELETE' });

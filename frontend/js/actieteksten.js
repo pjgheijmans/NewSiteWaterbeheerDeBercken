@@ -71,7 +71,7 @@ class ActieTekstenModule {
 
     /** Vul de standaardteksten in en sla direct op. */
     async laadStandaardActieTeksten() {
-        if (!confirm('Standaardteksten invullen? Dit overschrijft de huidige teksten.')) return;
+        if (!(await this.app.ui.bevestig({ tekst: 'Standaardteksten invullen? Dit overschrijft de huidige teksten.', bevestig: 'Invullen' }))) return;
         try {
             const res      = await this.app.api.call('/api/actieteksten/defaults');
             const defaults = await res.json();
