@@ -8,12 +8,12 @@ export class TrendRepository implements ITrendRepository {
     async getMetingenTrend(van: string, tot: string): Promise<TrendMetingRow[]> {
         const [rows] = await this.pool.execute<RowDataPacket[]>(
             `SELECT mg.datum, b.naam AS bad_naam, mg.ph_waarde, mg.chloor_waarde,
-                    mg.temperatuur, mg.flow, mg.filter_druk_in, mg.filter_druk_uit
+                    mg.temperatuur, mg.flow, mg.filter_druk_in, mg.filter_druk_uit, mg.kathodische_bescherming
              FROM metingen_diep_ondiep mg JOIN baden b ON mg.bad_id = b.id
              WHERE mg.datum BETWEEN ? AND ?
              UNION ALL
              SELECT mp.datum, b.naam AS bad_naam, mp.ph_waarde, mp.chloor_waarde,
-                    NULL AS temperatuur, mp.flow, mp.filter_druk_in, NULL AS filter_druk_uit
+                    NULL AS temperatuur, mp.flow, mp.filter_druk_in, NULL AS filter_druk_uit, NULL AS kathodische_bescherming
              FROM metingen_peuterbad mp JOIN baden b ON mp.bad_id = b.id
              WHERE mp.datum BETWEEN ? AND ?
              ORDER BY datum ASC, bad_naam ASC`,

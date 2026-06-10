@@ -17,7 +17,7 @@ const ALL_DATA_TABLES = [
 const EXPORT_QUERIES: Record<string, string> = {
     logboek:                          `SELECT id, datum, tijdstip, auteur, tekst FROM logboek ORDER BY datum DESC, tijdstip ASC`,
     coordinatoren_logboek:            `SELECT id, datum, tijdstip, auteur, tekst FROM coordinatoren_logboek ORDER BY datum DESC, tijdstip ASC`,
-    metingen_diep_ondiep:             `SELECT m.id, b.naam AS bad_naam, m.datum, m.ph_waarde, m.chloor_waarde, m.temperatuur, m.flow, m.filter_druk_in, m.filter_druk_uit FROM metingen_diep_ondiep m JOIN baden b ON m.bad_id = b.id ORDER BY m.datum DESC`,
+    metingen_diep_ondiep:             `SELECT m.id, b.naam AS bad_naam, m.datum, m.ph_waarde, m.chloor_waarde, m.temperatuur, m.flow, m.filter_druk_in, m.filter_druk_uit, m.kathodische_bescherming FROM metingen_diep_ondiep m JOIN baden b ON m.bad_id = b.id ORDER BY m.datum DESC`,
     metingen_peuterbad:               `SELECT m.id, b.naam AS bad_naam, m.datum, m.ph_waarde, m.chloor_waarde, m.flow, m.filter_druk_in, m.water, m.chemicalien_chloor, m.chemicalien_zwavelzuur FROM metingen_peuterbad m JOIN baden b ON m.bad_id = b.id ORDER BY m.datum DESC`,
     metingen_coordinatoren:           `SELECT mc.id, b.naam AS bad_naam, mc.datum, mc.tijdstip, mc.ph_waarde, mc.chloor_vrij, mc.chloor_totaal, mc.watertemperatuur, mc.helderheid, mc.bad_gebruikt FROM metingen_coordinatoren mc JOIN baden b ON mc.bad_id = b.id ORDER BY mc.datum DESC, mc.tijdstip ASC`,
     coordinatoren_checklist:          `SELECT datum, proef_waterspeel, proef_spraypark, proef_douches, proef_glijbaan, auteur FROM coordinatoren_checklist ORDER BY datum DESC`,

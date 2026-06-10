@@ -31,10 +31,14 @@ CREATE TABLE IF NOT EXISTS metingen_diep_ondiep (
     flow INT NULL,
     filter_druk_in DECIMAL(4,2) NULL,
     filter_druk_uit DECIMAL(4,2) NULL,
+    kathodische_bescherming DECIMAL(4,2) NULL,
     water DECIMAL(10,2) NULL,
     FOREIGN KEY (bad_id) REFERENCES baden(id),
     UNIQUE KEY unieke_meting_diep_ondiep (bad_id, datum)
 );
+
+-- Migratie: kathodische bescherming (Diep/Ondiep)
+ALTER TABLE metingen_diep_ondiep ADD COLUMN IF NOT EXISTS kathodische_bescherming DECIMAL(4,2) NULL AFTER filter_druk_uit;
 
 CREATE TABLE IF NOT EXISTS metingen_peuterbad (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -75,6 +79,7 @@ INSERT IGNORE INTO limieten (parameter_naam, min_waarde, max_waarde) VALUES
 ('filter_druk_in', 0.20, 1.50),
 ('filter_druk_uit', 0.20, 1.50),
 ('filter_druk_peuterbad', 0.20, 1.50),
+('kathodische_bescherming', 0.20, 2.50),
 ('watertemperatuur', 20.00, 30.00),
 ('elektriciteit_nacht', 0.00, 500.00),
 ('elektriciteit_dag', 0.00, 500.00),

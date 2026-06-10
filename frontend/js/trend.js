@@ -103,6 +103,7 @@ class TrendModule {
             this._maakLineChart('chart-flow-groot',     grootLabels, [ds('Diep', diep, 'flow',            grootLabels, '#007BFF'), ds('Ondiep', ondiep, 'flow',            grootLabels, '#28a745')]);
             this._maakLineChart('chart-filterin-groot', grootLabels, [ds('Diep', diep, 'filter_druk_in',  grootLabels, '#007BFF'), ds('Ondiep', ondiep, 'filter_druk_in',  grootLabels, '#28a745')]);
             this._maakLineChart('chart-filteruit-groot',grootLabels, [ds('Diep', diep, 'filter_druk_uit', grootLabels, '#007BFF'), ds('Ondiep', ondiep, 'filter_druk_uit', grootLabels, '#28a745')]);
+            this._maakLineChart('chart-kath-groot',     grootLabels, [ds('Diep', diep, 'kathodische_bescherming', grootLabels, '#007BFF'), ds('Ondiep', ondiep, 'kathodische_bescherming', grootLabels, '#28a745')]);
 
             this._maakLineChart('chart-ph-peuter',      peuterLabels, [ds('Peuterbad', peuter, 'ph_waarde',     peuterLabels, '#fd7e14')]);
             this._maakLineChart('chart-chloor-peuter',  peuterLabels, [ds('Peuterbad', peuter, 'chloor_waarde', peuterLabels, '#fd7e14')]);

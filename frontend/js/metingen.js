@@ -222,7 +222,7 @@ class MetingenModule {
 
             ['diep','ondiep'].forEach(b => {
                 ['ph','chloor','temp','flow'].forEach(f => { document.getElementById(`${f}-${b}`).value = ''; });
-                ['filter-in','filter-uit'].forEach(f => { document.getElementById(`${f}-${b}`).value = ''; });
+                ['filter-in','filter-uit','kath'].forEach(f => { document.getElementById(`${f}-${b}`).value = ''; });
             });
             ['Diep','Ondiep'].forEach(bad => {
                 const meting = Array.isArray(data) ? data.find(m => m.bad_naam === bad) : null;
@@ -233,6 +233,7 @@ class MetingenModule {
                 ui.zetInputValue(`flow-${lb}`,         meting?.flow         ?? '');
                 ui.zetInputValue(`filter-in-${lb}`,   meting?.filter_druk_in  ?? '');
                 ui.zetInputValue(`filter-uit-${lb}`,  meting?.filter_druk_uit ?? '');
+                ui.zetInputValue(`kath-${lb}`,        meting?.kathodische_bescherming ?? '');
             });
             if (huidigeSubtab === 'verbruik' || huidigeSubtab === 'verwarmingssysteem')
                 this.app.verbruik.laadWaterbeheerVelden();

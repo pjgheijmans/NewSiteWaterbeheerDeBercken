@@ -59,6 +59,6 @@ describe('saveGrootBadMeting', () => {
         const params = paramsVan(pool.execute);
         expect(params[0]).toBe(1);
         expect(params[1]).toBe('2026-05-31');
-        expect(params.slice(2)).toEqual([null, null, null, null, null, null]);
+        expect(params.slice(2)).toEqual([null, null, null, null, null, null, null]);
     });
 });
