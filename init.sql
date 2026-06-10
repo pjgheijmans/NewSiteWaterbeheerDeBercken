@@ -37,8 +37,13 @@ CREATE TABLE IF NOT EXISTS metingen_diep_ondiep (
     UNIQUE KEY unieke_meting_diep_ondiep (bad_id, datum)
 );
 
--- Migratie: kathodische bescherming (Diep/Ondiep)
-ALTER TABLE metingen_diep_ondiep ADD COLUMN IF NOT EXISTS kathodische_bescherming DECIMAL(4,2) NULL AFTER filter_druk_uit;
+-- Migratie: kathodische bescherming (Diep/Ondiep).
+-- NB: GEEN "IF NOT EXISTS" — dat is MariaDB-syntax en geeft op MySQL 8 een
+-- syntaxfout, waardoor de kolom op bestaande databases niet werd toegevoegd.
+-- Een kale ADD COLUMN voegt de kolom toe als die ontbreekt en faalt onschadelijk
+-- ("Duplicate column") als die al bestaat; runInitSql vangt die fout op. Idem
+-- voor de overige migraties hieronder.
+ALTER TABLE metingen_diep_ondiep ADD COLUMN kathodische_bescherming DECIMAL(4,2) NULL AFTER filter_druk_uit;
 
 CREATE TABLE IF NOT EXISTS metingen_peuterbad (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -153,7 +158,7 @@ CREATE TABLE IF NOT EXISTS coordinatoren_daggegevens (
 );
 
 -- Migratie: registreer wie de temperatuur & bezoekers invulde
-ALTER TABLE coordinatoren_daggegevens ADD COLUMN IF NOT EXISTS auteur VARCHAR(100) NULL AFTER bezoekers_totaal_spoelbeurt;
+ALTER TABLE coordinatoren_daggegevens ADD COLUMN auteur VARCHAR(100) NULL AFTER bezoekers_totaal_spoelbeurt;
 
 -- Wie was er op dienst bij waterbeheer (altijd 2 personen; één logt in, de ander
 -- wordt handmatig ingevuld). Eén record per dag.
@@ -177,7 +182,7 @@ CREATE TABLE IF NOT EXISTS coordinatoren_checklist (
 );
 
 -- Migratie: registreer wie de checklijst invulde
-ALTER TABLE coordinatoren_checklist ADD COLUMN IF NOT EXISTS auteur VARCHAR(100) NULL AFTER proef_glijbaan;
+ALTER TABLE coordinatoren_checklist ADD COLUMN auteur VARCHAR(100) NULL AFTER proef_glijbaan;
 
 -- Tabel voor acties/alarmen
 CREATE TABLE IF NOT EXISTS acties (
@@ -195,7 +200,7 @@ CREATE TABLE IF NOT EXISTS acties (
 );
 
 -- Migratie: voeg opgelost_door toe aan acties
-ALTER TABLE acties ADD COLUMN IF NOT EXISTS opgelost_door VARCHAR(100) NULL AFTER opgelost_op;
+ALTER TABLE acties ADD COLUMN opgelost_door VARCHAR(100) NULL AFTER opgelost_op;
 
 -- Tabel voor de tekst-sjablonen van acties. De waterbeheerder kan de
 -- formulering van een actie aanpassen zonder code te wijzigen. Plaatshouders
@@ -269,14 +274,14 @@ CREATE TABLE IF NOT EXISTS verwarmings_systeem_diep_ondiep (
 );
 
 -- Migratie: voeg auteur toe aan metingen_coordinatoren
-ALTER TABLE metingen_coordinatoren ADD COLUMN IF NOT EXISTS auteur VARCHAR(100) NULL AFTER tijdstip;
+ALTER TABLE metingen_coordinatoren ADD COLUMN auteur VARCHAR(100) NULL AFTER tijdstip;
 
 -- Migratie: voeg auteur toe aan logboek tabellen
-ALTER TABLE logboek ADD COLUMN IF NOT EXISTS auteur VARCHAR(100) NULL AFTER tijdstip;
-ALTER TABLE coordinatoren_logboek ADD COLUMN IF NOT EXISTS auteur VARCHAR(100) NULL AFTER tijdstip;
+ALTER TABLE logboek ADD COLUMN auteur VARCHAR(100) NULL AFTER tijdstip;
+ALTER TABLE coordinatoren_logboek ADD COLUMN auteur VARCHAR(100) NULL AFTER tijdstip;
 
 -- Migratie: verwijder opmerkingen kolom uit coordinatoren_checklist
-ALTER TABLE coordinatoren_checklist DROP COLUMN IF EXISTS opmerkingen;
+ALTER TABLE coordinatoren_checklist DROP COLUMN opmerkingen;
 
 -- Migratie: verbruik velden naar INT (meters geven gehele getallen, geen decimalen)
 ALTER TABLE verbruik_diep_ondiep

@@ -62,7 +62,7 @@ npm start        # node dist/backend/server.js
 - **Passwords**: hashed with `crypto.scrypt` via `backend/wachtwoord.ts`; `findByLogin` verifies in code and upgrades legacy plaintext on login; a startup migration (`hashBestaandeWachtwoorden`) hashes any remaining plaintext.
 - **Action generation**: fire-and-forget after a measurement save — no transactional guarantee between the save and the generated action.
 - **Coordinator visitor count**: cumulative since the last resolved `filter_spoelen_spoelbeurt` action.
-- **init.sql warnings**: a few SQL statements in `init.sql` produce syntax warnings on startup — these are pre-existing and non-fatal.
+- **init.sql warnings**: the per-column migrations use a plain `ALTER TABLE … ADD COLUMN`/`DROP COLUMN` (no `IF [NOT] EXISTS` — that's MariaDB syntax and a hard error on MySQL 8). On an up-to-date DB these log a harmless `Duplicate column`/`Can't DROP` warning (swallowed by `runInitSql`'s try-catch); on an older DB they actually add/drop the column. Non-fatal by design — do **not** re-add `IF NOT EXISTS`.
 
 ## Git workflow
 
