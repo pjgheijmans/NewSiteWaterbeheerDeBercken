@@ -135,6 +135,16 @@ h1 {
     letter-spacing: -0.01em;
 }
 
+/* Versielabel onder de titel: bewust gedempt zodat het de kop niet overheerst,
+   maar wel afleesbaar is bij een bugmelding. Wordt gevuld vanuit app.js. */
+.app-versie {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--kop);
+    opacity: .6;
+    white-space: nowrap;
+}
+
 /* Logo zwembad De Bercken: kleine afgeronde tegel naast de titel in de app-bar
    (de lichtblauwe vierkante achtergrond van het logo leest zo als een badge). */
 .app-logo {
@@ -323,6 +333,10 @@ h1 {
 }
 
 .app-bar .header-box h1 {
+    color: #fff;
+}
+
+.app-bar .header-box .app-versie {
     color: #fff;
 }
 
