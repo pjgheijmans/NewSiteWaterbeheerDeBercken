@@ -8,17 +8,33 @@ class OpslaanModule {
     }
 
     /**
+     * Bepaal of een grote-baden meetwaarden-opslag (Diep/Ondiep) onvolledig is.
+     * Pure functie: álle meetvelden van de pagina tellen mee — pH, chloor,
+     * temperatuur, flow, beide filterdrukken en kathodische bescherming.
+     * Een waarde is "leeg" als ze null is (0 telt als ingevuld).
+     * @param {{ph_waarde:?number, chloor_waarde:?number, temperatuur:?number, flow:?number, filter_druk_in:?number, filter_druk_uit:?number, kathodische_bescherming:?number}} payload
+     * @returns {boolean}
+     */
+    static meetwaardenOnvolledig(payload) {
+        return [
+            payload.ph_waarde, payload.chloor_waarde, payload.temperatuur, payload.flow,
+            payload.filter_druk_in, payload.filter_druk_uit, payload.kathodische_bescherming,
+        ].some(v => v == null);
+    }
+
+    /**
      * Bepaal of een peuterbad-opslag onvolledig is voor de actieve subtab.
      * Pure functie: op de Verbruik-subtab tellen water + beide chemicaliën,
-     * op Meetwaarden tellen pH + chloor. Een waarde is "leeg" als ze null is.
+     * op Meetwaarden tellen pH, chloor, flow én filterdruk (alle velden van de
+     * pagina). Een waarde is "leeg" als ze null is (0 telt als ingevuld).
      * @param {string} subtab - 'verbruik' of 'meetwaarden'
-     * @param {{water:?number, chemicalien_chloor:?number, chemicalien_zwavelzuur:?number, ph_waarde:?number, chloor_waarde:?number}} payload
+     * @param {{water:?number, chemicalien_chloor:?number, chemicalien_zwavelzuur:?number, ph_waarde:?number, chloor_waarde:?number, flow:?number, filter_druk:?number}} payload
      * @returns {boolean}
      */
     static peuterbadOnvolledig(subtab, payload) {
         return subtab === 'verbruik'
             ? (payload.water == null || payload.chemicalien_chloor == null || payload.chemicalien_zwavelzuur == null)
-            : (payload.ph_waarde == null || payload.chloor_waarde == null);
+            : (payload.ph_waarde == null || payload.chloor_waarde == null || payload.flow == null || payload.filter_druk == null);
     }
 
     /** Verbind auto-save listeners aan de dagstaat-sectie. */
@@ -113,12 +129,17 @@ class OpslaanModule {
             ui.toonBericht(msg, 'fout');
         };
         const refreshNaOpslaan = () => {
-            if (!autoSave) this.app.metingen.laadMetingen();
-            else if (huidigeRol === 'waterbeheer') {
-                if (huidigeBadPagina === 'peuterbad') this.app.verbruik.laadEnBerekenPeuterbadVerbruik();
-                else                                   this.app.verbruik.laadEnBerekenVerbruik();
-                this.app.metingen.laadActies(document.getElementById('centraleDatum').value);
-            }
+            if (!autoSave) { this.app.metingen.laadMetingen(); return; }
+            if (huidigeRol !== 'waterbeheer') return;
+            if (huidigeBadPagina === 'peuterbad') this.app.verbruik.laadEnBerekenPeuterbadVerbruik();
+            else                                   this.app.verbruik.laadEnBerekenVerbruik();
+            const d = document.getElementById('centraleDatum').value;
+            // Net als laadMetingen: zowel de ⚠-veldindicatoren bij de meetwaarden
+            // als de ⚠-badges op de pagina-/Taken-tabs bijwerken. Voorheen werd alleen
+            // laadActies aangeroepen, waardoor de badges pas na een volledige herlaad
+            // (datumwissel/paginawissel) verschenen — niet automatisch na het opslaan.
+            this.app.metingen.laadActies(d);
+            this.app.taken.werkBadgeBij(d);
         };
 
         // Logboek — geen centrale opslaan
@@ -141,9 +162,6 @@ class OpslaanModule {
 
             for (const bad of leiden) {
                 const lb = bad.toLowerCase();
-                const phEl    = document.getElementById(`ph-${lb}`);
-                const chloorEl = document.getElementById(`chloor-${lb}`);
-                if (!phEl?.value || !chloorEl?.value) leeg = true;
                 const payload = {
                     datum, bad_naam: bad,
                     ph_waarde:      api.parseNumberValue(`ph-${lb}`),
@@ -155,6 +173,9 @@ class OpslaanModule {
                     kathodische_bescherming: api.parseNumberValue(`kath-${lb}`),
                 };
                 payload.filter_druk = payload.filter_druk_in ?? payload.filter_druk_uit ?? 0;
+                // Onvolledig als één van de meetvelden van dit bad nog leeg is — alle
+                // velden op de pagina tellen mee, niet alleen pH + chloor.
+                if (OpslaanModule.meetwaardenOnvolledig(payload)) leeg = true;
                 try {
                     const res = await api.call('/api/metingen', {
                         method: 'POST',
