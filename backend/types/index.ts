@@ -6,6 +6,8 @@ export interface Gebruiker {
     voornaam?: string;
     achternaam?: string;
     inlognaam?: string;
+    /** Weergavenaam voor de kop; bij dubbele voornaam aangevuld met de eerste letter van de achternaam. */
+    weergavenaam?: string;
 }
 
 // ── Metingen ──────────────────────────────────────────────────────────────────
