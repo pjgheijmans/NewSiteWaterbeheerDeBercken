@@ -37,7 +37,8 @@ diagrammen.
 │   │   ├── state.js                    # AppState — gedeelde toestand
 │   │   ├── api.js · ui.js · nav.js · auth.js
 │   │   ├── metingen.js · taken.js · verbruik.js · opslaan.js · logboek.js
-│   │   └── gebruikers.js · database.js · trend.js · limieten.js
+│   │   ├── gebruikers.js · database.js · trend.js · limieten.js
+│   │   └── actieteksten.js · dienst.js     # actie-teksten beheren · waterbeheer-dienst
 │   └── partials/                       # HTML-fragmenten, samengevoegd door FrontendController
 ├── test/                               # Jest + ts-jest + Supertest
 │   ├── helpers/                        # testApp.ts, mockPool.ts
@@ -57,11 +58,11 @@ diagrammen.
 | Tabel                               | Inhoud                                                                        |
 |-------------------------------------|-------------------------------------------------------------------------------|
 | `baden`                             | Baden: Diep, Ondiep, Peuterbad                                                |
-| `metingen_diep_ondiep`              | Meetwaarden Diep/Ondiep: pH, chloor, temperatuur, flow, filterdruk, water     |
+| `metingen_diep_ondiep`              | Meetwaarden Diep/Ondiep: pH, chloor, temperatuur, flow, filterdruk, kathodische bescherming, water |
 | `metingen_peuterbad`                | Meetwaarden Peuterbad: pH, chloor, flow, filterdruk, water, chemicaliën       |
 | `metingen_coordinatoren`            | Coördinator metingen: pH, chloor (vrij/totaal), temperatuur, helderheid — meerdere blokken per dag met tijdstip |
-| `coordinatoren_checklist`           | Dagelijkse proefdraaien: waterspeel, spraypark, douches, glijbaan             |
-| `coordinatoren_daggegevens`         | Luchttemperatuur en bezoekersaantal per dag                                   |
+| `coordinatoren_checklist`           | Dagelijkse proefdraaien: waterspeel, spraypark, douches, glijbaan (+ auteur)  |
+| `coordinatoren_daggegevens`         | Luchttemperatuur en bezoekersaantal per dag (+ auteur)                         |
 | `coordinatoren_logboek`             | Vrij-tekst logboek coördinatoren (aparte tabel van waterbeheerder)            |
 | `logboek`                           | Vrij-tekst logboek waterbeheerders                                            |
 | `verbruik_diep_ondiep`              | Verbruik: water, elektriciteit, gas, chemicaliën, floculant                   |
@@ -69,6 +70,8 @@ diagrammen.
 | `limieten`                          | Min/max richtwaarden + actie-drempelwaarden per parameter                     |
 | `gebruikers`                        | Inlogaccounts: waterbeheerder, coordinator, Administrator                     |
 | `acties`                            | Automatisch gegenereerde acties/alarmen per bad en datum                      |
+| `actie_teksten`                     | Aanpasbare tekst-sjablonen voor gegenereerde acties (met plaatshouders)       |
+| `waterbeheer_dienst`                | Wie was er per dag op dienst bij waterbeheer (twee personen)                   |
 | `rondetaken_voltooid`               | Afgevinkte dagelijkse rondetaken per dag (catalogus staat in code)            |
 
 Standaard limieten en testgebruikers worden ingesteld via `INSERT IGNORE` in `init.sql`. Er is geen aparte seed-stap nodig.
@@ -95,9 +98,9 @@ app.use(session({
 
 | Rol              | Toegang                                                                                     |
 |------------------|---------------------------------------------------------------------------------------------|
-| `waterbeheerder` | Dagstaat (meetwaarden, verbruik, bezoekers, logboek, taken), coördinator-metingen, trendanalyse, gebruikersbeheer, database beheer |
+| `waterbeheerder` | Dagstaat (meetwaarden, verbruik, bezoekers, logboek, taken), dienstregistratie, coördinator-metingen, trendanalyse, gebruikersbeheer, database beheer |
 | `coordinator`    | Coördinator-metingen, checklijst, daggegevens, logboek                                      |
-| `Administrator`  | Limieten, gebruikersbeheer, database beheer                                                 |
+| `Administrator`  | Limieten, actie-teksten, gebruikersbeheer, database beheer                                  |
 
 > **Limieten & trendanalyse (zie R-006):** trendanalyse is voorbehouden aan
 > `waterbeheerder`. Limietwaarden worden voor veldvalidatie en seizoengrenzen door
@@ -124,6 +127,10 @@ de controllers (403). Muterende endpoints valideren de body met Zod (400).
 | DELETE       | `/api/gebruikers/:id`                     | Gebruiker verwijderen                             |
 | GET/POST     | `/api/limieten`                           | Richtwaarden lezen / opslaan                      |
 | GET          | `/api/limieten/defaults`                  | Standaard richtwaarden ophalen                    |
+| GET/POST     | `/api/actieteksten`                       | Actie-tekst-sjablonen lezen / opslaan (POST: Administrator) |
+| GET          | `/api/actieteksten/defaults`              | Standaard actie-teksten ophalen                   |
+| GET/POST     | `/api/dienst`                             | Waterbeheer-dienst (wie op dienst) lezen / opslaan |
+| GET          | `/api/dienst/waterbeheerders`             | Namenlijst waterbeheerders voor de keuzelijst     |
 | GET/POST     | `/api/metingen`                           | Meetwaarden Diep/Ondiep/Peuterbad                 |
 | GET          | `/api/acties`                             | Acties voor een datum ophalen                     |
 | POST         | `/api/acties/:id/resolve`                 | Actie als opgelost markeren                       |
@@ -189,7 +196,8 @@ Acties (drempelalarmen) worden automatisch aangemaakt of verwijderd na het opsla
 **Weergave in de UI (Taken-subtab):**
 - ⚠-badge op de **bad-paginatab** (Diep/Ondiep, Peuterbad) en de **Taken-subtab** zodra er verplichte taken openstaan
 - ⚠-indicatoren naast de betreffende invoervelden (op basis van open acties)
-- In de Taken-subtab staan **Verplicht vandaag** (open alarmen + kritieke rondetaken zoals regelaars en spraypark-filters) en **Overige taken** (overige optionele rondetaken)
+- In de Taken-subtab staan drie categorieën: **Verplicht vandaag** (getriggerde alarmen), **Belangrijk** (kritieke rondetaken zoals regelaars, spraypark-filters en de douches-test) en **Overige taken** (overige optionele rondetaken). Alleen openstaande Verplicht-taken geven de ⚠-badge
+- De tekst van de gegenereerde acties is aanpasbaar via de **Actie-teksten**-pagina (Administrator); de sjablonen staan in `actie_teksten` met plaatshouders (`{bad}`, `{drempel}`, `{waarde}`)
 - `filter_spoelen`-acties van een bad vallen samen op de filtertaak van dat bad (één rij met alle redenen); facility-brede chemicaliën-alarmen staan onder **Algemeen**
 
 **Rondetaken** vormen de vaste dagelijkse checklist (regelaars, filters, haarfilters, douches, spraypark, …). De catalogus staat in code (`RondetakenRepository`); per dag worden alleen de afgevinkte taken bewaard, dus elke nieuwe dag begint leeg.
@@ -226,7 +234,9 @@ Wijzigingen worden automatisch opgeslagen met een debounce van 1,2 seconden. Een
 | ✓ Opgeslagen               | groen  |
 | ✕ Fout bij opslaan         | rood   |
 
-Autosave geldt voor: dagstaat meetwaarden, verbruik, verwarmingssysteem, coördinator metingen, checklijst, daggegevens, limieten, gebruikers en logboek.
+Autosave geldt voor: dagstaat meetwaarden, verbruik, verwarmingssysteem, coördinator metingen, checklijst, daggegevens, limieten, actie-teksten, waterbeheer-dienst, gebruikers en logboek.
+
+Statusmeldingen verschijnen als zwevende **toast** rechtsonder (groen/rood/neutraal met icoon). Bevestigingen bij verwijder-/reset-acties gebruiken een **eigen modal** (in plaats van de browser-`confirm`/`alert`).
 
 ---
 
@@ -323,17 +333,22 @@ Beschikbare tabellen via Database Beheer in de UI:
 | Verbruik Diep/Ondiep         | ✓      | ✓      | ✓         |
 | Verwarmingssysteem           | ✓      | ✓      | ✓         |
 | Acties                       | ✓      | —      | ✓         |
+| Waterbeheer dienst           | ✓      | ✓      | ✓         |
 | Limieten                     | ✓      | ✓      | ✓         |
+| Actie-teksten                | ✓      | ✓      | ✓         |
 | Gebruikers                   | ✓      | ✓      | ✓         |
 
 ---
 
 ## Trendanalyse
 
-Bereikbaar via het **Trendanalyse**-menu (alleen Administrator). Kies een datumbereik en klik op "Toon grafiek".
+Bereikbaar via het **Trendanalyse**-menu (alleen waterbeheerder). Kies een datumbereik en klik op "Toon grafiek".
 
-**Meetwaarden** — Diep/Ondiep en Peuterbad:
-pH, chloor, temperatuur, flow, filterdruk in/uit
+**Meetwaarden** — Diep/Ondiep:
+pH, chloor, temperatuur, flow, filterdruk in/uit, kathodische bescherming
+
+**Meetwaarden** — Peuterbad:
+pH, chloor, flow, filterdruk in
 
 **Verbruik** — Diep/Ondiep:
 water (diep, ondiep, totaal), elektriciteit (nacht/dag), gas, chemicaliën

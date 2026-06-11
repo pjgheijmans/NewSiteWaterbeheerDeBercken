@@ -54,7 +54,7 @@ class AuthModule {
         document.getElementById('scherm-login').style.display    = 'none';
         document.getElementById('scherm-dashboard').style.display = 'block';
         const rolAfk = { waterbeheerder: 'WB', coordinator: 'CO', Administrator: 'AD' }[gebruiker.taak] || gebruiker.taak;
-        document.getElementById('welkom-tekst').innerText = `${gebruiker.voornaam} (${rolAfk})`;
+        document.getElementById('welkom-tekst').innerText = `${gebruiker.weergavenaam || gebruiker.voornaam} (${rolAfk})`;
 
         const knoppen = {
             waterbeheer:   false,

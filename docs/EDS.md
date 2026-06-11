@@ -1,16 +1,16 @@
 # Element Design Specification (EDS)
 
-**Document ID:** EDS-DDZ-0.1
+**Document ID:** EDS-DDZ-0.2
 **Element:** Digitale Dagstaat Zwembad — full web application
-**Version:** 0.1
+**Version:** 0.2
 **Status:** DRAFT
-**Date:** 2026-06-03
+**Date:** 2026-06-11
 **Author:** P. Heijmans
 **Approver:**
-**Parent EPS:** EPS-DDZ-0.2
+**Parent EPS:** EPS-DDZ-0.3
 
 > This EDS records *how* the application is designed to satisfy the requirements in
-> EPS-DDZ-0.2. It is descriptive of the current implementation (not aspirational):
+> EPS-DDZ-0.3. It is descriptive of the current implementation (not aspirational):
 > where the design has known gaps relative to the EPS, they are recorded as design
 > decisions and risks rather than hidden. Requirement IDs referenced here (AUTH-,
 > GEN-, WB-, CO-, ACT-, LIM-, ADM-, TRD-) are defined in the parent EPS.
@@ -22,6 +22,7 @@
 |Version|Date      |Author     |Description  |
 |-------|----------|-----------|-------------|
 |0.1    |2026-06-03|P. Heijmans|Initial design specification|
+|0.2    |2026-06-11|P. Heijmans|New domains actieteksten + dienst (repo/service/controller/route + modules); kathodische_bescherming column; auteur on checklist/daggegevens; 3-category Taken; toast + confirm/alert modal; idempotent plain-`ALTER` migrations for MySQL 8|
 
 -----
 
@@ -166,7 +167,7 @@ graph LR
 |DD-003|Vanilla ES6 frontend, no bundler|Runs behind any static server/proxy; no build pipeline; low complexity for solo dev|React/Vue + Vite|No components/JSX; manual DOM; no tree-shaking|
 |DD-004|`Application` container + few `window.*` globals|Single wiring point; inline `onclick` handlers still work|Full module system; event delegation only|Globals are a small surface to manage|
 |DD-005|Session auth, 2 h cookie|Simple, server-controlled; fits internal tool|JWT; OAuth|Server holds session state (fine at this scale)|
-|DD-006|Idempotent `init.sql` at startup|Zero-friction schema bootstrap; no migration tooling to maintain|Knex/Prisma migrations|No ordered migration history; schema edits are manual & idempotent|
+|DD-006|Idempotent `init.sql` at startup (plain `ALTER … ADD/DROP COLUMN`, errors swallowed per statement)|Zero-friction schema bootstrap; no migration tooling to maintain; works on MySQL 8 (no MariaDB-only `IF NOT EXISTS`)|Knex/Prisma migrations|No ordered migration history; harmless `Duplicate column` warnings when already applied|
 |DD-007|Zod `valideerBody`; `looseObject` for measurement domains|Runtime safety at the edge; lenient where the UI mixes strings/numbers|Manual checks; strict schemas everywhere|`looseObject` lets unknown fields through by design|
 |DD-008|`AppError` + central `errorHandler`|Consistent error→status mapping; logs only 5xx|Per-handler try/catch responses|Must remember to `next(err)`/throw|
 |DD-009|Fire-and-forget action generation|Keeps the save fast; action is derived state|Transactional save+generate|No atomic guarantee; recomputed on next save|
@@ -280,9 +281,13 @@ tab/subtab state. All are gated by login (UI-001).
 ```
 
 #### Header + role nav (all authenticated screens)
-Header shows greeting + Uitloggen. Role nav: Waterbeheer · Coördinatoren ·
-Limieten · Gebruikers Beheer · Database Beheer · Trendanalyse (shown per role). A
-central date picker drives all dagstaat data.
+Header shows the logged-in user's name with role abbreviation, e.g. `Paul (WB)`,
+as a clickable **menu** (currently: Uitloggen). When several users share a first
+name the display name is made unique with the surname initial (`Paul H`), or the
+full surname if that initial also collides (`Paul Heijmans` vs `Paul Hermans`),
+computed once at login in `AuthService` (`weergavenaam`). Role nav: Waterbeheer ·
+Coördinatoren · Limieten · Actie-teksten · Gebruikers Beheer · Database Beheer ·
+Trendanalyse (shown per role). A central date picker drives all dagstaat data.
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -295,8 +300,11 @@ central date picker drives all dagstaat data.
 
 #### Waterbeheer → Diep/Ondiep (UI-002)
 Tabs: Meetwaarden · Verbruik · Verwarmingssysteem · Bezoekers · Taken; plus the
-page-level tabs Diep/Ondiep · Peuterbad · Logboek.
-- **Meetwaarden:** per bath (Diep, Ondiep) pH, chloor, temp, flow, filterdruk in/out.
+page-level tabs Diep/Ondiep · Peuterbad · Logboek. A compact **"Dienst vandaag"**
+chip under the date selector records the two-person duty (WB-009).
+- **Meetwaarden:** per bath (Diep, Ondiep) pH, chloor, temp, flow, filterdruk in/out,
+  kathodische bescherming (responsive grid: parameters as rows on mobile, transposed
+  to columns ≥900px).
 - **Verbruik:** water (diep/ondiep/totaal), electricity (night/day), gas, flocculant,
   chemicals; each with a read-only daily-consumption (today − previous) cell.
 - **Verwarmingssysteem:** status/inspection checkboxes.
@@ -312,13 +320,14 @@ chloor/zwavelzuur, each with consumption cell) and Taken.
 Timestamped free-text entries for the day; add and delete.
 
 #### Waterbeheer → Taken (UI-005)
-Each bath page (Diep/Ondiep, Peuterbad) has a **Taken** subtab split into two
-sections: **Verplicht vandaag** (open alarms + critical rondetaken — regelaars,
-spraypark filters) and **Overige taken** (remaining optional rondetaken). Each row:
-Gebied · Taak · Reden · Uitgevoerd (checkbox); done rows struck-through with who/
-when. `filter_spoelen_*` alarms fold onto the bath's filter row (one row, marked
-MUST with the reason); ticking it also clears those actions. Facility-wide chemical
-alarms group under **Algemeen**. There is no separate global Acties tab.
+Each bath page (Diep/Ondiep, Peuterbad) has a **Taken** subtab split into three
+sections: **Verplicht** (triggered alarms), **Belangrijk** (critical rondetaken —
+regelaars, spraypark filters, douches-test) and **Overig** (remaining optional
+rondetaken). Each row: Gebied · Taak · Reden · Uitgevoerd (checkbox); done rows
+struck-through with who/when. `filter_spoelen_*` alarms fold onto the bath's filter
+row (one row, with the reason); ticking it also clears those actions. Facility-wide
+chemical alarms group under **Algemeen**. The ⚠ badge fires for open **Verplicht**
+items only. There is no separate global Acties tab.
 
 ```
 ┌ Verplicht vandaag (n) ──────────────────────────────────┐
@@ -341,6 +350,11 @@ visitors since backwash.
 Grouped tables (Diep/Ondiep meetwaarden, Peuterbad meetwaarden, Verbruik,
 Coördinatoren-chloor, Actie-drempelwaarden, Seizoen). Min/max per parameter (or a
 single threshold/date for the single-value groups). Autosave; "restore defaults".
+
+#### Actie-teksten (UI-010b)
+Administrator-only table of the editable action-text templates: per action a label,
+the `sjabloon` (with `{bad}`/`{drempel}`/`{waarde}` placeholders) and a live preview
+of the rendered text. Autosave; "Standaardteksten" restores the built-in defaults.
 
 #### Gebruikers Beheer (UI-011)
 Table of accounts (voornaam, achternaam, inlognaam, wachtwoord, taak) with inline
@@ -410,6 +424,8 @@ best-effort (EPS §5.4). No dedicated breakpoints are formally specified.
 |`coordinatoren.ts`|`/api/coordinatoren`|`GET/POST /`, `DELETE /`, `GET/POST /checklist`, `GET/POST /daggegevens`, `GET/POST /logboek`, `DELETE /logboek/:id`|waterbeheerder or coördinator|
 |`verbruik.ts`|`/api/verbruik`|`GET/POST /diep-ondiep`, `GET /diep-ondiep/vorige`, `GET/POST /verwarmingssysteem`|waterbeheerder|
 |`limieten.ts`|`/api/limieten`|`GET /`, `GET /defaults`, `POST /`|read: authenticated (any role) · write: **Administrator only**|
+|`actieteksten.ts`|`/api/actieteksten`|`GET /`, `GET /defaults`, `POST /`|read: authenticated · write: **Administrator only**|
+|`dienst.ts`|`/api/dienst`|`GET /`, `GET /waterbeheerders`, `POST /`|read: authenticated · write: admin/waterbeheerder|
 |`logboek.ts`|`/api/logboek`|`GET /`, `POST /`, `DELETE /:id`|waterbeheerder|
 |`gebruikers.ts`|`/api/gebruikers`|`GET /`, `POST /`, `PUT /:id`, `DELETE /:id`|admin/waterbeheerder|
 |`database.ts`|`/api/database`|`POST /truncate/:tabel`, `POST /verwijder-alles`, `POST /initialiseer`, `GET /export/:tabel`, `POST /import/:tabel`|admin/waterbeheerder|
@@ -541,11 +557,11 @@ graph TB
 |---|---|
 |`AppState`|Single source of truth for shared state and timers|
 |`ApiClient`|`fetch` wrapper (credentials); `parseNumberValue` (comma→point, empty→null)|
-|`UIManager`|Toasts, field validation against limits, autosave-status indicator|
+|`UIManager`|Floating toast messages, the confirm/info **modal** (`bevestig`/`meld`, replacing `window.confirm`/`alert`), field validation against limits, autosave-status indicator|
 |`NavModule`|Date navigation bounded by the season window|
 |`AuthModule`|Login/logout, activate dashboard, switch role|
 |`MetingenModule`|Load/render measurements; ⚠/✓ field markers from open/resolved actions; coordinator blocks|
-|`TakenModule`|Per-bath Taken subtab composed from `/api/taken`: "Verplicht vandaag" (must) vs "Overige taken"; toggle via rondetaken/acties endpoints; ⚠ tab/subtab badges|
+|`TakenModule`|Per-bath Taken subtab composed from `/api/taken`, in three categories (Verplicht / Belangrijk / Overig); toggle via rondetaken/acties endpoints; ⚠ tab/subtab badge for open Verplicht items only|
 |`VerbruikModule`|Load/save consumption & heating; `berekenVerbruik` deltas (Diep/Ondiep + Peuterbad)|
 |`OpslaanModule`|All autosave orchestration (central + per block); `peuterbadOnvolledig`|
 |`LogboekModule`|Log entries for water-management and coordinators|
@@ -553,6 +569,8 @@ graph TB
 |`DatabaseModule`|CSV import/export, truncate, reinitialise|
 |`TrendModule`|Chart.js charts for measurements and consumption|
 |`LimietenModule`|Load/render/save limits (autosave); date conversions; `_normaliseer`|
+|`ActieTekstenModule`|Load/render/save the action-text templates (autosave) with a live placeholder preview (Administrator)|
+|`DienstModule`|Waterbeheer-dienst chip: load/save the duty pair (datalist of water managers + free text); pre-fills the logged-in user|
 
 ### 6.3 Data Fetching Strategy
 
@@ -623,9 +641,9 @@ graph TB
 |Database|MySQL 8|—|
 |Access|Repositories only, via shared pool|Single SQL boundary|
 |Query style|Hand-written SQL (`mysql2`), no ORM|Simplicity, control|
-|Schema management|`init.sql` run at startup; `CREATE TABLE IF NOT EXISTS` + `INSERT IGNORE` + idempotent `ALTER`s|DD-006 (no migration tool)|
+|Schema management|`init.sql` run at startup; `CREATE TABLE IF NOT EXISTS` + `INSERT IGNORE` + plain `ALTER … ADD/DROP COLUMN` (errors per statement swallowed, MySQL-8-safe)|DD-006 (no migration tool)|
 |Write pattern|Upsert keyed by date / (bad,datum) / (bad,datum,actie_type)|Idempotent daily records|
-|Seeding|`seedAllDefaults()` seeds 34 limieten + 2 users on a fresh DB|First-run usability|
+|Seeding|`seedAllDefaults()` seeds 35 limieten + 2 users on a fresh DB (`actie_teksten`/`waterbeheer_dienst` survive a reset via `init.sql`)|First-run usability|
 
 Entity-relationship (key tables):
 
@@ -636,16 +654,18 @@ erDiagram
     BADEN ||--o{ METINGEN_COORDINATOREN : heeft
     BADEN ||--o{ ACTIES : heeft
     BADEN { int id PK  varchar naam }
-    METINGEN_DIEP_ONDIEP { int id PK  int bad_id FK  date datum  decimal ph_waarde  decimal chloor_waarde  decimal temperatuur  int flow  decimal filter_druk_in  decimal filter_druk_uit }
+    METINGEN_DIEP_ONDIEP { int id PK  int bad_id FK  date datum  decimal ph_waarde  decimal chloor_waarde  decimal temperatuur  int flow  decimal filter_druk_in  decimal filter_druk_uit  decimal kathodische_bescherming }
     METINGEN_PEUTERBAD { int id PK  int bad_id FK  date datum  decimal ph_waarde  decimal chloor_waarde  int flow  decimal filter_druk_in  int water  int chemicalien_chloor  int chemicalien_zwavelzuur }
     METINGEN_COORDINATOREN { int id PK  int bad_id FK  date datum  time tijdstip  varchar auteur  decimal ph_waarde  decimal chloor_vrij  decimal chloor_totaal  decimal watertemperatuur  varchar helderheid  tinyint bad_gebruikt }
-    COORDINATOREN_CHECKLIST { int id PK  date datum  tinyint proef_waterspeel  tinyint proef_spraypark  tinyint proef_douches  tinyint proef_glijbaan }
-    COORDINATOREN_DAGGEGEVENS { int id PK  date datum  decimal lucht_temperatuur  int bezoekers_vandaag  int bezoekers_totaal_spoelbeurt }
+    COORDINATOREN_CHECKLIST { int id PK  date datum  tinyint proef_waterspeel  tinyint proef_spraypark  tinyint proef_douches  tinyint proef_glijbaan  varchar auteur }
+    COORDINATOREN_DAGGEGEVENS { int id PK  date datum  decimal lucht_temperatuur  int bezoekers_vandaag  int bezoekers_totaal_spoelbeurt  varchar auteur }
     VERBRUIK_DIEP_ONDIEP { int id PK  date datum  int floculant  int water_diep  int water_ondiep  int water_totaal  int elektriciteit_nacht  int elektriciteit_dag  int gas  int chemicalien_chloor  int chemicalien_zwavelzuur }
     VERWARMINGS_SYSTEEM { int id PK  date datum  bool verwarming_status_1  bool verwarming_status_2  bool verwarming_status_3  bool verwarming_status_4  bool verwarming_druk_ok  bool verwarming_visuele_controle }
     ACTIES { int id PK  int bad_id FK  date datum  varchar beschrijving  varchar actie_type  bool opgelost  datetime opgelost_op  varchar opgelost_door }
     RONDETAKEN_VOLTOOID { int id PK  varchar taak_sleutel  date datum  datetime voltooid_op  varchar voltooid_door }
     LIMIETEN { int id PK  varchar parameter_naam  decimal min_waarde  decimal max_waarde }
+    ACTIE_TEKSTEN { varchar actie_sleutel PK  varchar sjabloon  varchar omschrijving }
+    WATERBEHEER_DIENST { date datum PK  varchar dienst_1  varchar dienst_2 }
     GEBRUIKERS { int id PK  varchar voornaam  varchar achternaam  varchar inlognaam  varchar wachtwoord  enum taak }
     LOGBOEK { int id PK  date datum  datetime tijdstip  varchar auteur  text tekst }
     COORDINATOREN_LOGBOEK { int id PK  date datum  datetime tijdstip  varchar auteur  text tekst }
@@ -777,7 +797,9 @@ Current counts (indicative): ~353 unit (incl. frontend jsdom) + 17 integration.
 |GEN-004 (validation, comma)|§4.2, §6.2 (UIManager/ApiClient), §7.4|Zod + client validation|
 |GEN-005 (idempotent persistence)|§7.3|Upserts keyed by date/block|
 |GEN-006 (author stamping)|§5.4 (`bepaalAuteur`), §7.3|Partial|
-|WB-001..008 (water log)|§4.3 (UI-002/003/004), §5.1, §7.2/7.3|metingen + verbruik + verwarming + logboek|
+|WB-001..008 (water log)|§4.3 (UI-002/003/004), §5.1, §7.2/7.3|metingen (incl. kathodische bescherming) + verbruik + verwarming + logboek|
+|WB-009 (duty registration)|§4.3 (UI-002), §5.1 (`/api/dienst`), §6.2 (DienstModule)|`waterbeheer_dienst` table; chip pre-fills logged-in user, datalist of water managers|
+|ACT-006 (editable action texts)|§4.3 (UI-010b), §5.1 (`/api/actieteksten`), §6.2 (ActieTekstenModule)|`actie_teksten` templates rendered with placeholders; built-in defaults; Administrator-only edit|
 |WB-005 (consumption deltas)|§5.4, §6.2 (`berekenVerbruik`)|Derived, jsdom-tested|
 |CO-001..004 (coordinator rounds)|§4.3 (UI-006..009), §5.1, §7.3|metingen_coordinatoren + checklist + daggegevens + logboek|
 |ACT-001..005 (actions)|§3 (DD-009/014), §4.3 (UI-005), §7 (ActiesRepository, TakenService)|Composed server-side into per-bath Taken (Verplicht vs Overige); fire-and-forget generation; filter rondetaak ↔ `filter_spoelen` sync|

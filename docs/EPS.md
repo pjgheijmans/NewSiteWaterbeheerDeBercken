@@ -1,10 +1,10 @@
 # Element Performance Specification (EPS)
 
-**Document ID:** EPS-DDZ-0.2
+**Document ID:** EPS-DDZ-0.3
 **Element:** Digitale Dagstaat Zwembad — full web application
-**Version:** 0.2
+**Version:** 0.3
 **Status:** DRAFT
-**Date:** 2026-06-03
+**Date:** 2026-06-11
 **Author:** P. Heijmans
 **Approver:**
 
@@ -24,6 +24,7 @@
 |-------|----------|-----------|-------------|
 |0.1    |2026-06-03|P. Heijmans|Initial draft (flat requirement list)|
 |0.2    |2026-06-03|P. Heijmans|Requirements regrouped by actor / functional block; block-prefixed IDs|
+|0.3    |2026-06-11|P. Heijmans|Added duty registration (WB-009), editable action texts (ACT-006), cathodic-protection measurement (WB-001), coordinator author stamping (GEN-006); 3-category task view; toast/modal feedback|
 
 -----
 
@@ -55,6 +56,9 @@ requirements are realised is recorded in the companion EDS-DDZ.
 - Central management of limit/threshold values and the season window.
 - Historical trend analysis (charts) and per-table CSV export/import and
   administrative data management.
+- Recording who was on duty for water management each day (two persons; one
+  logs in, the other is entered manually).
+- Editable text templates for the generated corrective actions.
 - User-account management.
 
 **Out of scope**
@@ -84,6 +88,9 @@ requirements are realised is recorded in the companion EDS-DDZ.
 |Spoelen / Spoelbeurt|(Filter) backwash / backwash cycle|
 |Gebonden chloor|Combined chlorine = total chlorine − free chlorine|
 |Floculant|Flocculant dosing agent|
+|Kathodische bescherming|Cathodic protection — a Diep/Ondiep measured value (default limit 0.2–2.5)|
+|Dienst|The water-management duty pair on a given day (two persons)|
+|Actie-tekst / sjabloon|Editable text template for a generated action (with `{bad}`/`{drempel}`/`{waarde}` placeholders)|
 |Limiet|A configured min/max or threshold value|
 |Seizoen|Season — the operating window (begin/end date) of the pool|
 
@@ -173,7 +180,7 @@ Priority uses MoSCoW (Must / Should / Could). "Impl." = met by the current build
 |Unauthenticated user|Anyone reaching the app without a valid session|Log in|AUTH (login only)|
 |**Waterbeheerder**|Technical water manager|Daily water measurements, consumption, heating checks, log; handle corrective actions; view trends|AUTH, GEN, WB, ACT, TRD|
 |**Coördinator**|Pool coordinator on shift|Timed measurement rounds, checklist, daily data (air temp, visitors), log|AUTH, GEN, CO|
-|**Administrator**|System administrator|User management, limit/threshold management and database management|AUTH, LIM, ADM|
+|**Administrator**|System administrator|User management, limit/threshold and action-text management, and database management|AUTH, LIM, ADM|
 
 **Confirmed role policy (resolves R-006).** **Trendanalyse (TRD)** is restricted to
 **Waterbeheerder only** (not Administrator, not Coördinator). **Limieten (LIM):**
@@ -203,7 +210,7 @@ Applies to all data-entry screens (Waterbeheer and Coördinatoren).
 |GEN-003|Edits shall autosave after a short debounce, with a visible save status (pending / saving / saved / warning / error).|Must|Yes|
 |GEN-004|Numeric entry shall be validated against the configured limits with inline visual feedback, and the locale decimal comma shall be normalised to a point.|Should|Yes|
 |GEN-005|Each day's data shall be persisted idempotently (insert-or-update keyed by date / block).|Must|Yes|
-|GEN-006|Saved measurements, log entries and resolved actions shall record their author.|Could|Partial|
+|GEN-006|Saved measurements, log entries, resolved actions, coordinator daily data and the checklist shall record their author.|Could|Partial (coordinator blocks, log entries, daggegevens, checklist and resolved actions record the author; waterbeheer measurements use the duty record instead — WB-009)|
 
 ### 3.3 Water-management daily log (WB)
 
@@ -211,7 +218,7 @@ Actor: Waterbeheerder (and Administrator).
 
 |ID|Requirement|Priority|Impl.|
 |--|-----------|--------|-----|
-|WB-001|Record daily measurements for Diep and Ondiep: pH, chlorine, temperature, flow, filter pressure in/out.|Must|Yes|
+|WB-001|Record daily measurements for Diep and Ondiep: pH, chlorine, temperature, flow, filter pressure in/out, cathodic protection (kathodische bescherming).|Must|Yes|
 |WB-002|Record daily measurements for Peuterbad: pH, chlorine, filter pressure, flow.|Must|Yes|
 |WB-003|Record daily consumption for Diep/Ondiep: water (deep/shallow/total), electricity (night/day), gas, flocculant, chemicals (chlorine/sulphuric acid).|Must|Yes|
 |WB-004|Record daily consumption for Peuterbad: water and chemicals (chlorine/sulphuric acid).|Must|Yes|
@@ -219,6 +226,7 @@ Actor: Waterbeheerder (and Administrator).
 |WB-006|Record heating-system status and inspection flags per day.|Should|Yes|
 |WB-007|Display visitor figures for the day, including cumulative visitors since the last backwash.|Should|Yes|
 |WB-008|Record, list and delete free-text, timestamped log entries for the Waterbeheer log per day.|Should|Yes|
+|WB-009|Record who was on duty for water management each day (two persons); the logged-in user is pre-filled, the second is chosen from the registered water managers or typed free-text.|Could|Yes|
 
 ### 3.4 Coordinator rounds (CO)
 
@@ -242,6 +250,7 @@ Generated by the system from saved data; surfaced primarily to the Waterbeheerde
 |ACT-003|Mark an action resolved and reopen it again, recording who resolved it and when.|Must|Yes|
 |ACT-004|Indicate open/resolved actions visually on the related input fields and on the relevant tab/navigation badges.|Should|Yes|
 |ACT-005|Regenerate the affected actions when the underlying data is saved or a coordinator block is deleted.|Must|Yes|
+|ACT-006|The text of generated actions shall be configurable via editable templates with placeholders (`{bad}`, `{drempel}`, `{waarde}`). **Editing is Administrator-only**; built-in defaults apply when no override exists.|Could|Yes|
 
 #### 3.5.1 Action generation rules (detail of ACT-001)
 
@@ -299,6 +308,7 @@ Actor: Administrator.
 |UI-008|Coördinatoren → Daggegevens|CO|Coördinator, Administrator|
 |UI-009|Coördinatoren → Logboek|CO|Coördinator, Administrator|
 |UI-010|Limieten|LIM|Administrator|
+|UI-010b|Actie-teksten|ACT/LIM|Administrator|
 |UI-011|Gebruikers Beheer|ADM|Administrator|
 |UI-012|Database Beheer|ADM|Administrator|
 |UI-013|Trendanalyse|TRD|Waterbeheerder|
@@ -331,12 +341,18 @@ table, clear a table, or reset the database (double confirmation). *(ADM-002..00
 ### 3.11 Navigation Model
 
 - A top-level **role navigation bar** (Waterbeheer, Coördinatoren, Limieten,
-  Gebruikers Beheer, Database Beheer, Trendanalyse); items shown/enabled per role.
+  Actie-teksten, Gebruikers Beheer, Database Beheer, Trendanalyse); items
+  shown/enabled per role.
+- The logged-in user's name is shown top-right and opens a **menu** (Uitloggen);
+  when several users share a first name it is disambiguated with the surname initial,
+  or the full surname when that initial also collides.
 - Within Waterbeheer and Coördinatoren, **tabs and subtabs** group the data areas.
+- The Waterbeheer dagstaat shows a compact **"Dienst vandaag"** chip under the
+  date selector (WB-009).
 - A single **central date selector** sets the active day for all dagstaat data.
-- The per-bath **Taken** subtab and its bath page tab (Diep/Ondiep, Peuterbad)
-  carry **⚠ badges** when must-do tasks (open alarms or critical rondetaken) are
-  open.
+- The per-bath **Taken** subtab lists three groups — **Verplicht**, **Belangrijk**
+  and **Overig** — and its bath page tab (Diep/Ondiep, Peuterbad) carries a
+  **⚠ badge** only when open **Verplicht** tasks (triggered alarms) exist.
 
 ### 3.12 Modes of Operation
 
