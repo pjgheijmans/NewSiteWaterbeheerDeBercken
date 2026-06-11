@@ -32,6 +32,19 @@ app.state.initDatumInput();
 app.opslaan.wireAutoSave();
 app.auth.start();
 
+// Versielabel in de kop vullen (faalt stil — het is puur informatief).
+(async () => {
+    try {
+        const res  = await app.api.call('/api/versie');
+        const data = await res.json();
+        const el   = document.getElementById('app-versie');
+        if (!el) return;
+        el.textContent = data.commit && data.commit !== 'onbekend'
+            ? `v${data.versie} (${data.commit})`
+            : `v${data.versie}`;
+    } catch { /* versie is niet kritiek; negeer fouten */ }
+})();
+
 // ── Globale functies voor HTML onclick-handlers ────────────────────────────────
 // Alle andere code gebruikt app.module.methode() direct.
 

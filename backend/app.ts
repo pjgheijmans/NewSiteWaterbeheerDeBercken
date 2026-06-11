@@ -21,6 +21,7 @@ import { maakLogboekRouter }       from './routes/logboek';
 import { maakRondetakenRouter }    from './routes/rondetaken';
 import { maakTakenRouter }         from './routes/taken';
 import { maakFrontendRouter }      from './routes/frontend';
+import { maakVersieRouter }        from './routes/versie';
 import { errorHandler }           from './middleware/errorHandler';
 import { bepaalSessionSecret }    from './config';
 
@@ -60,6 +61,7 @@ export function maakApp(pool: Pool): Express {
     app.use('/api/logboek',       maakLogboekRouter(pool));
     app.use('/api/rondetaken',    maakRondetakenRouter(pool));
     app.use('/api/taken',         maakTakenRouter(pool));
+    app.use('/api/versie',        maakVersieRouter());
 
     // Frontend: HTML-partials samenstellen (vóór static zodat / hier wordt afgehandeld)
     app.use('/', maakFrontendRouter());
