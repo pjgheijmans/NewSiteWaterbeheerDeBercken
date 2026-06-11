@@ -59,10 +59,57 @@ describe('OpslaanModule.peuterbadOnvolledig', () => {
             { water: 0, chemicalien_chloor: 0, chemicalien_zwavelzuur: 0 })).toBe(false);
     });
 
-    it('Meetwaarden-subtab: kijkt naar pH + chloor, niet naar verbruikvelden', () => {
+    it('Meetwaarden-subtab: volledig als pH, chloor, flow én filterdruk zijn ingevuld', () => {
         expect(OpslaanModule.peuterbadOnvolledig('meetwaarden',
-            { ph_waarde: 7.2, chloor_waarde: 1.0, water: null })).toBe(false);
+            { ph_waarde: 7.2, chloor_waarde: 1.0, flow: 50, filter_druk: 0.5, water: null })).toBe(false);
+    });
+
+    it('Meetwaarden-subtab: onvolledig zodra flow of filterdruk leeg is (kern van fix)', () => {
         expect(OpslaanModule.peuterbadOnvolledig('meetwaarden',
-            { ph_waarde: null, chloor_waarde: 1.0 })).toBe(true);
+            { ph_waarde: 7.2, chloor_waarde: 1.0, flow: null, filter_druk: 0.5 })).toBe(true);
+        expect(OpslaanModule.peuterbadOnvolledig('meetwaarden',
+            { ph_waarde: 7.2, chloor_waarde: 1.0, flow: 50, filter_druk: null })).toBe(true);
+    });
+
+    it('Meetwaarden-subtab: onvolledig als pH of chloor leeg is', () => {
+        expect(OpslaanModule.peuterbadOnvolledig('meetwaarden',
+            { ph_waarde: null, chloor_waarde: 1.0, flow: 50, filter_druk: 0.5 })).toBe(true);
+    });
+
+    it('Meetwaarden-subtab: kijkt niet naar verbruikvelden (water mag leeg zijn)', () => {
+        expect(OpslaanModule.peuterbadOnvolledig('meetwaarden',
+            { ph_waarde: 7.2, chloor_waarde: 1.0, flow: 50, filter_druk: 0.5,
+              water: null, chemicalien_chloor: null, chemicalien_zwavelzuur: null })).toBe(false);
+    });
+});
+
+describe('OpslaanModule.meetwaardenOnvolledig (Diep/Ondiep)', () => {
+    /** Een volledig ingevuld bad: alle zeven meetvelden hebben een waarde. */
+    const volledig = {
+        ph_waarde: 7.2, chloor_waarde: 1.0, temperatuur: 28, flow: 200,
+        filter_druk_in: 0.5, filter_druk_uit: 0.4, kathodische_bescherming: 0.8,
+    };
+
+    it('volledig als alle zeven meetvelden zijn ingevuld', () => {
+        expect(OpslaanModule.meetwaardenOnvolledig(volledig)).toBe(false);
+    });
+
+    it('0 telt als een ingevulde waarde, niet als leeg', () => {
+        expect(OpslaanModule.meetwaardenOnvolledig({
+            ...volledig, filter_druk_in: 0, kathodische_bescherming: 0,
+        })).toBe(false);
+    });
+
+    it('onvolledig zodra één meetveld leeg is — niet alleen pH/chloor (kern van fix)', () => {
+        // De oorspronkelijke bug: pH + chloor ingevuld, rest leeg → toonde géén waarschuwing.
+        expect(OpslaanModule.meetwaardenOnvolledig({
+            ...volledig, ph_waarde: 7.2, chloor_waarde: 1.0,
+            temperatuur: null, flow: null, filter_druk_in: null,
+            filter_druk_uit: null, kathodische_bescherming: null,
+        })).toBe(true);
+
+        for (const veld of ['temperatuur', 'flow', 'filter_druk_in', 'filter_druk_uit', 'kathodische_bescherming']) {
+            expect(OpslaanModule.meetwaardenOnvolledig({ ...volledig, [veld]: null })).toBe(true);
+        }
     });
 });

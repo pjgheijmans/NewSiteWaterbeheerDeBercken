@@ -22,6 +22,7 @@ function maakApp(overrides: any = {}) {
         api,
         ui: { toonBericht: jest.fn(), setAutoSaveStatus: jest.fn() },
         metingen: { laadMetingen: jest.fn(), laadActies: jest.fn() },
+        taken: { werkBadgeBij: jest.fn() },
         verbruik: { laadEnBerekenVerbruik: jest.fn(), laadEnBerekenPeuterbadVerbruik: jest.fn() },
         state: {
             huidigeRol: 'waterbeheer', huidigeBadPagina: 'peuterbad',
