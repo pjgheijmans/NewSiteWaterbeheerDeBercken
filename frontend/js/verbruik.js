@@ -51,7 +51,25 @@ class VerbruikModule {
     }
 
     /**
+     * Bepaal of de Diep/Ondiep Verbruik-standen onvolledig zijn.
+     * Pure functie: alle door de gebruiker in te vullen standen tellen mee
+     * (water diep/ondiep/totaal, elektriciteit nacht/dag, gas, floculant,
+     * chloor, zwavelzuur). Een waarde is "leeg" als ze null is (0 telt als ingevuld).
+     * @param {{water_diep:?number, water_ondiep:?number, water_totaal:?number, elektriciteit_nacht:?number, elektriciteit_dag:?number, gas:?number, floculant:?(number|string), chemicalien_chloor:?(number|string), chemicalien_zwavelzuur:?(number|string)}} payload
+     * @returns {boolean}
+     */
+    static verbruikOnvolledig(payload) {
+        return [
+            payload.water_diep, payload.water_ondiep, payload.water_totaal,
+            payload.elektriciteit_nacht, payload.elektriciteit_dag, payload.gas,
+            payload.floculant, payload.chemicalien_chloor, payload.chemicalien_zwavelzuur,
+        ].some(v => v == null);
+    }
+
+    /**
      * Sla verbruik- en verwarmingsgegevens op naar de backend.
+     * Volledigheid wordt niet hier bepaald maar passief getoond via
+     * metingen.werkVolledigheidBij() (zie verbruikOnvolledig).
      * @returns {Promise<boolean>}
      */
     async slaAlgemeenGegevensOp() {

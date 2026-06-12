@@ -41,8 +41,12 @@ class OpslaanModule {
     wireAutoSave() {
         const sectie = document.getElementById('sectie-dagstaat');
         if (sectie) {
-            sectie.addEventListener('input',  () => this.scheduleAutoSave());
-            sectie.addEventListener('change', () => this.scheduleAutoSave());
+            // Naast het inplannen van de opslag ook direct de volledigheids-markeringen
+            // op de subtabs bijwerken, zodat de indicatie live meeloopt met het typen
+            // (i.p.v. een waarschuwing na elke opslag).
+            const opInvoer = () => { this.scheduleAutoSave(); this.app.metingen.werkVolledigheidBij(); };
+            sectie.addEventListener('input',  opInvoer);
+            sectie.addEventListener('change', opInvoer);
         }
     }
 
@@ -124,10 +128,6 @@ class OpslaanModule {
             ui.setAutoSaveStatus('error');
             ui.toonBericht(msg, 'fout');
         };
-        const opWaarschuwing = msg => {
-            ui.setAutoSaveStatus('warning');
-            ui.toonBericht(msg, 'fout');
-        };
         const refreshNaOpslaan = () => {
             if (!autoSave) { this.app.metingen.laadMetingen(); return; }
             if (huidigeRol !== 'waterbeheer') return;
@@ -140,6 +140,7 @@ class OpslaanModule {
             // (datumwissel/paginawissel) verschenen — niet automatisch na het opslaan.
             this.app.metingen.laadActies(d);
             this.app.taken.werkBadgeBij(d);
+            this.app.metingen.werkVolledigheidBij();
         };
 
         // Logboek — geen centrale opslaan
@@ -150,6 +151,8 @@ class OpslaanModule {
         // Verbruik / Verwarmingssysteem subtabs
         if (huidigeRol === 'waterbeheer' && huidigeBadPagina === 'grote-baden' && huidigeSubtab !== 'meetwaarden') {
             const ok = await this.app.verbruik.slaAlgemeenGegevensOp();
+            // Onvolledige standen worden niet meer als waarschuwing getoond, maar
+            // passief als markering op de subtab (zie metingen.werkVolledigheidBij).
             if (ok) { opSuccess('Gegevens succesvol opgeslagen!'); refreshNaOpslaan(); }
             else      opError('Fout bij opslaan.');
             return;
@@ -158,7 +161,7 @@ class OpslaanModule {
         // Meetwaarden Diep / Ondiep
         if (huidigeRol === 'waterbeheer' && huidigeBadPagina === 'grote-baden') {
             const leiden = ['Diep', 'Ondiep'];
-            let ok = 0, leeg = false, fouten = [];
+            let ok = 0, fouten = [];
 
             for (const bad of leiden) {
                 const lb = bad.toLowerCase();
@@ -173,9 +176,6 @@ class OpslaanModule {
                     kathodische_bescherming: api.parseNumberValue(`kath-${lb}`),
                 };
                 payload.filter_druk = payload.filter_druk_in ?? payload.filter_druk_uit ?? 0;
-                // Onvolledig als één van de meetvelden van dit bad nog leeg is — alle
-                // velden op de pagina tellen mee, niet alleen pH + chloor.
-                if (OpslaanModule.meetwaardenOnvolledig(payload)) leeg = true;
                 try {
                     const res = await api.call('/api/metingen', {
                         method: 'POST',
@@ -187,13 +187,10 @@ class OpslaanModule {
                 } catch (e) { fouten.push(`${bad}: ${e.message}`); }
             }
 
-            if (ok === leiden.length) {
-                if (leeg) opWaarschuwing('Opgeslagen, maar niet alle velden zijn ingevuld.');
-                else      opSuccess('Meetwaarden opgeslagen!');
-                refreshNaOpslaan();
-            } else {
-                opError(fouten.join(' | ') || 'Niet alle gegevens konden worden opgeslagen.');
-            }
+            // Onvolledige velden worden passief op de subtab gemarkeerd (werkVolledigheidBij),
+            // niet meer als waarschuwing na het opslaan.
+            if (ok === leiden.length) { opSuccess('Meetwaarden opgeslagen!'); refreshNaOpslaan(); }
+            else opError(fouten.join(' | ') || 'Niet alle gegevens konden worden opgeslagen.');
             return;
         }
 
@@ -209,8 +206,6 @@ class OpslaanModule {
                 chemicalien_chloor:     api.parseNumberValue('peuterbad-chemicalien-chloor'),
                 chemicalien_zwavelzuur: api.parseNumberValue('peuterbad-chemicalien-zwavelzuur'),
             };
-            // Waarschuwing alleen over de velden van de actieve subtab, niet over de andere subtab
-            const leeg = OpslaanModule.peuterbadOnvolledig(this.app.state.huidigePeuterbadSubtab, payload);
             try {
                 const res = await api.call('/api/metingen', {
                     method: 'POST',
@@ -218,8 +213,9 @@ class OpslaanModule {
                     body: JSON.stringify(payload),
                 });
                 if (res.ok) {
-                    if (leeg) opWaarschuwing('Opgeslagen, maar niet alle velden zijn ingevuld.');
-                    else      opSuccess('Peuterbad opgeslagen!');
+                    // Onvolledige velden worden passief op de subtab gemarkeerd
+                    // (werkVolledigheidBij), niet meer als waarschuwing na het opslaan.
+                    opSuccess('Peuterbad opgeslagen!');
                     refreshNaOpslaan();
                 } else {
                     const e = await res.json().catch(() => null);

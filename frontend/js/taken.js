@@ -175,13 +175,23 @@ class TakenModule {
     _zetMarker(id, label, heeft) {
         const btn = document.getElementById(id);
         if (!btn) return;
-        btn.textContent = label;                       // wist tevens een oude marker
-        if (!heeft) return;
-        const marker = document.createElement('span');
-        marker.className   = 'tab-actie-indicator';
-        marker.textContent = '⚠';
-        marker.title       = 'Openstaande taak/taken';
-        btn.appendChild(marker);
+        // Werk alleen het label en de eigen ⚠-marker bij; andere markeringen op de
+        // knop (zoals het volledigheids-bolletje van metingen) blijven staan.
+        const tekstKnoop = [...btn.childNodes].find(n => n.nodeType === Node.TEXT_NODE);
+        if (tekstKnoop) tekstKnoop.textContent = label;
+        else            btn.insertBefore(document.createTextNode(label), btn.firstChild);
+        let marker = btn.querySelector('.tab-actie-indicator');
+        if (heeft) {
+            if (!marker) {
+                marker = document.createElement('span');
+                marker.className   = 'tab-actie-indicator';
+                marker.textContent = '⚠';
+                marker.title       = 'Openstaande taak/taken';
+                btn.appendChild(marker);
+            }
+        } else if (marker) {
+            marker.remove();
+        }
     }
 }
 

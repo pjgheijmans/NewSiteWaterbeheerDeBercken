@@ -1,10 +1,11 @@
 /**
  * @jest-environment jsdom
  *
- * jsdom-test voor de "niet alle velden ingevuld"-waarschuwing op de grote-baden
- * Meetwaarden-pagina (Diep/Ondiep), gedreven via de echte module-methode.
- * Regressie: de waarschuwing keek alleen naar pH + chloor en verdween zodra die
- * twee waren ingevuld, ook al waren temperatuur/flow/filterdruk/kath nog leeg.
+ * jsdom-tests voor het opslaan op de grote-baden pagina (Diep/Ondiep), gedreven
+ * via de echte module-methode. De vroegere "niet alle velden ingevuld"-waarschuwing
+ * na elke opslag is vervangen door een passieve markering op de subtab
+ * (zie volledigheid.dom.test.ts); hier verifiëren we dat de autosave zelf
+ * niet meer waarschuwt en de juiste verversingen aanroept.
  */
 /* eslint-disable @typescript-eslint/no-var-requires */
 export {}; // markeer als module zodat top-level consts niet botsen met andere testbestanden
@@ -18,7 +19,7 @@ function maakApp() {
     return {
         api,
         ui: { toonBericht: jest.fn(), setAutoSaveStatus: jest.fn() },
-        metingen: { laadMetingen: jest.fn(), laadActies: jest.fn() },
+        metingen: { laadMetingen: jest.fn(), laadActies: jest.fn(), werkVolledigheidBij: jest.fn() },
         taken: { werkBadgeBij: jest.fn() },
         verbruik: { laadEnBerekenVerbruik: jest.fn(), laadEnBerekenPeuterbadVerbruik: jest.fn() },
         state: {
@@ -49,8 +50,8 @@ function volledigBad(bad: string): Record<string, string> {
     };
 }
 
-describe('Grote baden — Meetwaarden waarschuwing bij onvolledige invoer', () => {
-    it('alleen pH + chloor ingevuld → status "warning" (regressie)', async () => {
+describe('Grote baden — autosave waarschuwt niet meer over onvolledige velden', () => {
+    it('alleen pH + chloor ingevuld → status "saved" (geen "warning" meer)', async () => {
         zetMeetwaardenFormulier({
             'ph-diep': '7.2', 'chloor-diep': '1.0',
             'ph-ondiep': '7.2', 'chloor-ondiep': '1.0',
@@ -59,11 +60,13 @@ describe('Grote baden — Meetwaarden waarschuwing bij onvolledige invoer', () =
 
         await new OpslaanModule(app).verwerkCentraleOpslaan(true);
 
-        expect(app.ui.setAutoSaveStatus).toHaveBeenCalledWith('warning');
-        expect(app.ui.setAutoSaveStatus).not.toHaveBeenCalledWith('saved');
+        expect(app.ui.setAutoSaveStatus).toHaveBeenCalledWith('saved');
+        expect(app.ui.setAutoSaveStatus).not.toHaveBeenCalledWith('warning');
+        // De volledigheid wordt passief via de markering bijgewerkt.
+        expect(app.metingen.werkVolledigheidBij).toHaveBeenCalled();
     });
 
-    it('alle velden van beide baden ingevuld → status "saved", geen "warning"', async () => {
+    it('alle velden van beide baden ingevuld → status "saved"', async () => {
         zetMeetwaardenFormulier({ ...volledigBad('diep'), ...volledigBad('ondiep') });
         const app = maakApp();
 
@@ -71,17 +74,6 @@ describe('Grote baden — Meetwaarden waarschuwing bij onvolledige invoer', () =
 
         expect(app.ui.setAutoSaveStatus).toHaveBeenCalledWith('saved');
         expect(app.ui.setAutoSaveStatus).not.toHaveBeenCalledWith('warning');
-    });
-
-    it('één bad compleet, ander bad mist een veld → toch "warning"', async () => {
-        const ondiepMinusKath = volledigBad('ondiep');
-        delete ondiepMinusKath['kath-ondiep'];
-        zetMeetwaardenFormulier({ ...volledigBad('diep'), ...ondiepMinusKath });
-        const app = maakApp();
-
-        await new OpslaanModule(app).verwerkCentraleOpslaan(true);
-
-        expect(app.ui.setAutoSaveStatus).toHaveBeenCalledWith('warning');
     });
 });
 
@@ -98,5 +90,43 @@ describe('Grote baden — automatische verversing van indicatoren én tab-badges
         const datum = '2026-07-15';
         expect(app.metingen.laadActies).toHaveBeenCalledWith(datum);
         expect(app.taken.werkBadgeBij).toHaveBeenCalledWith(datum);
+        expect(app.metingen.werkVolledigheidBij).toHaveBeenCalled();
+    });
+});
+
+describe('Grote baden — Verbruik/Verwarmingssysteem opslaan waarschuwt niet', () => {
+    /** App met gemockte slaAlgemeenGegevensOp (geeft nu enkel ok terug). */
+    function maakVerbruikApp(subtab: string) {
+        return {
+            api: { call: jest.fn() },
+            ui: { toonBericht: jest.fn(), setAutoSaveStatus: jest.fn() },
+            metingen: { laadMetingen: jest.fn(), laadActies: jest.fn(), werkVolledigheidBij: jest.fn() },
+            taken: { werkBadgeBij: jest.fn() },
+            verbruik: {
+                slaAlgemeenGegevensOp: jest.fn(async () => true),
+                laadEnBerekenVerbruik: jest.fn(), laadEnBerekenPeuterbadVerbruik: jest.fn(),
+            },
+            state: {
+                huidigeRol: 'waterbeheer', huidigeBadPagina: 'grote-baden',
+                huidigeSubtab: subtab, huidigeCoordSubtab: 'metingen',
+                huidigePeuterbadSubtab: 'meetwaarden',
+            },
+        };
+    }
+
+    beforeEach(() => { document.body.innerHTML = `<input id="centraleDatum" value="2026-07-15">`; });
+
+    it('Verbruik-subtab → status "saved" (volledigheid via de markering)', async () => {
+        const app = maakVerbruikApp('verbruik');
+        await new OpslaanModule(app).verwerkCentraleOpslaan(true);
+        expect(app.ui.setAutoSaveStatus).toHaveBeenCalledWith('saved');
+        expect(app.ui.setAutoSaveStatus).not.toHaveBeenCalledWith('warning');
+    });
+
+    it('Verwarmingssysteem-subtab → status "saved"', async () => {
+        const app = maakVerbruikApp('verwarmingssysteem');
+        await new OpslaanModule(app).verwerkCentraleOpslaan(true);
+        expect(app.ui.setAutoSaveStatus).toHaveBeenCalledWith('saved');
+        expect(app.ui.setAutoSaveStatus).not.toHaveBeenCalledWith('warning');
     });
 });
