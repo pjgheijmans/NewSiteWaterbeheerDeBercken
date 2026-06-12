@@ -89,6 +89,10 @@ class MetingenModule {
                 this.laadActies(datum);                  // alleen nog de ⚠-veldindicatoren
                 this.app.taken.werkBadgeBij(datum);      // tab-/subtab-badges voor openstaande taken
                 await this.app.verbruik.laadEnBerekenVerbruik();
+                // Verbruik-standen laden zodat de volledigheids-markering op de
+                // Verbruik-subtab ook klopt vóór die subtab geopend is.
+                if (huidigeBadPagina === 'grote-baden') await this.app.verbruik.laadWaterbeheerVelden();
+                this.werkVolledigheidBij();              // passieve "niet alle velden ingevuld"-markering
             }
         } catch { this.app.ui.toonBericht('Fout bij het ophalen van de gegevens.', 'fout'); }
     }
@@ -154,6 +158,35 @@ class MetingenModule {
         };
     }
 
+    /** Koppelt een subtab-contentcontainer aan de bijbehorende subtab-knop. */
+    static get ACTIE_SUBTAB_KNOP() {
+        return {
+            'subtab-meetwaarden-content':    'subtab-meetwaarden',
+            'subtab-verbruik-content':       'subtab-verbruik',
+            'subtab-bezoekers-content':      'subtab-bezoekers',
+            'peuterbad-meetwaarden-content': 'subtab-peuterbad-meetwaarden',
+            'peuterbad-verbruik-content':    'subtab-peuterbad-verbruik',
+        };
+    }
+
+    /** Zet of verwijder de ⚠-actiemarkering op een subtab-knop (idempotent). */
+    _zetSubtabActieMarker(buttonId, heeft) {
+        const btn = document.getElementById(buttonId);
+        if (!btn) return;
+        let marker = btn.querySelector('.tab-actie-indicator');
+        if (heeft) {
+            if (!marker) {
+                marker = document.createElement('span');
+                marker.className   = 'tab-actie-indicator';
+                marker.textContent = '⚠';
+                marker.title       = 'Openstaande actie op een veld in deze subtab';
+                btn.appendChild(marker);
+            }
+        } else if (marker) {
+            marker.remove();
+        }
+    }
+
     /**
      * Toont de ⚠/✓-veldindicatoren naast de meetwaarden op basis van de open/
      * afgehandelde acties. De takenlijst zelf (incl. deze acties) wordt door de
@@ -169,14 +202,21 @@ class MetingenModule {
             const veldKaart = MetingenModule.ACTIE_VELD_MAP;
             const open     = acties.filter(a => !a.opgelost);
             const gesloten = acties.filter(a =>  a.opgelost);
+            const subtabsMetActie = new Set();
             open.forEach(actie => {
                 (veldKaart[`${actie.actie_type}|${actie.bad_naam}`] || []).forEach(inputId => {
                     const input = document.getElementById(inputId); if (!input) return;
                     const ind   = document.createElement('span');
                     ind.className = 'actie-indicator'; ind.title = actie.beschrijving; ind.textContent = '⚠';
                     input.parentElement.appendChild(ind);
+                    // Onthoud welke subtab dit veld bevat, zodat ook de subtab-knop een
+                    // ⚠ krijgt (anders zie je het alarm alleen op de Taken-/pagina-tab).
+                    const knop = MetingenModule.ACTIE_SUBTAB_KNOP[input.closest('[id$="-content"]')?.id];
+                    if (knop) subtabsMetActie.add(knop);
                 });
             });
+            Object.values(MetingenModule.ACTIE_SUBTAB_KNOP).forEach(knop =>
+                this._zetSubtabActieMarker(knop, subtabsMetActie.has(knop)));
             gesloten.forEach(actie => {
                 (veldKaart[`${actie.actie_type}|${actie.bad_naam}`] || []).forEach(inputId => {
                     const input = document.getElementById(inputId); if (!input) return;
@@ -190,6 +230,81 @@ class MetingenModule {
                 });
             });
         } catch (f) { console.error('Fout bij laden veldindicatoren:', f); }
+    }
+
+    // ── Volledigheid (passieve "niet alle velden ingevuld"-markering) ────────
+
+    /**
+     * Werkt de passieve markering bij op de Meetwaarden- en Verbruik-subtabs van
+     * de huidige bad-pagina: een gedempt bolletje als nog niet alle velden van die
+     * subtab zijn ingevuld. Vervangt de oude waarschuwing-na-elke-opslag. Leest de
+     * (geladen) veldwaarden uit de DOM en hergebruikt de pure onvolledig-helpers.
+     */
+    werkVolledigheidBij() {
+        const { huidigeRol, huidigeBadPagina } = this.app.state;
+        if (huidigeRol !== 'waterbeheer') return;
+        const api = this.app.api;
+        const tekst = id => document.getElementById(id)?.value || null;
+
+        if (huidigeBadPagina === 'grote-baden') {
+            const meetOnvolledig = ['diep', 'ondiep'].some(lb => OpslaanModule.meetwaardenOnvolledig({
+                ph_waarde:      api.parseNumberValue(`ph-${lb}`),
+                chloor_waarde:  api.parseNumberValue(`chloor-${lb}`),
+                temperatuur:    api.parseNumberValue(`temp-${lb}`),
+                flow:           api.parseNumberValue(`flow-${lb}`),
+                filter_druk_in: api.parseNumberValue(`filter-in-${lb}`),
+                filter_druk_uit:api.parseNumberValue(`filter-uit-${lb}`),
+                kathodische_bescherming: api.parseNumberValue(`kath-${lb}`),
+            }));
+            const verbruikOnvolledig = VerbruikModule.verbruikOnvolledig({
+                water_diep:          api.parseNumberValue('water-diep'),
+                water_ondiep:        api.parseNumberValue('water-ondiep'),
+                water_totaal:        api.parseNumberValue('water-totaal'),
+                elektriciteit_nacht: api.parseNumberValue('elektriciteit-nacht'),
+                elektriciteit_dag:   api.parseNumberValue('elektriciteit-dag'),
+                gas:                 api.parseNumberValue('gas'),
+                floculant:              tekst('floculant'),
+                chemicalien_chloor:     tekst('chemicalien-chloor'),
+                chemicalien_zwavelzuur: tekst('chemicalien-zwavelzuur'),
+            });
+            this._zetVolledigheidMarker('subtab-meetwaarden', meetOnvolledig);
+            this._zetVolledigheidMarker('subtab-verbruik',    verbruikOnvolledig);
+            // Net als de actie-⚠: ook de pagina-tab markeren als één van de subtabs onvolledig is.
+            this._zetVolledigheidMarker('tab-grote-baden', meetOnvolledig || verbruikOnvolledig);
+        } else if (huidigeBadPagina === 'peuterbad') {
+            const payload = {
+                ph_waarde:    api.parseNumberValue('peuterbad-ph'),
+                chloor_waarde:api.parseNumberValue('peuterbad-chloor'),
+                flow:         api.parseNumberValue('peuterbad-flow'),
+                filter_druk:  api.parseNumberValue('peuterbad-filterdruk'),
+                water:                  api.parseNumberValue('peuterbad-water'),
+                chemicalien_chloor:     api.parseNumberValue('peuterbad-chemicalien-chloor'),
+                chemicalien_zwavelzuur: api.parseNumberValue('peuterbad-chemicalien-zwavelzuur'),
+            };
+            const pMeetOnvolledig    = OpslaanModule.peuterbadOnvolledig('meetwaarden', payload);
+            const pVerbruikOnvolledig = OpslaanModule.peuterbadOnvolledig('verbruik', payload);
+            this._zetVolledigheidMarker('subtab-peuterbad-meetwaarden', pMeetOnvolledig);
+            this._zetVolledigheidMarker('subtab-peuterbad-verbruik',    pVerbruikOnvolledig);
+            this._zetVolledigheidMarker('tab-peuterbad', pMeetOnvolledig || pVerbruikOnvolledig);
+        }
+    }
+
+    /** Zet of verwijder het volledigheids-bolletje op een subtab-knop (idempotent). */
+    _zetVolledigheidMarker(buttonId, onvolledig) {
+        const btn = document.getElementById(buttonId);
+        if (!btn) return;
+        let marker = btn.querySelector('.tab-onvolledig-indicator');
+        if (onvolledig) {
+            if (!marker) {
+                marker = document.createElement('span');
+                marker.className   = 'tab-onvolledig-indicator';
+                marker.textContent = '•';
+                marker.title       = 'Nog niet alle velden ingevuld';
+                btn.appendChild(marker);
+            }
+        } else if (marker) {
+            marker.remove();
+        }
     }
 
     // ── Tabel renderen ────────────────────────────────────────────────────
@@ -235,8 +350,8 @@ class MetingenModule {
                 ui.zetInputValue(`filter-uit-${lb}`,  meting?.filter_druk_uit ?? '');
                 ui.zetInputValue(`kath-${lb}`,        meting?.kathodische_bescherming ?? '');
             });
-            if (huidigeSubtab === 'verbruik' || huidigeSubtab === 'verwarmingssysteem')
-                this.app.verbruik.laadWaterbeheerVelden();
+            // De Verbruik-standen worden door laadMetingen geladen (zodat ook de
+            // volledigheids-markering klopt); hier niet nogmaals laden.
             return;
         }
 

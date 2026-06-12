@@ -21,7 +21,7 @@ function maakApp(overrides: any = {}) {
     const app: any = {
         api,
         ui: { toonBericht: jest.fn(), setAutoSaveStatus: jest.fn() },
-        metingen: { laadMetingen: jest.fn(), laadActies: jest.fn() },
+        metingen: { laadMetingen: jest.fn(), laadActies: jest.fn(), werkVolledigheidBij: jest.fn() },
         taken: { werkBadgeBij: jest.fn() },
         verbruik: { laadEnBerekenVerbruik: jest.fn(), laadEnBerekenPeuterbadVerbruik: jest.fn() },
         state: {
@@ -68,7 +68,7 @@ describe('Fix #1 — peuterbad save stuurt null voor lege velden', () => {
     });
 });
 
-describe('Fix #2 — waarschuwing is subtab-bewust', () => {
+describe('Fix #2 — autosave waarschuwt niet meer (passieve markering i.p.v. nag)', () => {
     it('alle Verbruik-velden ingevuld → status "saved", geen "warning"', async () => {
         zetPeuterbadFormulier({
             'peuterbad-water': '130',
@@ -84,14 +84,17 @@ describe('Fix #2 — waarschuwing is subtab-bewust', () => {
         expect(app.ui.setAutoSaveStatus).not.toHaveBeenCalledWith('warning');
     });
 
-    it('controle: onvolledige Verbruik-velden → wél "warning"', async () => {
+    it('óók bij onvolledige velden → "saved" (geen "warning" meer); volledigheid loopt via de markering', async () => {
         zetPeuterbadFormulier({ 'peuterbad-chemicalien-chloor': '8' }); // water/zwavelzuur leeg
         const app = maakApp();
         app.api.call = jest.fn(async () => ({ ok: true, json: async () => ({}) }));
 
         await new OpslaanModule(app).verwerkCentraleOpslaan(true);
 
-        expect(app.ui.setAutoSaveStatus).toHaveBeenCalledWith('warning');
+        expect(app.ui.setAutoSaveStatus).toHaveBeenCalledWith('saved');
+        expect(app.ui.setAutoSaveStatus).not.toHaveBeenCalledWith('warning');
+        // De volledigheids-markering wordt na het opslaan bijgewerkt.
+        expect(app.metingen.werkVolledigheidBij).toHaveBeenCalled();
     });
 });
 

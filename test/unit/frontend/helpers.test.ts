@@ -35,6 +35,31 @@ describe('VerbruikModule.berekenVerbruik', () => {
     });
 });
 
+describe('VerbruikModule.verbruikOnvolledig (Diep/Ondiep Verbruik-standen)', () => {
+    /** Alle negen in te vullen standen hebben een waarde. */
+    const volledig = {
+        water_diep: 100, water_ondiep: 80, water_totaal: 180,
+        elektriciteit_nacht: 10, elektriciteit_dag: 20, gas: 5,
+        floculant: '3', chemicalien_chloor: '8', chemicalien_zwavelzuur: '7',
+    };
+
+    it('volledig als alle negen standen zijn ingevuld', () => {
+        expect(VerbruikModule.verbruikOnvolledig(volledig)).toBe(false);
+    });
+
+    it('0 / "0" telt als een ingevulde waarde, niet als leeg', () => {
+        expect(VerbruikModule.verbruikOnvolledig({
+            ...volledig, gas: 0, water_diep: 0, chemicalien_chloor: '0',
+        })).toBe(false);
+    });
+
+    it('onvolledig zodra één stand leeg is', () => {
+        for (const veld of Object.keys(volledig)) {
+            expect(VerbruikModule.verbruikOnvolledig({ ...volledig, [veld]: null })).toBe(true);
+        }
+    });
+});
+
 describe('OpslaanModule.peuterbadOnvolledig', () => {
     it('Verbruik-subtab: volledig als water + beide chemicaliën zijn ingevuld', () => {
         expect(OpslaanModule.peuterbadOnvolledig('verbruik',
