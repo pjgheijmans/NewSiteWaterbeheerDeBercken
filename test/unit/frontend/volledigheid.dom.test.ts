@@ -17,8 +17,8 @@ const VerbruikModule = require('../../../frontend/js/verbruik.js');
 (global as any).VerbruikModule = VerbruikModule;
 const MetingenModule = require('../../../frontend/js/metingen.js');
 
-function maakApp(huidigeBadPagina: string) {
-    return { api: new ApiClient(), state: { huidigeRol: 'waterbeheer', huidigeBadPagina } };
+function maakApp(huidigeBadPagina: string, extra: any = {}) {
+    return { api: new ApiClient(), state: { huidigeRol: 'waterbeheer', huidigeBadPagina, ...extra } };
 }
 
 function heeftMarker(buttonId: string): boolean {
@@ -149,6 +149,58 @@ describe('Peuterbad — volledigheids-markering op subtabs', () => {
         new MetingenModule(maakApp('peuterbad')).werkVolledigheidBij();
         expect(heeftMarker('subtab-peuterbad-meetwaarden')).toBe(false);
         expect(heeftMarker('subtab-peuterbad-verbruik')).toBe(false);
+        expect(heeftMarker('tab-peuterbad')).toBe(false);
+    });
+});
+
+describe('Andere pagina-tab uit gecachte data (correct vanaf het laden)', () => {
+    beforeEach(() => {
+        document.body.innerHTML = `
+            <button id="tab-grote-baden">Diep / Ondiep</button>
+            <button id="tab-peuterbad">Peuterbad</button>`;
+    });
+
+    const volledigePeuterRij = {
+        bad_naam: 'Peuterbad', ph_waarde: 7.2, chloor_waarde: 1.0, flow: 5, filter_druk: 0.3,
+        water: 100, chemicalien_chloor: 8, chemicalien_zwavelzuur: 7,
+    };
+    const volledigeGroteRijen = ['Diep', 'Ondiep'].map(bad => ({
+        bad_naam: bad, ph_waarde: 7, chloor_waarde: 1, temperatuur: 28, flow: 200,
+        filter_druk_in: 0.5, filter_druk_uit: 0.4, kathodische_bescherming: 0.8,
+    }));
+    const volledigVerbruik = {
+        water_diep: 1, water_ondiep: 1, water_totaal: 1, elektriciteit_nacht: 1,
+        elektriciteit_dag: 1, gas: 1, floculant: '1', chemicalien_chloor: '1', chemicalien_zwavelzuur: '1',
+    };
+
+    it('op Diep/Ondiep: volledige Peuterbad-data → geen bolletje op de Peuterbad-tab', () => {
+        const app = maakApp('grote-baden', { gecachteData: [volledigePeuterRij] });
+        new MetingenModule(app).werkVolledigheidBij();
+        expect(heeftMarker('tab-peuterbad')).toBe(false);
+    });
+
+    it('op Diep/Ondiep: ontbrekende Peuterbad-data → bolletje op de Peuterbad-tab', () => {
+        const app = maakApp('grote-baden', { gecachteData: [] });
+        new MetingenModule(app).werkVolledigheidBij();
+        expect(heeftMarker('tab-peuterbad')).toBe(true);
+    });
+
+    it('op Peuterbad: volledige Diep/Ondiep-data + verbruik → geen bolletje op de Diep/Ondiep-tab', () => {
+        const app = maakApp('peuterbad', { gecachteData: volledigeGroteRijen, gecachteVerbruik: volledigVerbruik });
+        new MetingenModule(app).werkVolledigheidBij();
+        expect(heeftMarker('tab-grote-baden')).toBe(false);
+    });
+
+    it('op Peuterbad: meetwaarden compleet maar verbruik onvolledig → bolletje op de Diep/Ondiep-tab', () => {
+        const app = maakApp('peuterbad', { gecachteData: volledigeGroteRijen, gecachteVerbruik: { ...volledigVerbruik, gas: null } });
+        new MetingenModule(app).werkVolledigheidBij();
+        expect(heeftMarker('tab-grote-baden')).toBe(true);
+    });
+
+    it('"0" in de data telt als ingevuld (geen bolletje)', () => {
+        const peuterMetNullen = { ...volledigePeuterRij, ph_waarde: 0, water: 0, chemicalien_chloor: '0' };
+        const app = maakApp('grote-baden', { gecachteData: [peuterMetNullen] });
+        new MetingenModule(app).werkVolledigheidBij();
         expect(heeftMarker('tab-peuterbad')).toBe(false);
     });
 });

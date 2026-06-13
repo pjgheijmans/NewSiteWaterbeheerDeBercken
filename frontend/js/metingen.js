@@ -89,9 +89,11 @@ class MetingenModule {
                 this.laadActies(datum);                  // alleen nog de ⚠-veldindicatoren
                 this.app.taken.werkBadgeBij(datum);      // tab-/subtab-badges voor openstaande taken
                 await this.app.verbruik.laadEnBerekenVerbruik();
-                // Verbruik-standen laden zodat de volledigheids-markering op de
-                // Verbruik-subtab ook klopt vóór die subtab geopend is.
+                // Verbruik-standen laden/cachen zodat de volledigheids-markering klopt:
+                // op grote-baden in de DOM (voor de subtab), op peuterbad alleen gecachet
+                // (voor het bolletje op de Diep/Ondiep-pagina-tab).
                 if (huidigeBadPagina === 'grote-baden') await this.app.verbruik.laadWaterbeheerVelden();
+                else                                     await this.app.verbruik.cacheGroteBadenVerbruik();
                 this.werkVolledigheidBij();              // passieve "niet alle velden ingevuld"-markering
             }
         } catch { this.app.ui.toonBericht('Fout bij het ophalen van de gegevens.', 'fout'); }
@@ -235,58 +237,118 @@ class MetingenModule {
     // ── Volledigheid (passieve "niet alle velden ingevuld"-markering) ────────
 
     /**
-     * Werkt de passieve markering bij op de Meetwaarden- en Verbruik-subtabs van
-     * de huidige bad-pagina: een gedempt bolletje als nog niet alle velden van die
-     * subtab zijn ingevuld. Vervangt de oude waarschuwing-na-elke-opslag. Leest de
-     * (geladen) veldwaarden uit de DOM en hergebruikt de pure onvolledig-helpers.
+     * Werkt de passieve "niet alle velden ingevuld"-markering (gedempt bolletje) bij.
+     * De huidige pagina wordt live uit de DOM gelezen (incl. nog niet opgeslagen
+     * invoer); de andere pagina uit de gecachte data (die wordt nu niet bewerkt).
+     * Zo zijn beide pagina-tabs vanaf het laden correct, net als de actie-⚠.
+     * De subtab-bolletjes worden alleen voor de zichtbare pagina gezet.
      */
     werkVolledigheidBij() {
         const { huidigeRol, huidigeBadPagina } = this.app.state;
         if (huidigeRol !== 'waterbeheer') return;
-        const api = this.app.api;
-        const tekst = id => document.getElementById(id)?.value || null;
+
+        const grote  = huidigeBadPagina === 'grote-baden'
+            ? this._groteBadenOnvolledigUitDom()  : this._groteBadenOnvolledigUitData();
+        const peuter = huidigeBadPagina === 'peuterbad'
+            ? this._peuterbadOnvolledigUitDom()   : this._peuterbadOnvolledigUitData();
 
         if (huidigeBadPagina === 'grote-baden') {
-            const meetOnvolledig = ['diep', 'ondiep'].some(lb => OpslaanModule.meetwaardenOnvolledig({
-                ph_waarde:      api.parseNumberValue(`ph-${lb}`),
-                chloor_waarde:  api.parseNumberValue(`chloor-${lb}`),
-                temperatuur:    api.parseNumberValue(`temp-${lb}`),
-                flow:           api.parseNumberValue(`flow-${lb}`),
-                filter_druk_in: api.parseNumberValue(`filter-in-${lb}`),
-                filter_druk_uit:api.parseNumberValue(`filter-uit-${lb}`),
-                kathodische_bescherming: api.parseNumberValue(`kath-${lb}`),
-            }));
-            const verbruikOnvolledig = VerbruikModule.verbruikOnvolledig({
-                water_diep:          api.parseNumberValue('water-diep'),
-                water_ondiep:        api.parseNumberValue('water-ondiep'),
-                water_totaal:        api.parseNumberValue('water-totaal'),
-                elektriciteit_nacht: api.parseNumberValue('elektriciteit-nacht'),
-                elektriciteit_dag:   api.parseNumberValue('elektriciteit-dag'),
-                gas:                 api.parseNumberValue('gas'),
-                floculant:              tekst('floculant'),
-                chemicalien_chloor:     tekst('chemicalien-chloor'),
-                chemicalien_zwavelzuur: tekst('chemicalien-zwavelzuur'),
-            });
-            this._zetVolledigheidMarker('subtab-meetwaarden', meetOnvolledig);
-            this._zetVolledigheidMarker('subtab-verbruik',    verbruikOnvolledig);
-            // Net als de actie-⚠: ook de pagina-tab markeren als één van de subtabs onvolledig is.
-            this._zetVolledigheidMarker('tab-grote-baden', meetOnvolledig || verbruikOnvolledig);
+            this._zetVolledigheidMarker('subtab-meetwaarden', grote.meet);
+            this._zetVolledigheidMarker('subtab-verbruik',    grote.verbruik);
         } else if (huidigeBadPagina === 'peuterbad') {
-            const payload = {
-                ph_waarde:    api.parseNumberValue('peuterbad-ph'),
-                chloor_waarde:api.parseNumberValue('peuterbad-chloor'),
-                flow:         api.parseNumberValue('peuterbad-flow'),
-                filter_druk:  api.parseNumberValue('peuterbad-filterdruk'),
-                water:                  api.parseNumberValue('peuterbad-water'),
-                chemicalien_chloor:     api.parseNumberValue('peuterbad-chemicalien-chloor'),
-                chemicalien_zwavelzuur: api.parseNumberValue('peuterbad-chemicalien-zwavelzuur'),
-            };
-            const pMeetOnvolledig    = OpslaanModule.peuterbadOnvolledig('meetwaarden', payload);
-            const pVerbruikOnvolledig = OpslaanModule.peuterbadOnvolledig('verbruik', payload);
-            this._zetVolledigheidMarker('subtab-peuterbad-meetwaarden', pMeetOnvolledig);
-            this._zetVolledigheidMarker('subtab-peuterbad-verbruik',    pVerbruikOnvolledig);
-            this._zetVolledigheidMarker('tab-peuterbad', pMeetOnvolledig || pVerbruikOnvolledig);
+            this._zetVolledigheidMarker('subtab-peuterbad-meetwaarden', peuter.meet);
+            this._zetVolledigheidMarker('subtab-peuterbad-verbruik',    peuter.verbruik);
         }
+        // Pagina-tabs voor beide baden — net als de actie-⚠ altijd actueel.
+        this._zetVolledigheidMarker('tab-grote-baden', grote.meet  || grote.verbruik);
+        this._zetVolledigheidMarker('tab-peuterbad',   peuter.meet || peuter.verbruik);
+    }
+
+    /** Normaliseer een data-waarde: lege string/undefined → null (0 en "0" blijven). */
+    static _leeg(v) { return (v === '' || v === undefined) ? null : v; }
+
+    /** Diep/Ondiep onvolledig uit de (live) DOM. @returns {{meet:boolean, verbruik:boolean}} */
+    _groteBadenOnvolledigUitDom() {
+        const api = this.app.api;
+        const tekst = id => document.getElementById(id)?.value || null;
+        const meet = ['diep', 'ondiep'].some(lb => OpslaanModule.meetwaardenOnvolledig({
+            ph_waarde:      api.parseNumberValue(`ph-${lb}`),
+            chloor_waarde:  api.parseNumberValue(`chloor-${lb}`),
+            temperatuur:    api.parseNumberValue(`temp-${lb}`),
+            flow:           api.parseNumberValue(`flow-${lb}`),
+            filter_druk_in: api.parseNumberValue(`filter-in-${lb}`),
+            filter_druk_uit:api.parseNumberValue(`filter-uit-${lb}`),
+            kathodische_bescherming: api.parseNumberValue(`kath-${lb}`),
+        }));
+        const verbruik = VerbruikModule.verbruikOnvolledig({
+            water_diep:          api.parseNumberValue('water-diep'),
+            water_ondiep:        api.parseNumberValue('water-ondiep'),
+            water_totaal:        api.parseNumberValue('water-totaal'),
+            elektriciteit_nacht: api.parseNumberValue('elektriciteit-nacht'),
+            elektriciteit_dag:   api.parseNumberValue('elektriciteit-dag'),
+            gas:                 api.parseNumberValue('gas'),
+            floculant:              tekst('floculant'),
+            chemicalien_chloor:     tekst('chemicalien-chloor'),
+            chemicalien_zwavelzuur: tekst('chemicalien-zwavelzuur'),
+        });
+        return { meet, verbruik };
+    }
+
+    /** Diep/Ondiep onvolledig uit de gecachte data (gecachteData + gecachteVerbruik). */
+    _groteBadenOnvolledigUitData() {
+        const L = MetingenModule._leeg;
+        const rijen = Array.isArray(this.app.state.gecachteData) ? this.app.state.gecachteData : [];
+        const meet = ['Diep', 'Ondiep'].some(bad => {
+            const r = rijen.find(m => m.bad_naam === bad) || {};
+            return OpslaanModule.meetwaardenOnvolledig({
+                ph_waarde: L(r.ph_waarde), chloor_waarde: L(r.chloor_waarde),
+                temperatuur: L(r.temperatuur), flow: L(r.flow),
+                filter_druk_in: L(r.filter_druk_in), filter_druk_uit: L(r.filter_druk_uit),
+                kathodische_bescherming: L(r.kathodische_bescherming),
+            });
+        });
+        const v = this.app.state.gecachteVerbruik || {};
+        const verbruik = VerbruikModule.verbruikOnvolledig({
+            water_diep: L(v.water_diep), water_ondiep: L(v.water_ondiep), water_totaal: L(v.water_totaal),
+            elektriciteit_nacht: L(v.elektriciteit_nacht), elektriciteit_dag: L(v.elektriciteit_dag), gas: L(v.gas),
+            floculant: L(v.floculant), chemicalien_chloor: L(v.chemicalien_chloor), chemicalien_zwavelzuur: L(v.chemicalien_zwavelzuur),
+        });
+        return { meet, verbruik };
+    }
+
+    /** Peuterbad onvolledig uit de (live) DOM. @returns {{meet:boolean, verbruik:boolean}} */
+    _peuterbadOnvolledigUitDom() {
+        const api = this.app.api;
+        const payload = {
+            ph_waarde:    api.parseNumberValue('peuterbad-ph'),
+            chloor_waarde:api.parseNumberValue('peuterbad-chloor'),
+            flow:         api.parseNumberValue('peuterbad-flow'),
+            filter_druk:  api.parseNumberValue('peuterbad-filterdruk'),
+            water:                  api.parseNumberValue('peuterbad-water'),
+            chemicalien_chloor:     api.parseNumberValue('peuterbad-chemicalien-chloor'),
+            chemicalien_zwavelzuur: api.parseNumberValue('peuterbad-chemicalien-zwavelzuur'),
+        };
+        return {
+            meet:     OpslaanModule.peuterbadOnvolledig('meetwaarden', payload),
+            verbruik: OpslaanModule.peuterbadOnvolledig('verbruik', payload),
+        };
+    }
+
+    /** Peuterbad onvolledig uit de gecachte data (Peuterbad-rij in gecachteData). */
+    _peuterbadOnvolledigUitData() {
+        const L = MetingenModule._leeg;
+        const rijen = Array.isArray(this.app.state.gecachteData) ? this.app.state.gecachteData : [];
+        const r = rijen.find(m => m.bad_naam === 'Peuterbad') || {};
+        const payload = {
+            ph_waarde: L(r.ph_waarde), chloor_waarde: L(r.chloor_waarde),
+            flow: L(r.flow), filter_druk: L(r.filter_druk ?? r.filter_druk_in),
+            water: L(r.water), chemicalien_chloor: L(r.chemicalien_chloor),
+            chemicalien_zwavelzuur: L(r.chemicalien_zwavelzuur),
+        };
+        return {
+            meet:     OpslaanModule.peuterbadOnvolledig('meetwaarden', payload),
+            verbruik: OpslaanModule.peuterbadOnvolledig('verbruik', payload),
+        };
     }
 
     /** Zet of verwijder het volledigheids-bolletje op een subtab-knop (idempotent). */

@@ -31,6 +31,7 @@ class VerbruikModule {
                 this.app.api.call(`/api/verbruik/verwarmingssysteem?datum=${datum}`),
             ]);
             const data = { ...await verbruikRes.json(), ...await warmteRes.json() };
+            this.app.state.gecachteVerbruik = data;   // voor de volledigheids-markering
 
             document.getElementById('floculant').value                = data.floculant               || '';
             document.getElementById('water-diep').value               = data.water_diep              || '';
@@ -48,6 +49,19 @@ class VerbruikModule {
             document.getElementById('systeem-druk-ok').checked        = data.verwarming_druk_ok     === 1;
             document.getElementById('visuele-inspectie').checked      = data.verwarming_visuele_controle === 1;
         } catch (f) { console.error('Fout bij laden algemene velden:', f); }
+    }
+
+    /**
+     * Haal en cache alleen de Diep/Ondiep-verbruikstanden (zonder de DOM te vullen),
+     * zodat het volledigheids-bolletje op de Diep/Ondiep-pagina-tab ook klopt terwijl
+     * de Peuterbad-pagina actief is. Vult `state.gecachteVerbruik`.
+     */
+    async cacheGroteBadenVerbruik() {
+        const datum = document.getElementById('centraleDatum').value;
+        try {
+            const res = await this.app.api.call(`/api/verbruik/diep-ondiep?datum=${datum}`);
+            this.app.state.gecachteVerbruik = await res.json();
+        } catch (f) { console.error('Fout bij cachen verbruikstanden:', f); }
     }
 
     /**
