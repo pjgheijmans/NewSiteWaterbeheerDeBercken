@@ -22,6 +22,9 @@ import { maakRondetakenRouter }    from './routes/rondetaken';
 import { maakTakenRouter }         from './routes/taken';
 import { maakFrontendRouter }      from './routes/frontend';
 import { maakVersieRouter }        from './routes/versie';
+import { maakConfiguratieRouter }  from './routes/configuratie';
+import { ConfiguratieRepository }  from './repositories/ConfiguratieRepository';
+import { ConfiguratieService }     from './services/ConfiguratieService';
 import { errorHandler }           from './middleware/errorHandler';
 import { bepaalSessionSecret }    from './config';
 
@@ -34,12 +37,26 @@ export function maakApp(pool: Pool): Express {
     const app = express();
 
     app.use(express.json());
+
+    // Gedeelde configuratie-service: dezelfde instance voedt de sessie-middleware
+    // (per request, uit de cache) én de admin-router (wijzigen ververst de cache).
+    const configService = new ConfiguratieService(new ConfiguratieRepository(pool));
+    configService.laadCache();   // fire-and-forget; faalt zacht, default = 5 min
+
     app.use(session({
         secret: bepaalSessionSecret(),
         resave: false,
         saveUninitialized: false,
-        cookie: { maxAge: 2 * 60 * 60 * 1000 },
+        rolling: true,           // sliding/idle: vervaltijd reset bij activiteit
+        cookie: { maxAge: configService.getSessieTimeoutMs() },
     }));
+    // De time-out is instelbaar (DB) en mag zonder herstart wijzigen: zet de
+    // maxAge per request uit de cache; met rolling herstuurt express-session de
+    // cookie met de verse vervaltijd.
+    app.use((req, _res, next) => {
+        if (req.session) req.session.cookie.maxAge = configService.getSessieTimeoutMs();
+        next();
+    });
 
     // DatabaseRepository deelt de pool met de limieten- en gebruikers-repository
     // (nodig voor seedAllDefaults via /api/database/initialiseer).
@@ -62,6 +79,7 @@ export function maakApp(pool: Pool): Express {
     app.use('/api/rondetaken',    maakRondetakenRouter(pool));
     app.use('/api/taken',         maakTakenRouter(pool));
     app.use('/api/versie',        maakVersieRouter());
+    app.use('/api/configuratie',  maakConfiguratieRouter(configService));
 
     // Frontend: HTML-partials samenstellen (vóór static zodat / hier wordt afgehandeld)
     app.use('/', maakFrontendRouter());

@@ -124,6 +124,17 @@ CREATE TABLE IF NOT EXISTS gebruikers (
 INSERT IGNORE INTO gebruikers (voornaam, achternaam, inlognaam, wachtwoord, taak) VALUES ('Admin', '', 'Admin', 'lpphw', 'Administrator');
 INSERT IGNORE INTO gebruikers (voornaam, achternaam, inlognaam, wachtwoord, taak) VALUES ('Paul', 'Heijmans', 'pheijmans', 'Paul', 'waterbeheerder');
 
+-- Generieke configuratie (sleutel/waarde). Beheerbaar door Administrator.
+CREATE TABLE IF NOT EXISTS configuratie (
+    sleutel       VARCHAR(64)  NOT NULL PRIMARY KEY,
+    waarde        VARCHAR(255) NOT NULL,
+    omschrijving  VARCHAR(255) NULL,
+    type          VARCHAR(20)  NOT NULL DEFAULT 'tekst',
+    bijgewerkt_op TIMESTAMP    DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
+INSERT IGNORE INTO configuratie (sleutel, waarde, omschrijving, type) VALUES
+('sessie_timeout_minuten', '5', 'Sessie-time-out (idle/sliding) in minuten', 'getal');
+
 -- Vrij-tekst logboek voor waterbeheerders
 CREATE TABLE IF NOT EXISTS logboek (
     id INT AUTO_INCREMENT PRIMARY KEY,

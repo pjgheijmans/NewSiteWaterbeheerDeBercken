@@ -7,7 +7,7 @@
 class Application {
     constructor() {
         this.state      = new AppState();
-        this.api        = new ApiClient();
+        this.api        = new ApiClient(this);
         this.ui         = new UIManager(this);
         this.nav        = new NavModule(this);
         this.limieten   = new LimietenModule(this);
@@ -17,6 +17,7 @@ class Application {
         this.logboek    = new LogboekModule(this);
         this.gebruikers = new GebruikersModule(this);
         this.database   = new DatabaseModule(this);
+        this.configuratie = new ConfiguratieModule(this);
         this.verbruik   = new VerbruikModule(this);
         this.metingen   = new MetingenModule(this);
         this.taken      = new TakenModule(this);

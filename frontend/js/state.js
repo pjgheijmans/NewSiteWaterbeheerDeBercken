@@ -34,6 +34,7 @@ class AppState {
         this.dienstAutoSaveTimer        = null;
         this.logboekTimers              = {};
         this.gebruikersSaveTimers       = {};
+        this.configuratieSaveTimers     = {};
     }
 
     /** Schrijf de begindatum naar het datum-invoerveld in de pagina. */
