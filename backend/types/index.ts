@@ -193,6 +193,17 @@ export interface LimietInput {
     max_waarde: number;
 }
 
+// ── Configuratie ──────────────────────────────────────────────────────────────
+
+/** Eén generieke configuratie-instelling (sleutel/waarde) uit de `configuratie`-tabel. */
+export interface Configuratie {
+    sleutel: string;
+    waarde: string;
+    omschrijving: string | null;
+    /** 'getal' | 'tekst' — stuurt de invoer/validatie in de admin-UI. */
+    type: string;
+}
+
 // ── Actie-teksten ─────────────────────────────────────────────────────────────
 
 /** Tekst-sjabloon voor een gegenereerde actie. */

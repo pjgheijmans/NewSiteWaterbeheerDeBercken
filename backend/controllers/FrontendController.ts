@@ -4,13 +4,13 @@ import { Router, Request, Response } from 'express';
 
 const ORDER = [
     'head', 'login', 'dashboard-open', 'nav',
-    'dagstaat', 'limieten', 'actieteksten', 'gebruikers', 'database', 'trendanalyse', 'footer',
+    'dagstaat', 'limieten', 'actieteksten', 'gebruikers', 'database', 'configuratie', 'trendanalyse', 'footer',
 ];
 
 const JS_FILES = [
     'state', 'api', 'ui', 'limieten', 'actieteksten', 'dienst', 'auth',
     'metingen', 'taken', 'verbruik', 'opslaan', 'logboek',
-    'gebruikers', 'database', 'nav', 'trend', 'app',
+    'gebruikers', 'database', 'configuratie', 'nav', 'trend', 'app',
 ];
 
 export class FrontendController {

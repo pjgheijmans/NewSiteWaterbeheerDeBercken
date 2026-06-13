@@ -55,6 +55,13 @@ export const limietSchema = z.object({
     max_waarde:     z.number(),
 });
 
+// ── Configuratie (strikt) ─────────────────────────────────────────────────────
+// Alleen de waarde komt mee in de body; de sleutel zit in de URL en de
+// semantische check (bv. minuten-bereik) zit in de ConfiguratieService.
+export const configuratieUpdateSchema = z.object({
+    waarde: z.string().min(1, 'is verplicht'),
+});
+
 // ── Actie-teksten (strikt) ────────────────────────────────────────────────────
 export const actieTekstSchema = z.object({
     actie_sleutel: z.string().min(1, 'is verplicht'),

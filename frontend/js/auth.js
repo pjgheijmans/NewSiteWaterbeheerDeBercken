@@ -46,6 +46,22 @@ class AuthModule {
     }
 
     /**
+     * De server gaf 401 (sessie verlopen door de idle-time-out): keer terug naar
+     * het loginscherm met een blijvende uitleg in de login-foutregel (geen
+     * vluchtige toast — die mis je als de time-out tijdens afwezigheid afgaat).
+     * Guard tegen herhaald vuren bij meerdere parallelle 401's.
+     */
+    sessieVerlopen() {
+        if (!this.app.state.ingelogdeGebruiker) return; // al uitgelogd
+        this._zetGebruikerMenu(false);
+        this.app.state.ingelogdeGebruiker = null;
+        document.getElementById('scherm-login').style.display    = 'block';
+        document.getElementById('scherm-dashboard').style.display = 'none';
+        const fout = document.getElementById('login-fout');
+        if (fout) fout.innerText = 'Uw sessie is verlopen door inactiviteit. Log opnieuw in om verder te gaan.';
+    }
+
+    /**
      * @param {Object} gebruiker
      * @private
      */
@@ -63,6 +79,7 @@ class AuthModule {
             actieteksten:  false,
             gebruikers:    false,
             database:      false,
+            configuratie:  false,
             trendanalyse:  false,
         };
 
@@ -77,6 +94,7 @@ class AuthModule {
             knoppen.actieteksten = true;
             knoppen.gebruikers   = true;
             knoppen.database     = true;
+            knoppen.configuratie = true;
             knoppen.trendanalyse = false; // trendanalyse is voorbehouden aan waterbeheerder
             beginRol = 'limieten';
         } else {
@@ -98,7 +116,7 @@ class AuthModule {
      */
     wisselRol(rol) {
         this.app.state.huidigeRol = rol;
-        ['waterbeheer', 'coordinatoren', 'limieten', 'actieteksten', 'gebruikers', 'database', 'trendanalyse'].forEach(r => {
+        ['waterbeheer', 'coordinatoren', 'limieten', 'actieteksten', 'gebruikers', 'database', 'configuratie', 'trendanalyse'].forEach(r => {
             const btn = document.getElementById(`btn-rol-${r}`);
             if (btn) btn.classList.toggle('actief', r === rol);
         });
@@ -109,6 +127,7 @@ class AuthModule {
         document.getElementById('sectie-actieteksten').style.display   = (rol === 'actieteksten')   ? 'block' : 'none';
         document.getElementById('sectie-gebruikers').style.display     = (rol === 'gebruikers')     ? 'block' : 'none';
         document.getElementById('sectie-database').style.display       = (rol === 'database')       ? 'block' : 'none';
+        document.getElementById('sectie-configuratie').style.display    = (rol === 'configuratie')   ? 'block' : 'none';
         document.getElementById('sectie-trendanalyse').style.display   = (rol === 'trendanalyse')   ? 'block' : 'none';
         document.getElementById('waterbeheer-tabs').style.display      = (rol === 'waterbeheer')    ? 'flex'  : 'none';
         document.getElementById('waterbeheer-dienst-bar').style.display = (rol === 'waterbeheer')   ? 'block' : 'none';
@@ -131,6 +150,8 @@ class AuthModule {
             });
         } else if (rol === 'gebruikers') {
             this.app.gebruikers.laadGebruikers();
+        } else if (rol === 'configuratie') {
+            this.app.configuratie.laad();
         } else if (rol === 'limieten') {
             this.app.limieten.laadLimietenVanServer();
         } else if (rol === 'actieteksten') {
@@ -167,4 +188,9 @@ class AuthModule {
             this._sluitGebruikerMenu = null;
         }
     }
+}
+
+// Node/Jest: maak de klasse importeerbaar. In de browser bestaat `module` niet.
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = AuthModule;
 }
