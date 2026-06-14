@@ -84,6 +84,7 @@ class MetingenModule {
             this.app.state.gecachteData = await res.json();
             this._bouwTabelOp(this.app.state.gecachteData);
             if (huidigeRol === 'waterbeheer') {
+                this._onthoudMetingVersies(this.app.state.gecachteData);
                 await this.laadBezoekers();
                 await this.laadGebondenChloor();
                 this.laadActies(datum);                  // alleen nog de ⚠-veldindicatoren
@@ -95,8 +96,52 @@ class MetingenModule {
                 if (huidigeBadPagina === 'grote-baden') await this.app.verbruik.laadWaterbeheerVelden();
                 else                                     await this.app.verbruik.cacheGroteBadenVerbruik();
                 this.werkVolledigheidBij();              // passieve "niet alle velden ingevuld"-markering
+                this.toonLaatstGewijzigd();              // "laatst gewijzigd door … om …"
             }
         } catch { this.app.ui.toonBericht('Fout bij het ophalen van de gegevens.', 'fout'); }
+    }
+
+    // ── Optimistische concurrency: versies + "laatst gewijzigd" + conflict ──────
+
+    /** Bewaar per bad de versie/auteur/bijgewerkt_op uit de geladen metingen. */
+    _onthoudMetingVersies(data) {
+        (Array.isArray(data) ? data : []).forEach(r => {
+            this.app.state.versies[`meting:${r.bad_naam}`] = {
+                versie: r.versie ?? null, auteur: r.auteur ?? null, bijgewerkt_op: r.bijgewerkt_op ?? null,
+            };
+        });
+    }
+
+    /**
+     * Optimistische concurrency: de server gaf 409 omdat iemand anders de gegevens
+     * ondertussen wijzigde. Herlaad met de actuele waarden en leg uit wat er gebeurde.
+     */
+    behandelConflict() {
+        this.app.ui.toonBericht(
+            'Iemand anders heeft deze gegevens ondertussen gewijzigd. De pagina is opnieuw geladen met de actuele waarden.',
+            'fout');
+        this.laadMetingen();
+    }
+
+    /** Vul de "laatst gewijzigd door … om …"-regels uit de bewaarde versie-meta. */
+    toonLaatstGewijzigd() {
+        const v = this.app.state.versies;
+        const fmt = meta => {
+            if (!meta || !meta.auteur) return '';
+            let tijd = '';
+            if (meta.bijgewerkt_op) {
+                const d = new Date(meta.bijgewerkt_op);
+                if (!isNaN(d)) tijd = ' om ' + d.toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' });
+            }
+            return `Laatst gewijzigd door ${meta.auteur}${tijd}`;
+        };
+        const recentste = (...ms) => ms
+            .filter(m => m && m.bijgewerkt_op)
+            .sort((a, b) => (a.bijgewerkt_op < b.bijgewerkt_op ? 1 : -1))[0] || null;
+        const zet = (id, tekst) => { const el = document.getElementById(id); if (el) el.textContent = tekst; };
+        zet('meetwaarden-gewijzigd', fmt(recentste(v['meting:Diep'], v['meting:Ondiep'])));
+        zet('verbruik-gewijzigd',    fmt(v['verbruik']));
+        zet('peuterbad-gewijzigd',   fmt(v['meting:Peuterbad']));
     }
 
     async laadBezoekers() {

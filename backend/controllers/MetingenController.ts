@@ -4,6 +4,7 @@ import { valideerBody } from '../middleware/valideer';
 import { metingSchema } from '../validation/schemas';
 import { IMetingenService } from '../services/IMetingenService';
 import { MetingInput } from '../types';
+import { bepaalAuteur } from '../auteur';
 
 export class MetingenController {
     readonly router: Router;
@@ -37,8 +38,8 @@ export class MetingenController {
     private async postMeting(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistWaterbeheerder(req, res)) return;
         try {
-            await this.service.saveMeting(req.body as MetingInput);
-            res.json({ status: 'success' });
+            const meta = await this.service.saveMeting(req.body as MetingInput, bepaalAuteur(req.session.gebruiker!));
+            res.json({ status: 'success', ...meta });
         } catch (err) { next(err); }
     }
 

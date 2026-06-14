@@ -4,6 +4,7 @@ import { valideerBody } from '../middleware/valideer';
 import { verbruikSchema, verwarmingSchema } from '../validation/schemas';
 import { IVerbruikService } from '../services/IVerbruikService';
 import { VerbruikInput, VerwarmingInput } from '../types';
+import { bepaalAuteur } from '../auteur';
 
 export class VerbruikController {
     readonly router: Router;
@@ -42,8 +43,8 @@ export class VerbruikController {
     private async postVerbruik(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistWaterbeheerder(req, res)) return;
         try {
-            await this.service.saveVerbruik(req.body as VerbruikInput);
-            res.json({ status: 'success' });
+            const meta = await this.service.saveVerbruik(req.body as VerbruikInput, bepaalAuteur(req.session.gebruiker!));
+            res.json({ status: 'success', ...meta });
         } catch (err) { next(err); }
     }
 
@@ -57,8 +58,8 @@ export class VerbruikController {
     private async postVerwarming(req: Request, res: Response, next: NextFunction): Promise<void> {
         if (!this.vereistWaterbeheerder(req, res)) return;
         try {
-            await this.service.saveVerwarming(req.body as VerwarmingInput);
-            res.json({ status: 'success' });
+            const meta = await this.service.saveVerwarming(req.body as VerwarmingInput, bepaalAuteur(req.session.gebruiker!));
+            res.json({ status: 'success', ...meta });
         } catch (err) { next(err); }
     }
 }

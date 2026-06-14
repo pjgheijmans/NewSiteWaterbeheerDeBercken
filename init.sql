@@ -284,6 +284,24 @@ CREATE TABLE IF NOT EXISTS verwarmings_systeem_diep_ondiep (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
+-- Migratie: optimistische concurrency + attributie voor de waterbeheer
+-- meetwaarden/verbruik-tabellen. `versie` (optimistisch slot), `auteur` (wie sloeg
+-- als laatste op) en `bijgewerkt_op` (wanneer). Kale ADD COLUMN — geen IF NOT
+-- EXISTS (MySQL 8); op een up-to-date DB geeft dit een onschadelijke
+-- "Duplicate column"-waarschuwing die runInitSql opvangt.
+ALTER TABLE metingen_diep_ondiep ADD COLUMN versie INT NOT NULL DEFAULT 0;
+ALTER TABLE metingen_diep_ondiep ADD COLUMN auteur VARCHAR(100) NULL;
+ALTER TABLE metingen_diep_ondiep ADD COLUMN bijgewerkt_op TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+ALTER TABLE metingen_peuterbad ADD COLUMN versie INT NOT NULL DEFAULT 0;
+ALTER TABLE metingen_peuterbad ADD COLUMN auteur VARCHAR(100) NULL;
+ALTER TABLE metingen_peuterbad ADD COLUMN bijgewerkt_op TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+ALTER TABLE verbruik_diep_ondiep ADD COLUMN versie INT NOT NULL DEFAULT 0;
+ALTER TABLE verbruik_diep_ondiep ADD COLUMN auteur VARCHAR(100) NULL;
+ALTER TABLE verbruik_diep_ondiep ADD COLUMN bijgewerkt_op TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+ALTER TABLE verwarmings_systeem_diep_ondiep ADD COLUMN versie INT NOT NULL DEFAULT 0;
+ALTER TABLE verwarmings_systeem_diep_ondiep ADD COLUMN auteur VARCHAR(100) NULL;
+ALTER TABLE verwarmings_systeem_diep_ondiep ADD COLUMN bijgewerkt_op TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
+
 -- Migratie: voeg auteur toe aan metingen_coordinatoren
 ALTER TABLE metingen_coordinatoren ADD COLUMN auteur VARCHAR(100) NULL AFTER tijdstip;
 

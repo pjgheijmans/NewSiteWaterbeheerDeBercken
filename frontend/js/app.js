@@ -33,6 +33,16 @@ app.state.initDatumInput();
 app.opslaan.wireAutoSave();
 app.auth.start();
 
+// Bij terugkeer naar het tabblad de waterbeheer-gegevens verversen, zodat
+// wijzigingen van een andere gebruiker zichtbaar worden. Alleen als er geen
+// onopgeslagen invoer in de wacht staat (geen lopende autosave-debounce), zodat
+// we niemand z'n typewerk overschrijven.
+window.addEventListener('focus', () => {
+    if (app.state.ingelogdeGebruiker && app.state.huidigeRol === 'waterbeheer' && !app.state.autoSaveTimer) {
+        app.metingen.laadMetingen();
+    }
+});
+
 // Versielabel in de kop vullen (faalt stil — het is puur informatief).
 (async () => {
     try {

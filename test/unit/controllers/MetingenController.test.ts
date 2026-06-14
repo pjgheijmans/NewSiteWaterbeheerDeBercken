@@ -57,13 +57,22 @@ describe('GET /metingen', () => {
 });
 
 describe('POST /metingen', () => {
-    it('delegeert het opslaan naar de service', async () => {
-        mockService.saveMeting.mockResolvedValue(undefined);
-        const body = { datum: DATUM, bad_naam: 'Diep', ph_waarde: 7.2 };
+    it('delegeert het opslaan naar de service (met auteur) en geeft de meta terug', async () => {
+        mockService.saveMeting.mockResolvedValue({ versie: 3, auteur: 'Test User', bijgewerkt_op: '2026-05-31T10:00:00' });
+        const body = { datum: DATUM, bad_naam: 'Diep', ph_waarde: 7.2, versie: 2 };
         const res = await request(maakApp()).post('/metingen').send(body);
         expect(res.status).toBe(200);
-        expect(res.body.status).toBe('success');
-        expect(mockService.saveMeting).toHaveBeenCalledWith(expect.objectContaining({ bad_naam: 'Diep' }));
+        expect(res.body).toMatchObject({ status: 'success', versie: 3, auteur: 'Test User' });
+        // (payload, auteur) — de auteur komt uit de sessie (maakTestGebruiker).
+        expect(mockService.saveMeting).toHaveBeenCalledWith(
+            expect.objectContaining({ bad_naam: 'Diep', versie: 2 }), 'Test User');
+    });
+
+    it('propageert een AppError 409 (conflict) met de juiste status', async () => {
+        mockService.saveMeting.mockRejectedValue(new AppError('Iemand anders heeft deze gegevens ondertussen gewijzigd.', 409));
+        const res = await request(maakApp()).post('/metingen').send({ datum: DATUM, bad_naam: 'Diep', versie: 1 });
+        expect(res.status).toBe(409);
+        expect(res.body.error).toContain('gewijzigd');
     });
 
     it('propageert een AppError 400 met de juiste status', async () => {

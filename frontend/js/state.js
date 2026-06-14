@@ -35,6 +35,10 @@ class AppState {
         this.logboekTimers              = {};
         this.gebruikersSaveTimers       = {};
         this.configuratieSaveTimers     = {};
+
+        // Optimistische concurrency: per record (sleutel → {versie, auteur, bijgewerkt_op}).
+        // Sleutels: 'meting:Diep' | 'meting:Ondiep' | 'meting:Peuterbad' | 'verbruik' | 'verwarming'.
+        this.versies                    = {};
     }
 
     /** Schrijf de begindatum naar het datum-invoerveld in de pagina. */

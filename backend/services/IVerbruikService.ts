@@ -1,9 +1,9 @@
-import { VerbruikData, VerbruikInput, VerwarmingData, VerwarmingInput } from '../types';
+import { VerbruikData, VerbruikInput, VerwarmingData, VerwarmingInput, OpslaanResultaat } from '../types';
 
 export interface IVerbruikService {
     getVerbruik(datum: string): Promise<VerbruikData>;
     getVorigeVerbruik(datum: string): Promise<VerbruikData>;
-    saveVerbruik(body: VerbruikInput): Promise<void>;
+    saveVerbruik(body: VerbruikInput, auteur: string | null): Promise<OpslaanResultaat>;
     getVerwarming(datum: string): Promise<VerwarmingData>;
-    saveVerwarming(body: VerwarmingInput): Promise<void>;
+    saveVerwarming(body: VerwarmingInput, auteur: string | null): Promise<OpslaanResultaat>;
 }

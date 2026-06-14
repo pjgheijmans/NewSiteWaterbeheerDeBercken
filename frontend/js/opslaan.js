@@ -50,6 +50,22 @@ class OpslaanModule {
         }
     }
 
+    /**
+     * Onthoud de nieuwe versie-meta na een succesvolle opslag, zodat de volgende
+     * autosave de juiste verwachte versie meestuurt (optimistische concurrency).
+     * @param {string} sleutel
+     * @param {?{versie:number, auteur:?string, bijgewerkt_op:?string}} meta
+     */
+    _onthoudVersie(sleutel, meta) {
+        if (!meta) return;
+        this.app.state.versies[sleutel] = {
+            versie: meta.versie ?? null,
+            auteur: meta.auteur ?? null,
+            bijgewerkt_op: meta.bijgewerkt_op ?? null,
+        };
+        this.app.metingen.toonLaatstGewijzigd();
+    }
+
     // ── Centrale auto-save ────────────────────────────────────────────────
 
     scheduleAutoSave() {
@@ -57,6 +73,7 @@ class OpslaanModule {
         if (state.autoSaveTimer) clearTimeout(state.autoSaveTimer);
         this.app.ui.setAutoSaveStatus('pending');
         state.autoSaveTimer = setTimeout(async () => {
+            state.autoSaveTimer = null;   // niet langer "pending" (o.a. voor de focus-herlaad)
             this.app.ui.setAutoSaveStatus('saving');
             await this.verwerkCentraleOpslaan(true);
         }, 1200);
@@ -150,7 +167,8 @@ class OpslaanModule {
 
         // Verbruik / Verwarmingssysteem subtabs
         if (huidigeRol === 'waterbeheer' && huidigeBadPagina === 'grote-baden' && huidigeSubtab !== 'meetwaarden') {
-            const ok = await this.app.verbruik.slaAlgemeenGegevensOp();
+            const { ok, conflict } = await this.app.verbruik.slaAlgemeenGegevensOp();
+            if (conflict) { this.app.metingen.behandelConflict(); return; }
             // Onvolledige standen worden niet meer als waarschuwing getoond, maar
             // passief als markering op de subtab (zie metingen.werkVolledigheidBij).
             if (ok) { opSuccess('Gegevens succesvol opgeslagen!'); refreshNaOpslaan(); }
@@ -174,6 +192,7 @@ class OpslaanModule {
                     filter_druk_in: api.parseNumberValue(`filter-in-${lb}`),
                     filter_druk_uit:api.parseNumberValue(`filter-uit-${lb}`),
                     kathodische_bescherming: api.parseNumberValue(`kath-${lb}`),
+                    versie: this.app.state.versies[`meting:${bad}`]?.versie ?? null,
                 };
                 payload.filter_druk = payload.filter_druk_in ?? payload.filter_druk_uit ?? 0;
                 try {
@@ -182,7 +201,8 @@ class OpslaanModule {
                         headers: { 'Content-Type': 'application/json' },
                         body: JSON.stringify(payload),
                     });
-                    if (res.ok) ok++;
+                    if (res.status === 409) { this.app.metingen.behandelConflict(); return; }
+                    if (res.ok) { ok++; this._onthoudVersie(`meting:${bad}`, await res.json().catch(() => null)); }
                     else { const e = await res.json().catch(() => null); fouten.push(`${bad}: ${e?.error || res.statusText}`); }
                 } catch (e) { fouten.push(`${bad}: ${e.message}`); }
             }
@@ -205,6 +225,7 @@ class OpslaanModule {
                 water:                  api.parseNumberValue('peuterbad-water'),
                 chemicalien_chloor:     api.parseNumberValue('peuterbad-chemicalien-chloor'),
                 chemicalien_zwavelzuur: api.parseNumberValue('peuterbad-chemicalien-zwavelzuur'),
+                versie: this.app.state.versies['meting:Peuterbad']?.versie ?? null,
             };
             try {
                 const res = await api.call('/api/metingen', {
@@ -212,7 +233,9 @@ class OpslaanModule {
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(payload),
                 });
+                if (res.status === 409) { this.app.metingen.behandelConflict(); return; }
                 if (res.ok) {
+                    this._onthoudVersie('meting:Peuterbad', await res.json().catch(() => null));
                     // Onvolledige velden worden passief op de subtab gemarkeerd
                     // (werkVolledigheidBij), niet meer als waarschuwing na het opslaan.
                     opSuccess('Peuterbad opgeslagen!');

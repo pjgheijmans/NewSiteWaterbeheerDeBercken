@@ -3,7 +3,7 @@ import { IActiesRepository } from '../repositories/IActiesRepository';
 import { IDaggegevensProvider } from '../repositories/IDaggegevensProvider';
 import { IMetingenService } from './IMetingenService';
 import { bepaalAuteur } from '../auteur';
-import { Meting, MetingInput, Actie, Gebruiker, BezoekersResultaat, GebondenChloorResultaat } from '../types';
+import { Meting, MetingInput, Actie, Gebruiker, BezoekersResultaat, GebondenChloorResultaat, OpslaanResultaat } from '../types';
 
 /**
  * Bedrijfslogica voor metingen en acties.
@@ -20,14 +20,16 @@ export class MetingenService implements IMetingenService {
         return this.metingenRepo.getMetingen(datum);
     }
 
-    async saveMeting(body: MetingInput): Promise<void> {
+    async saveMeting(body: MetingInput, auteur: string | null): Promise<OpslaanResultaat> {
         const bad_id = await this.metingenRepo.getBadId(body.bad_naam);
-        if (body.bad_naam === 'Peuterbad') {
-            await this.metingenRepo.savePeuterbadMeting(bad_id, body);
-        } else {
-            await this.metingenRepo.saveGrootBadMeting(bad_id, body);
-        }
+        const verwachteVersie = body.versie ?? null;
+        // Bij een versieconflict gooit de repo AppError(409); de actiegeneratie
+        // hieronder wordt dan terecht overgeslagen (er is niets opgeslagen).
+        const resultaat = body.bad_naam === 'Peuterbad'
+            ? await this.metingenRepo.savePeuterbadMeting(bad_id, body, auteur, verwachteVersie)
+            : await this.metingenRepo.saveGrootBadMeting(bad_id, body, auteur, verwachteVersie);
         await this.actiesRepo.genereer(bad_id, body.datum, body.bad_naam, body);
+        return resultaat;
     }
 
     getActies(datum: string): Promise<Actie[]> {
