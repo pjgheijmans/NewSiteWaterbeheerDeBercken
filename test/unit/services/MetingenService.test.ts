@@ -23,30 +23,43 @@ const gebruiker: Gebruiker = { id: 1, gebruikersnaam: 'tu', taak: 'waterbeheerde
 
 beforeEach(() => jest.clearAllMocks());
 
+const META = { versie: 1, auteur: 'Test User', bijgewerkt_op: null };
+
 describe('saveMeting — keuze bad-tabel', () => {
-    it('gebruikt savePeuterbadMeting voor het Peuterbad', async () => {
+    it('gebruikt savePeuterbadMeting voor het Peuterbad (met auteur + verwachte versie)', async () => {
         metingenRepo.getBadId.mockResolvedValue(3);
-        await service.saveMeting({ datum: DATUM, bad_naam: 'Peuterbad', ph_waarde: 7.0 });
-        expect(metingenRepo.savePeuterbadMeting).toHaveBeenCalledWith(3, expect.objectContaining({ bad_naam: 'Peuterbad' }));
+        metingenRepo.savePeuterbadMeting.mockResolvedValue(META);
+        await service.saveMeting({ datum: DATUM, bad_naam: 'Peuterbad', ph_waarde: 7.0, versie: 2 }, 'Test User');
+        expect(metingenRepo.savePeuterbadMeting).toHaveBeenCalledWith(3, expect.objectContaining({ bad_naam: 'Peuterbad' }), 'Test User', 2);
         expect(metingenRepo.saveGrootBadMeting).not.toHaveBeenCalled();
     });
 
-    it('gebruikt saveGrootBadMeting voor Diep/Ondiep', async () => {
+    it('gebruikt saveGrootBadMeting voor Diep/Ondiep (verwachte versie null als die ontbreekt)', async () => {
         metingenRepo.getBadId.mockResolvedValue(1);
-        await service.saveMeting({ datum: DATUM, bad_naam: 'Diep' });
-        expect(metingenRepo.saveGrootBadMeting).toHaveBeenCalledWith(1, expect.objectContaining({ bad_naam: 'Diep' }));
+        metingenRepo.saveGrootBadMeting.mockResolvedValue(META);
+        await service.saveMeting({ datum: DATUM, bad_naam: 'Diep' }, 'Test User');
+        expect(metingenRepo.saveGrootBadMeting).toHaveBeenCalledWith(1, expect.objectContaining({ bad_naam: 'Diep' }), 'Test User', null);
         expect(metingenRepo.savePeuterbadMeting).not.toHaveBeenCalled();
     });
 
-    it('genereert acties na het opslaan', async () => {
+    it('geeft de meta terug en genereert daarna acties', async () => {
         metingenRepo.getBadId.mockResolvedValue(1);
-        await service.saveMeting({ datum: DATUM, bad_naam: 'Diep' });
+        metingenRepo.saveGrootBadMeting.mockResolvedValue({ versie: 5, auteur: 'Test User', bijgewerkt_op: '2026-05-31T10:00:00' });
+        const meta = await service.saveMeting({ datum: DATUM, bad_naam: 'Diep' }, 'Test User');
+        expect(meta).toEqual({ versie: 5, auteur: 'Test User', bijgewerkt_op: '2026-05-31T10:00:00' });
         expect(actiesRepo.genereer).toHaveBeenCalledWith(1, DATUM, 'Diep', expect.objectContaining({ bad_naam: 'Diep' }));
+    });
+
+    it('genereert geen acties bij een opslag-conflict (409)', async () => {
+        metingenRepo.getBadId.mockResolvedValue(1);
+        metingenRepo.saveGrootBadMeting.mockRejectedValue(new Error('conflict'));
+        await expect(service.saveMeting({ datum: DATUM, bad_naam: 'Diep' }, 'Test User')).rejects.toThrow('conflict');
+        expect(actiesRepo.genereer).not.toHaveBeenCalled();
     });
 
     it('propageert een fout van getBadId zonder op te slaan', async () => {
         metingenRepo.getBadId.mockRejectedValue(new Error('Bad niet gevonden'));
-        await expect(service.saveMeting({ datum: DATUM, bad_naam: 'X' })).rejects.toThrow('Bad niet gevonden');
+        await expect(service.saveMeting({ datum: DATUM, bad_naam: 'X' }, 'Test User')).rejects.toThrow('Bad niet gevonden');
         expect(metingenRepo.saveGrootBadMeting).not.toHaveBeenCalled();
         expect(actiesRepo.genereer).not.toHaveBeenCalled();
     });

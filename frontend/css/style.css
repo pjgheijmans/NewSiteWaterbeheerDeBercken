@@ -1101,6 +1101,16 @@ input[type="text"].buiten-limiet {
     background: var(--kleur-succes);
 }
 
+/* "Laatst gewijzigd door … om …" — gedempte awareness-regel boven een sectie,
+   zodat je ziet wie de gegevens als laatste aanraakte (bij meerdere gebruikers). */
+.laatst-gewijzigd {
+    font-size: 12px;
+    color: #888;
+    font-style: italic;
+    margin-bottom: 8px;
+    min-height: 16px;
+}
+
 /* Passieve "nog niet alle velden ingevuld"-markering op een subtab. Bewust
    gedempt en amberkleurig — informatief, geen alarm zoals de rode ⚠-indicator. */
 .tab-onvolledig-indicator {

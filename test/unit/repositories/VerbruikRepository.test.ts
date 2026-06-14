@@ -1,6 +1,6 @@
 import { Pool } from 'mysql2/promise';
 import { VerbruikRepository } from '../../../backend/repositories/VerbruikRepository';
-import { maakMockPool, resultaat, paramsVan, MockPool } from '../../helpers/mockPool';
+import { maakMockPool, resultaat, sqlVan, paramsVan, MockPool } from '../../helpers/mockPool';
 
 let pool: MockPool;
 let repo: VerbruikRepository;
@@ -36,14 +36,26 @@ describe('getVorigeVerbruik', () => {
     });
 });
 
+// Happy-update pad: conditionele UPDATE matcht, daarna leesMeta.
+function scriptHappyUpdate() {
+    pool.execute
+        .mockResolvedValueOnce([{ affectedRows: 1 }, []])
+        .mockResolvedValueOnce(resultaat([{ versie: 1, auteur: 'Jan', bijgewerkt_op: null }]));
+}
+
 describe('saveVerbruik', () => {
-    it('zet ontbrekende velden om naar null', async () => {
-        await repo.saveVerbruik({ datum: '2026-05-31', water_diep: 1000 });
-        const params = paramsVan(pool.execute);
-        expect(params[0]).toBe('2026-05-31');
-        expect(params[1]).toBeNull();   // floculant
-        expect(params[2]).toBe(1000);   // water_diep
-        expect(params[3]).toBeNull();   // water_ondiep
+    it('mapt de velden + auteur + verwachte versie naar de conditionele UPDATE', async () => {
+        scriptHappyUpdate();
+        const res = await repo.saveVerbruik({ datum: '2026-05-31', water_diep: 1000 }, 'Jan', 4);
+        expect(res).toEqual({ versie: 1, auteur: 'Jan', bijgewerkt_op: null });
+
+        expect(sqlVan(pool.execute, 0)).toContain('UPDATE verbruik_diep_ondiep');
+        const p = paramsVan(pool.execute, 0); // [floculant, water_diep, ..., auteur, datum, verwachteVersie]
+        expect(p[0]).toBeNull();          // floculant ontbreekt
+        expect(p[1]).toBe(1000);          // water_diep
+        expect(p[2]).toBeNull();          // water_ondiep
+        expect(p).toContain('Jan');
+        expect(p[p.length - 1]).toBe(4);  // verwachte versie
     });
 });
 
@@ -55,11 +67,12 @@ describe('getVerwarming', () => {
 });
 
 describe('saveVerwarming', () => {
-    it('slaat de statusvelden op met null-fallback', async () => {
-        await repo.saveVerwarming({ datum: '2026-05-31', verwarming_status_1: true });
-        const params = paramsVan(pool.execute);
-        expect(params[0]).toBe('2026-05-31');
-        expect(params[1]).toBe(true);
-        expect(params[2]).toBeNull();
+    it('normaliseert de statusvelden naar 0/1 in de UPDATE', async () => {
+        scriptHappyUpdate();
+        await repo.saveVerwarming({ datum: '2026-05-31', verwarming_status_1: true }, 'Jan', null);
+        expect(sqlVan(pool.execute, 0)).toContain('UPDATE verwarmings_systeem_diep_ondiep');
+        const p = paramsVan(pool.execute, 0);
+        expect(p[0]).toBe(1);   // status_1 = true → 1
+        expect(p[1]).toBe(0);   // status_2 ontbreekt → 0
     });
 });

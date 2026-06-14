@@ -21,13 +21,14 @@ function maakApp(overrides: any = {}) {
     const app: any = {
         api,
         ui: { toonBericht: jest.fn(), setAutoSaveStatus: jest.fn() },
-        metingen: { laadMetingen: jest.fn(), laadActies: jest.fn(), werkVolledigheidBij: jest.fn() },
+        metingen: { laadMetingen: jest.fn(), laadActies: jest.fn(), werkVolledigheidBij: jest.fn(),
+                    toonLaatstGewijzigd: jest.fn(), behandelConflict: jest.fn() },
         taken: { werkBadgeBij: jest.fn() },
         verbruik: { laadEnBerekenVerbruik: jest.fn(), laadEnBerekenPeuterbadVerbruik: jest.fn() },
         state: {
             huidigeRol: 'waterbeheer', huidigeBadPagina: 'peuterbad',
             huidigeSubtab: 'meetwaarden', huidigeCoordSubtab: 'metingen',
-            huidigePeuterbadSubtab: 'verbruik',
+            huidigePeuterbadSubtab: 'verbruik', versies: {},
         },
     };
     return Object.assign(app, overrides);

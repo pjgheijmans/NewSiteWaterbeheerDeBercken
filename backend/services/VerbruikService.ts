@@ -1,7 +1,7 @@
 import { IVerbruikRepository } from '../repositories/IVerbruikRepository';
 import { IActiesRepository } from '../repositories/IActiesRepository';
 import { IVerbruikService } from './IVerbruikService';
-import { VerbruikData, VerbruikInput, VerwarmingData, VerwarmingInput } from '../types';
+import { VerbruikData, VerbruikInput, VerwarmingData, VerwarmingInput, OpslaanResultaat } from '../types';
 
 /**
  * Bedrijfslogica voor verbruik en verwarmingssysteem.
@@ -21,16 +21,17 @@ export class VerbruikService implements IVerbruikService {
         return this.verbruikRepo.getVorigeVerbruik(datum);
     }
 
-    async saveVerbruik(body: VerbruikInput): Promise<void> {
-        await this.verbruikRepo.saveVerbruik(body);
+    async saveVerbruik(body: VerbruikInput, auteur: string | null): Promise<OpslaanResultaat> {
+        const resultaat = await this.verbruikRepo.saveVerbruik(body, auteur, body.versie ?? null);
         await this.actiesRepo.genereerVerbruik(body.datum, body);
+        return resultaat;
     }
 
     getVerwarming(datum: string): Promise<VerwarmingData> {
         return this.verbruikRepo.getVerwarming(datum);
     }
 
-    saveVerwarming(body: VerwarmingInput): Promise<void> {
-        return this.verbruikRepo.saveVerwarming(body);
+    saveVerwarming(body: VerwarmingInput, auteur: string | null): Promise<OpslaanResultaat> {
+        return this.verbruikRepo.saveVerwarming(body, auteur, body.versie ?? null);
     }
 }

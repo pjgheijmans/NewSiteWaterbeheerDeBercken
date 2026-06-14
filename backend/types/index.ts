@@ -12,6 +12,16 @@ export interface Gebruiker {
 
 // ── Metingen ──────────────────────────────────────────────────────────────────
 
+/** Optimistische-concurrency + attributie-meta, meegestuurd bij lezen en opslaan. */
+export interface OpslaanResultaat {
+    /** Rijversie; de client stuurt 'm terug en de server detecteert er conflicten mee. */
+    versie: number;
+    /** Wie het record als laatste opsloeg (weergavenaam). */
+    auteur: string | null;
+    /** Wanneer (ISO 'YYYY-MM-DDTHH:MM:SS'); voor de "laatst gewijzigd"-weergave. */
+    bijgewerkt_op: string | null;
+}
+
 export interface Meting {
     bad_naam: string;
     ph_waarde: number | null;
@@ -24,6 +34,9 @@ export interface Meting {
     water: number | null;
     chemicalien_chloor: number | null;
     chemicalien_zwavelzuur: number | null;
+    versie?: number | null;
+    auteur?: string | null;
+    bijgewerkt_op?: string | null;
 }
 
 export interface GrootBadMetingInput {
@@ -36,6 +49,8 @@ export interface GrootBadMetingInput {
     filter_druk_in?: number | null;
     filter_druk_uit?: number | null;
     kathodische_bescherming?: number | null;
+    /** Versie die de client laatst zag (null = nog geen record); voor conflictdetectie. */
+    versie?: number | null;
 }
 
 export interface PeuterbadMetingInput {
@@ -49,6 +64,7 @@ export interface PeuterbadMetingInput {
     water?: number | null;
     chemicalien_chloor?: number | null;
     chemicalien_zwavelzuur?: number | null;
+    versie?: number | null;
 }
 
 export type MetingInput = GrootBadMetingInput | PeuterbadMetingInput;
@@ -288,6 +304,9 @@ export interface VerbruikData {
     gas?: number | null;
     chemicalien_chloor?: number | null;
     chemicalien_zwavelzuur?: number | null;
+    versie?: number | null;
+    auteur?: string | null;
+    bijgewerkt_op?: string | null;
 }
 
 export interface VerbruikInput extends VerbruikData {
@@ -302,6 +321,9 @@ export interface VerwarmingData {
     verwarming_status_4?: boolean | number | null;
     verwarming_druk_ok?: boolean | number | null;
     verwarming_visuele_controle?: boolean | number | null;
+    versie?: number | null;
+    auteur?: string | null;
+    bijgewerkt_op?: string | null;
 }
 
 export interface VerwarmingInput extends VerwarmingData {

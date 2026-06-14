@@ -19,13 +19,14 @@ function maakApp() {
     return {
         api,
         ui: { toonBericht: jest.fn(), setAutoSaveStatus: jest.fn() },
-        metingen: { laadMetingen: jest.fn(), laadActies: jest.fn(), werkVolledigheidBij: jest.fn() },
+        metingen: { laadMetingen: jest.fn(), laadActies: jest.fn(), werkVolledigheidBij: jest.fn(),
+                    toonLaatstGewijzigd: jest.fn(), behandelConflict: jest.fn() },
         taken: { werkBadgeBij: jest.fn() },
         verbruik: { laadEnBerekenVerbruik: jest.fn(), laadEnBerekenPeuterbadVerbruik: jest.fn() },
         state: {
             huidigeRol: 'waterbeheer', huidigeBadPagina: 'grote-baden',
             huidigeSubtab: 'meetwaarden', huidigeCoordSubtab: 'metingen',
-            huidigePeuterbadSubtab: 'meetwaarden',
+            huidigePeuterbadSubtab: 'meetwaarden', versies: {},
         },
     };
 }
@@ -100,16 +101,17 @@ describe('Grote baden — Verbruik/Verwarmingssysteem opslaan waarschuwt niet', 
         return {
             api: { call: jest.fn() },
             ui: { toonBericht: jest.fn(), setAutoSaveStatus: jest.fn() },
-            metingen: { laadMetingen: jest.fn(), laadActies: jest.fn(), werkVolledigheidBij: jest.fn() },
+            metingen: { laadMetingen: jest.fn(), laadActies: jest.fn(), werkVolledigheidBij: jest.fn(),
+                        toonLaatstGewijzigd: jest.fn(), behandelConflict: jest.fn() },
             taken: { werkBadgeBij: jest.fn() },
             verbruik: {
-                slaAlgemeenGegevensOp: jest.fn(async () => true),
+                slaAlgemeenGegevensOp: jest.fn(async () => ({ ok: true, conflict: false })),
                 laadEnBerekenVerbruik: jest.fn(), laadEnBerekenPeuterbadVerbruik: jest.fn(),
             },
             state: {
                 huidigeRol: 'waterbeheer', huidigeBadPagina: 'grote-baden',
                 huidigeSubtab: subtab, huidigeCoordSubtab: 'metingen',
-                huidigePeuterbadSubtab: 'meetwaarden',
+                huidigePeuterbadSubtab: 'meetwaarden', versies: {},
             },
         };
     }
@@ -128,5 +130,55 @@ describe('Grote baden — Verbruik/Verwarmingssysteem opslaan waarschuwt niet', 
         await new OpslaanModule(app).verwerkCentraleOpslaan(true);
         expect(app.ui.setAutoSaveStatus).toHaveBeenCalledWith('saved');
         expect(app.ui.setAutoSaveStatus).not.toHaveBeenCalledWith('warning');
+    });
+});
+
+describe('Grote baden — optimistische concurrency (versie + 409 conflict)', () => {
+    it('stuurt de bewaarde versie mee en onthoudt de nieuwe versie na opslaan', async () => {
+        zetMeetwaardenFormulier({ 'ph-diep': '7.2', 'ph-ondiep': '7.0' });
+        const app: any = maakApp();
+        app.state.versies = { 'meting:Diep': { versie: 2 }, 'meting:Ondiep': { versie: 5 } };
+        const bodies: any[] = [];
+        app.api.call = jest.fn(async (_url: string, opts: any) => {
+            const body = JSON.parse(opts.body);
+            bodies.push(body);
+            return { ok: true, status: 200, json: async () => ({ versie: body.bad_naam === 'Diep' ? 3 : 6, auteur: 'Jan', bijgewerkt_op: null }) };
+        });
+
+        await new OpslaanModule(app).verwerkCentraleOpslaan(true);
+
+        expect(bodies.find(b => b.bad_naam === 'Diep').versie).toBe(2);   // verwachte versie meegestuurd
+        expect(app.state.versies['meting:Diep'].versie).toBe(3);          // nieuwe versie onthouden
+        expect(app.state.versies['meting:Ondiep'].versie).toBe(6);
+        expect(app.metingen.behandelConflict).not.toHaveBeenCalled();
+    });
+
+    it('een 409 op meetwaarden → behandelConflict en geen "saved"', async () => {
+        zetMeetwaardenFormulier({ 'ph-diep': '7.2' });
+        const app = maakApp();
+        app.api.call = jest.fn(async () => ({ ok: false, status: 409, json: async () => ({ error: 'conflict' }) }));
+
+        await new OpslaanModule(app).verwerkCentraleOpslaan(true);
+
+        expect(app.metingen.behandelConflict).toHaveBeenCalled();
+        expect(app.ui.setAutoSaveStatus).not.toHaveBeenCalledWith('saved');
+    });
+
+    it('een verbruik-conflict ({conflict:true}) → behandelConflict en geen "saved"', async () => {
+        document.body.innerHTML = `<input id="centraleDatum" value="2026-07-15">`;
+        const app: any = {
+            api: { call: jest.fn() },
+            ui: { toonBericht: jest.fn(), setAutoSaveStatus: jest.fn() },
+            metingen: { laadMetingen: jest.fn(), laadActies: jest.fn(), werkVolledigheidBij: jest.fn(),
+                        toonLaatstGewijzigd: jest.fn(), behandelConflict: jest.fn() },
+            taken: { werkBadgeBij: jest.fn() },
+            verbruik: { slaAlgemeenGegevensOp: jest.fn(async () => ({ ok: false, conflict: true })),
+                        laadEnBerekenVerbruik: jest.fn(), laadEnBerekenPeuterbadVerbruik: jest.fn() },
+            state: { huidigeRol: 'waterbeheer', huidigeBadPagina: 'grote-baden', huidigeSubtab: 'verbruik',
+                     huidigeCoordSubtab: 'metingen', huidigePeuterbadSubtab: 'meetwaarden', versies: {} },
+        };
+        await new OpslaanModule(app).verwerkCentraleOpslaan(true);
+        expect(app.metingen.behandelConflict).toHaveBeenCalled();
+        expect(app.ui.setAutoSaveStatus).not.toHaveBeenCalledWith('saved');
     });
 });

@@ -1,7 +1,7 @@
 import { Pool } from 'mysql2/promise';
 import { MetingenRepository } from '../../../backend/repositories/MetingenRepository';
 import { AppError } from '../../../backend/errors';
-import { maakMockPool, resultaat, paramsVan, MockPool } from '../../helpers/mockPool';
+import { maakMockPool, resultaat, sqlVan, paramsVan, MockPool } from '../../helpers/mockPool';
 
 let pool: MockPool;
 let repo: MetingenRepository;
@@ -34,31 +34,45 @@ describe('getBadId', () => {
     });
 });
 
+// Happy-update pad scripten: conditionele UPDATE matcht, daarna leest leesMeta de nieuwe meta.
+function scriptHappyUpdate() {
+    pool.execute
+        .mockResolvedValueOnce([{ affectedRows: 1 }, []])
+        .mockResolvedValueOnce(resultaat([{ versie: 1, auteur: 'Jan', bijgewerkt_op: '2026-05-31T10:00:00' }]));
+}
+
 describe('savePeuterbadMeting', () => {
-    it('zet ontbrekende velden om naar null en gebruikt filter_druk-fallback', async () => {
-        await repo.savePeuterbadMeting(3, { datum: '2026-05-31', bad_naam: 'Peuterbad', ph_waarde: 7.0 });
-        const params = paramsVan(pool.execute);
-        expect(params[0]).toBe(3);
-        expect(params[1]).toBe('2026-05-31');
-        expect(params[2]).toBe(7.0);
-        // chloor_waarde, flow ontbreken → null
-        expect(params[3]).toBeNull();
-        expect(params[4]).toBeNull();
+    it('mapt de meetvelden + auteur + verwachte versie naar de conditionele UPDATE', async () => {
+        scriptHappyUpdate();
+        const res = await repo.savePeuterbadMeting(3, { datum: '2026-05-31', bad_naam: 'Peuterbad', ph_waarde: 7.0 }, 'Jan', 2);
+        expect(res).toEqual({ versie: 1, auteur: 'Jan', bijgewerkt_op: '2026-05-31T10:00:00' });
+
+        expect(sqlVan(pool.execute, 0)).toContain('UPDATE metingen_peuterbad');
+        const p = paramsVan(pool.execute, 0); // [ph, chloor, flow, filter_druk_in, water, chem_chloor, chem_zwavel, auteur, bad_id, datum, verwachteVersie]
+        expect(p[0]).toBe(7.0);
+        expect(p[1]).toBeNull();              // chloor ontbreekt
+        expect(p[2]).toBeNull();              // flow ontbreekt
+        expect(p).toContain('Jan');
+        expect(p[8]).toBe(3);                 // bad_id (sleutel)
+        expect(p[9]).toBe('2026-05-31');      // datum (sleutel)
+        expect(p[10]).toBe(2);                // verwachte versie in WHERE
     });
 
     it('gebruikt filter_druk als filter_druk_in ontbreekt', async () => {
-        await repo.savePeuterbadMeting(3, { datum: '2026-05-31', bad_naam: 'Peuterbad', filter_druk: 0.8 });
-        const params = paramsVan(pool.execute);
-        expect(params[5]).toBe(0.8); // filter_druk ?? filter_druk_in ?? null
+        scriptHappyUpdate();
+        await repo.savePeuterbadMeting(3, { datum: '2026-05-31', bad_naam: 'Peuterbad', filter_druk: 0.8 }, 'Jan', null);
+        expect(paramsVan(pool.execute, 0)[3]).toBe(0.8); // filter_druk ?? filter_druk_in ?? null
     });
 });
 
 describe('saveGrootBadMeting', () => {
-    it('zet alle ontbrekende meetwaarden om naar null', async () => {
-        await repo.saveGrootBadMeting(1, { datum: '2026-05-31', bad_naam: 'Diep' });
-        const params = paramsVan(pool.execute);
-        expect(params[0]).toBe(1);
-        expect(params[1]).toBe('2026-05-31');
-        expect(params.slice(2)).toEqual([null, null, null, null, null, null, null]);
+    it('zet alle ontbrekende meetwaarden om naar null in de UPDATE', async () => {
+        scriptHappyUpdate();
+        await repo.saveGrootBadMeting(1, { datum: '2026-05-31', bad_naam: 'Diep' }, 'Jan', null);
+        expect(sqlVan(pool.execute, 0)).toContain('UPDATE metingen_diep_ondiep');
+        const p = paramsVan(pool.execute, 0);
+        expect(p.slice(0, 7)).toEqual([null, null, null, null, null, null, null]); // de 7 meetvelden
+        expect(p[8]).toBe(1);            // bad_id
+        expect(p[9]).toBe('2026-05-31'); // datum
     });
 });

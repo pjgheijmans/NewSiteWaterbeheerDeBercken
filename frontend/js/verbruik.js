@@ -30,8 +30,13 @@ class VerbruikModule {
                 this.app.api.call(`/api/verbruik/diep-ondiep?datum=${datum}`),
                 this.app.api.call(`/api/verbruik/verwarmingssysteem?datum=${datum}`),
             ]);
-            const data = { ...await verbruikRes.json(), ...await warmteRes.json() };
+            const verbruikData = await verbruikRes.json();
+            const warmteData   = await warmteRes.json();
+            const data = { ...verbruikData, ...warmteData };
             this.app.state.gecachteVerbruik = data;   // voor de volledigheids-markering
+            // Versie-meta per record bewaren (verbruik en verwarming zijn aparte records).
+            this._onthoudVersie('verbruik',   verbruikData);
+            this._onthoudVersie('verwarming', warmteData);
 
             document.getElementById('floculant').value                = data.floculant               || '';
             document.getElementById('water-diep').value               = data.water_diep              || '';
@@ -59,9 +64,19 @@ class VerbruikModule {
     async cacheGroteBadenVerbruik() {
         const datum = document.getElementById('centraleDatum').value;
         try {
-            const res = await this.app.api.call(`/api/verbruik/diep-ondiep?datum=${datum}`);
-            this.app.state.gecachteVerbruik = await res.json();
+            const res  = await this.app.api.call(`/api/verbruik/diep-ondiep?datum=${datum}`);
+            const data = await res.json();
+            this.app.state.gecachteVerbruik = data;
+            this._onthoudVersie('verbruik', data);
         } catch (f) { console.error('Fout bij cachen verbruikstanden:', f); }
+    }
+
+    /** Bewaar de versie/auteur/bijgewerkt_op-meta van een verbruik-/verwarmingsrecord. */
+    _onthoudVersie(sleutel, data) {
+        if (!data) return;   // mislukte JSON-parse: houd de bestaande versie aan
+        this.app.state.versies[sleutel] = {
+            versie: data.versie ?? null, auteur: data.auteur ?? null, bijgewerkt_op: data.bijgewerkt_op ?? null,
+        };
     }
 
     /**
@@ -81,14 +96,15 @@ class VerbruikModule {
     }
 
     /**
-     * Sla verbruik- en verwarmingsgegevens op naar de backend.
-     * Volledigheid wordt niet hier bepaald maar passief getoond via
-     * metingen.werkVolledigheidBij() (zie verbruikOnvolledig).
-     * @returns {Promise<boolean>}
+     * Sla verbruik- en verwarmingsgegevens op naar de backend. Stuurt de verwachte
+     * versie mee (optimistische concurrency) en onthoudt de nieuwe versie bij succes.
+     * @returns {Promise<{ok:boolean, conflict:boolean}>} `conflict` = HTTP 409 (iemand
+     *   anders wijzigde de gegevens); de aanroeper herlaadt dan via behandelConflict.
      */
     async slaAlgemeenGegevensOp() {
         const api   = this.app.api;
         const datum = document.getElementById('centraleDatum').value;
+        const versies = this.app.state.versies;
 
         const verbruikPayload = {
             datum,
@@ -101,6 +117,7 @@ class VerbruikModule {
             gas:                 api.parseNumberValue('gas'),
             chemicalien_chloor:    document.getElementById('chemicalien-chloor').value    || null,
             chemicalien_zwavelzuur:document.getElementById('chemicalien-zwavelzuur').value || null,
+            versie: versies['verbruik']?.versie ?? null,
         };
         const verwarmingsPayload = {
             datum,
@@ -110,6 +127,7 @@ class VerbruikModule {
             verwarming_status_4:         document.getElementById('systeem-status-4').checked,
             verwarming_druk_ok:          document.getElementById('systeem-druk-ok').checked,
             verwarming_visuele_controle: document.getElementById('visuele-inspectie').checked,
+            versie: versies['verwarming']?.versie ?? null,
         };
 
         try {
@@ -117,8 +135,12 @@ class VerbruikModule {
                 api.call('/api/verbruik/diep-ondiep',      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(verbruikPayload) }),
                 api.call('/api/verbruik/verwarmingssysteem',{ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(verwarmingsPayload) }),
             ]);
-            return r1.ok && r2.ok;
-        } catch (f) { console.error('Fout bij opslaan algemene gegevens:', f); return false; }
+            if (r1.status === 409 || r2.status === 409) return { ok: false, conflict: true };
+            if (r1.ok) this._onthoudVersie('verbruik',   await r1.json().catch(() => null));
+            if (r2.ok) this._onthoudVersie('verwarming', await r2.json().catch(() => null));
+            this.app.metingen.toonLaatstGewijzigd();
+            return { ok: r1.ok && r2.ok, conflict: false };
+        } catch (f) { console.error('Fout bij opslaan algemene gegevens:', f); return { ok: false, conflict: false }; }
     }
 
     /** Laad verbruikdeltas (huidig − vorige dag) en vul de berekeningsvelden. */
