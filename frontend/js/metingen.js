@@ -88,7 +88,15 @@ class MetingenModule {
                 await this.laadBezoekers();
                 await this.laadGebondenChloor();
                 this.laadActies(datum);                  // alleen nog de ⚠-veldindicatoren
-                this.app.taken.werkBadgeBij(datum);      // tab-/subtab-badges voor openstaande taken
+                // Taken: badges altijd bijwerken; staat de Taken-subtab van de grote
+                // baden open, dan ook de inhoud (her)laden — anders blijft die bij
+                // datumnavigatie op de vorige dag staan (de peuterbad-Taken-inhoud
+                // wordt via _bouwTabelOp → wisselPeuterbadSubtab al herladen).
+                if (huidigeBadPagina === 'grote-baden' && this.app.state.huidigeSubtab === 'taken') {
+                    this.app.taken.laadBadTaken('grote-baden', datum);   // badges + inhoud
+                } else {
+                    this.app.taken.werkBadgeBij(datum);                  // alleen badges
+                }
                 await this.app.verbruik.laadEnBerekenVerbruik();
                 // Verbruik-standen laden/cachen zodat de volledigheids-markering klopt:
                 // op grote-baden in de DOM (voor de subtab), op peuterbad alleen gecachet
