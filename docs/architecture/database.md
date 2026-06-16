@@ -20,7 +20,10 @@ erDiagram
         int flow
         decimal filter_druk_in
         decimal filter_druk_uit
-        decimal water
+        decimal kathodische_bescherming
+        int versie
+        varchar auteur
+        timestamp bijgewerkt_op
     }
     METINGEN_PEUTERBAD {
         int id PK
@@ -33,6 +36,9 @@ erDiagram
         int water
         int chemicalien_chloor
         int chemicalien_zwavelzuur
+        int versie
+        varchar auteur
+        timestamp bijgewerkt_op
     }
     METINGEN_COORDINATOREN {
         int id PK
@@ -88,6 +94,9 @@ erDiagram
         int gas
         int chemicalien_chloor
         int chemicalien_zwavelzuur
+        int versie
+        varchar auteur
+        timestamp bijgewerkt_op
     }
     VERWARMINGS_SYSTEEM {
         int id PK
@@ -98,6 +107,16 @@ erDiagram
         boolean verwarming_status_4
         boolean verwarming_druk_ok
         boolean verwarming_visuele_controle
+        int versie
+        varchar auteur
+        timestamp bijgewerkt_op
+    }
+    CONFIGURATIE {
+        varchar sleutel PK
+        varchar waarde
+        varchar omschrijving
+        varchar type
+        timestamp bijgewerkt_op
     }
     ACTIES {
         int id PK
@@ -142,9 +161,27 @@ erDiagram
 > De tabel bewaart enkel de afgevinkte taken per dag, uniek op
 > `(taak_sleutel, datum)` — een nieuwe dag = geen rijen = alles weer onafgevinkt.
 
+> Niet getoond (eigen daily-tabellen met dezelfde patronen): `COORDINATOREN_CHECKLIST`
+> en `COORDINATOREN_DAGGEGEVENS` (beide met `auteur`), `ACTIE_TEKSTEN`
+> (`actie_sleutel` PK, bewerkbare sjablonen) en `WATERBEHEER_DIENST` (`datum` PK,
+> `dienst_1`/`dienst_2`).
+
+## Optimistische concurrency & attributie
+
+De waterbeheer meetwaarden/verbruik-tabellen (`metingen_diep_ondiep`,
+`metingen_peuterbad`, `verbruik_diep_ondiep`, `verwarmings_systeem_diep_ondiep`)
+hebben elk `versie` (INT, optimistic-concurrency-token), `auteur` (wie sloeg als
+laatste op) en `bijgewerkt_op` (TIMESTAMP). Opslaan loopt via de gedeelde helper
+`optimistischOpslaan()` (`backend/repositories/optimistisch.ts`): een conditionele
+`UPDATE … WHERE sleutel AND versie = ?` (de rij-lock serialiseert gelijktijdige
+schrijvers); komt de versie niet overeen, dan krijgt de client **409** in plaats
+van een stille overschrijving. De `configuratie`-tabel is een generieke
+sleutel/waarde-store (o.a. `sessie_timeout_minuten`).
+
 ## Toegang
 
 Alle tabellen worden uitsluitend benaderd via de repositories
 (`backend/repositories/`), die de gedeelde `mysql2`-pool uit `db.ts` gebruiken.
-`LIMIETEN` en `GEBRUIKERS` worden bij een verse database voorzien van
-standaardwaarden via `seedDefaults()` (34 limieten, 2 gebruikers).
+`LIMIETEN`, `GEBRUIKERS` en `CONFIGURATIE` worden bij een verse database voorzien
+van standaardwaarden (limieten + 2 gebruikers via `seedDefaults()`; de
+`configuratie`-seed staat in `init.sql`).

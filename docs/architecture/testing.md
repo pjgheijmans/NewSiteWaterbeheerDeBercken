@@ -66,7 +66,14 @@ test/
 ```
 
 De unit-tests draaien volledig zonder database (alle I/O is gemockt), waardoor
-ze snel en CI-vriendelijk zijn.
+ze snel en CI-vriendelijk zijn. Naast de backend-lagen zijn er **frontend
+jsdom-tests** (`test/unit/frontend/`) voor pure helpers én DOM-flows (o.a. de
+auto-save/opslaan-paden, volledigheids-markeringen, de versie-round-trip + 409-
+conflictafhandeling, de sessie-verloop-afhandeling en de configuratie-autosave).
+De vanilla-JS-klassen worden via een door de browser genegeerde
+`module.exports`-guard importeerbaar gemaakt.
 
-> Integratietests (volledige stack tegen een echte MySQL) staan op de roadmap en
-> krijgen een aparte `test:integration`-opzet met een eigen testdatabase.
+> Integratietests (volledige stack tegen een echte MySQL, `jest.integration.config.js`
+> met een eigen `zwembad_status_test`-database) draaien apart via
+> `npm run test:integration`; `npm run test:unit` blijft database-vrij. Richtaantal
+> (indicatief): ~494 unit (incl. frontend jsdom) + integratie.

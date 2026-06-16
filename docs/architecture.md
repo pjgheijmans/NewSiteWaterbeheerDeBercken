@@ -136,17 +136,22 @@ graph LR
         CO4["Logboek"]
     end
 
-    subgraph AD_Tab["Beheerschermen"]
+    subgraph AD_Tab["Beheerschermen (Administrator)"]
         AD1["Limieten\n(richtwaarden + actiedrempels\n+ seizoendatums)"]
+        AD1b["Actie-teksten\n(bewerkbare sjablonen)"]
         AD2["Gebruikersbeheer"]
         AD3["Database Beheer\n(export/import/truncate)"]
-        AD4["Trendanalyse\n(Chart.js)"]
+        AD5["Configuratie\n(o.a. sessie-time-out)"]
     end
 
-    WB --> WB1 & WB2 & WB3
+    WB --> WB1 & WB2 & WB3 & TR["Trendanalyse\n(Chart.js)"]
     CO --> CO1 & CO2 & CO3 & CO4
-    AD --> AD1 & AD2 & AD3 & AD4
+    AD --> AD1 & AD1b & AD2 & AD3 & AD5
 ```
+
+> Rolbeleid: **Trendanalyse** is voorbehouden aan de **Waterbeheerder** (niet de
+> Administrator); **Limieten/Actie-teksten/Configuratie** lezen mag elke ingelogde
+> rol, bewerken is **Administrator**.
 
 De rolcontrole zit in de controllers (`isWaterbeheerder`,
 `isWaterbeheerderOrCoordinator`, `isAdminOrWaterbeheerder` uit

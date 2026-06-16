@@ -156,6 +156,18 @@ classDiagram
 | `DatabaseModule` | CSV-import/-export, truncate, herinitialisatie |
 | `TrendModule` | Chart.js-grafieken voor metingen en verbruik |
 | `LimietenModule` | Limieten laden/renderen/opslaan (auto-save) |
+| `ActieTekstenModule` | Actie-tekstsjablonen laden/renderen/opslaan (auto-save) met live placeholder-preview (Administrator) |
+| `DienstModule` | "Dienst vandaag"-chip: dienstpaar laden/opslaan; vult de ingelogde gebruiker voor |
+| `ConfiguratieModule` | Configuratiescherm: generieke instellingen laden/renderen en per waarde auto-saven (`PUT /api/configuratie/:sleutel`); Administrator |
+
+> **Optimistische concurrency & sessie (toegevoegd):** `OpslaanModule`/`MetingenModule`/
+> `VerbruikModule` houden per record een `versie` bij in `AppState.versies`, sturen die
+> mee bij elke save en tellen door op het antwoord; een **409** roept
+> `MetingenModule.behandelConflict()` aan (melding + herladen). `werkVolledigheidBij()`
+> zet de passieve volledigheids-bolletjes en `toonLaatstGewijzigd()` de "laatst
+> gewijzigd door …"-regel. `ApiClient` stuurt een 401 naar `AuthModule.sessieVerlopen()`
+> (terug naar het loginscherm met uitleg). De kop toont een app-versielabel uit
+> `/api/versie`.
 
 ---
 

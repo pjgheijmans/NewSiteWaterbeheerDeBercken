@@ -158,12 +158,20 @@ classDiagram
 | `taken.ts` | `/api/taken` | `GET /` — samengestelde taken-/actielijst per bad-pagina | waterbeheerder |
 | `coordinatoren.ts` | `/api/coordinatoren` | `GET/POST /`, `DELETE /`, `GET/POST /checklist`, `GET/POST /daggegevens`, `GET/POST /logboek`, `DELETE /logboek/:id` | waterbeheerder of coördinator |
 | `verbruik.ts` | `/api/verbruik` | `GET/POST /diep-ondiep`, `GET /diep-ondiep/vorige`, `GET/POST /verwarmingssysteem` | waterbeheerder |
-| `limieten.ts` | `/api/limieten` | `GET /`, `GET /defaults`, `POST /` | lezen: vrij · schrijven: admin/waterbeheerder |
+| `limieten.ts` | `/api/limieten` | `GET /`, `GET /defaults`, `POST /` | lezen: elke rol · schrijven: **Administrator** |
+| `actieteksten.ts` | `/api/actieteksten` | `GET /`, `GET /defaults`, `POST /` | lezen: elke rol · schrijven: **Administrator** |
+| `dienst.ts` | `/api/dienst` | `GET /`, `GET /waterbeheerders`, `POST /` | lezen: elke rol · schrijven: admin/waterbeheerder |
 | `logboek.ts` | `/api/logboek` | `GET /`, `POST /`, `DELETE /:id` | waterbeheerder |
 | `gebruikers.ts` | `/api/gebruikers` | `GET /`, `POST /`, `PUT /:id`, `DELETE /:id` | admin/waterbeheerder |
 | `database.ts` | `/api/database` | `POST /truncate/:tabel`, `POST /verwijder-alles`, `POST /initialiseer`, `GET /export/:tabel`, `POST /import/:tabel` | admin/waterbeheerder |
 | `trend.ts` | `/api/trend` | `GET /metingen`, `GET /verbruik` | waterbeheerder |
+| `configuratie.ts` | `/api/configuratie` | `GET /`, `PUT /:sleutel` | lezen: elke rol · schrijven: **Administrator** |
+| `versie.ts` | `/api/versie` | `GET /` — `{ versie, commit }` voor het kop-label | ingelogd |
 | `frontend.ts` | `/` | `GET /` — HTML-partials samenvoegen | — |
+
+> `POST /api/metingen` en `POST /api/verbruik/{diep-ondiep,verwarmingssysteem}`
+> nemen een verwachte `versie` mee en geven `{ versie, auteur, bijgewerkt_op }`
+> terug; bij een versieverschil volgt **409** (optimistische concurrency, zie §6).
 
 ---
 
@@ -226,3 +234,13 @@ graph TB
   schakelt foreign-key-checks tijdelijk uit.
 - **`init.sql`** draait bij elke start (`CREATE TABLE IF NOT EXISTS` +
   `INSERT IGNORE`) — idempotent, geen migratietool.
+- **Optimistische concurrency** op de waterbeheer meetwaarden/verbruik-tabellen
+  via `optimistischOpslaan()` (`repositories/optimistisch.ts`): een conditionele
+  `UPDATE … WHERE sleutel AND versie = ?` voorkomt stille "lost updates" — bij een
+  versieverschil volgt `AppError(409)`. De repo's geven de nieuwe `versie`/`auteur`/
+  `bijgewerkt_op` terug; de controller zet `auteur` uit de sessie (`bepaalAuteur`).
+- **Configureerbare, sliding sessie-time-out:** één gedeelde `ConfiguratieService`
+  (in-memory cache) voedt zowel de sessie-middleware — `rolling: true` + een
+  per-request `cookie.maxAge` uit de cache — als de `/api/configuratie`-router, zodat
+  een admin-wijziging direct (zonder herstart) doorwerkt. `ApiClient` stuurt een 401
+  terug naar het loginscherm met uitleg.
