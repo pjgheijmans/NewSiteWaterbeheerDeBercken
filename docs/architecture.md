@@ -144,7 +144,9 @@ graph LR
         AD5["Configuratie\n(o.a. sessie-time-out)"]
     end
 
-    WB --> WB1 & WB2 & WB3 & TR["Trendanalyse\n(Chart.js)"]
+    TR["Trendanalyse\n(Chart.js)"]
+
+    WB --> WB1 & WB2 & WB3 & TR
     CO --> CO1 & CO2 & CO3 & CO4
     AD --> AD1 & AD1b & AD2 & AD3 & AD5
 ```

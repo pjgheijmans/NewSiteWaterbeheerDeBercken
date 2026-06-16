@@ -22,7 +22,7 @@ sequenceDiagram
     FE->>FE: HTML-partials samenvoegen
     FE-->>B: volledige HTML + /js/*.js + /css/style.css
 
-    Note over B: new Application()\napp.auth.start()
+    Note over B: new Application()<br/>app.auth.start()
 
     B->>Auth: GET /api/ingelogd
     alt Niet ingelogd
@@ -59,11 +59,11 @@ sequenceDiagram
         Met->>Svc: MetingenService.getActies(datum)
         Svc->>DB: getActies()
         DB-->>B: acties
-        Note over B: ⚠/✓-veldindicatoren bij de meetwaarden;\nGET /api/taken voor de tab-/subtab-badges
+        Note over B: ⚠/✓-veldindicatoren bij de meetwaarden<br/>GET /api/taken voor de tab-/subtab-badges
     end
 
     B->>Met: GET /api/verbruik/diep-ondiep (+ /vorige)
-    Note over B: app.verbruik.laadEnBerekenVerbruik()\nVerbruik = huidig − vorige
+    Note over B: app.verbruik.laadEnBerekenVerbruik()<br/>Verbruik = huidig − vorige
 ```
 
 ---
@@ -96,16 +96,16 @@ sequenceDiagram
     Repo->>DB: INSERT/DELETE acties (chloor_bestellen / zwavelzuur / floculant)
 
     Note over WB,Svc: Trigger via bezoekers (coördinator-daggegevens)
-    Note over Svc: CoordinatorenService.saveDaggegevens()\n→ genereerBezoekers() + genereerSpoelbeurt() (fire-and-forget)
+    Note over Svc: CoordinatorenService.saveDaggegevens()<br/>→ genereerBezoekers() + genereerSpoelbeurt() (fire-and-forget)
 
     Note over WB,FE: Taken weergeven (per bad)
     WB->>FE: Taken-subtab openen
     FE->>Ctrl: GET /api/taken?datum=...
     Ctrl->>Svc: TakenService.getTaken(datum)
     Svc->>Repo: getRondetaken() + getActies()
-    Note over Svc: filter_spoelen_* vouwen samen op de filtertaak;\noverige acties → losse rijen; must = alarm of kritiek
+    Note over Svc: filter_spoelen_* vouwen samen op de filtertaak<br/>overige acties → losse rijen — must = alarm of kritiek
     Repo-->>FE: TaakItem[]
-    FE-->>WB: secties "Verplicht vandaag" / "Overige taken"\n+ ⚠-badges op tabs/subtabs
+    FE-->>WB: secties "Verplicht vandaag" / "Overige taken"<br/>+ ⚠-badges op tabs/subtabs
 
     Note over WB,Svc: Afvinken / heropenen
     WB->>FE: Checkbox aan/uit
@@ -136,7 +136,7 @@ sequenceDiagram
 
     U->>DOM: Waarde invoeren
     DOM->>Save: input/change (bubble naar sectie-dagstaat)
-    Save->>Save: setAutoSaveStatus('pending')\nclearTimeout + setTimeout(1200ms)
+    Save->>Save: setAutoSaveStatus('pending')<br/>clearTimeout + setTimeout(1200ms)
     Note over Save: debounce — reset bij elke toetsaanslag
 
     Save->>Save: timer → 'saving' → verwerkCentraleOpslaan(true)
@@ -156,7 +156,7 @@ sequenceDiagram
 
     alt geen conflict
         Svc-->>Save: 200 { versie, auteur, bijgewerkt_op }
-        Save->>Save: versie onthouden; setAutoSaveStatus('saved')\n+ 'laatst gewijzigd' / volledigheids-bolletjes bijwerken
+        Save->>Save: versie onthouden, setAutoSaveStatus('saved')<br/>'laatst gewijzigd' / volledigheids-bolletjes bijwerken
     else versieconflict (iemand anders wijzigde de gegevens)
         Svc-->>Save: 409
         Save->>Save: behandelConflict() — melding + laadMetingen() (herladen)
