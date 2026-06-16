@@ -142,18 +142,23 @@ sequenceDiagram
     Save->>Save: timer → 'saving' → verwerkCentraleOpslaan(true)
 
     alt Waterbeheer — meetwaarden
-        Save->>Ctrl: POST /api/metingen [Diep + Ondiep]
-        Ctrl->>Svc: MetingenService.saveMeting()
-        Svc->>DB: save + genereer acties
+        Save->>Ctrl: POST /api/metingen [Diep + Ondiep] (incl. verwachte versie)
+        Ctrl->>Svc: MetingenService.saveMeting(body, auteur)
+        Svc->>DB: optimistischOpslaan (UPDATE WHERE versie=?) + genereer acties
         Save->>Ctrl: GET /api/acties (veldindicatoren) + GET /api/taken (badges)
     else Waterbeheer — verbruik/verwarming
-        Save->>Ctrl: POST /api/verbruik/diep-ondiep (+ /verwarmingssysteem)
+        Save->>Ctrl: POST /api/verbruik/diep-ondiep (+ /verwarmingssysteem) (incl. versie)
         Ctrl->>Svc: VerbruikService.saveVerbruik() / saveVerwarming()
     else Coördinator — blok / checklist / daggegevens
         Save->>Ctrl: POST /api/coordinatoren[/checklist|/daggegevens]
         Ctrl->>Svc: CoordinatorenService.save...()
     end
 
-    Svc-->>Save: { status: 'success' }
-    Save->>Save: setAutoSaveStatus('saved')\nsetTimeout(4000ms) → leegmaken
+    alt geen conflict
+        Svc-->>Save: 200 { versie, auteur, bijgewerkt_op }
+        Save->>Save: versie onthouden; setAutoSaveStatus('saved')\n+ 'laatst gewijzigd' / volledigheids-bolletjes bijwerken
+    else versieconflict (iemand anders wijzigde de gegevens)
+        Svc-->>Save: 409
+        Save->>Save: behandelConflict() — melding + laadMetingen() (herladen)
+    end
 ```

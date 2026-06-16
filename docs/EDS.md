@@ -1,16 +1,16 @@
 # Element Design Specification (EDS)
 
-**Document ID:** EDS-DDZ-0.2
+**Document ID:** EDS-DDZ-0.3
 **Element:** Digitale Dagstaat Zwembad — full web application
-**Version:** 0.2
+**Version:** 0.3
 **Status:** DRAFT
-**Date:** 2026-06-11
+**Date:** 2026-06-16
 **Author:** P. Heijmans
 **Approver:**
-**Parent EPS:** EPS-DDZ-0.3
+**Parent EPS:** EPS-DDZ-0.4
 
 > This EDS records *how* the application is designed to satisfy the requirements in
-> EPS-DDZ-0.3. It is descriptive of the current implementation (not aspirational):
+> EPS-DDZ-0.4. It is descriptive of the current implementation (not aspirational):
 > where the design has known gaps relative to the EPS, they are recorded as design
 > decisions and risks rather than hidden. Requirement IDs referenced here (AUTH-,
 > GEN-, WB-, CO-, ACT-, LIM-, ADM-, TRD-) are defined in the parent EPS.
@@ -23,6 +23,7 @@
 |-------|----------|-----------|-------------|
 |0.1    |2026-06-03|P. Heijmans|Initial design specification|
 |0.2    |2026-06-11|P. Heijmans|New domains actieteksten + dienst (repo/service/controller/route + modules); kathodische_bescherming column; auteur on checklist/daggegevens; 3-category Taken; toast + confirm/alert modal; idempotent plain-`ALTER` migrations for MySQL 8|
+|0.3    |2026-06-16|P. Heijmans|Generic `configuratie` store + Configuratie domain/screen (DD-019); configurable sliding session time-out (DD-005 revised) with live config + global 401→login UX; optimistic concurrency on waterbeheer meetwaarden/verbruik via shared `optimistischOpslaan` helper (DD-020); passive completeness indicators + version label (DD-021); `/api/versie` endpoint; added §5.5 sequence diagrams|
 
 -----
 
@@ -64,7 +65,7 @@ spoelbeurt, etc.).
 
 |ID|Title|Version|
 |--|-----|-------|
-|EPS-DDZ|Element Performance Specification|0.2|
+|EPS-DDZ|Element Performance Specification|0.4|
 |—|`docs/architecture.md` + `docs/architecture/{backend,frontend,flows,database,testing}.md`|current|
 |—|`CLAUDE.md` — project conventions|current|
 |—|`init.sql` — authoritative schema|current|
@@ -97,7 +98,7 @@ spoelbeurt, etc.).
 |DD-002|Upper layers depend on interfaces; concretes wired only in route factory; ISP via `IDaggegevensProvider`|§3, §7|
 |DD-003|Frontend is vanilla ES6 classes, no bundler/build step|§3, §6|
 |DD-004|Single `Application` container + minimal `window.*` globals for `onclick`|§6|
-|DD-005|Session-based authentication (`express-session`, 2-hour cookie)|§5.2|
+|DD-005|Session-based authentication (`express-session`); sliding/idle `rolling` cookie whose max-age comes from the live configuration (default 5 min)|§5.2|
 |DD-006|MySQL with idempotent `init.sql` at startup; no migration tool|§7.3|
 |DD-007|Runtime validation with Zod via `valideerBody` middleware|§7.4|
 |DD-008|Central `errorHandler` + `AppError(message, status)`|§7.5|
@@ -111,6 +112,9 @@ spoelbeurt, etc.).
 |DD-016|Combined chlorine and consumption deltas are derived, not stored|§5.4|
 |DD-017|Session secret required in production (`SESSION_SECRET`); fail fast if unset, dev/test fallback only|§5.2, §8.2|
 |DD-018|Password hashing with Node's built-in scrypt (no external dependency); legacy plaintext upgraded on login + startup migration|§5.2, §7.2|
+|DD-019|Generic `configuratie` key/value table + a single shared `ConfiguratieService` (in-memory cache) feeding both the session middleware and the admin router|§3.1, §5.2, §7.3|
+|DD-020|Optimistic concurrency on the waterbeheer meetwaarden/verbruik tables via a shared `optimistischOpslaan()` helper (conditional UPDATE on `versie`, `AppError(409)` on mismatch); `auteur`/`bijgewerkt_op` for attribution|§3.1, §5.4, §7.3|
+|DD-021|Passive completeness indicators (subtab/page-tab dot) replace the post-save warning; app-version label from `/api/versie`; global 401 handler returns the UI to the login screen|§4.2, §5.1, §6.2|
 
 ### 2.3 Architecture Overview
 
@@ -166,7 +170,7 @@ graph LR
 |DD-002|Depend on interfaces; wire concretes in route factory; ISP|Each layer mockable; minimal coupling (`IDaggegevensProvider`)|Concrete deps; service locator|Extra interface files|
 |DD-003|Vanilla ES6 frontend, no bundler|Runs behind any static server/proxy; no build pipeline; low complexity for solo dev|React/Vue + Vite|No components/JSX; manual DOM; no tree-shaking|
 |DD-004|`Application` container + few `window.*` globals|Single wiring point; inline `onclick` handlers still work|Full module system; event delegation only|Globals are a small surface to manage|
-|DD-005|Session auth, 2 h cookie|Simple, server-controlled; fits internal tool|JWT; OAuth|Server holds session state (fine at this scale)|
+|DD-005|Session auth; sliding/idle `rolling` cookie, max-age from live config (default 5 min)|Simple, server-controlled; idle-out limits unattended access; tunable without restart|JWT; OAuth; fixed absolute lifetime|Server holds session state (fine at this scale); short idle-out needs graceful 401 handling (DD-021)|
 |DD-006|Idempotent `init.sql` at startup (plain `ALTER … ADD/DROP COLUMN`, errors swallowed per statement)|Zero-friction schema bootstrap; no migration tooling to maintain; works on MySQL 8 (no MariaDB-only `IF NOT EXISTS`)|Knex/Prisma migrations|No ordered migration history; harmless `Duplicate column` warnings when already applied|
 |DD-007|Zod `valideerBody`; `looseObject` for measurement domains|Runtime safety at the edge; lenient where the UI mixes strings/numbers|Manual checks; strict schemas everywhere|`looseObject` lets unknown fields through by design|
 |DD-008|`AppError` + central `errorHandler`|Consistent error→status mapping; logs only 5xx|Per-handler try/catch responses|Must remember to `next(err)`/throw|
@@ -180,6 +184,9 @@ graph LR
 |DD-016|Combined chlorine & deltas derived|Single source of truth; no stored duplication to keep consistent|Persist computed columns|Recomputed on read|
 |DD-017|Require `SESSION_SECRET` in production via `bepaalSessionSecret()` (fail fast under `NODE_ENV=production`); dev/test use a labelled fallback|No insecure default reaches production; dev/tests keep working without config|Always require (breaks dev); keep insecure default (rejected)|Relies on `NODE_ENV=production` being set in the deployment|
 |DD-018|Hash passwords with Node's built-in `crypto.scrypt` (format `scrypt$N$salt$hash`); verify supports legacy plaintext; upgrade on login + a startup migration|Zero new dependency (works on Alpine; avoids the container `node_modules` gotcha); secure KDF; smooth migration of existing rows|bcrypt/argon2 (native build on Alpine); accept plaintext (rejected)|Hand-rolled format string; scrypt cost fixed at N=16384|
+|DD-019|Generic `configuratie` (sleutel/waarde/type) + one shared `ConfiguratieService` with an in-memory cache; the same instance feeds the session middleware (per-request max-age) and the `/api/configuratie` router|Add settings without schema changes; no DB hit per request; admin edits take effect immediately (same cache)|Per-setting columns/endpoints; env-only config (needs restart)|Service instance shared, not pool-injected like other domains (documented exception)|
+|DD-020|Optimistic concurrency via `optimistischOpslaan()`: conditional `UPDATE … WHERE key AND versie = ?` (row-lock serialises writers), new-record/conflict/duplicate-insert handling, `AppError(409)` on mismatch; client round-trips `versie`|Turns silent lost-updates into a visible, recoverable conflict; cheap; reuses the layered pattern|Pessimistic locks; CRDT/real-time merge; field-level PATCH|Conflict reload discards the user's just-typed value (accepted; autosave makes the window tiny)|
+|DD-021|Passive completeness dot (subtab/page-tab) instead of a post-save warning; `/api/versie` header label; global 401 → login screen with explanation|Less nagging; clearer "what's incomplete"; short idle-out needs a graceful re-login path; version aids support|Keep transient warning; per-tab modal on expiry|Extra client state (per-record version + completeness)|
 
 ### 3.2 Decision Narratives (selected)
 
@@ -258,9 +265,12 @@ domain.
 - **Reusable patterns (CSS classes, not components):** `categorie-box` (card),
   `categorie-tabel` (data table), `subtab-nav` / `subtab-btn`, `btn-centraal-opslaan`
   (primary), `btn-wissen-gevaar` (destructive), `actie-indicator` (⚠/✓ field marker),
+  `tab-actie-indicator` (⚠ tab badge), `tab-onvolledig-indicator` (subdued ● "fields
+  incomplete" dot, DD-021), `laatst-gewijzigd` ("last edited by …" line, DD-020),
   `status-melding` (toast), autosave-status text.
-- **Status colours:** pending `#888`, saving `#fd7e14`, saved `#28a745`, warning
-  `#fd7e14`, error `#dc3545`.
+- **Status colours:** pending `#888`, saving `#fd7e14`, saved `#28a745`, error
+  `#dc3545`. (The former post-save "warning" status is replaced by the passive
+  completeness dot, DD-021.)
 - **Typography/spacing:** browser-default sans stack; spacing via the stylesheet.
 
 ### 4.3 Screen Designs
@@ -285,9 +295,11 @@ Header shows the logged-in user's name with role abbreviation, e.g. `Paul (WB)`,
 as a clickable **menu** (currently: Uitloggen). When several users share a first
 name the display name is made unique with the surname initial (`Paul H`), or the
 full surname if that initial also collides (`Paul Heijmans` vs `Paul Hermans`),
-computed once at login in `AuthService` (`weergavenaam`). Role nav: Waterbeheer ·
-Coördinatoren · Limieten · Actie-teksten · Gebruikers Beheer · Database Beheer ·
-Trendanalyse (shown per role). A central date picker drives all dagstaat data.
+computed once at login in `AuthService` (`weergavenaam`). A small **app-version
+label** (`v… (commit)`, from `/api/versie`) sits next to the title. Role nav:
+Waterbeheer · Coördinatoren · Limieten · Actie-teksten · Gebruikers Beheer ·
+Database Beheer · Configuratie · Trendanalyse (shown per role). A central date
+picker drives all dagstaat data.
 
 ```
 ┌──────────────────────────────────────────────────────────┐
@@ -310,7 +322,9 @@ chip under the date selector records the two-person duty (WB-009).
 - **Verwarmingssysteem:** status/inspection checkboxes.
 - **Bezoekers:** today's count and cumulative-since-backwash (from coordinator data).
 Action `⚠`/`✓` markers attach to the relevant inputs; a ⚠ badge appears on the
-page tab and the Taken subtab when must-do tasks are open.
+page tab, the Taken subtab and the subtab that holds a field with an open action.
+A subdued ● dot marks a subtab/page tab whose fields are still incomplete (DD-021),
+and a "Laatst gewijzigd door … om …" line shows who last saved (DD-020).
 
 #### Waterbeheer → Peuterbad (UI-003)
 Subtabs Meetwaarden (pH, chloor, filterdruk, flow), Verbruik (water, chemicals
@@ -367,6 +381,11 @@ with full delete and recreate-with-defaults (double confirmation, logout after).
 #### Trendanalyse (UI-013)
 From/To date pickers; tabs Meetwaarden / Verbruik; grids of Chart.js canvases per
 parameter for both bath groups.
+
+#### Configuratie (UI-014)
+Administrator-only table of generic settings (label + value input per row), e.g.
+the session idle time-out in minutes. Autosave per value; the backend validates
+(e.g. 1–1440) and changes apply without a restart (DD-019).
 
 ### 4.4 Routing Approach
 
@@ -430,7 +449,14 @@ best-effort (EPS §5.4). No dedicated breakpoints are formally specified.
 |`gebruikers.ts`|`/api/gebruikers`|`GET /`, `POST /`, `PUT /:id`, `DELETE /:id`|admin/waterbeheerder|
 |`database.ts`|`/api/database`|`POST /truncate/:tabel`, `POST /verwijder-alles`, `POST /initialiseer`, `GET /export/:tabel`, `POST /import/:tabel`|admin/waterbeheerder|
 |`trend.ts`|`/api/trend`|`GET /metingen`, `GET /verbruik`|waterbeheerder|
+|`configuratie.ts`|`/api/configuratie`|`GET /`, `PUT /:sleutel`|read: authenticated · write: **Administrator only**|
+|`versie.ts`|`/api/versie`|`GET /` — `{ versie, commit }` for the header label|authenticated (public, non-sensitive)|
 |`frontend.ts`|`/`|`GET /` — assemble HTML partials|—|
+
+> **Concurrency on saves.** `POST /api/metingen` and `POST /api/verbruik/{diep-ondiep,verwarmingssysteem}`
+> accept an expected `versie` and return the new `{ versie, auteur, bijgewerkt_op }`;
+> a version mismatch yields **409** (DD-020). GETs for those records include the
+> same meta so the client can round-trip the version and show "last edited by".
 
 > **Role policy (EPS R-006, resolved 2026-06-03).** Trend (`/api/trend/*`) is
 > **Waterbeheerder only** (strict `isWaterbeheerder`; Administrators and Coördinators
@@ -443,10 +469,17 @@ best-effort (EPS §5.4). No dedicated breakpoints are formally specified.
 ### 5.2 Authentication & Session Model
 
 - **Mechanism:** `express-session` with `secret = bepaalSessionSecret()`
-  (`backend/config.ts`), `resave: false`, `saveUninitialized: false`, cookie
-  `maxAge = 2 h`. `bepaalSessionSecret` returns `SESSION_SECRET` if set; under
-  `NODE_ENV=production` it **throws if unset** (fail fast, no insecure default);
+  (`backend/config.ts`), `resave: false`, `saveUninitialized: false`, and a
+  **sliding/idle** cookie: `rolling: true` re-issues the cookie on every response,
+  and a small middleware after `session()` sets `req.session.cookie.maxAge` from the
+  live `ConfiguratieService.getSessieTimeoutMs()` (default 5 min, key
+  `sessie_timeout_minuten`). So the time-out resets on activity and is changeable
+  without a restart (DD-019). `bepaalSessionSecret` returns `SESSION_SECRET` if set;
+  under `NODE_ENV=production` it **throws if unset** (fail fast, no insecure default);
   in dev/test it falls back to a labelled value. (R-003 resolved.)
+- **Expiry UX:** `ApiClient` treats a 401 (other than the login call) as an expired
+  session and returns the UI to the login screen with a persistent
+  "session expired due to inactivity" message (AUTH-007 / DD-021).
 - **Login:** `POST /api/login` validates `{username, password}` (Zod), looks up the
   user, and stores `req.session.gebruiker` (typed via a `declare module
   'express-session'` augmentation in `backend/types/index.ts`).
@@ -501,6 +534,213 @@ declare module 'express-session' {
 today − previous day (computed in `VerbruikModule`). Decimal input is normalised
 comma→point client-side before sending.
 
+### 5.5 Sequence diagrams
+
+The diagrams below describe the currently implemented day-to-day flows in the
+client/server code. They focus on login, autosave, conflict handling, action
+triggering, and the Waterbeheer pages that users operate most.
+
+#### 5.5.1 Login and role activation
+
+```mermaid
+sequenceDiagram
+    participant U as <<Actor>><br/>User
+    participant C as <<Frontend>><br/>AuthModule
+    participant A as <<Frontend>><br/>ApiClient
+    participant S as <<Backend>><br/>Express /api/login
+    participant SR as <<Backend>><br/>AuthService
+    participant R as <<Backend>><br/>GebruikersRepository
+    participant SS as <<Backend>><br/>Session store
+    participant UI as <<Frontend>><br/>Dashboard
+
+    U->>C: submit username + password
+    C->>A: POST /api/login
+    A->>S: fetch(..., credentials: include)
+    S->>SR: login(username, password)
+    SR->>R: findByLogin(username, password)
+    R-->>SR: gebruiker + hash verification result
+    SR-->>S: gebruiker (with display name)
+    S->>SS: req.session.gebruiker = gebruiker
+    S-->>A: 200 { gebruiker }
+    A-->>C: response
+    C->>UI: activate dashboard + role view
+```
+
+#### 5.5.2 Waterbeheer autosave on the measurement page
+
+```mermaid
+sequenceDiagram
+    participant U as <<Actor>><br/>User
+    participant F as <<Frontend>><br/>Browser input
+    participant O as <<Frontend>><br/>OpslaanModule
+    participant A as <<Frontend>><br/>ApiClient
+    participant S as <<Backend>><br/>POST /api/metingen
+    participant MS as <<Backend>><br/>MetingenService
+    participant MR as <<Backend>><br/>MetingenRepository
+    participant AR as <<Backend>><br/>ActiesRepository
+    participant UI as <<Frontend>><br/>Waterbeheer UI
+
+    U->>F: change a field (for example pH or flow)
+    F->>O: input/change event
+    O->>O: scheduleAutoSave (1.2 s debounce)
+    O-->>O: wait for debounce
+    O->>A: POST /api/metingen with current values + versie
+    A->>S: fetch(...)
+    S->>MS: saveMeting(body, auteur)
+    MS->>MR: saveGrootBadMeting / savePeuterbadMeting
+    MR-->>MS: new version metadata
+    MS->>AR: genereer(...)
+    AR-->>MS: action rows updated (fire-and-forget)
+    MS-->>S: { versie, auteur, bijgewerkt_op }
+    S-->>A: 200
+    A-->>O: response
+    O->>UI: update status to saved
+    O->>UI: refresh action markers / badges / completeness dots
+```
+
+#### 5.5.3 Waterbeheer verbruik/verwarming save path
+
+```mermaid
+sequenceDiagram
+    participant U as <<Actor>><br/>User
+    participant F as <<Frontend>><br/>Verbruik form
+    participant V as <<Frontend>><br/>VerbruikModule
+    participant A as <<Frontend>><br/>ApiClient
+    participant S1 as <<Backend>><br/>POST /api/verbruik/diep-ondiep
+    participant S2 as <<Backend>><br/>POST /api/verbruik/verwarmingssysteem
+    participant VS as <<Backend>><br/>VerbruikService
+    participant VR as <<Backend>><br/>VerbruikRepository
+    participant AR as <<Backend>><br/>ActiesRepository
+    participant UI as <<Frontend>><br/>Waterbeheer page
+
+    U->>F: edit water, gas, heating or chemical fields
+    F->>V: save action
+    V->>A: POST both verbruik records
+    A->>S1: save verbruik
+    A->>S2: save heating status
+    S1->>VS: saveVerbruik(body, auteur)
+    VS->>VR: saveVerbruik(...)
+    VR-->>VS: new version metadata
+    VS->>AR: genereerVerbruik(datum, body)
+    AR-->>VS: action rows refreshed
+    S2->>VS: saveVerwarming(body, auteur)
+    VS->>VR: saveVerwarming(...)
+    VR-->>VS: new version metadata
+    VS-->>S1: response
+    VS-->>S2: response
+    A-->>V: both responses
+    V->>UI: refresh consumption deltas and last-edited text
+```
+
+#### 5.5.4 Concurrent edit conflict on the same Waterbeheer page
+
+```mermaid
+sequenceDiagram
+    participant U1 as <<Actor>><br/>User A
+    participant U2 as <<Actor>><br/>User B
+    participant F1 as <<Frontend>><br/>Browser A
+    participant F2 as <<Frontend>><br/>Browser B
+    participant A as <<Frontend>><br/>ApiClient
+    participant S as <<Backend>><br/>POST /api/metingen or /api/verbruik
+    participant R as <<Backend>><br/>optimistischOpslaan()
+    participant DB as <<Database>><br/>MySQL row
+
+    U1->>F1: edit value on page
+    U1->>A: autosave with expectedVersie = N
+    Note over A,S: N is the numeric `versie` column from the last successful load.<br/>It is stored in `app.state.versies[...]` and is used only for the optimistic check.<br/>The human-readable `auteur` and `bijgewerkt_op` values are returned separately for display.
+    A->>S: save request
+    S->>R: UPDATE ... WHERE versie = N
+    R->>DB: read current row version and payload
+    R->>DB: UPDATE SET ... WHERE versie = N
+
+    alt row version still matches N
+        DB-->>R: update succeeded, new versie = N+1
+        R-->>S: 200 with new version metadata
+        S-->>A: 200
+        A-->>F1: success
+    else row version no longer matches N
+        DB-->>R: 0 rows updated (someone else changed it)
+        R-->>S: AppError(409, "Iemand anders heeft deze gegevens ondertussen gewijzigd.")
+        S-->>A: 409
+        A-->>F1: 409
+        F1->>F1: show conflict toast and reload current values
+    end
+
+    U2->>F2: edit same record at nearly the same time
+    U2->>A: autosave with expectedVersie = N
+    Note over A,S: N is still the same numeric version number from the page's cached metadata.<br/>The name and timestamp shown to the user come from the returned `auteur` and `bijgewerkt_op` fields, not from N.
+    A->>S: save request
+    S->>R: UPDATE ... WHERE versie = N
+    R->>DB: read current row version and payload
+    R->>DB: UPDATE SET ... WHERE versie = N
+
+    alt row version still matches N
+        DB-->>R: update succeeded, new versie = N+1
+        R-->>S: 200 with new version metadata
+        S-->>A: 200
+        A-->>F2: success
+    else row version no longer matches N
+        DB-->>R: 0 rows updated (someone else changed it)
+        R-->>S: AppError(409, "Iemand anders heeft deze gegevens ondertussen gewijzigd.")
+        S-->>A: 409
+        A-->>F2: 409
+        F2->>F2: show conflict toast and reload current values
+    end
+```
+
+#### 5.5.5 Threshold breach generates an action and marks the page
+
+```mermaid
+sequenceDiagram
+    participant U as <<Actor>><br/>User
+    participant O as <<Frontend>><br/>OpslaanModule
+    participant A as <<Frontend>><br/>ApiClient
+    participant S as <<Backend>><br/>POST /api/metingen or /api/verbruik
+    participant MS as <<Backend>><br/>MetingenService / VerbruikService
+    participant AR as <<Backend>><br/>ActiesRepository
+    participant DB as <<Database>><br/>acties table
+    participant UI as <<Frontend>><br/>Field markers + badges
+
+    U->>O: save a value that crosses a threshold
+    O->>A: POST updated data
+    A->>S: save request
+    S->>MS: saveMeting / saveVerbruik
+    MS->>AR: genereer(...)
+    AR->>DB: upsert or update action rows
+    AR-->>MS: done
+    MS-->>S: save result
+    S-->>A: 200
+    A-->>O: response
+    O->>UI: refresh action indicators and task badges
+    UI-->>U: open action becomes visible on the relevant field and tab
+```
+
+#### 5.5.6 Resolving a filter action from the Taken page
+
+```mermaid
+sequenceDiagram
+    participant U as <<Actor>><br/>Waterbeheerder
+    participant T as <<Frontend>><br/>TakenModule
+    participant A as <<Frontend>><br/>ApiClient
+    participant S as <<Backend>><br/>POST /api/rondetaken/:sleutel/voltooi
+    participant RS as <<Backend>><br/>RondetakenService
+    participant AR as <<Backend>><br/>ActiesRepository
+    participant DB as <<Database>><br/>rondetaken_voltooid + acties
+    participant UI as <<Frontend>><br/>Taken / action view
+
+    U->>T: tick a filter or task item as done
+    T->>A: POST /api/rondetaken/:sleutel/voltooi
+    A->>S: request
+    S->>RS: voltooi(...)
+    RS->>AR: resolveFilterSpoelen(...)
+    AR->>DB: mark task complete and resolve related filter actions
+    AR-->>RS: done
+    RS-->>S: success
+    S-->>A: 200
+    A-->>T: response
+    T->>UI: refresh task list and action badges
+```
+
 -----
 
 ## 6. Client-side Architecture
@@ -520,7 +760,8 @@ comma→point client-side before sending.
 ```
 frontend/
 ├── partials/        # HTML fragments assembled by FrontendController
-│   ├── head, nav, dagstaat, limieten, gebruikers, database, trendanalyse, login, footer
+│   ├── head, nav, dagstaat, limieten, actieteksten, gebruikers, database,
+│   ├── configuratie, trendanalyse, login, footer
 ├── css/style.css
 └── js/              # ES6 class modules, loaded sequentially
     ├── state.js     (AppState)        ├── api.js      (ApiClient)
@@ -571,6 +812,14 @@ graph TB
 |`LimietenModule`|Load/render/save limits (autosave); date conversions; `_normaliseer`|
 |`ActieTekstenModule`|Load/render/save the action-text templates (autosave) with a live placeholder preview (Administrator)|
 |`DienstModule`|Waterbeheer-dienst chip: load/save the duty pair (datalist of water managers + free text); pre-fills the logged-in user|
+|`ConfiguratieModule`|Configuratie screen: load/render the generic settings and autosave each value (`PUT /api/configuratie/:sleutel`); Administrator-only|
+
+Cross-cutting client behaviour added in 0.3: `OpslaanModule`/`MetingenModule`/
+`VerbruikModule` track a per-record `versie` in `AppState.versies`, send it on each
+save and update it from the response; a **409** triggers `MetingenModule.behandelConflict()`
+(reload + explain). `MetingenModule.werkVolledigheidBij()` sets the passive
+completeness dots and `toonLaatstGewijzigd()` the "last edited by" line; `ApiClient`
+routes a 401 to `AuthModule.sessieVerlopen()` (back to login).
 
 ### 6.3 Data Fetching Strategy
 
@@ -642,7 +891,7 @@ graph TB
 |Access|Repositories only, via shared pool|Single SQL boundary|
 |Query style|Hand-written SQL (`mysql2`), no ORM|Simplicity, control|
 |Schema management|`init.sql` run at startup; `CREATE TABLE IF NOT EXISTS` + `INSERT IGNORE` + plain `ALTER … ADD/DROP COLUMN` (errors per statement swallowed, MySQL-8-safe)|DD-006 (no migration tool)|
-|Write pattern|Upsert keyed by date / (bad,datum) / (bad,datum,actie_type)|Idempotent daily records|
+|Write pattern|Upsert keyed by date / (bad,datum) / (bad,datum,actie_type). Waterbeheer meetwaarden/verbruik use a version-checked upsert (`optimistischOpslaan`, DD-020) for conflict detection|Idempotent daily records; no silent lost updates|
 |Seeding|`seedAllDefaults()` seeds 35 limieten + 2 users on a fresh DB (`actie_teksten`/`waterbeheer_dienst` survive a reset via `init.sql`)|First-run usability|
 
 Entity-relationship (key tables):
@@ -654,18 +903,19 @@ erDiagram
     BADEN ||--o{ METINGEN_COORDINATOREN : heeft
     BADEN ||--o{ ACTIES : heeft
     BADEN { int id PK  varchar naam }
-    METINGEN_DIEP_ONDIEP { int id PK  int bad_id FK  date datum  decimal ph_waarde  decimal chloor_waarde  decimal temperatuur  int flow  decimal filter_druk_in  decimal filter_druk_uit  decimal kathodische_bescherming }
-    METINGEN_PEUTERBAD { int id PK  int bad_id FK  date datum  decimal ph_waarde  decimal chloor_waarde  int flow  decimal filter_druk_in  int water  int chemicalien_chloor  int chemicalien_zwavelzuur }
+    METINGEN_DIEP_ONDIEP { int id PK  int bad_id FK  date datum  decimal ph_waarde  decimal chloor_waarde  decimal temperatuur  int flow  decimal filter_druk_in  decimal filter_druk_uit  decimal kathodische_bescherming  int versie  varchar auteur  timestamp bijgewerkt_op }
+    METINGEN_PEUTERBAD { int id PK  int bad_id FK  date datum  decimal ph_waarde  decimal chloor_waarde  int flow  decimal filter_druk_in  int water  int chemicalien_chloor  int chemicalien_zwavelzuur  int versie  varchar auteur  timestamp bijgewerkt_op }
     METINGEN_COORDINATOREN { int id PK  int bad_id FK  date datum  time tijdstip  varchar auteur  decimal ph_waarde  decimal chloor_vrij  decimal chloor_totaal  decimal watertemperatuur  varchar helderheid  tinyint bad_gebruikt }
     COORDINATOREN_CHECKLIST { int id PK  date datum  tinyint proef_waterspeel  tinyint proef_spraypark  tinyint proef_douches  tinyint proef_glijbaan  varchar auteur }
     COORDINATOREN_DAGGEGEVENS { int id PK  date datum  decimal lucht_temperatuur  int bezoekers_vandaag  int bezoekers_totaal_spoelbeurt  varchar auteur }
-    VERBRUIK_DIEP_ONDIEP { int id PK  date datum  int floculant  int water_diep  int water_ondiep  int water_totaal  int elektriciteit_nacht  int elektriciteit_dag  int gas  int chemicalien_chloor  int chemicalien_zwavelzuur }
-    VERWARMINGS_SYSTEEM { int id PK  date datum  bool verwarming_status_1  bool verwarming_status_2  bool verwarming_status_3  bool verwarming_status_4  bool verwarming_druk_ok  bool verwarming_visuele_controle }
+    VERBRUIK_DIEP_ONDIEP { int id PK  date datum  int floculant  int water_diep  int water_ondiep  int water_totaal  int elektriciteit_nacht  int elektriciteit_dag  int gas  int chemicalien_chloor  int chemicalien_zwavelzuur  int versie  varchar auteur  timestamp bijgewerkt_op }
+    VERWARMINGS_SYSTEEM { int id PK  date datum  bool verwarming_status_1  bool verwarming_status_2  bool verwarming_status_3  bool verwarming_status_4  bool verwarming_druk_ok  bool verwarming_visuele_controle  int versie  varchar auteur  timestamp bijgewerkt_op }
     ACTIES { int id PK  int bad_id FK  date datum  varchar beschrijving  varchar actie_type  bool opgelost  datetime opgelost_op  varchar opgelost_door }
     RONDETAKEN_VOLTOOID { int id PK  varchar taak_sleutel  date datum  datetime voltooid_op  varchar voltooid_door }
     LIMIETEN { int id PK  varchar parameter_naam  decimal min_waarde  decimal max_waarde }
     ACTIE_TEKSTEN { varchar actie_sleutel PK  varchar sjabloon  varchar omschrijving }
     WATERBEHEER_DIENST { date datum PK  varchar dienst_1  varchar dienst_2 }
+    CONFIGURATIE { varchar sleutel PK  varchar waarde  varchar omschrijving  varchar type  timestamp bijgewerkt_op }
     GEBRUIKERS { int id PK  varchar voornaam  varchar achternaam  varchar inlognaam  varchar wachtwoord  enum taak }
     LOGBOEK { int id PK  date datum  datetime tijdstip  varchar auteur  text tekst }
     COORDINATOREN_LOGBOEK { int id PK  date datum  datetime tijdstip  varchar auteur  text tekst }
@@ -674,11 +924,14 @@ erDiagram
 **Uniqueness/keys of note:** `metingen_diep_ondiep (bad_id, datum)`,
 `metingen_peuterbad (bad_id, datum)`, `metingen_coordinatoren (bad_id, datum,
 tijdstip)`, `acties (bad_id, datum, actie_type)`, `rondetaken_voltooid
-(taak_sleutel, datum)`, `limieten.parameter_naam`, `gebruikers.inlognaam`; daily
-tables unique on `datum`. `LIMIETEN` also stores the action thresholds (`actie_*`)
-and the season window (`seizoen_begin/eind` as YYYYMMDD). `RONDETAKEN_VOLTOOID`
-stores only daily completions; the task catalogue itself lives in code
-(`RondetakenRepository`), so it has no `bad_id` FK.
+(taak_sleutel, datum)`, `limieten.parameter_naam`, `gebruikers.inlognaam`,
+`configuratie.sleutel`; daily tables unique on `datum`. `LIMIETEN` also stores the
+action thresholds (`actie_*`) and the season window (`seizoen_begin/eind` as
+YYYYMMDD). `RONDETAKEN_VOLTOOID` stores only daily completions; the task catalogue
+itself lives in code (`RondetakenRepository`), so it has no `bad_id` FK. The
+waterbeheer meetwaarden/verbruik tables carry `versie` (optimistic-concurrency
+token), `auteur` and `bijgewerkt_op` for attribution (DD-020); `CONFIGURATIE` is a
+generic key/value settings store seeded with `sessie_timeout_minuten` (DD-019).
 
 ### 7.4 Middleware Stack
 
@@ -761,7 +1014,10 @@ pure, testable helpers (see §9.3). Schema changes go in `init.sql` only.
 |Integration|Jest + Supertest + MySQL|Full stack against an isolated `zwembad_status_test` DB (`jest.integration.config.js`); `npm test` stays DB-free|
 |E2E|—|**Gap:** no automated browser smoke test yet (R-004)|
 
-Current counts (indicative): ~353 unit (incl. frontend jsdom) + 17 integration.
+Current counts (indicative): ~494 unit (incl. frontend jsdom) + integration. New
+coverage in 0.3: `optimistisch` helper (all conflict branches), `ConfiguratieController`/
+`ConfiguratieService`, and frontend jsdom tests for the version round-trip + 409
+handling, completeness markers, session-expiry and the Configuratie autosave.
 
 ### 9.4 Known Constraints
 
@@ -792,6 +1048,10 @@ Current counts (indicative): ~353 unit (incl. frontend jsdom) + 17 integration.
 |-----------------------|-----------------|-----|
 |AUTH-001..004 (login/session/roles/logout)|§5.2, §7.4|express-session + checkAuth/role helpers|
 |AUTH-005 (credential security)|§5.2 (DD-018)|Met — scrypt hashing; unit + integration tested|
+|AUTH-006/007 (idle/sliding time-out; expiry UX)|§5.2 (DD-005/DD-019/DD-021)|`rolling` cookie + per-request max-age from config; 401 → login message|
+|CFG-001/002 (general configuration)|§4.3 (UI-014), §5.1 (`/api/configuratie`), §6.2 (ConfiguratieModule), §7.3 (DD-019)|Generic key/value store; shared cache; Administrator-only write|
+|GEN-007 (concurrent-edit detection + attribution)|§5.1, §5.4, §5.5.4, §7.3 (DD-020)|`optimistischOpslaan` version check (409); `auteur`/`bijgewerkt_op`; client round-trips `versie`|
+|GEN-008/009 (passive completeness; version label)|§4.2 (DD-021), §6.2|Subtab/page-tab dot; `/api/versie` header label|
 |GEN-001/002 (date scoping, season bounds)|§4.4, §6.2 (NavModule)|Client date state + season limits|
 |GEN-003 (autosave + status)|§4.5, §6.2 (OpslaanModule), flows §3|1.2 s debounce (DD-010)|
 |GEN-004 (validation, comma)|§4.2, §6.2 (UIManager/ApiClient), §7.4|Zod + client validation|
