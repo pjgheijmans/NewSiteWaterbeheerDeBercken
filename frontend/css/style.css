@@ -1393,6 +1393,24 @@ td select,
         min-height: 34px;
     }
 
+    /* Beheerpagina's (Limieten, Actie-teksten, Gebruikers, Database, Configuratie):
+       inputs én cel-/labeltekst op 13px, gelijk aan de dagstaat-pagina's. */
+    #sectie-limieten input,     #sectie-limieten select,
+    #sectie-actieteksten input, #sectie-actieteksten textarea,
+    #sectie-gebruikers input,   #sectie-gebruikers select,
+    #sectie-database input,     #sectie-database select,
+    #sectie-configuratie input {
+        font-size: 13px !important;
+        min-height: 34px;
+    }
+    #sectie-limieten td,     #sectie-limieten th,
+    #sectie-actieteksten td, #sectie-actieteksten th,
+    #sectie-gebruikers td,   #sectie-gebruikers th,
+    #sectie-database td,     #sectie-database th,
+    #sectie-configuratie td, #sectie-configuratie th {
+        font-size: 13px;
+    }
+
     /* Buttons full-width in action bars */
     .actie-container {
         flex-wrap: wrap;
