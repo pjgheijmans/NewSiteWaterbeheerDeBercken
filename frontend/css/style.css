@@ -1370,9 +1370,11 @@ td select,
     }
 
     /* Parameter-tekst kleiner op mobiel, in lijn met de menu-/tabtekst (13px) —
-       zowel tabelcellen als de checkbox-rijen (o.a. Verwarmingssysteem). */
+       zowel tabelcellen, de checkbox-rijen (o.a. Verwarmingssysteem) als de
+       parameter-labels van de Diep/Ondiep-meetwaarden-grid (.meet-col-kop). */
     .categorie-tabel td,
-    .checkbox-item {
+    .checkbox-item,
+    .meet-col-kop {
         font-size: 13px;
     }
 
@@ -1384,7 +1386,9 @@ td select,
         padding: 6px 8px;
     }
     #waterbeheer-grote-baden-content .categorie-tabel td input,
-    #waterbeheer-peuterbad-content   .categorie-tabel td input {
+    #waterbeheer-peuterbad-content   .categorie-tabel td input,
+    .meet-cel input,
+    .meet-gebonden-veld input {
         font-size: 13px !important;
         min-height: 34px;
     }
