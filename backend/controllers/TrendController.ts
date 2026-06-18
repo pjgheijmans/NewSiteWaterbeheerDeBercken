@@ -1,5 +1,5 @@
 import { Router, Request, Response, NextFunction } from 'express';
-import { checkAuth, isWaterbeheerder } from '../middleware/auth';
+import { checkAuth, vereist } from '../middleware/auth';
 import { ITrendService } from '../services/ITrendService';
 
 export class TrendController {
@@ -7,26 +7,16 @@ export class TrendController {
 
     constructor(private readonly service: ITrendService) {
         this.router = Router();
-        this.router.get('/metingen', checkAuth, this.getMetingen.bind(this));
-        this.router.get('/verbruik', checkAuth, this.getVerbruik.bind(this));
-    }
-
-    private vereistWaterbeheerder(req: Request, res: Response): boolean {
-        if (!isWaterbeheerder(req.session.gebruiker!.taak)) {
-            res.status(403).json({ error: 'Geen toegang' });
-            return false;
-        }
-        return true;
+        this.router.get('/metingen', checkAuth, vereist('waterbeheer', 'lezen'), this.getMetingen.bind(this));
+        this.router.get('/verbruik', checkAuth, vereist('waterbeheer', 'lezen'), this.getVerbruik.bind(this));
     }
 
     private async getMetingen(req: Request, res: Response, next: NextFunction): Promise<void> {
-        if (!this.vereistWaterbeheerder(req, res)) return;
         try { res.json(await this.service.getMetingenTrend(req.query.van as string, req.query.tot as string)); }
         catch (err) { next(err); }
     }
 
     private async getVerbruik(req: Request, res: Response, next: NextFunction): Promise<void> {
-        if (!this.vereistWaterbeheerder(req, res)) return;
         try { res.json(await this.service.getVerbruikTrend(req.query.van as string, req.query.tot as string)); }
         catch (err) { next(err); }
     }

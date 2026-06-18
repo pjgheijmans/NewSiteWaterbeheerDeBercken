@@ -40,12 +40,29 @@ export const gebruikerSchema = z.object({
     achternaam: z.string(),
     inlognaam:  z.string().min(1, 'is verplicht'),
     wachtwoord: z.string().min(1, 'is verplicht'),
-    taak:       z.enum(['waterbeheerder', 'coordinator', 'Administrator']),
+    rol_ids:    z.array(z.number().int()),
 });
 
 // Bij wijzigen mag het wachtwoord leeg blijven (= ongewijzigd laten).
 export const gebruikerUpdateSchema = gebruikerSchema.extend({
     wachtwoord: z.string().optional(),
+});
+
+// ── Rollen (strikt) ──────────────────────────────────────────────────────────
+const rechtniveau = z.enum(['geen', 'lezen', 'schrijven']);
+
+export const rolCreateSchema = z.object({
+    naam: z.string().min(1, 'is verplicht'),
+});
+
+export const rolUpdateSchema = z.object({
+    naam:                   z.string().min(1, 'is verplicht'),
+    mag_historie_bewerken:  z.boolean(),
+    rechten: z.object({
+        beheer:      rechtniveau.optional(),
+        waterbeheer: rechtniveau.optional(),
+        coordinator: rechtniveau.optional(),
+    }),
 });
 
 // ── Limieten (strikt) ─────────────────────────────────────────────────────────

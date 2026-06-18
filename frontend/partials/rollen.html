@@ -1,0 +1,30 @@
+<div id="sectie-rollen" style="display: none;">
+            <h2>Rollenbeheer</h2>
+            <p style="font-size:13px; color:#666; margin:-8px 0 14px;">
+                Bepaal per rol wat is toegestaan binnen elk domein: <b>geen</b>, <b>lezen</b> (alleen bekijken)
+                of <b>schrijven</b> (bewerken). "Historie bewerken" staat het wijzigen van datums in het verleden toe.
+                Een gebruiker kan meerdere rollen hebben; dan geldt per domein het hoogste niveau.
+            </p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Rol</th>
+                        <th>Beheer</th>
+                        <th>Waterbeheer</th>
+                        <th>Coördinator</th>
+                        <th>Historie bewerken</th>
+                        <th>Acties</th>
+                    </tr>
+                </thead>
+                <tbody id="rollenTbody"></tbody>
+                <tr style="background:#e9ecef;">
+                    <td><input type="text" id="r-naam" placeholder="Nieuwe rol"></td>
+                    <td colspan="4" style="font-size:13px; color:#666;">Rechten instelbaar na toevoegen</td>
+                    <td><button class="btn-centraal-opslaan" style="padding:6px 12px; font-size:14px;"
+                            onclick="voegRolToe()">Toevoegen</button></td>
+                </tr>
+            </table>
+            <div class="actie-container" style="justify-content: flex-start; min-height: 28px;">
+                <span id="rollenSaveStatus" style="font-size:14px; font-style:italic;"></span>
+            </div>
+        </div>

@@ -33,9 +33,20 @@ class GebruikersModule {
         }, 1200);
     }
 
-    /** Laad alle gebruikers en render de beheertabel. */
+    /** @private Bouw rol-selectievakjes; vink de toegekende rollen aan. */
+    _rolCheckboxes(geselecteerd) {
+        const ids = (geselecteerd || []).map(Number);
+        return (this._rollen || [])
+            .map(rol => `<label style="display:block; margin:0 0 4px 0; white-space:nowrap;">
+                <input type="checkbox" class="g-r" value="${rol.id}" ${ids.includes(rol.id) ? 'checked' : ''}> ${rol.naam}</label>`)
+            .join('');
+    }
+
+    /** Laad alle gebruikers (en de beschikbare rollen) en render de beheertabel. */
     async laadGebruikers() {
         try {
+            const rolRes  = await this.app.api.call('/api/rollen');
+            this._rollen  = await rolRes.json();
             const res       = await this.app.api.call('/api/gebruikers');
             const gebruikers = await res.json();
             const tbody     = document.getElementById('gebruikersTbody');
@@ -48,11 +59,7 @@ class GebruikersModule {
                     <td><input type="text" class="g-a" value="${g.achternaam}"></td>
                     <td><input type="text" class="g-i" value="${g.inlognaam}"></td>
                     <td><input type="password" class="g-w" value="" placeholder="•••• (ongewijzigd)"></td>
-                    <td><select class="g-t">
-                        <option value="waterbeheerder" ${g.taak === 'waterbeheerder' ? 'selected' : ''}>Waterbeheerder</option>
-                        <option value="coordinator"    ${g.taak === 'coordinator'    ? 'selected' : ''}>Coördinator</option>
-                        <option value="Administrator"  ${g.taak === 'Administrator'  ? 'selected' : ''}>Administrator</option>
-                    </select></td>
+                    <td>${this._rolCheckboxes(g.rol_ids)}</td>
                     <td><button onclick="verwijderGebruiker(${g.id})" style="background:#dc3545;color:white;border:none;padding:5px 10px;border-radius:4px;cursor:pointer;">Wissen</button></td>`;
                 tbody.appendChild(tr);
                 tr.querySelectorAll('input, select').forEach(el => {
@@ -60,17 +67,21 @@ class GebruikersModule {
                     el.addEventListener('change', () => this._scheduleAutoSave(g.id));
                 });
             });
+            // Selectievakjes voor de nieuwe-gebruiker-rij.
+            const nieuw = document.getElementById('g-rollen-nieuw');
+            if (nieuw) nieuw.innerHTML = this._rolCheckboxes([]);
         } catch { this.app.ui.toonBericht('Fout bij laden gebruikers.', 'fout'); }
     }
 
     /** Voeg een nieuwe gebruiker toe via het aanmaakformulier. */
     async voegGebruikerToe() {
+        const rol_ids = [...document.querySelectorAll('#g-rollen-nieuw .g-r:checked')].map(c => Number(c.value));
         const payload = {
             voornaam:   document.getElementById('g-voornaam').value,
             achternaam: document.getElementById('g-achternaam').value,
             inlognaam:  document.getElementById('g-inlognaam').value,
             wachtwoord: document.getElementById('g-wachtwoord').value,
-            taak:       document.getElementById('g-taak').value,
+            rol_ids,
         };
         const res = await this.app.api.call('/api/gebruikers', {
             method: 'POST',
@@ -95,7 +106,7 @@ class GebruikersModule {
             achternaam: rij.querySelector('.g-a').value,
             inlognaam:  rij.querySelector('.g-i').value,
             wachtwoord: rij.querySelector('.g-w').value,
-            taak:       rij.querySelector('.g-t').value,
+            rol_ids:    [...rij.querySelectorAll('.g-r:checked')].map(c => Number(c.value)),
         };
         const res = await this.app.api.call(`/api/gebruikers/${id}`, {
             method: 'PUT',

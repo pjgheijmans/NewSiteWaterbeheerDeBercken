@@ -12,18 +12,27 @@ beforeEach(() => {
 });
 
 describe('findByLogin', () => {
-    it('verifieert een gehasht wachtwoord en geeft de gebruiker terug zonder wachtwoord', async () => {
+    it('verifieert een gehasht wachtwoord en geeft de gebruiker met effectieve rechten terug', async () => {
         const hash = hashWachtwoord('Paul');
-        pool.execute.mockResolvedValue(resultaat([
-            { id: 1, voornaam: 'Paul', achternaam: 'H', inlognaam: 'pheijmans', taak: 'waterbeheerder', wachtwoord: hash },
-        ]));
+        pool.execute
+            .mockResolvedValueOnce(resultaat([
+                { id: 1, voornaam: 'Paul', achternaam: 'H', inlognaam: 'pheijmans', taak: 'waterbeheerder', wachtwoord: hash },
+            ]))
+            .mockResolvedValueOnce(resultaat([
+                { naam: 'Waterbeheer', mag_historie_bewerken: 1, domein: 'waterbeheer', niveau: 'schrijven' },
+                { naam: 'Waterbeheer', mag_historie_bewerken: 1, domein: 'coordinator', niveau: 'schrijven' },
+            ]));
         const g = await repo.findByLogin('pheijmans', 'Paul');
-        expect(g).toMatchObject({ id: 1, taak: 'waterbeheerder' });
+        expect(g).toMatchObject({
+            id: 1,
+            rechten: { waterbeheer: 'schrijven', coordinator: 'schrijven' },
+            magHistorie: true,
+        });
         expect((g as unknown as Record<string, unknown>).wachtwoord).toBeUndefined();
         // Zoekt uitsluitend op inlognaam; verificatie gebeurt in code.
         expect(paramsVan(pool.execute)).toEqual(['pheijmans']);
-        // Reeds gehasht → geen upgrade-UPDATE.
-        expect(pool.execute).toHaveBeenCalledTimes(1);
+        // 1 SELECT user + 1 SELECT rechten (reeds gehasht → geen upgrade-UPDATE).
+        expect(pool.execute).toHaveBeenCalledTimes(2);
     });
 
     it('geeft null bij een verkeerd wachtwoord', async () => {
@@ -39,13 +48,13 @@ describe('findByLogin', () => {
     });
 
     it('upgradet een legacy plaintext-wachtwoord naar een hash bij een geslaagde login', async () => {
-        pool.execute.mockResolvedValue(resultaat([
+        // call 0 = SELECT user (plaintext); call 1 = UPDATE upgrade; call 2 = SELECT rechten.
+        pool.execute.mockResolvedValueOnce(resultaat([
             { id: 7, inlognaam: 'pheijmans', taak: 'waterbeheerder', wachtwoord: 'Paul' },
         ]));
         const g = await repo.findByLogin('pheijmans', 'Paul');
         expect(g).toMatchObject({ id: 7 });
-        // Tweede call = UPDATE met gehasht wachtwoord.
-        expect(pool.execute).toHaveBeenCalledTimes(2);
+        expect(pool.execute).toHaveBeenCalledTimes(3);
         expect(sqlVan(pool.execute, 1)).toMatch(/UPDATE gebruikers SET wachtwoord/i);
         const updateParams = paramsVan(pool.execute, 1);
         expect(isGehasht(updateParams[0] as string)).toBe(true);
@@ -63,18 +72,21 @@ describe('getAll', () => {
 });
 
 describe('create', () => {
-    it('hasht het wachtwoord voor het opslaan', async () => {
-        await repo.create({ voornaam: 'Jan', achternaam: 'Jansen', inlognaam: 'jjansen', wachtwoord: 'x', taak: 'coordinator' });
+    it('hasht het wachtwoord voor het opslaan (binnen een transactie)', async () => {
+        await repo.create({ voornaam: 'Jan', achternaam: 'Jansen', inlognaam: 'jjansen', wachtwoord: 'x', rol_ids: [3] });
+        // call 0 = INSERT gebruikers (binnen de transactie-connection, gedeelde execute-mock).
         const params = paramsVan(pool.execute);
         expect(params[0]).toBe('Jan');
         expect(isGehasht(params[3] as string)).toBe(true);
         expect(params[3]).not.toBe('x');
+        expect(pool.connection.beginTransaction).toHaveBeenCalled();
+        expect(pool.connection.commit).toHaveBeenCalled();
     });
 });
 
 describe('update', () => {
     it('hasht een nieuw wachtwoord en zet het id als laatste parameter', async () => {
-        await repo.update('5', { voornaam: 'Jan', achternaam: 'J', inlognaam: 'jj', wachtwoord: 'x', taak: 'coordinator' });
+        await repo.update('5', { voornaam: 'Jan', achternaam: 'J', inlognaam: 'jj', wachtwoord: 'x', rol_ids: [2] });
         const params = paramsVan(pool.execute);
         expect(sqlVan(pool.execute)).toMatch(/wachtwoord=\?/i);
         expect(isGehasht(params[3] as string)).toBe(true);
@@ -82,10 +94,10 @@ describe('update', () => {
     });
 
     it('laat het wachtwoord ongemoeid wanneer het leeg is', async () => {
-        await repo.update('5', { voornaam: 'Jan', achternaam: 'J', inlognaam: 'jj', wachtwoord: '', taak: 'coordinator' });
+        await repo.update('5', { voornaam: 'Jan', achternaam: 'J', inlognaam: 'jj', wachtwoord: '', rol_ids: [2] });
+        // call 0 = UPDATE gebruikers (zonder wachtwoord).
         expect(sqlVan(pool.execute)).not.toMatch(/wachtwoord/i);
-        const params = paramsVan(pool.execute);
-        expect(params[params.length - 1]).toBe('5');
+        expect(paramsVan(pool.execute)[paramsVan(pool.execute).length - 1]).toBe('5');
     });
 });
 
@@ -97,11 +109,13 @@ describe('remove', () => {
 });
 
 describe('seedDefaults', () => {
-    it('voegt beide standaardgebruikers met een gehasht wachtwoord toe (INSERT IGNORE)', async () => {
+    it('voegt beide standaardgebruikers met een gehasht wachtwoord toe en koppelt hun rol', async () => {
         await repo.seedDefaults();
-        expect(pool.execute).toHaveBeenCalledTimes(2);
-        expect(sqlVan(pool.execute)).toMatch(/INSERT IGNORE/i);
-        expect(isGehasht(paramsVan(pool.execute)[3] as string)).toBe(true);
+        // Per gebruiker: 1 INSERT IGNORE gebruikers + 1 INSERT IGNORE gebruiker_rollen = 4 calls.
+        expect(pool.execute).toHaveBeenCalledTimes(4);
+        expect(sqlVan(pool.execute, 0)).toMatch(/INSERT IGNORE INTO gebruikers/i);
+        expect(isGehasht(paramsVan(pool.execute, 0)[3] as string)).toBe(true);
+        expect(sqlVan(pool.execute, 1)).toMatch(/INSERT IGNORE INTO gebruiker_rollen/i);
     });
 });
 

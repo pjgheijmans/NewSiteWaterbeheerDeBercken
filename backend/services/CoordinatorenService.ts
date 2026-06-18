@@ -3,6 +3,8 @@ import { ICoordinatorenLogboekRepository } from '../repositories/ICoordinatorenL
 import { IActiesRepository } from '../repositories/IActiesRepository';
 import { ICoordinatorenService } from './ICoordinatorenService';
 import { bepaalAuteur } from '../auteur';
+import { magDatumBewerken } from '../middleware/auth';
+import { AppError } from '../errors';
 import { CoordinatorBlok, CoordinatorMetingInput, Checklist, ChecklistInput,
          Daggegevens, DaggegevensInput, LogboekEntry, LogboekOpslaanResultaat, Gebruiker } from '../types';
 
@@ -63,7 +65,11 @@ export class CoordinatorenService implements ICoordinatorenService {
         return { id: row?.id ?? null, auteur: row?.auteur ?? auteur };
     }
 
-    deleteLogboek(id: string): Promise<void> {
-        return this.logboekRepo.deleteById(id);
+    async deleteLogboek(id: string, gebruiker: Gebruiker): Promise<void> {
+        const datum = await this.logboekRepo.getDatumById(id);
+        if (datum && !magDatumBewerken(datum, gebruiker)) {
+            throw new AppError('Een datum in het verleden mag je niet bewerken', 403);
+        }
+        await this.logboekRepo.deleteById(id);
     }
 }

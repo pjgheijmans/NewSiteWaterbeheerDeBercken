@@ -9,6 +9,7 @@ import { DatabaseRepository }   from './repositories/DatabaseRepository';
 
 import { maakAuthRouter }          from './routes/auth';
 import { maakGebruikersRouter }    from './routes/gebruikers';
+import { maakRollenRouter }        from './routes/rollen';
 import { maakLimietenRouter }      from './routes/limieten';
 import { maakActieTekstenRouter }  from './routes/actieteksten';
 import { maakDienstRouter }        from './routes/dienst';
@@ -67,6 +68,7 @@ export function maakApp(pool: Pool): Express {
     // ── Routes ──────────────────────────────────────────────────────────────────
     app.use('/api',               maakAuthRouter(pool));
     app.use('/api/gebruikers',    maakGebruikersRouter(pool));
+    app.use('/api/rollen',        maakRollenRouter(pool));
     app.use('/api/limieten',      maakLimietenRouter(pool));
     app.use('/api/actieteksten',  maakActieTekstenRouter(pool));
     app.use('/api/dienst',        maakDienstRouter(pool));

@@ -30,6 +30,13 @@ export class LogboekRepository implements ILogboekRepository {
         return (rows[0] as LogboekSaveResult) ?? null;
     }
 
+    async getDatumById(id: string): Promise<string | null> {
+        const [rows] = await this.pool.execute<RowDataPacket[]>(
+            "SELECT DATE_FORMAT(datum, '%Y-%m-%d') AS datum FROM logboek WHERE id = ?", [id]
+        );
+        return (rows[0] as { datum: string } | undefined)?.datum ?? null;
+    }
+
     async deleteById(id: string): Promise<void> {
         await this.pool.execute<ResultSetHeader>(
             'DELETE FROM logboek WHERE id = ?', [id]

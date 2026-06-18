@@ -69,6 +69,8 @@ class OpslaanModule {
     // ── Centrale auto-save ────────────────────────────────────────────────
 
     scheduleAutoSave() {
+        // Niets opslaan in alleen-lezen modus (geen schrijfrecht of historie-slot).
+        if (this.app.auth && !this.app.auth.magNuOpslaan()) return;
         const state = this.app.state;
         if (state.autoSaveTimer) clearTimeout(state.autoSaveTimer);
         this.app.ui.setAutoSaveStatus('pending');
@@ -82,6 +84,7 @@ class OpslaanModule {
     // ── Coordinator blok auto-save ────────────────────────────────────────
 
     scheduleAutoSaveBlok(tijdstip) {
+        if (this.app.auth && !this.app.auth.magNuOpslaan()) return;
         const state = this.app.state;
         if (state.blokTimers[tijdstip]) clearTimeout(state.blokTimers[tijdstip]);
         this.app.ui.setAutoSaveStatus('pending');

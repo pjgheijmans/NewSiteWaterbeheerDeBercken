@@ -1,13 +1,37 @@
+/** De drie autorisatiedomeinen waarop rechten gelden. */
+export type Domein = 'beheer' | 'waterbeheer' | 'coordinator';
+
+/** Toegangsniveau binnen een domein, oplopend in macht: geen < lezen < schrijven. */
+export type Rechtniveau = 'geen' | 'lezen' | 'schrijven';
+
+/** Rechten per domein. Een ontbrekend domein telt als 'geen'. */
+export type RolRechten = Partial<Record<Domein, Rechtniveau>>;
+
+/** Een rol: een herbruikbare bundel rechten + historie-toestemming. */
+export interface Rol {
+    id: number;
+    naam: string;
+    mag_historie_bewerken: boolean;
+    rechten: RolRechten;
+}
+
 /** Aangemelde gebruiker opgeslagen in de sessie. */
 export interface Gebruiker {
     id: number;
     gebruikersnaam: string;
-    taak: string;
+    /** Legacy-rollabel; autorisatie loopt voortaan via `rechten`, niet via dit veld. */
+    taak?: string | null;
     voornaam?: string;
     achternaam?: string;
     inlognaam?: string;
     /** Weergavenaam voor de kop; bij dubbele voornaam aangevuld met de eerste letter van de achternaam. */
     weergavenaam?: string;
+    /** Effectieve rechten: het hoogste niveau over al zijn rollen, per domein. Ontbreekt = geen rechten. */
+    rechten?: RolRechten;
+    /** True als minstens een van zijn rollen historie-bewerking toestaat. */
+    magHistorie?: boolean;
+    /** Namen van de toegekende rollen (alleen voor weergave). */
+    rolNamen?: string[];
 }
 
 // ── Metingen ──────────────────────────────────────────────────────────────────
@@ -183,7 +207,8 @@ export interface GebruikerRecord {
     inlognaam: string;
     /** Optioneel: getAll() levert het (gehashte) wachtwoord niet mee terug. */
     wachtwoord?: string;
-    taak: string;
+    /** Id's van de toegekende rollen (voor de selectievakjes in het beheerscherm). */
+    rol_ids: number[];
 }
 
 export interface GebruikerInput {
@@ -191,7 +216,8 @@ export interface GebruikerInput {
     achternaam: string;
     inlognaam: string;
     wachtwoord: string;
-    taak: string;
+    /** Id's van de toe te kennen rollen. */
+    rol_ids: number[];
 }
 
 // ── Limieten ──────────────────────────────────────────────────────────────────

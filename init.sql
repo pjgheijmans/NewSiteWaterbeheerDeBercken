@@ -124,6 +124,63 @@ CREATE TABLE IF NOT EXISTS gebruikers (
 INSERT IGNORE INTO gebruikers (voornaam, achternaam, inlognaam, wachtwoord, taak) VALUES ('Admin', '', 'Admin', 'lpphw', 'Administrator');
 INSERT IGNORE INTO gebruikers (voornaam, achternaam, inlognaam, wachtwoord, taak) VALUES ('Paul', 'Heijmans', 'pheijmans', 'Paul', 'waterbeheerder');
 
+-- ── Rollen & rechten (RBAC) ───────────────────────────────────────────────────
+-- Een rol bundelt rechten per domein (beheer/waterbeheer/coordinator). Een gebruiker
+-- kan meerdere rollen hebben; zijn effectieve recht per domein is het HOOGSTE niveau
+-- over al zijn rollen, en mag_historie_bewerken geldt als minstens een rol het heeft.
+CREATE TABLE IF NOT EXISTS rollen (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    naam VARCHAR(50) NOT NULL UNIQUE,
+    mag_historie_bewerken TINYINT(1) NOT NULL DEFAULT 0
+);
+
+CREATE TABLE IF NOT EXISTS rol_rechten (
+    rol_id INT NOT NULL,
+    domein ENUM('beheer', 'waterbeheer', 'coordinator') NOT NULL,
+    niveau ENUM('geen', 'lezen', 'schrijven') NOT NULL DEFAULT 'geen',
+    PRIMARY KEY (rol_id, domein),
+    FOREIGN KEY (rol_id) REFERENCES rollen(id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS gebruiker_rollen (
+    gebruiker_id INT NOT NULL,
+    rol_id INT NOT NULL,
+    PRIMARY KEY (gebruiker_id, rol_id),
+    FOREIGN KEY (gebruiker_id) REFERENCES gebruikers(id) ON DELETE CASCADE,
+    FOREIGN KEY (rol_id) REFERENCES rollen(id) ON DELETE CASCADE
+);
+
+-- taak is vervangen door rollen; mag voortaan leeg zijn (behouden voor backfill/legacy).
+ALTER TABLE gebruikers MODIFY taak ENUM('waterbeheerder', 'coordinator', 'Administrator') NULL;
+
+-- Standaardrollen (idempotent).
+INSERT IGNORE INTO rollen (naam, mag_historie_bewerken) VALUES ('Beheer', 1);
+INSERT IGNORE INTO rollen (naam, mag_historie_bewerken) VALUES ('Waterbeheer', 1);
+INSERT IGNORE INTO rollen (naam, mag_historie_bewerken) VALUES ('Coordinator', 0);
+
+-- Rechtenmatrix per standaardrol (idempotent via INSERT IGNORE op de samengestelde PK).
+INSERT IGNORE INTO rol_rechten (rol_id, domein, niveau) SELECT id, 'beheer',      'schrijven' FROM rollen WHERE naam='Beheer';
+INSERT IGNORE INTO rol_rechten (rol_id, domein, niveau) SELECT id, 'waterbeheer', 'geen'      FROM rollen WHERE naam='Beheer';
+INSERT IGNORE INTO rol_rechten (rol_id, domein, niveau) SELECT id, 'coordinator', 'geen'      FROM rollen WHERE naam='Beheer';
+INSERT IGNORE INTO rol_rechten (rol_id, domein, niveau) SELECT id, 'beheer',      'geen'      FROM rollen WHERE naam='Waterbeheer';
+INSERT IGNORE INTO rol_rechten (rol_id, domein, niveau) SELECT id, 'waterbeheer', 'schrijven' FROM rollen WHERE naam='Waterbeheer';
+INSERT IGNORE INTO rol_rechten (rol_id, domein, niveau) SELECT id, 'coordinator', 'schrijven' FROM rollen WHERE naam='Waterbeheer';
+INSERT IGNORE INTO rol_rechten (rol_id, domein, niveau) SELECT id, 'beheer',      'geen'      FROM rollen WHERE naam='Coordinator';
+INSERT IGNORE INTO rol_rechten (rol_id, domein, niveau) SELECT id, 'waterbeheer', 'geen'      FROM rollen WHERE naam='Coordinator';
+INSERT IGNORE INTO rol_rechten (rol_id, domein, niveau) SELECT id, 'coordinator', 'schrijven' FROM rollen WHERE naam='Coordinator';
+
+-- Eenmalige backfill: koppel bestaande gebruikers aan de rol die bij hun oude taak hoort.
+-- Draait alleen voor gebruikers die nog geen enkele rol hebben, dus idempotent en niet-destructief.
+INSERT IGNORE INTO gebruiker_rollen (gebruiker_id, rol_id)
+    SELECT g.id, r.id FROM gebruikers g JOIN rollen r ON r.naam='Beheer'
+    WHERE g.taak='Administrator' AND NOT EXISTS (SELECT 1 FROM gebruiker_rollen gr WHERE gr.gebruiker_id=g.id);
+INSERT IGNORE INTO gebruiker_rollen (gebruiker_id, rol_id)
+    SELECT g.id, r.id FROM gebruikers g JOIN rollen r ON r.naam='Waterbeheer'
+    WHERE g.taak='waterbeheerder' AND NOT EXISTS (SELECT 1 FROM gebruiker_rollen gr WHERE gr.gebruiker_id=g.id);
+INSERT IGNORE INTO gebruiker_rollen (gebruiker_id, rol_id)
+    SELECT g.id, r.id FROM gebruikers g JOIN rollen r ON r.naam='Coordinator'
+    WHERE g.taak='coordinator' AND NOT EXISTS (SELECT 1 FROM gebruiker_rollen gr WHERE gr.gebruiker_id=g.id);
+
 -- Generieke configuratie (sleutel/waarde). Beheerbaar door Administrator.
 CREATE TABLE IF NOT EXISTS configuratie (
     sleutel       VARCHAR(64)  NOT NULL PRIMARY KEY,

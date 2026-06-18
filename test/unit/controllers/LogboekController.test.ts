@@ -63,7 +63,7 @@ describe('DELETE /:id', () => {
         mockService.deleteById.mockResolvedValue(undefined);
         const res = await request(maakApp()).delete('/12');
         expect(res.status).toBe(200);
-        expect(mockService.deleteById).toHaveBeenCalledWith('12');
+        expect(mockService.deleteById).toHaveBeenCalledWith('12', expect.objectContaining({ taak: 'waterbeheerder' }));
     });
 
     it('geeft 403 voor coordinator', async () => {

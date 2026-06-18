@@ -9,7 +9,7 @@ const mockService: jest.Mocked<IDatabaseService> = {
     truncate: jest.fn(), wisAlles: jest.fn(), initialiseer: jest.fn(),
 };
 
-function maakApp(taak: string | null = 'waterbeheerder') {
+function maakApp(taak: string | null = 'Administrator') {
     return maakTestApp(new DatabaseController(mockService).router, taak);
 }
 

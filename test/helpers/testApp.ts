@@ -1,9 +1,24 @@
 import express, { Application, RequestHandler, Router } from 'express';
-import { Gebruiker } from '../../backend/types';
+import { Gebruiker, RolRechten } from '../../backend/types';
 import { errorHandler } from '../../backend/middleware/errorHandler';
+
+/**
+ * De rechten + historie-toestemming die bij een legacy-rolnaam horen.
+ * Spiegelt de standaardrollen uit init.sql, zodat bestaande tests die een
+ * rolnaam ('waterbeheerder'/'coordinator'/'Administrator') meegeven blijven werken.
+ */
+function rechtenVoorTaak(taak: string): { rechten: RolRechten; magHistorie: boolean } {
+    switch (taak) {
+        case 'Administrator':  return { rechten: { beheer: 'schrijven' }, magHistorie: true };
+        case 'waterbeheerder': return { rechten: { waterbeheer: 'schrijven', coordinator: 'schrijven' }, magHistorie: true };
+        case 'coordinator':    return { rechten: { coordinator: 'schrijven' }, magHistorie: false };
+        default:               return { rechten: {}, magHistorie: false };
+    }
+}
 
 /** Standaard testgebruiker voor sessie-mocks. */
 export function maakTestGebruiker(taak = 'waterbeheerder'): Gebruiker {
+    const { rechten, magHistorie } = rechtenVoorTaak(taak);
     return {
         id: 1,
         gebruikersnaam: 'testuser',
@@ -11,6 +26,8 @@ export function maakTestGebruiker(taak = 'waterbeheerder'): Gebruiker {
         voornaam: 'Test',
         achternaam: 'User',
         inlognaam: 'testuser',
+        rechten,
+        magHistorie,
     };
 }
 

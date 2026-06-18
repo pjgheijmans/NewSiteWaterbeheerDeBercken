@@ -3,7 +3,7 @@ import { ILogboekRepository } from '../../../backend/repositories/ILogboekReposi
 import { Gebruiker } from '../../../backend/types';
 
 const repo: jest.Mocked<ILogboekRepository> = {
-    getByDatum: jest.fn(), save: jest.fn(), deleteById: jest.fn(),
+    getByDatum: jest.fn(), save: jest.fn(), getDatumById: jest.fn(), deleteById: jest.fn(),
 };
 const service = new LogboekService(repo);
 const DATUM = '2026-05-31';
@@ -26,11 +26,30 @@ describe('save', () => {
 });
 
 describe('pass-through', () => {
-    it('getByDatum en deleteById delegeren', async () => {
+    it('getByDatum delegeert', async () => {
         repo.getByDatum.mockResolvedValue([]);
         await service.getByDatum(DATUM);
-        await service.deleteById('3');
         expect(repo.getByDatum).toHaveBeenCalledWith(DATUM);
+    });
+});
+
+describe('deleteById (historie-bewaking)', () => {
+    it('verwijdert een regel van vandaag', async () => {
+        repo.getDatumById.mockResolvedValue(new Date().toISOString().slice(0, 10));
+        await service.deleteById('3', gebruiker);
+        expect(repo.deleteById).toHaveBeenCalledWith('3');
+    });
+
+    it('blokkeert het verwijderen van een datum in het verleden zonder historie-recht', async () => {
+        repo.getDatumById.mockResolvedValue('2000-01-01');
+        await expect(service.deleteById('3', { ...gebruiker, magHistorie: false }))
+            .rejects.toMatchObject({ status: 403 });
+        expect(repo.deleteById).not.toHaveBeenCalled();
+    });
+
+    it('staat verwijderen in het verleden toe mét historie-recht', async () => {
+        repo.getDatumById.mockResolvedValue('2000-01-01');
+        await service.deleteById('3', { ...gebruiker, magHistorie: true });
         expect(repo.deleteById).toHaveBeenCalledWith('3');
     });
 });

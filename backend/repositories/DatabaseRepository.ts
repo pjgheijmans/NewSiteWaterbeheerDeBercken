@@ -11,7 +11,7 @@ const ALL_DATA_TABLES = [
     'coordinatoren_checklist', 'coordinatoren_daggegevens',
     'metingen_peuterbad', 'verbruik_diep_ondiep',
     'verwarmings_systeem_diep_ondiep', 'waterbeheer_dienst',
-    'limieten', 'gebruikers',
+    'limieten', 'gebruiker_rollen', 'gebruikers',
 ];
 
 const EXPORT_QUERIES: Record<string, string> = {

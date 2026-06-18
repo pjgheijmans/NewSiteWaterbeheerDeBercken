@@ -20,11 +20,11 @@ describe('validatie-bedrading in de routes', () => {
         expect(service.saveMeting).not.toHaveBeenCalled();
     });
 
-    it('POST /gebruikers met onbekende taak → 400', async () => {
+    it('POST /gebruikers zonder rol_ids → 400', async () => {
         const service = { create: jest.fn() } as any;
-        const app = maakTestApp(new GebruikersController(service).router, 'waterbeheerder');
+        const app = maakTestApp(new GebruikersController(service).router, 'Administrator');
         const res = await request(app).post('/').send({
-            voornaam: 'Jan', achternaam: 'J', inlognaam: 'jj', wachtwoord: 'x', taak: 'directeur',
+            voornaam: 'Jan', achternaam: 'J', inlognaam: 'jj', wachtwoord: 'x',
         });
         expect(res.status).toBe(400);
         expect(service.create).not.toHaveBeenCalled();
@@ -32,7 +32,7 @@ describe('validatie-bedrading in de routes', () => {
 
     it('POST /limieten met niet-numerieke grenswaarde → 400', async () => {
         const service = { save: jest.fn() } as any;
-        const app = maakTestApp(new LimietenController(service).router, 'waterbeheerder');
+        const app = maakTestApp(new LimietenController(service).router, 'Administrator');
         const res = await request(app).post('/').send({ parameter_naam: 'ph_waarde', min_waarde: 'x', max_waarde: 7.6 });
         expect(res.status).toBe(400);
         expect(service.save).not.toHaveBeenCalled();
