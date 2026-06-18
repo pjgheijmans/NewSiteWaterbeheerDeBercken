@@ -115,6 +115,7 @@ export interface Drempelwaarden {
     actie_zwavelzuur_min: number;
     actie_bezoekers_max: number;
     actie_spoelbeurt_max: number;
+    actie_spoelbeurt_dagen: number;
     actie_floculant_min: number;
     actie_gebonden_chloor_max: number;
     actie_chloor_peuterbad_min: number;

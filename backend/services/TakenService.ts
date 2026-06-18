@@ -33,19 +33,27 @@ export class TakenService implements ITakenService {
 
         const items: TaakItem[] = [];
 
-        // 1) Rondetaken → items. Een filter-rondetaak neemt de open filter_spoelen-
+        // 1) Rondetaken → items. Een filter-rondetaak neemt de filter_spoelen-
         //    acties van zijn bad over als alarm (samengevouwen tot één rij).
         for (const rt of rondetaken) {
             const badVanFilter = RondetakenRepository.badVoorFilterSleutel(rt.sleutel);
+            // Álle filteralarmen van dit bad (ook reeds opgeloste). Een afgevinkt
+            // alarm blijft zo een "verplichte" taak: hij blijft in de Verplicht-
+            // sectie staan (afgestreept + reden) i.p.v. terug te zakken naar
+            // Belangrijk/Overig — zo blijft zichtbaar dát en waaróm het moest.
             const filterAlarmen = badVanFilter
-                ? acties.filter(a => !a.opgelost && a.bad_naam === badVanFilter
+                ? acties.filter(a => a.bad_naam === badVanFilter
                                      && a.actie_type.startsWith('filter_spoelen'))
                 : [];
-            const heeftAlarm = filterAlarmen.length > 0;
-            // Een open alarm maakt de taak verplicht; anders bepaalt de
-            // rondetaakprioriteit of het belangrijk (kritiek) of overig (normaal) is.
+            const openAlarmen = filterAlarmen.filter(a => !a.opgelost);
+            const heeftAlarm  = filterAlarmen.length > 0;
+            // Een (ooit) getriggerd alarm maakt de taak verplicht; anders bepaalt
+            // de rondetaakprioriteit of het belangrijk (kritiek) of overig (normaal) is.
             const categorie: TaakCategorie =
                 heeftAlarm ? 'verplicht' : (rt.prioriteit === 'kritiek' ? 'belangrijk' : 'overig');
+            // Toon bij voorkeur de reden van nog openstaande alarmen; is alles
+            // afgehandeld, dan die van de opgeloste alarmen.
+            const redenBron = openAlarmen.length ? openAlarmen : filterAlarmen;
             items.push({
                 sleutel:       rt.sleutel,
                 pagina:        rt.pagina,
@@ -55,7 +63,7 @@ export class TakenService implements ITakenService {
                 voltooid:      rt.voltooid,
                 voltooid_op:   rt.voltooid_op,
                 voltooid_door: rt.voltooid_door,
-                reden:         heeftAlarm ? filterAlarmen.map(a => TakenService._reden(a.beschrijving)).join('; ') : null,
+                reden:         heeftAlarm ? redenBron.map(a => TakenService._reden(a.beschrijving)).join('; ') : null,
                 categorie,
                 bron:          { type: 'rondetaak', sleutel: rt.sleutel },
             });

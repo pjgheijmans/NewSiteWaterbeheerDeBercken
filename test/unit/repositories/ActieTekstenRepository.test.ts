@@ -29,7 +29,7 @@ describe('render — plaatshouders', () => {
 describe('getDefaults', () => {
     it('geeft alle standaard-sjablonen synchroon terug zonder DB-toegang', () => {
         const defaults = repo.getDefaults();
-        expect(defaults.length).toBe(13);
+        expect(defaults.length).toBe(14);
         expect(defaults.find(t => t.actie_sleutel === 'chloor_bestellen')).toBeDefined();
         expect(pool.execute).not.toHaveBeenCalled();
     });
@@ -83,7 +83,7 @@ describe('save', () => {
 describe('seedDefaults', () => {
     it('voegt alle standaard-sjablonen met INSERT IGNORE toe', async () => {
         await repo.seedDefaults();
-        expect(pool.execute).toHaveBeenCalledTimes(13);
+        expect(pool.execute).toHaveBeenCalledTimes(14);
         expect(sqlVan(pool.execute)).toMatch(/INSERT IGNORE/i);
     });
 });
