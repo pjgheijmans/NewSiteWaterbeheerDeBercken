@@ -16,6 +16,7 @@ class Application {
         this.trend      = new TrendModule(this);
         this.logboek    = new LogboekModule(this);
         this.gebruikers = new GebruikersModule(this);
+        this.rollen     = new RollenModule(this);
         this.database   = new DatabaseModule(this);
         this.configuratie = new ConfiguratieModule(this);
         this.verbruik   = new VerbruikModule(this);
@@ -63,6 +64,7 @@ window.verwerkLogin             = ()           => app.auth.verwerkLogin();
 window.verwerkLogout            = ()           => app.auth.verwerkLogout();
 window.toggleGebruikerMenu      = ()           => app.auth.toggleGebruikerMenu();
 window.wisselRol                = (rol)        => app.auth.wisselRol(rol);
+window.actualiseerLeesmodus     = ()           => app.auth.actualiseerLeesmodus();
 
 window.veranderDatum            = (dagen)      => app.nav.veranderDatum(dagen);
 
@@ -85,6 +87,9 @@ window.toggleDienst             = ()           => app.dienst.toggleBewerk();
 
 window.voegGebruikerToe         = ()           => app.gebruikers.voegGebruikerToe();
 window.verwijderGebruiker       = (id)         => app.gebruikers.verwijderGebruiker(id);
+
+window.voegRolToe               = ()           => app.rollen.voegRolToe();
+window.verwijderRol             = (id)         => app.rollen.verwijderRol(id);
 
 window.leegmakenTabel           = (naam)       => app.database.leegmakenTabel(naam);
 window.verwijderDatabase        = ()           => app.database.verwijderDatabase();

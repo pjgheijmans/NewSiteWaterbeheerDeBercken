@@ -49,14 +49,23 @@ describe('logboekSchema', () => {
 });
 
 describe('gebruikerSchema', () => {
-    const geldig = { voornaam: 'Jan', achternaam: 'J', inlognaam: 'jj', wachtwoord: 'x', taak: 'coordinator' };
+    const geldig = { voornaam: 'Jan', achternaam: 'J', inlognaam: 'jj', wachtwoord: 'x', rol_ids: [3] };
 
     it('accepteert een geldige gebruiker', () => {
         expect(gebruikerSchema.safeParse(geldig).success).toBe(true);
     });
 
-    it('weigert een onbekende taak', () => {
-        expect(gebruikerSchema.safeParse({ ...geldig, taak: 'directeur' }).success).toBe(false);
+    it('accepteert een lege rollenlijst', () => {
+        expect(gebruikerSchema.safeParse({ ...geldig, rol_ids: [] }).success).toBe(true);
+    });
+
+    it('weigert niet-numerieke rol_ids', () => {
+        expect(gebruikerSchema.safeParse({ ...geldig, rol_ids: ['x'] }).success).toBe(false);
+    });
+
+    it('weigert ontbrekende rol_ids', () => {
+        const { rol_ids: _weg, ...zonder } = geldig;
+        expect(gebruikerSchema.safeParse(zonder).success).toBe(false);
     });
 
     it('weigert een leeg inlognaam of wachtwoord', () => {
@@ -66,7 +75,7 @@ describe('gebruikerSchema', () => {
 });
 
 describe('gebruikerUpdateSchema', () => {
-    const basis = { voornaam: 'Jan', achternaam: 'J', inlognaam: 'jj', taak: 'coordinator' };
+    const basis = { voornaam: 'Jan', achternaam: 'J', inlognaam: 'jj', rol_ids: [3] };
 
     it('staat een ontbrekend wachtwoord toe (ongewijzigd laten)', () => {
         expect(gebruikerUpdateSchema.safeParse(basis).success).toBe(true);

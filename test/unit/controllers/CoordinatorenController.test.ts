@@ -21,7 +21,10 @@ function maakApp(taak: string | null = 'coordinator') {
     return maakTestApp(new CoordinatorenController(mockService).router, taak);
 }
 
-const DATUM = '2026-05-31';
+// Vandaag (Amsterdam) zodat de historie-bewaking de delegatie-tests niet blokkeert.
+const DATUM = new Intl.DateTimeFormat('en-CA', {
+    timeZone: 'Europe/Amsterdam', year: 'numeric', month: '2-digit', day: '2-digit',
+}).format(new Date());
 beforeEach(() => jest.clearAllMocks());
 
 describe('GET /', () => {
@@ -144,6 +147,15 @@ describe('logboek', () => {
         mockService.deleteLogboek.mockResolvedValue(undefined);
         const res = await request(maakApp()).delete('/logboek/3');
         expect(res.status).toBe(200);
-        expect(mockService.deleteLogboek).toHaveBeenCalledWith('3');
+        expect(mockService.deleteLogboek).toHaveBeenCalledWith('3', expect.objectContaining({ taak: 'coordinator' }));
+    });
+});
+
+describe('historie-bewaking', () => {
+    it('blokkeert een POST op een datum in het verleden zonder historie-recht', async () => {
+        const res = await request(maakApp('coordinator'))
+            .post('/').send({ datum: '2000-01-01', bad_naam: 'Diep' });
+        expect(res.status).toBe(403);
+        expect(mockService.saveMeting).not.toHaveBeenCalled();
     });
 });

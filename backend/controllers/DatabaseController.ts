@@ -1,5 +1,5 @@
 import express, { Router, Request, Response, NextFunction } from 'express';
-import { checkAuth, isAdminOrWaterbeheerder } from '../middleware/auth';
+import { checkAuth, vereist } from '../middleware/auth';
 import { IDatabaseService } from '../services/IDatabaseService';
 
 const TRUNC_TABLES  = ['logboek','coordinatoren_logboek','metingen_diep_ondiep','metingen_coordinatoren','coordinatoren_checklist','coordinatoren_daggegevens','metingen_peuterbad','verbruik_diep_ondiep','verwarmings_systeem_diep_ondiep','waterbeheer_dienst','acties','limieten','actie_teksten','gebruikers'];
@@ -11,23 +11,14 @@ export class DatabaseController {
 
     constructor(private readonly service: IDatabaseService) {
         this.router = Router();
-        this.router.post('/truncate/:tabelnaam', checkAuth, this.truncate.bind(this));
-        this.router.get('/export/:tabelnaam',    checkAuth, this.exportCsv.bind(this));
-        this.router.post('/import/:tabelnaam',   checkAuth, express.text({ type: 'text/csv', limit: '10mb' }), this.importCsv.bind(this));
-        this.router.post('/verwijder-alles',     checkAuth, this.verwijderAlles.bind(this));
-        this.router.post('/initialiseer',        checkAuth, this.initialiseer.bind(this));
-    }
-
-    private vereistToegang(req: Request, res: Response): boolean {
-        if (!isAdminOrWaterbeheerder(req.session.gebruiker!.taak)) {
-            res.status(403).json({ error: 'Geen toegang' });
-            return false;
-        }
-        return true;
+        this.router.post('/truncate/:tabelnaam', checkAuth, vereist('beheer', 'schrijven'), this.truncate.bind(this));
+        this.router.get('/export/:tabelnaam',    checkAuth, vereist('beheer', 'lezen'),     this.exportCsv.bind(this));
+        this.router.post('/import/:tabelnaam',   checkAuth, vereist('beheer', 'schrijven'), express.text({ type: 'text/csv', limit: '10mb' }), this.importCsv.bind(this));
+        this.router.post('/verwijder-alles',     checkAuth, vereist('beheer', 'schrijven'), this.verwijderAlles.bind(this));
+        this.router.post('/initialiseer',        checkAuth, vereist('beheer', 'schrijven'), this.initialiseer.bind(this));
     }
 
     private async truncate(req: Request, res: Response, next: NextFunction): Promise<void> {
-        if (!this.vereistToegang(req, res)) return;
         const tabel = String(req.params['tabelnaam']);
         if (!TRUNC_TABLES.includes(tabel)) { res.status(400).json({ error: 'Ongeldige tabelnaam' }); return; }
         try {
@@ -37,7 +28,6 @@ export class DatabaseController {
     }
 
     private async exportCsv(req: Request, res: Response, next: NextFunction): Promise<void> {
-        if (!this.vereistToegang(req, res)) return;
         const tabel = String(req.params['tabelnaam']);
         if (!EXPORT_TABLES.includes(tabel)) { res.status(400).json({ error: 'Ongeldige tabelnaam' }); return; }
         try {
@@ -50,7 +40,6 @@ export class DatabaseController {
     }
 
     private async importCsv(req: Request, res: Response, next: NextFunction): Promise<void> {
-        if (!this.vereistToegang(req, res)) return;
         const tabel = String(req.params['tabelnaam']);
         if (!IMPORT_TABLES.includes(tabel)) { res.status(400).json({ error: 'Ongeldige tabelnaam' }); return; }
         try {
@@ -60,7 +49,6 @@ export class DatabaseController {
     }
 
     private async verwijderAlles(req: Request, res: Response, next: NextFunction): Promise<void> {
-        if (!this.vereistToegang(req, res)) return;
         try {
             await this.service.wisAlles();
             req.session.destroy(() => {});
@@ -69,7 +57,6 @@ export class DatabaseController {
     }
 
     private async initialiseer(req: Request, res: Response, next: NextFunction): Promise<void> {
-        if (!this.vereistToegang(req, res)) return;
         try {
             await this.service.initialiseer();
             req.session.destroy(() => {});

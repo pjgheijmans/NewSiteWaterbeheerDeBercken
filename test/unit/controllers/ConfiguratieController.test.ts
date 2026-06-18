@@ -14,14 +14,18 @@ function maakApp(taak: string | null = 'Administrator') {
 
 beforeEach(() => jest.clearAllMocks());
 
-describe('GET / (login vereist, elke rol)', () => {
+describe('GET / (beheer-domein)', () => {
     it('geeft de configuratie-instellingen terug', async () => {
         mockService.getAll.mockResolvedValue([
             { sleutel: 'sessie_timeout_minuten', waarde: '5', omschrijving: 'Sessie', type: 'getal' },
         ]);
-        const res = await request(maakApp('coordinator')).get('/');
+        const res = await request(maakApp('Administrator')).get('/');
         expect(res.status).toBe(200);
         expect(res.body[0].sleutel).toBe('sessie_timeout_minuten');
+    });
+
+    it('geeft 403 voor een niet-beheer-rol', async () => {
+        expect((await request(maakApp('coordinator')).get('/')).status).toBe(403);
     });
 
     it('geeft 401 zonder sessie', async () => {

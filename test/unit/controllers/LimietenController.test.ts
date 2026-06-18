@@ -7,18 +7,23 @@ const mockService: jest.Mocked<ILimietenService> = {
     getAll: jest.fn(), getDefaults: jest.fn(), save: jest.fn(),
 };
 
-function maakApp(taak: string | null = 'waterbeheerder') {
+function maakApp(taak: string | null = 'Administrator') {
     return maakTestApp(new LimietenController(mockService).router, taak);
 }
 
 beforeEach(() => jest.clearAllMocks());
 
-describe('GET / (login vereist, elke rol)', () => {
-    it('geeft de limietenmap terug voor een ingelogde gebruiker', async () => {
+describe('GET / (beheer-domein)', () => {
+    it('geeft de limietenmap terug voor het beheer-domein', async () => {
         mockService.getAll.mockResolvedValue({ ph_waarde: { min: 6.8, max: 7.6 } });
-        const res = await request(maakApp('coordinator')).get('/');
+        const res = await request(maakApp('Administrator')).get('/');
         expect(res.status).toBe(200);
         expect(res.body.ph_waarde).toEqual({ min: 6.8, max: 7.6 });
+    });
+
+    it('geeft 403 voor een niet-beheer-rol', async () => {
+        expect((await request(maakApp('coordinator')).get('/')).status).toBe(403);
+        expect(mockService.getAll).not.toHaveBeenCalled();
     });
 
     it('geeft 401 zonder sessie', async () => {
@@ -27,14 +32,14 @@ describe('GET / (login vereist, elke rol)', () => {
 
     it('geeft 500 bij een fout in de service', async () => {
         mockService.getAll.mockRejectedValue(new Error('DB fout'));
-        expect((await request(maakApp('waterbeheerder')).get('/')).status).toBe(500);
+        expect((await request(maakApp('Administrator')).get('/')).status).toBe(500);
     });
 });
 
-describe('GET /defaults (login vereist)', () => {
-    it('geeft de standaardwaarden terug voor een ingelogde gebruiker', async () => {
+describe('GET /defaults (beheer-domein)', () => {
+    it('geeft de standaardwaarden terug voor het beheer-domein', async () => {
         mockService.getDefaults.mockReturnValue({ ph_waarde: { min: 6.8, max: 7.6 } });
-        const res = await request(maakApp('waterbeheerder')).get('/defaults');
+        const res = await request(maakApp('Administrator')).get('/defaults');
         expect(res.status).toBe(200);
         expect(mockService.getDefaults).toHaveBeenCalled();
     });
@@ -44,7 +49,7 @@ describe('GET /defaults (login vereist)', () => {
     });
 });
 
-describe('POST / (alleen Administrator)', () => {
+describe('POST / (alleen beheer)', () => {
     const payload = { parameter_naam: 'ph_waarde', min_waarde: 6.8, max_waarde: 7.6 };
 
     it('slaat op voor Administrator', async () => {

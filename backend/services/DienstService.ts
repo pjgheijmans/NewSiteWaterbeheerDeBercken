@@ -19,13 +19,12 @@ export class DienstService implements IDienstService {
     }
 
     /**
-     * Namen van de waterbeheerders (incl. Administrators) voor de keuzelijst.
-     * Dedupliceert en sorteert; lege namen vallen weg.
+     * Namen voor de keuzelijst: iedereen die het waterbeheer-domein mag bewerken
+     * (via een van zijn rollen). Dedupliceert en sorteert; lege namen vallen weg.
      */
     async getWaterbeheerders(): Promise<string[]> {
-        const gebruikers = await this.gebruikersRepo.getAll();
+        const gebruikers = await this.gebruikersRepo.getMetRecht('waterbeheer', 'schrijven');
         const namen = gebruikers
-            .filter(g => g.taak === 'waterbeheerder' || g.taak === 'Administrator')
             .map(g => [g.voornaam, g.achternaam].filter(Boolean).join(' ').trim() || g.inlognaam)
             .filter(naam => !!naam);
         return Array.from(new Set(namen)).sort((a, b) => a.localeCompare(b));

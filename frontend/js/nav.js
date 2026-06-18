@@ -47,5 +47,6 @@ class NavModule {
         nieuw     = this.begrensSeizoenDatum(nieuw);
         input.value = nieuw;
         this.app.metingen.laadMetingen();
+        this.app.auth.actualiseerLeesmodus();
     }
 }

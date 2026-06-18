@@ -13,14 +13,18 @@ function maakApp(taak: string | null = 'Administrator') {
 
 beforeEach(() => jest.clearAllMocks());
 
-describe('GET / (login vereist, elke rol)', () => {
-    it('geeft de sjablonen terug voor een ingelogde gebruiker', async () => {
+describe('GET / (beheer-domein)', () => {
+    it('geeft de sjablonen terug voor het beheer-domein', async () => {
         mockService.getAll.mockResolvedValue([
             { actie_sleutel: 'chloor_bestellen', sjabloon: 'Chloor bestellen', omschrijving: null },
         ]);
-        const res = await request(maakApp('coordinator')).get('/');
+        const res = await request(maakApp('Administrator')).get('/');
         expect(res.status).toBe(200);
         expect(res.body[0].actie_sleutel).toBe('chloor_bestellen');
+    });
+
+    it('geeft 403 voor een niet-beheer-rol', async () => {
+        expect((await request(maakApp('coordinator')).get('/')).status).toBe(403);
     });
 
     it('geeft 401 zonder sessie', async () => {

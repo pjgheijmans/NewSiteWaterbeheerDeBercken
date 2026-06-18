@@ -1,6 +1,8 @@
 import { ILogboekRepository } from '../repositories/ILogboekRepository';
 import { ILogboekService } from './ILogboekService';
 import { bepaalAuteur } from '../auteur';
+import { magDatumBewerken } from '../middleware/auth';
+import { AppError } from '../errors';
 import { LogboekEntry, LogboekOpslaanResultaat, Gebruiker } from '../types';
 
 /** Bedrijfslogica voor het waterbeheer-logboek; berekent de auteur. */
@@ -17,7 +19,11 @@ export class LogboekService implements ILogboekService {
         return { id: row?.id ?? null, auteur: row?.auteur ?? auteur };
     }
 
-    deleteById(id: string): Promise<void> {
-        return this.repo.deleteById(id);
+    async deleteById(id: string, gebruiker: Gebruiker): Promise<void> {
+        const datum = await this.repo.getDatumById(id);
+        if (datum && !magDatumBewerken(datum, gebruiker)) {
+            throw new AppError('Een datum in het verleden mag je niet bewerken', 403);
+        }
+        await this.repo.deleteById(id);
     }
 }

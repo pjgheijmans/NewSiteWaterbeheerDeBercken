@@ -3,7 +3,7 @@ import { IGebruikersRepository } from '../../../backend/repositories/IGebruikers
 import { maakTestGebruiker } from '../../helpers/testApp';
 
 const repo: jest.Mocked<IGebruikersRepository> = {
-    findByLogin: jest.fn(), getAll: jest.fn(), create: jest.fn(),
+    findByLogin: jest.fn(), getAll: jest.fn(), getMetRecht: jest.fn(), create: jest.fn(),
     update: jest.fn(), remove: jest.fn(), seedDefaults: jest.fn(),
     hashBestaandeWachtwoorden: jest.fn(),
 };
@@ -27,8 +27,8 @@ describe('login', () => {
     it('gebruikt alleen de voornaam als die uniek is', async () => {
         repo.findByLogin.mockResolvedValue({ id: 1, gebruikersnaam: 'p', taak: 'waterbeheerder', voornaam: 'Paul', achternaam: 'Heijmans', inlognaam: 'pheijmans' });
         repo.getAll.mockResolvedValue([
-            { id: 1, voornaam: 'Paul', achternaam: 'Heijmans', inlognaam: 'pheijmans', taak: 'waterbeheerder' },
-            { id: 2, voornaam: 'Jan',  achternaam: 'Bos',      inlognaam: 'jbos',      taak: 'coordinator' },
+            { id: 1, voornaam: 'Paul', achternaam: 'Heijmans', inlognaam: 'pheijmans', rol_ids: [] },
+            { id: 2, voornaam: 'Jan',  achternaam: 'Bos',      inlognaam: 'jbos',      rol_ids: [] },
         ]);
         expect((await service.login('pheijmans', 'Paul'))?.weergavenaam).toBe('Paul');
     });
@@ -36,8 +36,8 @@ describe('login', () => {
     it('vult de achternaam-initiaal aan bij een dubbele voornaam', async () => {
         repo.findByLogin.mockResolvedValue({ id: 1, gebruikersnaam: 'p', taak: 'waterbeheerder', voornaam: 'Paul', achternaam: 'Heijmans', inlognaam: 'pheijmans' });
         repo.getAll.mockResolvedValue([
-            { id: 1, voornaam: 'Paul', achternaam: 'Heijmans', inlognaam: 'pheijmans', taak: 'waterbeheerder' },
-            { id: 2, voornaam: 'Paul', achternaam: 'Visser',   inlognaam: 'pvisser',   taak: 'coordinator' },
+            { id: 1, voornaam: 'Paul', achternaam: 'Heijmans', inlognaam: 'pheijmans', rol_ids: [] },
+            { id: 2, voornaam: 'Paul', achternaam: 'Visser',   inlognaam: 'pvisser',   rol_ids: [] },
         ]);
         expect((await service.login('pheijmans', 'Paul'))?.weergavenaam).toBe('Paul H');
     });
@@ -45,8 +45,8 @@ describe('login', () => {
     it('gebruikt de volledige achternaam als de initiaal ook botst (Heijmans/Hermans)', async () => {
         repo.findByLogin.mockResolvedValue({ id: 1, gebruikersnaam: 'p', taak: 'waterbeheerder', voornaam: 'Paul', achternaam: 'Heijmans', inlognaam: 'pheijmans' });
         repo.getAll.mockResolvedValue([
-            { id: 1, voornaam: 'Paul', achternaam: 'Heijmans', inlognaam: 'pheijmans', taak: 'waterbeheerder' },
-            { id: 2, voornaam: 'Paul', achternaam: 'Hermans',  inlognaam: 'phermans',  taak: 'coordinator' },
+            { id: 1, voornaam: 'Paul', achternaam: 'Heijmans', inlognaam: 'pheijmans', rol_ids: [] },
+            { id: 2, voornaam: 'Paul', achternaam: 'Hermans',  inlognaam: 'phermans',  rol_ids: [] },
         ]);
         expect((await service.login('pheijmans', 'Paul'))?.weergavenaam).toBe('Paul Heijmans');
     });

@@ -11,5 +11,5 @@ export interface ICoordinatorenService {
     deleteBlok(datum: string, tijdstip: string): Promise<void>;
     getLogboek(datum: string): Promise<LogboekEntry[]>;
     saveLogboek(datum: string, tijdstip: string, tekst: string, gebruiker: Gebruiker): Promise<LogboekOpslaanResultaat>;
-    deleteLogboek(id: string): Promise<void>;
+    deleteLogboek(id: string, gebruiker: Gebruiker): Promise<void>;
 }

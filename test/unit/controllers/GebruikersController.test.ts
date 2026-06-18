@@ -7,29 +7,30 @@ const mockService: jest.Mocked<IGebruikersService> = {
     getAll: jest.fn(), create: jest.fn(), update: jest.fn(), remove: jest.fn(),
 };
 
-function maakApp(taak: string | null = 'waterbeheerder') {
+function maakApp(taak: string | null = 'Administrator') {
     return maakTestApp(new GebruikersController(mockService).router, taak);
 }
 
 beforeEach(() => jest.clearAllMocks());
 
 describe('GET /', () => {
-    it('geeft de gebruikerslijst terug voor waterbeheerder', async () => {
+    it('geeft de gebruikerslijst terug voor het beheer-domein', async () => {
         mockService.getAll.mockResolvedValue([
-            { id: 1, voornaam: 'Paul', achternaam: 'H', inlognaam: 'pheijmans', wachtwoord: '***', taak: 'waterbeheerder' },
+            { id: 1, voornaam: 'Paul', achternaam: 'H', inlognaam: 'pheijmans', wachtwoord: '***', rol_ids: [2] },
         ]);
         const res = await request(maakApp()).get('/');
         expect(res.status).toBe(200);
         expect(res.body[0].inlognaam).toBe('pheijmans');
     });
 
-    it('staat Administrator toe', async () => {
-        mockService.getAll.mockResolvedValue([]);
-        expect((await request(maakApp('Administrator')).get('/')).status).toBe(200);
-    });
-
     it('geeft 403 voor coordinator', async () => {
         const res = await request(maakApp('coordinator')).get('/');
+        expect(res.status).toBe(403);
+        expect(mockService.getAll).not.toHaveBeenCalled();
+    });
+
+    it('geeft 403 voor waterbeheerder (geen beheer-recht)', async () => {
+        const res = await request(maakApp('waterbeheerder')).get('/');
         expect(res.status).toBe(403);
         expect(mockService.getAll).not.toHaveBeenCalled();
     });
@@ -45,7 +46,7 @@ describe('GET /', () => {
 });
 
 describe('POST /', () => {
-    const nieuw = { voornaam: 'Jan', achternaam: 'Jansen', inlognaam: 'jjansen', wachtwoord: 'geheim', taak: 'coordinator' };
+    const nieuw = { voornaam: 'Jan', achternaam: 'Jansen', inlognaam: 'jjansen', wachtwoord: 'geheim', rol_ids: [3] };
 
     it('delegeert het aanmaken naar de service', async () => {
         mockService.create.mockResolvedValue(undefined);
@@ -61,7 +62,7 @@ describe('POST /', () => {
 });
 
 describe('PUT /:id', () => {
-    const wijziging = { voornaam: 'Jan', achternaam: 'Jansen', inlognaam: 'jjansen', wachtwoord: 'nieuw', taak: 'waterbeheerder' };
+    const wijziging = { voornaam: 'Jan', achternaam: 'Jansen', inlognaam: 'jjansen', wachtwoord: 'nieuw', rol_ids: [2] };
 
     it('delegeert de wijziging met het id', async () => {
         mockService.update.mockResolvedValue(undefined);

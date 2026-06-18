@@ -15,7 +15,7 @@ beforeEach(() => {
         getAll: jest.fn(), getDefaults: jest.fn(), seedDefaults: jest.fn(), save: jest.fn(),
     };
     gebruikersRepo = {
-        findByLogin: jest.fn(), getAll: jest.fn(), create: jest.fn(),
+        findByLogin: jest.fn(), getAll: jest.fn(), getMetRecht: jest.fn(), create: jest.fn(),
         update: jest.fn(), remove: jest.fn(), seedDefaults: jest.fn(),
         hashBestaandeWachtwoorden: jest.fn(),
     };
@@ -49,8 +49,8 @@ describe('truncate', () => {
 describe('truncateAll', () => {
     it('truncate alle datatabellen tussen FK-check toggles', async () => {
         await repo.truncateAll();
-        // 13 tabellen + 2 FK-toggles = 15 query-aanroepen
-        expect(pool.query).toHaveBeenCalledTimes(15);
+        // 14 tabellen + 2 FK-toggles = 16 query-aanroepen
+        expect(pool.query).toHaveBeenCalledTimes(16);
     });
 
     it('gaat door als één tabel een fout geeft', async () => {

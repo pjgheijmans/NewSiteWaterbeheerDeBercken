@@ -10,7 +10,7 @@ const coordRepo: jest.Mocked<ICoordinatorenRepository> = {
     getDaggegevens: jest.fn(), saveDaggegevens: jest.fn(),
 };
 const logboekRepo: jest.Mocked<ICoordinatorenLogboekRepository> = {
-    getByDatum: jest.fn(), save: jest.fn(), deleteById: jest.fn(),
+    getByDatum: jest.fn(), save: jest.fn(), getDatumById: jest.fn(), deleteById: jest.fn(),
 };
 const actiesRepo: jest.Mocked<IActiesRepository> = {
     getActies: jest.fn(), resolve: jest.fn(), unresolve: jest.fn(),
@@ -92,7 +92,7 @@ describe('pass-through methoden', () => {
         await service.getDaggegevens(DATUM);
         await service.deleteBlok(DATUM, '10:00:00');
         await service.getLogboek(DATUM);
-        await service.deleteLogboek('3');
+        await service.deleteLogboek('3', gebruiker);
 
         expect(coordRepo.getCoordinatoren).toHaveBeenCalledWith(DATUM);
         expect(coordRepo.saveChecklist).toHaveBeenCalledWith(DATUM, { proef_waterspeel: true }, 'Co Ord');

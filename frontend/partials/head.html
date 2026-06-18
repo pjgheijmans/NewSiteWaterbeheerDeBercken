@@ -7,5 +7,19 @@
     <title>Digitale Dagstaat - Zwembad</title>
     <link rel="icon" type="image/png" href="/images/debercken-site.png">
     <link rel="stylesheet" href="/css/style.css">
+    <style>
+        /* Alleen-lezen modus: gegevensinvoer blokkeren wanneer de gebruiker geen
+           schrijfrecht heeft (of een datum in het verleden zonder historie-recht).
+           Datum-navigatie (centrale datum, trend-bereik) blijft bruikbaar zodat je
+           altijd terug naar vandaag kunt en grafieken kunt filteren. */
+        .alleen-lezen input:not(#centraleDatum):not(#trend-van):not(#trend-tot),
+        .alleen-lezen select,
+        .alleen-lezen textarea { pointer-events: none; opacity: 0.55; }
+        .leesmodus-banner { background:#fff3cd; color:#856404; border:1px solid #ffeeba;
+            padding:8px 14px; border-radius:6px; margin:10px 0; font-size:14px; }
+        /* Gebruikersbeheer: vaste kolommen zodat de naam/wachtwoord-velden smaller
+           zijn en de Rollen-kolom de resterende ruimte krijgt. */
+        #sectie-gebruikers table { table-layout: fixed; }
+    </style>
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 </head>

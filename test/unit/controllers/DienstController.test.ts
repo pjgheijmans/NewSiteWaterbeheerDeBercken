@@ -41,7 +41,7 @@ describe('GET /waterbeheerders (login vereist)', () => {
     });
 });
 
-describe('POST / (waterbeheerder of Administrator)', () => {
+describe('POST / (waterbeheer-domein)', () => {
     const payload = { datum: DATUM, dienst_1: 'Jan', dienst_2: 'Piet' };
 
     it('slaat op voor waterbeheerder', async () => {
@@ -51,9 +51,9 @@ describe('POST / (waterbeheerder of Administrator)', () => {
         expect(mockService.saveDienst).toHaveBeenCalledWith(payload);
     });
 
-    it('slaat op voor Administrator', async () => {
-        mockService.saveDienst.mockResolvedValue(undefined);
-        expect((await request(maakApp('Administrator')).post('/').send(payload)).status).toBe(200);
+    it('geeft 403 voor Administrator zonder waterbeheer-recht', async () => {
+        expect((await request(maakApp('Administrator')).post('/').send(payload)).status).toBe(403);
+        expect(mockService.saveDienst).not.toHaveBeenCalled();
     });
 
     it('geeft 403 voor coordinator', async () => {

@@ -34,6 +34,7 @@ class AppState {
         this.dienstAutoSaveTimer        = null;
         this.logboekTimers              = {};
         this.gebruikersSaveTimers       = {};
+        this.rollenSaveTimers           = {};
         this.configuratieSaveTimers     = {};
 
         // Optimistische concurrency: per record (sleutel → {versie, auteur, bijgewerkt_op}).
