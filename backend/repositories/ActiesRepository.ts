@@ -75,6 +75,7 @@ export class ActiesRepository implements IActiesRepository {
             actie_zwavelzuur_min: 50,
             actie_bezoekers_max:  750,
             actie_spoelbeurt_max: 1500,
+            actie_spoelbeurt_dagen: 7,
             actie_floculant_min:  10,
             actie_gebonden_chloor_max:      1,
             actie_chloor_peuterbad_min:     10,
@@ -208,17 +209,19 @@ export class ActiesRepository implements IActiesRepository {
     }
 
     /**
-     * Aantal bezoekers sinds de laatste filterreiniging voor dit bad. Een
+     * Bezoekers én dagen sinds de laatste filterreiniging voor dit bad. Een
      * "reiniging" kan uit twee bronnen komen: een opgeloste
      * filter_spoelen_spoelbeurt-actie (Acties-tab) óf een afgevinkte
      * filter-rondetaak (diep_filter / ondiep_filter). De meest recente van de
-     * twee, strikt vóór `datum`, bepaalt vanaf welke dag de dagtotalen tellen.
+     * twee, strikt vóór `datum`, bepaalt vanaf welke dag de dagtotalen tellen en
+     * hoeveel dagen er sinds die reiniging zijn verstreken. `dagen` is `null`
+     * als er nog geen reiniging bekend is (geen referentiepunt → geen actie).
      */
-    private async berekenSpoelbeurtTotaal(
+    private async berekenSpoelbeurt(
         bad_id: number, datum: string, rondetaakSleutel: string
-    ): Promise<number> {
+    ): Promise<{ totaal: number; dagen: number | null }> {
         const [ankerRows] = await this.pool.execute<RowDataPacket[]>(
-            `SELECT MAX(d) AS anker FROM (
+            `SELECT MAX(d) AS anker, DATEDIFF(?, MAX(d)) AS dagen FROM (
                  SELECT MAX(datum) AS d FROM acties
                    WHERE bad_id = ? AND actie_type = 'filter_spoelen_spoelbeurt'
                      AND opgelost = TRUE AND datum < ?
@@ -226,9 +229,11 @@ export class ActiesRepository implements IActiesRepository {
                  SELECT MAX(datum) AS d FROM rondetaken_voltooid
                    WHERE taak_sleutel = ? AND datum < ?
              ) t`,
-            [bad_id, datum, rondetaakSleutel, datum]
+            [datum, bad_id, datum, rondetaakSleutel, datum]
         );
-        const anker = (ankerRows[0] as { anker: string | null } | undefined)?.anker ?? null;
+        const rij    = ankerRows[0] as { anker: string | null; dagen: number | null } | undefined;
+        const anker  = rij?.anker ?? null;
+        const dagen  = rij?.dagen == null ? null : Number(rij.dagen);
 
         const [totaalRows] = await this.pool.execute<RowDataPacket[]>(
             anker
@@ -239,7 +244,10 @@ export class ActiesRepository implements IActiesRepository {
             anker ? [anker, datum] : [datum]
         );
 
-        return parseFloat(String((totaalRows[0] as { totaal: string }).totaal)) || 0;
+        return {
+            totaal: parseFloat(String((totaalRows[0] as { totaal: string }).totaal)) || 0,
+            dagen,
+        };
     }
 
     async genereerSpoelbeurt(datum: string): Promise<BadTotalen> {
@@ -248,16 +256,20 @@ export class ActiesRepository implements IActiesRepository {
             "SELECT id, naam FROM baden WHERE naam IN ('Diep', 'Ondiep')"
         );
         // Koppeling met de Rondetaken-filtertaak per bad: een afgevinkte
-        // rondetaak telt mee als reinigingsmoment (zie berekenSpoelbeurtTotaal).
+        // rondetaak telt mee als reinigingsmoment (zie berekenSpoelbeurt).
         const t = await this.actieTekstenRepo.getSjablonen();
         const totalen: Record<string, number> = {};
         for (const bad of bads as Array<{ id: number; naam: string }>) {
             const sleutel = RondetakenRepository.filterSleutelVoorBad(bad.naam) ?? '';
-            const totaal  = await this.berekenSpoelbeurtTotaal(bad.id, datum, sleutel);
+            const { totaal, dagen } = await this.berekenSpoelbeurt(bad.id, datum, sleutel);
             totalen[bad.naam.toLowerCase()] = totaal;
             await this.stelIn(bad.id, datum, 'filter_spoelen_spoelbeurt',
                 this._tekst(t, 'filter_spoelen_spoelbeurt', { bad: bad.naam, waarde: totaal, drempel: d.actie_spoelbeurt_max }),
                 totaal > d.actie_spoelbeurt_max);
+            // Spoel óók als de laatste reiniging te lang geleden is (drempel in dagen).
+            await this.stelIn(bad.id, datum, 'filter_spoelen_dagen',
+                this._tekst(t, 'filter_spoelen_dagen', { bad: bad.naam, waarde: dagen ?? 0, drempel: d.actie_spoelbeurt_dagen }),
+                dagen !== null && dagen > d.actie_spoelbeurt_dagen);
         }
         return totalen as unknown as BadTotalen;
     }

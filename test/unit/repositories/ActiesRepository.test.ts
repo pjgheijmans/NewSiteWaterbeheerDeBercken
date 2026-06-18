@@ -190,12 +190,14 @@ describe('genereerSpoelbeurt', () => {
         pool.execute
             .mockResolvedValueOnce(resultaat([]))                                  // laadDrempelwaarden → spoelbeurt_max 1500
             .mockResolvedValueOnce(resultaat([{ id: 1, naam: 'Diep' }, { id: 2, naam: 'Ondiep' }])) // baden
-            .mockResolvedValueOnce(resultaat([{ anker: null }]))                   // Diep: anker (geen reiniging)
+            .mockResolvedValueOnce(resultaat([{ anker: null, dagen: null }]))      // Diep: anker (geen reiniging)
             .mockResolvedValueOnce(resultaat([{ totaal: '2000' }]))                // Diep: totaal 2000 > 1500
-            .mockResolvedValueOnce(resultaat([]))                                  // Diep: stelIn INSERT
-            .mockResolvedValueOnce(resultaat([{ anker: null }]))                   // Ondiep: anker (geen reiniging)
+            .mockResolvedValueOnce(resultaat([]))                                  // Diep: stelIn spoelbeurt
+            .mockResolvedValueOnce(resultaat([]))                                  // Diep: stelIn dagen
+            .mockResolvedValueOnce(resultaat([{ anker: null, dagen: null }]))      // Ondiep: anker (geen reiniging)
             .mockResolvedValueOnce(resultaat([{ totaal: '500' }]))                 // Ondiep: totaal 500 < 1500
-            .mockResolvedValueOnce(resultaat([]));                                 // Ondiep: stelIn DELETE
+            .mockResolvedValueOnce(resultaat([]))                                  // Ondiep: stelIn spoelbeurt
+            .mockResolvedValueOnce(resultaat([]));                                 // Ondiep: stelIn dagen
 
         const totalen = await repo.genereerSpoelbeurt('2026-05-31');
         expect(totalen).toEqual({ diep: 2000, ondiep: 500 });
@@ -203,14 +205,16 @@ describe('genereerSpoelbeurt', () => {
 
     it('telt per bad onafhankelijk: Diep reset op zijn eigen spoelbeurt, Ondiep telt door', async () => {
         pool.execute
-            .mockResolvedValueOnce(resultaat([]))                                                   // laadDrempelwaarden → max 1500
+            .mockResolvedValueOnce(resultaat([]))                                                   // laadDrempelwaarden → max 1500, dagen 7
             .mockResolvedValueOnce(resultaat([{ id: 1, naam: 'Diep' }, { id: 2, naam: 'Ondiep' }])) // baden
-            .mockResolvedValueOnce(resultaat([{ anker: '2026-05-20' }]))                            // Diep: eigen anker
+            .mockResolvedValueOnce(resultaat([{ anker: '2026-05-20', dagen: 11 }]))                 // Diep: eigen anker
             .mockResolvedValueOnce(resultaat([{ totaal: '800' }]))                                  // Diep: 800 sinds reset < 1500
-            .mockResolvedValueOnce(resultaat([]))                                                   // Diep: stelIn DELETE
-            .mockResolvedValueOnce(resultaat([{ anker: null }]))                                    // Ondiep: GEEN anker
+            .mockResolvedValueOnce(resultaat([]))                                                   // Diep: stelIn spoelbeurt DELETE
+            .mockResolvedValueOnce(resultaat([]))                                                   // Diep: stelIn dagen
+            .mockResolvedValueOnce(resultaat([{ anker: null, dagen: null }]))                       // Ondiep: GEEN anker
             .mockResolvedValueOnce(resultaat([{ totaal: '2000' }]))                                 // Ondiep: 2000 (alles) > 1500
-            .mockResolvedValueOnce(resultaat([]));                                                  // Ondiep: stelIn INSERT
+            .mockResolvedValueOnce(resultaat([]))                                                   // Ondiep: stelIn spoelbeurt INSERT
+            .mockResolvedValueOnce(resultaat([]));                                                  // Ondiep: stelIn dagen
 
         const totalen = await repo.genereerSpoelbeurt('2026-05-31');
 
@@ -218,33 +222,34 @@ describe('genereerSpoelbeurt', () => {
         expect(totalen).toEqual({ diep: 800, ondiep: 2000 });
 
         // Diep telt met ZIJN bad_id + filter-rondetaaksleutel en reset-venster (datum > anker)
-        expect(paramsVan(pool.execute, 2)).toEqual([1, '2026-05-31', 'diep_filter', '2026-05-31']);
+        expect(paramsVan(pool.execute, 2)).toEqual(['2026-05-31', 1, '2026-05-31', 'diep_filter', '2026-05-31']);
         expect(sqlVan(pool.execute, 3)).toMatch(/datum > \? AND datum <= \?/i);
         expect(paramsVan(pool.execute, 3)).toEqual(['2026-05-20', '2026-05-31']);
         expect(sqlVan(pool.execute, 4)).toMatch(/DELETE FROM acties/i); // Diep < drempel → geen actie
 
         // Ondiep telt met ZIJN bad_id + sleutel en zonder reset (geen anker)
-        expect(paramsVan(pool.execute, 5)).toEqual([2, '2026-05-31', 'ondiep_filter', '2026-05-31']);
-        expect(sqlVan(pool.execute, 6)).not.toMatch(/datum > \?/i);
-        expect(paramsVan(pool.execute, 6)).toEqual(['2026-05-31']);
-        expect(sqlVan(pool.execute, 7)).toMatch(/INSERT INTO acties/i); // Ondiep > drempel → actie
-        expect(paramsVan(pool.execute, 7)[3]).toBe('filter_spoelen_spoelbeurt');
+        expect(paramsVan(pool.execute, 6)).toEqual(['2026-05-31', 2, '2026-05-31', 'ondiep_filter', '2026-05-31']);
+        expect(sqlVan(pool.execute, 7)).not.toMatch(/datum > \?/i);
+        expect(paramsVan(pool.execute, 7)).toEqual(['2026-05-31']);
+        expect(sqlVan(pool.execute, 8)).toMatch(/INSERT INTO acties/i); // Ondiep > drempel → actie
+        expect(paramsVan(pool.execute, 8)[3]).toBe('filter_spoelen_spoelbeurt');
     });
 
     it('betrekt de filter-rondetaak in het ankerpunt (meest recente reiniging telt)', async () => {
         pool.execute
             .mockResolvedValueOnce(resultaat([]))                                  // laadDrempelwaarden → max 1500
             .mockResolvedValueOnce(resultaat([{ id: 1, naam: 'Diep' }]))           // baden (alleen Diep)
-            .mockResolvedValueOnce(resultaat([{ anker: '2026-05-25' }]))           // Diep: anker = rondetaak (recenter dan actie)
+            .mockResolvedValueOnce(resultaat([{ anker: '2026-05-25', dagen: 6 }])) // Diep: anker = rondetaak (recenter dan actie)
             .mockResolvedValueOnce(resultaat([{ totaal: '300' }]))                 // Diep: 300 sinds 25e
-            .mockResolvedValueOnce(resultaat([]));                                 // Diep: stelIn DELETE
+            .mockResolvedValueOnce(resultaat([]))                                  // Diep: stelIn spoelbeurt DELETE
+            .mockResolvedValueOnce(resultaat([]));                                 // Diep: stelIn dagen
 
         await repo.genereerSpoelbeurt('2026-05-31');
 
         // De ankerquery kijkt naar zowel de opgeloste spoelbeurt-actie als de filter-rondetaak
         expect(sqlVan(pool.execute, 2)).toMatch(/rondetaken_voltooid/i);
         expect(sqlVan(pool.execute, 2)).toMatch(/filter_spoelen_spoelbeurt/i);
-        expect(paramsVan(pool.execute, 2)).toEqual([1, '2026-05-31', 'diep_filter', '2026-05-31']);
+        expect(paramsVan(pool.execute, 2)).toEqual(['2026-05-31', 1, '2026-05-31', 'diep_filter', '2026-05-31']);
         // Telt vanaf het (meest recente) ankerpunt
         expect(paramsVan(pool.execute, 3)).toEqual(['2026-05-25', '2026-05-31']);
     });

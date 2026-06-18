@@ -20,6 +20,7 @@ const DEFAULT_ACTIE_TEKSTEN: ActieTekst[] = [
     { actie_sleutel: 'floculant_bijvullen',          sjabloon: 'Floculant {waarde} < {drempel} — Vul floculant bij',                          omschrijving: 'Verbruik: floculant bijna op' },
     { actie_sleutel: 'filter_spoelen_bezoekers',     sjabloon: 'Aantal bezoekers {waarde} > {drempel} — Filter spoelen',                      omschrijving: 'Dagbezoek boven de drempel' },
     { actie_sleutel: 'filter_spoelen_spoelbeurt',    sjabloon: 'Aantal bezoekers sinds spoelbeurt {bad} {waarde} > {drempel} — Filter spoelen', omschrijving: 'Cumulatief bezoek sinds laatste spoelbeurt' },
+    { actie_sleutel: 'filter_spoelen_dagen',         sjabloon: 'Laatste spoelbeurt {bad} {waarde} dagen geleden > {drempel} dagen — Filter spoelen', omschrijving: 'Te lang geleden sinds laatste spoelbeurt' },
     { actie_sleutel: 'filter_spoelen_gebonden',      sjabloon: 'Gebonden chloor {bad} {waarde} > {drempel} mg/l — Filter spoelen',            omschrijving: 'Coördinator: gebonden chloor te hoog' },
     { actie_sleutel: 'peuterbad_aftappen',           sjabloon: 'Peuterbad is vandaag gebruikt — Peuterbad water aftappen',                    omschrijving: 'Peuterbad na gebruik aftappen' },
 ];

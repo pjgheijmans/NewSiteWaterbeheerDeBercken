@@ -106,6 +106,7 @@ INSERT IGNORE INTO limieten (parameter_naam, min_waarde, max_waarde) VALUES
 ('actie_zwavelzuur_min', 0.00, 50.00),
 ('actie_bezoekers_max', 0.00, 750.00),
 ('actie_spoelbeurt_max', 0.00, 1500.00),
+('actie_spoelbeurt_dagen', 0.00, 7.00),
 ('actie_floculant_min', 0.00, 10.00),
 ('actie_gebonden_chloor_max', 0.00, 1.00),
 ('actie_chloor_peuterbad_min', 0.00, 10.00),
@@ -293,6 +294,7 @@ INSERT IGNORE INTO actie_teksten (actie_sleutel, sjabloon, omschrijving) VALUES
 ('floculant_bijvullen',         'Floculant {waarde} < {drempel} — Vul floculant bij',         'Verbruik: floculant bijna op'),
 ('filter_spoelen_bezoekers',    'Aantal bezoekers {waarde} > {drempel} — Filter spoelen',     'Dagbezoek boven de drempel'),
 ('filter_spoelen_spoelbeurt',   'Aantal bezoekers sinds spoelbeurt {bad} {waarde} > {drempel} — Filter spoelen', 'Cumulatief bezoek sinds laatste spoelbeurt'),
+('filter_spoelen_dagen',        'Laatste spoelbeurt {bad} {waarde} dagen geleden > {drempel} dagen — Filter spoelen', 'Te lang geleden sinds laatste spoelbeurt'),
 ('filter_spoelen_gebonden',     'Gebonden chloor {bad} {waarde} > {drempel} mg/l — Filter spoelen', 'Coördinator: gebonden chloor te hoog'),
 ('peuterbad_aftappen',          'Peuterbad is vandaag gebruikt — Peuterbad water aftappen',   'Peuterbad na gebruik aftappen');
 

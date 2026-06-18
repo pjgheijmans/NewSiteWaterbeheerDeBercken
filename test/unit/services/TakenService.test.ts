@@ -95,4 +95,17 @@ describe('getTaken — opgeloste acties', () => {
         expect(chloor.voltooid).toBe(true);
         expect(chloor.categorie === 'verplicht' && !chloor.voltooid).toBe(false);
     });
+
+    it('houdt een afgevinkt filteralarm in Verplicht (afgehandeld, mét reden)', async () => {
+        rondetakenRepo.getRondetaken.mockResolvedValue([
+            rt('diep_filter', 'Diep', 'Diep filter gereinigd', 'normaal', 'grote-baden', true),
+        ]);
+        actiesRepo.getActies.mockResolvedValue([
+            actie(1, 'Diep', 'Flow Diep onder 250 m³/h — Filter spoelen', 'filter_spoelen_flow', true),
+        ]);
+        const diepFilter = (await service.getTaken(DATUM)).find(i => i.sleutel === 'diep_filter')!;
+        expect(diepFilter.categorie).toBe('verplicht');   // blijft in de Verplicht-sectie
+        expect(diepFilter.voltooid).toBe(true);            // wel afgevinkt
+        expect(diepFilter.reden).toBe('Flow Diep onder 250 m³/h'); // reden blijft zichtbaar
+    });
 });

@@ -32,6 +32,7 @@ const DEFAULT_LIMIETEN: LimietInput[] = [
     { parameter_naam: 'actie_zwavelzuur_min',   min_waarde: 0.00,  max_waarde: 50.00      },
     { parameter_naam: 'actie_bezoekers_max',    min_waarde: 0.00,  max_waarde: 750.00     },
     { parameter_naam: 'actie_spoelbeurt_max',   min_waarde: 0.00,  max_waarde: 1500.00    },
+    { parameter_naam: 'actie_spoelbeurt_dagen', min_waarde: 0.00,  max_waarde: 7.00       },
     { parameter_naam: 'actie_floculant_min',    min_waarde: 0.00,  max_waarde: 10.00      },
     { parameter_naam: 'actie_gebonden_chloor_max',      min_waarde: 0.00, max_waarde: 1.00  },
     { parameter_naam: 'actie_chloor_peuterbad_min',     min_waarde: 0.00, max_waarde: 10.00 },
