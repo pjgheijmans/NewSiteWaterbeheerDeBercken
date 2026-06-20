@@ -9,7 +9,11 @@
         "test": "jest",
         "test:unit": "jest test/unit",
         "test:integration": "jest -c jest.integration.config.js",
-        "test:coverage": "jest --coverage"
+        "test:coverage": "jest --coverage",
+        "lint": "eslint backend frontend test",
+        "lint:fix": "eslint backend frontend test --fix",
+        "format": "prettier --write .",
+        "format:check": "prettier --check ."
     },
     "dependencies": {
         "express": "^4.19.2",
@@ -25,13 +29,16 @@
         "@types/node": "^25.9.1",
         "@types/supertest": "^7.2.0",
         "eslint": "^10.4.1",
+        "eslint-config-prettier": "^10.1.8",
         "globals": "^17.6.0",
         "jest": "^30.4.2",
         "jest-environment-jsdom": "^30.4.1",
         "nodemon": "^3.0.0",
+        "prettier": "^3.8.4",
         "supertest": "^7.2.2",
         "ts-jest": "^29.4.11",
         "ts-node": "^10.9.2",
-        "typescript": "^6.0.3"
+        "typescript": "^6.0.3",
+        "typescript-eslint": "^8.61.1"
     }
 }
