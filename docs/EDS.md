@@ -233,7 +233,10 @@ directly. Accepted given the app's modest UI and the solo-developer constraint.
 **server-side**: all `filter_spoelen_*` actions for a bath fold onto that bath's
 filter rondetaak (one row carrying every reason), the rest become standalone alarm
 rows. Ticking the filter rondetaak resolves those actions
-(`resolveFilterSpoelen`).
+(`resolveFilterSpoelen`). A filter rondetaak that has *ever* triggered an alarm
+today (open **or** already resolved) is categorised **Verplicht**, so it stays in
+the must-do section after it is ticked off — struck-through and keeping its reason —
+rather than dropping back to Belangrijk/Overig.
 
 **Rationale.** Keeps saves fast and the backend simple (no cross-table
 transaction), while the user still sees a single "Filter spoelen" action per bath
@@ -339,9 +342,11 @@ sections: **Verplicht** (triggered alarms), **Belangrijk** (critical rondetaken 
 regelaars, spraypark filters, douches-test) and **Overig** (remaining optional
 rondetaken). Each row: Gebied · Taak · Reden · Uitgevoerd (checkbox); done rows
 struck-through with who/when. `filter_spoelen_*` alarms fold onto the bath's filter
-row (one row, with the reason); ticking it also clears those actions. Facility-wide
-chemical alarms group under **Algemeen**. The ⚠ badge fires for open **Verplicht**
-items only. There is no separate global Acties tab.
+row (one row, with the reason); ticking it also clears those actions. A row that was
+triggered as **Verplicht** stays in that section once ticked off (done, reason kept),
+so it remains clear that and why it was required. Facility-wide chemical alarms group
+under **Algemeen**. The ⚠ badge fires for open **Verplicht** items only. There is no
+separate global Acties tab.
 
 ```
 ┌ Verplicht vandaag (n) ──────────────────────────────────┐
@@ -518,7 +523,8 @@ interface Drempelwaarden {           // action thresholds, loaded from LIMIETEN
   actie_druk_verschil: number; actie_druk_peuterbad: number;
   actie_flow_diep: number; actie_flow_ondiep: number; actie_flow_peuterbad: number;
   actie_chloor_min: number; actie_zwavelzuur_min: number;
-  actie_bezoekers_max: number; actie_spoelbeurt_max: number; actie_floculant_min: number;
+  actie_bezoekers_max: number; actie_spoelbeurt_max: number;
+  actie_spoelbeurt_dagen: number; actie_floculant_min: number;
   actie_gebonden_chloor_max: number; actie_chloor_peuterbad_min: number;
   actie_zwavelzuur_peuterbad_min: number;
 }
@@ -892,7 +898,7 @@ graph TB
 |Query style|Hand-written SQL (`mysql2`), no ORM|Simplicity, control|
 |Schema management|`init.sql` run at startup; `CREATE TABLE IF NOT EXISTS` + `INSERT IGNORE` + plain `ALTER … ADD/DROP COLUMN` (errors per statement swallowed, MySQL-8-safe)|DD-006 (no migration tool)|
 |Write pattern|Upsert keyed by date / (bad,datum) / (bad,datum,actie_type). Waterbeheer meetwaarden/verbruik use a version-checked upsert (`optimistischOpslaan`, DD-020) for conflict detection|Idempotent daily records; no silent lost updates|
-|Seeding|`seedAllDefaults()` seeds 35 limieten + 2 users on a fresh DB (`actie_teksten`/`waterbeheer_dienst` survive a reset via `init.sql`)|First-run usability|
+|Seeding|`seedAllDefaults()` seeds 36 limieten + 2 users on a fresh DB (`actie_teksten`/`waterbeheer_dienst` survive a reset via `init.sql`)|First-run usability|
 
 Entity-relationship (key tables):
 

@@ -127,9 +127,12 @@ Twee domeinen verzorgen de dagelijkse takenweergave:
 - **`taken`** — een **read-only compositie** die `RondetakenRepository` en
   `ActiesRepository` samenvoegt tot één `TaakItem[]` per bad-pagina:
   `filter_spoelen_*`-acties vouwen samen op de filter-rondetaak, overige acties
-  worden losse alarm-rijen (chemicaliën onder "Algemeen"). Het veld `must`
-  markeert wat verplicht is (open alarm of kritieke rondetaak). Schrijfacties
-  lopen via de bestaande `/api/rondetaken`- en `/api/acties`-endpoints.
+  worden losse alarm-rijen (chemicaliën onder "Algemeen"). De `categorie`
+  markeert wat verplicht is: een filter-rondetaak die vandaag een alarm heeft
+  gehad (open **óf** al opgelost) blijft `verplicht` — dus ook ná afvinken blijft
+  hij in de Verplicht-sectie staan (afgestreept, mét reden) i.p.v. terug te
+  zakken naar belangrijk/overig. Schrijfacties lopen via de bestaande
+  `/api/rondetaken`- en `/api/acties`-endpoints.
 
 ### Foutklasse
 
@@ -225,10 +228,14 @@ graph TB
 
 - **Actiegeneratie** is fire-and-forget na een meting/daggegevens-save — geen
   transactionele garantie tussen de save en de gegenereerde actie.
-- **Spoelbeurt-totaal** is cumulatief sinds de laatste filterreiniging — de
+- **Spoelbeurt** wordt per bad afgemeten tegen de laatste filterreiniging — de
   meest recente van een opgeloste `filter_spoelen_spoelbeurt`-actie óf een
-  afgevinkte filter-rondetaak (`diep_filter`/`ondiep_filter`) — zie
-  `ActiesRepository.berekenSpoelbeurtTotaal`.
+  afgevinkte filter-rondetaak (`diep_filter`/`ondiep_filter`). `ActiesRepository.berekenSpoelbeurt`
+  levert vanaf dat ankerpunt zowel het **cumulatieve bezoekersaantal** (drempel
+  `actie_spoelbeurt_max` → `filter_spoelen_spoelbeurt`) als het **aantal dagen
+  sinds de reiniging** (via `DATEDIFF`, drempel `actie_spoelbeurt_dagen`, standaard
+  7 → `filter_spoelen_dagen`). Zonder ankerpunt (nog nooit gereinigd) is `dagen`
+  `null` en blijft de dagen-actie uit.
 - **CSV-export/-import** zit in `DatabaseService`: puntkomma-gescheiden voor
   EU-Excel; import vertaalt `bad_naam` → `bad_id` voor metingen-tabellen en
   schakelt foreign-key-checks tijdelijk uit.
