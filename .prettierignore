@@ -1,0 +1,8 @@
+dist
+node_modules
+coverage
+package-lock.json
+
+# HTML partials are fragments assembled at runtime by FrontendController,
+# not full documents — Prettier's HTML parser fails on them.
+frontend/partials/**/*.html
