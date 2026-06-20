@@ -96,14 +96,14 @@ sequenceDiagram
     Repo->>DB: INSERT/DELETE acties (chloor_bestellen / zwavelzuur / floculant)
 
     Note over WB,Svc: Trigger via bezoekers (coördinator-daggegevens)
-    Note over Svc: CoordinatorenService.saveDaggegevens()<br/>→ genereerBezoekers() + genereerSpoelbeurt() (fire-and-forget)
+    Note over Svc: CoordinatorenService.saveDaggegevens()<br/>→ genereerBezoekers() + genereerSpoelbeurt() (fire-and-forget)<br/>spoelbeurt → filter_spoelen_spoelbeurt (bezoekers) + filter_spoelen_dagen (dagen sinds reiniging)
 
     Note over WB,FE: Taken weergeven (per bad)
     WB->>FE: Taken-subtab openen
     FE->>Ctrl: GET /api/taken?datum=...
     Ctrl->>Svc: TakenService.getTaken(datum)
     Svc->>Repo: getRondetaken() + getActies()
-    Note over Svc: filter_spoelen_* vouwen samen op de filtertaak<br/>overige acties → losse rijen — must = alarm of kritiek
+    Note over Svc: filter_spoelen_* vouwen samen op de filtertaak<br/>overige acties → losse rijen — verplicht = (ooit) getriggerd alarm of kritiek<br/>afgevinkt verplicht alarm blijft in Verplicht (afgestreept, mét reden)
     Repo-->>FE: TaakItem[]
     FE-->>WB: secties "Verplicht vandaag" / "Overige taken"<br/>+ ⚠-badges op tabs/subtabs
 

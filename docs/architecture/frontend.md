@@ -148,7 +148,7 @@ classDiagram
 | `NavModule` | Datumnavigatie met begrenzing op de seizoengrenzen |
 | `AuthModule` | Inloggen/uitloggen, dashboard activeren, rol wisselen |
 | `MetingenModule` | Metingen laden/tonen, ⚠/✓-veldindicatoren bij de meetwaarden, coördinator-blokken |
-| `TakenModule` | Taken-subtab per bad: "Verplicht vandaag" vs "Overige taken"; afvinken via rondetaken-/acties-endpoints; ⚠-badges op tabs/subtabs |
+| `TakenModule` | Taken-subtab per bad: "Verplicht vandaag" vs "Overige taken"; afvinken via rondetaken-/acties-endpoints; een afgevinkte verplichte taak blijft in Verplicht (afgestreept, mét reden); ⚠-badges op tabs/subtabs |
 | `VerbruikModule` | Verbruik/verwarming laden, opslaan, dagdelta berekenen |
 | `OpslaanModule` | Alle auto-save-orkestratie (centraal + per blok), 1.2 s debounce |
 | `LogboekModule` | Logboekblokken voor waterbeheer en coördinatoren |
