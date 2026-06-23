@@ -64,6 +64,7 @@ npm start        # node dist/backend/server.js
 - **Passwords**: hashed with `crypto.scrypt` via `backend/wachtwoord.ts`; `findByLogin` verifies in code and upgrades legacy plaintext on login; a startup migration (`hashBestaandeWachtwoorden`) hashes any remaining plaintext.
 - **Action generation**: fire-and-forget after a measurement save — no transactional guarantee between the save and the generated action.
 - **Coordinator visitor count**: cumulative since the last resolved `filter_spoelen_spoelbeurt` action.
+- **Logboek length cap**: free-text logboek entries are hard-capped at **500 characters** on both layers — the textarea `maxlength` (`frontend/js/logboek.js`) and the server-side `logboekSchema` (`LOGBOEK_MAX_TEKEN` in `backend/validation/schemas.ts`, shared by the Waterbeheer and Coördinator logs; over-length input → 400). Keep the two in sync if you change the limit; the column itself stays `TEXT`.
 - **init.sql warnings**: the per-column migrations use a plain `ALTER TABLE … ADD COLUMN`/`DROP COLUMN` (no `IF [NOT] EXISTS` — that's MariaDB syntax and a hard error on MySQL 8). On an up-to-date DB these log a harmless `Duplicate column`/`Can't DROP` warning (swallowed by `runInitSql`'s try-catch); on an older DB they actually add/drop the column. Non-fatal by design — do **not** re-add `IF NOT EXISTS`.
 
 ## Git workflow
