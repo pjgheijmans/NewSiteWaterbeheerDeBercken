@@ -13,7 +13,12 @@ export class LogboekService implements ILogboekService {
         return this.repo.getByDatum(datum);
     }
 
-    async save(datum: string, tijdstip: string, tekst: string, gebruiker: Gebruiker): Promise<LogboekOpslaanResultaat> {
+    async save(
+        datum: string,
+        tijdstip: string,
+        tekst: string,
+        gebruiker: Gebruiker,
+    ): Promise<LogboekOpslaanResultaat> {
         const auteur = bepaalAuteur(gebruiker);
         const row = await this.repo.save(datum, tijdstip, tekst, auteur);
         return { id: row?.id ?? null, auteur: row?.auteur ?? auteur };

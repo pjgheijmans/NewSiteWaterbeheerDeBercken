@@ -12,8 +12,8 @@ import { TakenController } from '../controllers/TakenController';
  */
 export function maakTakenRouter(pool: Pool): Router {
     const rondetakenRepo = new RondetakenRepository(pool);
-    const actiesRepo     = new ActiesRepository(pool, new ActieTekstenRepository(pool));
-    const service        = new TakenService(rondetakenRepo, actiesRepo);
-    const controller     = new TakenController(service);
+    const actiesRepo = new ActiesRepository(pool, new ActieTekstenRepository(pool));
+    const service = new TakenService(rondetakenRepo, actiesRepo);
+    const controller = new TakenController(service);
     return controller.router;
 }

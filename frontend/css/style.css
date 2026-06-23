@@ -5,39 +5,40 @@
    ─────────────────────────────────────────────────────────────────────────── */
 :root {
     /* Primair (rustig, modern blauw) */
-    --kleur-primair:        #2563eb;
+    --kleur-primair: #2563eb;
     --kleur-primair-donker: #1d4ed8;
-    --kleur-primair-licht:  #eff6ff;
+    --kleur-primair-licht: #eff6ff;
 
     /* Status */
-    --kleur-succes:         #16a34a;
-    --kleur-succes-donker:  #15803d;
-    --kleur-gevaar:         #dc3545;
-    --kleur-gevaar-donker:  #bd2130;
-    --kleur-info:           #0891b2;
+    --kleur-succes: #16a34a;
+    --kleur-succes-donker: #15803d;
+    --kleur-gevaar: #dc3545;
+    --kleur-gevaar-donker: #bd2130;
+    --kleur-info: #0891b2;
 
     /* Navigatie (koel donker leien-grijs) */
-    --nav-bg:               #1e293b;
-    --nav-knop:             #334155;
+    --nav-bg: #1e293b;
+    --nav-knop: #334155;
 
     /* Tekst & oppervlak */
-    --tekst:                #1f2937;
-    --tekst-dof:            #64748b;
-    --kop:                  #0f172a;
-    --rand:                 #e2e8f0;
-    --rand-sterk:           #cbd5e1;
-    --opp:                  #ffffff;
-    --opp-dof:              #f8fafc;
-    --kop-bg:               #f1f5f9;
+    --tekst: #1f2937;
+    --tekst-dof: #64748b;
+    --kop: #0f172a;
+    --rand: #e2e8f0;
+    --rand-sterk: #cbd5e1;
+    --opp: #ffffff;
+    --opp-dof: #f8fafc;
+    --kop-bg: #f1f5f9;
 
     /* Vorm & diepte */
-    --radius:               10px;
-    --radius-sm:            6px;
-    --schaduw:              0 1px 3px rgba(15, 23, 42, .08), 0 1px 2px rgba(15, 23, 42, .06);
-    --schaduw-zwaar:        0 10px 25px rgba(15, 23, 42, .10);
+    --radius: 10px;
+    --radius-sm: 6px;
+    --schaduw: 0 1px 3px rgba(15, 23, 42, 0.08), 0 1px 2px rgba(15, 23, 42, 0.06);
+    --schaduw-zwaar: 0 10px 25px rgba(15, 23, 42, 0.1);
 
     /* Typografie — modern system-font-stack */
-    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    --font:
+        -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
 }
 
 *,
@@ -58,7 +59,7 @@ body {
        Pas de overlay-alfawaarden aan om de foto sterker of zwakker te tonen. */
     background-color: var(--opp-dof);
     background-image:
-        linear-gradient(rgba(255, 255, 255, .42), rgba(239, 246, 255, .52)),
+        linear-gradient(rgba(255, 255, 255, 0.42), rgba(239, 246, 255, 0.52)),
         url(/images/zwembad_water_oppervlakte.jpg);
     background-size: cover;
     background-position: center;
@@ -75,8 +76,11 @@ textarea {
 }
 
 button {
-    transition: background-color .15s ease, color .15s ease,
-                box-shadow .15s ease, border-color .15s ease;
+    transition:
+        background-color 0.15s ease,
+        color 0.15s ease,
+        box-shadow 0.15s ease,
+        border-color 0.15s ease;
 }
 
 /* Duidelijke, toegankelijke focus-indicator i.p.v. de standaard browser-ring. */
@@ -98,9 +102,9 @@ textarea:focus {
     *,
     *::before,
     *::after {
-        animation-duration: .001ms !important;
+        animation-duration: 0.001ms !important;
         animation-iteration-count: 1 !important;
-        transition-duration: .001ms !important;
+        transition-duration: 0.001ms !important;
     }
 }
 
@@ -110,10 +114,10 @@ textarea:focus {
     margin: 0 auto;
     /* Frosted glass: doorschijnend wit met blur, zodat het wateroppervlak er
        zacht doorheen schemert terwijl de werkkaart leesbaar blijft. */
-    background: rgba(255, 255, 255, .58);
+    background: rgba(255, 255, 255, 0.58);
     -webkit-backdrop-filter: blur(16px) saturate(1.3);
     backdrop-filter: blur(16px) saturate(1.3);
-    border: 1px solid rgba(255, 255, 255, .6);
+    border: 1px solid rgba(255, 255, 255, 0.6);
     padding: var(--pad);
     border-radius: var(--radius);
     box-shadow: var(--schaduw-zwaar);
@@ -141,7 +145,7 @@ h1 {
     font-size: 12px;
     font-weight: 600;
     color: var(--kop);
-    opacity: .6;
+    opacity: 0.6;
     white-space: nowrap;
 }
 
@@ -172,10 +176,10 @@ h1 {
     padding: 32px;
     /* Frosted glass: gelijk aan .container, zodat het wateroppervlak er
        zacht doorheen schemert terwijl het formulier leesbaar blijft. */
-    background: rgba(255, 255, 255, .58);
+    background: rgba(255, 255, 255, 0.58);
     -webkit-backdrop-filter: blur(16px) saturate(1.3);
     backdrop-filter: blur(16px) saturate(1.3);
-    border: 1px solid rgba(255, 255, 255, .6);
+    border: 1px solid rgba(255, 255, 255, 0.6);
     border-radius: var(--radius);
     box-shadow: var(--schaduw-zwaar);
     text-align: center;
@@ -228,7 +232,7 @@ h1 {
 
 /* Dunne scheidslijn tussen aangrenzende knoppen. */
 .hoofd-nav button:not(:last-child) {
-    border-right: 1px solid rgba(255, 255, 255, .14);
+    border-right: 1px solid rgba(255, 255, 255, 0.14);
 }
 
 /* Alleen de uiteinden van de balk afronden. */
@@ -280,11 +284,11 @@ h1 {
     border-radius: 6px;
 }
 .gebruiker-trigger:hover {
-    background: rgba(255, 255, 255, .15);
+    background: rgba(255, 255, 255, 0.15);
 }
 .gebruiker-caret {
     font-size: 12px;
-    opacity: .8;
+    opacity: 0.8;
 }
 .gebruiker-dropdown {
     position: absolute;
@@ -295,7 +299,7 @@ h1 {
     background: #fff;
     border: 1px solid var(--rand-sterk, #cbd5e1);
     border-radius: 8px;
-    box-shadow: 0 8px 22px rgba(15, 23, 42, .22);
+    box-shadow: 0 8px 22px rgba(15, 23, 42, 0.22);
     overflow: hidden;
     z-index: 100;
 }
@@ -404,7 +408,7 @@ h1 {
 #waterbeheer-grote-baden-content,
 #waterbeheer-peuterbad-content,
 #waterbeheer-logboek-content {
-    border: 1px solid rgba(255, 255, 255, .6);
+    border: 1px solid rgba(255, 255, 255, 0.6);
     border-top: 3px solid var(--kleur-primair);
     border-radius: 0 0 var(--radius) var(--radius);
     padding: 16px;
@@ -442,7 +446,7 @@ h1 {
     background-color: var(--kleur-primair-donker);
 }
 
-.datum-navigatie input[type="date"] {
+.datum-navigatie input[type='date'] {
     padding: 9px;
     font-size: 16px;
     border: 1px solid var(--rand-sterk);
@@ -482,13 +486,13 @@ th {
     font-weight: 600;
     border-bottom: 2px solid var(--rand-sterk);
     font-size: 13px;
-    letter-spacing: .02em;
+    letter-spacing: 0.02em;
     text-transform: uppercase;
 }
 
-td input[type="number"],
-td input[type="text"],
-td input[type="password"],
+td input[type='number'],
+td input[type='text'],
+td input[type='password'],
 td select {
     width: 100%;
     padding: 7px;
@@ -521,9 +525,9 @@ td select {
 }
 
 .categorie-box {
-    border: 1px solid rgba(255, 255, 255, .6);
+    border: 1px solid rgba(255, 255, 255, 0.6);
     border-radius: var(--radius);
-    background: rgba(255, 255, 255, .22);
+    background: rgba(255, 255, 255, 0.22);
     padding: 20px;
     margin-bottom: 20px;
     overflow-x: auto;
@@ -642,8 +646,8 @@ td select {
     color: #000 !important;
 }
 
-input[type="number"].buiten-limiet,
-input[type="text"].buiten-limiet {
+input[type='number'].buiten-limiet,
+input[type='text'].buiten-limiet {
     color: #000 !important;
 }
 
@@ -662,7 +666,7 @@ input[type="text"].buiten-limiet {
     background: #ffe0e0 !important;
 }
 
-#acties-tabel input[type="checkbox"]:checked {
+#acties-tabel input[type='checkbox']:checked {
     accent-color: var(--kleur-succes);
 }
 
@@ -716,8 +720,6 @@ input[type="text"].buiten-limiet {
     font-weight: 700;
 }
 
-
-
 #subtab-meetwaarden-content .categorie-tabel,
 #peuterbad-meetwaarden-content .categorie-tabel,
 #subtab-verbruik-content .categorie-tabel,
@@ -753,14 +755,14 @@ input[type="text"].buiten-limiet {
     border-left: 1px solid var(--rand);
     grid-template-columns: var(--meet-label-w) var(--meet-val-w) var(--meet-val-w);
     grid-template-areas:
-        "cnr bdp bod"
-        "kph phd pho"
-        "kcl cld clo"
-        "kte ted teo"
-        "kfl fld flo"
-        "kin ind ino"
-        "kui uid uio"
-        "kkb kbd kbo";
+        'cnr bdp bod'
+        'kph phd pho'
+        'kcl cld clo'
+        'kte ted teo'
+        'kfl fld flo'
+        'kin ind ino'
+        'kui uid uio'
+        'kkb kbd kbo';
 }
 .meet-grid > *,
 .meet-gebonden > * {
@@ -779,13 +781,19 @@ input[type="text"].buiten-limiet {
     background-color: var(--kop-bg);
     font-weight: 600;
     font-size: 13px;
-    letter-spacing: .02em;
+    letter-spacing: 0.02em;
     text-transform: uppercase;
     border-bottom: 2px solid var(--rand-sterk);
 }
-.meet-bad-kop { justify-content: center; }
-.meet-col-kop { font-weight: 400; }
-.meet-cel { gap: 4px; }
+.meet-bad-kop {
+    justify-content: center;
+}
+.meet-col-kop {
+    font-weight: 400;
+}
+.meet-cel {
+    gap: 4px;
+}
 .meet-cel input,
 .meet-gebonden-veld input {
     flex: 1;
@@ -806,11 +814,17 @@ input[type="text"].buiten-limiet {
     border-left: 1px solid var(--rand);
     grid-template-columns: var(--meet-label-w) var(--meet-val-w) var(--meet-val-w);
 }
-.meet-gebonden-label { font-weight: 600; }
-.meet-gebonden-veld  { gap: 6px; }
-.meet-gebonden-bad   { display: none; }   /* badnaam staat al in de kolomkop */
+.meet-gebonden-label {
+    font-weight: 600;
+}
+.meet-gebonden-veld {
+    gap: 6px;
+}
+.meet-gebonden-bad {
+    display: none;
+} /* badnaam staat al in de kolomkop */
 .meet-gebonden-veld input {
-    background: rgba(255, 255, 255, .5);
+    background: rgba(255, 255, 255, 0.5);
     cursor: not-allowed;
 }
 
@@ -818,16 +832,16 @@ input[type="text"].buiten-limiet {
     .meet-grid {
         grid-template-columns: var(--meet-label-w) repeat(7, minmax(var(--meet-val-w), max-content));
         grid-template-areas:
-            "cnr kph kcl kte kfl kin kui kkb"
-            "bdp phd cld ted fld ind uid kbd"
-            "bod pho clo teo flo ino uio kbo";
+            'cnr kph kcl kte kfl kin kui kkb'
+            'bdp phd cld ted fld ind uid kbd'
+            'bod pho clo teo flo ino uio kbo';
     }
     /* Parameters worden nu de kopcellen; baden worden gewone zijlabels. */
     .meet-col-kop {
         background-color: var(--kop-bg);
         font-weight: 600;
         font-size: 13px;
-        letter-spacing: .02em;
+        letter-spacing: 0.02em;
         text-transform: uppercase;
         border-bottom: 2px solid var(--rand-sterk);
         justify-content: center;
@@ -855,20 +869,37 @@ input[type="text"].buiten-limiet {
         border: 0;
         font-size: 14px;
     }
-    .meet-gebonden > * { border: 0; padding: 0; }
-    .meet-gebonden-bad   { display: inline; color: #555; }
-    .meet-gebonden-veld  { display: inline-flex; }
-    .meet-gebonden-veld input { flex: 0 0 auto; width: 90px; }
+    .meet-gebonden > * {
+        border: 0;
+        padding: 0;
+    }
+    .meet-gebonden-bad {
+        display: inline;
+        color: #555;
+    }
+    .meet-gebonden-veld {
+        display: inline-flex;
+    }
+    .meet-gebonden-veld input {
+        flex: 0 0 auto;
+        width: 90px;
+    }
 }
 
 /* Alleen mobiel (verticale weergave): compacter — verberg de groepskop en
    krimp de celruimte rond de invoervelden. */
 @media (max-width: 899.98px) {
-    #categorie-opname-meetwaarden h3 { display: none; }
+    #categorie-opname-meetwaarden h3 {
+        display: none;
+    }
     .meet-grid > *,
-    .meet-gebonden > * { padding: 4px 7px; }
+    .meet-gebonden > * {
+        padding: 4px 7px;
+    }
     .meet-cel input,
-    .meet-gebonden-veld input { padding: 6px; }
+    .meet-gebonden-veld input {
+        padding: 6px;
+    }
 }
 
 /* Verbruik-tabellen: identieke kolombreedtes over de losse groep-tabellen
@@ -935,12 +966,17 @@ input[type="text"].buiten-limiet {
     color: #fff;
     background: #334155;
     border-radius: 12px;
-    box-shadow: 0 12px 30px rgba(15, 23, 42, .28), 0 2px 6px rgba(15, 23, 42, .18);
+    box-shadow:
+        0 12px 30px rgba(15, 23, 42, 0.28),
+        0 2px 6px rgba(15, 23, 42, 0.18);
     opacity: 0;
     visibility: hidden;
     pointer-events: none;
     transform: translateY(14px);
-    transition: opacity .25s ease, transform .25s ease, visibility .25s ease;
+    transition:
+        opacity 0.25s ease,
+        transform 0.25s ease,
+        visibility 0.25s ease;
 }
 .status-melding.zichtbaar {
     opacity: 1;
@@ -957,18 +993,32 @@ input[type="text"].buiten-limiet {
     align-items: center;
     justify-content: center;
     border-radius: 50%;
-    background: rgba(255, 255, 255, .22);
+    background: rgba(255, 255, 255, 0.22);
     font-size: 14px;
     font-weight: 700;
 }
-.status-melding.succes { background: var(--kleur-succes); color: #fff; }
-.status-melding.succes::before { content: '✓'; }
-.status-melding.fout   { background: var(--kleur-gevaar); color: #fff; }
-.status-melding.fout::before { content: '!'; }
+.status-melding.succes {
+    background: var(--kleur-succes);
+    color: #fff;
+}
+.status-melding.succes::before {
+    content: '✓';
+}
+.status-melding.fout {
+    background: var(--kleur-gevaar);
+    color: #fff;
+}
+.status-melding.fout::before {
+    content: '!';
+}
 
 /* Standalone tekstkleuren (o.a. de login-foutmelding). */
-.succes { color: var(--kleur-succes); }
-.fout   { color: #dc3545; }
+.succes {
+    color: var(--kleur-succes);
+}
+.fout {
+    color: #dc3545;
+}
 
 /* Bevestigings-/info-modal (vervangt window.confirm en window.alert). */
 .modal-overlay {
@@ -979,12 +1029,14 @@ input[type="text"].buiten-limiet {
     align-items: center;
     justify-content: center;
     padding: 20px;
-    background: rgba(15, 23, 42, .5);
+    background: rgba(15, 23, 42, 0.5);
     -webkit-backdrop-filter: blur(2px);
     backdrop-filter: blur(2px);
     opacity: 0;
     visibility: hidden;
-    transition: opacity .2s ease, visibility .2s ease;
+    transition:
+        opacity 0.2s ease,
+        visibility 0.2s ease;
 }
 .modal-overlay.zichtbaar {
     opacity: 1;
@@ -995,9 +1047,9 @@ input[type="text"].buiten-limiet {
     background: #fff;
     border-radius: 14px;
     padding: 24px;
-    box-shadow: 0 24px 60px rgba(15, 23, 42, .35);
-    transform: translateY(12px) scale(.98);
-    transition: transform .2s ease;
+    box-shadow: 0 24px 60px rgba(15, 23, 42, 0.35);
+    transform: translateY(12px) scale(0.98);
+    transition: transform 0.2s ease;
 }
 .modal-overlay.zichtbaar .modal-dialog {
     transform: none;
@@ -1013,7 +1065,7 @@ input[type="text"].buiten-limiet {
     font-size: 15px;
     line-height: 1.5;
     color: var(--tekst);
-    white-space: pre-line;   /* respecteer regeleinden in de tekst */
+    white-space: pre-line; /* respecteer regeleinden in de tekst */
 }
 .modal-knoppen {
     display: flex;
@@ -1029,12 +1081,26 @@ input[type="text"].buiten-limiet {
     font-weight: 600;
     cursor: pointer;
 }
-.modal-annuleer { background: #e2e8f0; color: #334155; }
-.modal-annuleer:hover { background: #cbd5e1; }
-.modal-bevestig { background: var(--kleur-primair); color: #fff; }
-.modal-bevestig:hover { background: var(--kleur-primair-donker); }
-.modal-gevaar .modal-bevestig { background: var(--kleur-gevaar); }
-.modal-gevaar .modal-bevestig:hover { background: var(--kleur-gevaar-donker); }
+.modal-annuleer {
+    background: #e2e8f0;
+    color: #334155;
+}
+.modal-annuleer:hover {
+    background: #cbd5e1;
+}
+.modal-bevestig {
+    background: var(--kleur-primair);
+    color: #fff;
+}
+.modal-bevestig:hover {
+    background: var(--kleur-primair-donker);
+}
+.modal-gevaar .modal-bevestig {
+    background: var(--kleur-gevaar);
+}
+.modal-gevaar .modal-bevestig:hover {
+    background: var(--kleur-gevaar-donker);
+}
 
 /* ── Acties ── */
 /* De Acties-tab blijft het enige "luide" signaal: rode vulling + pulse. */
@@ -1052,8 +1118,13 @@ input[type="text"].buiten-limiet {
 }
 
 @keyframes actie-pulse {
-    0%, 100% { opacity: 1; }
-    50%       { opacity: .75; }
+    0%,
+    100% {
+        opacity: 1;
+    }
+    50% {
+        opacity: 0.75;
+    }
 }
 
 /* Telbadge (pill) — rustige wegwijzer op de pad-tabs en op de Acties-tab. */
@@ -1128,7 +1199,7 @@ input[type="text"].buiten-limiet {
     margin-left: 6px;
     border-radius: 50%;
     background: #f0ad4e;
-    color: transparent;          /* het bolletje is de vorm; de "•" houdt 'm verticaal gecentreerd */
+    color: transparent; /* het bolletje is de vorm; de "•" houdt 'm verticaal gecentreerd */
     font-size: 9px;
     line-height: 1;
     vertical-align: middle;
@@ -1142,48 +1213,52 @@ input[type="text"].buiten-limiet {
    ─────────────────────────────────────────────────────────────────────────── */
 
 /* Invoervelden duidelijk verdiept (ingedrukt). */
-td input[type="number"],
-td input[type="text"],
+td input[type='number'],
+td input[type='text'],
 td select,
 .meet-cel input,
 .meet-gebonden-veld input,
 .veld-item input,
 .veld-item select,
 .login-box input {
-    box-shadow: inset 0 1px 3px rgba(15, 23, 42, .15);
+    box-shadow: inset 0 1px 3px rgba(15, 23, 42, 0.15);
 }
 
 /* Losse knoppen sterker opgetild + duidelijk ingedrukt bij klikken. */
 .btn-centraal-opslaan,
 .datum-navigatie button {
-    box-shadow: inset 0 1px 0 rgba(255, 255, 255, .35), 0 3px 7px rgba(15, 23, 42, .28);
+    box-shadow:
+        inset 0 1px 0 rgba(255, 255, 255, 0.35),
+        0 3px 7px rgba(15, 23, 42, 0.28);
 }
 .btn-centraal-opslaan:active,
 .datum-navigatie button:active {
     transform: translateY(1px);
-    box-shadow: inset 0 3px 6px rgba(15, 23, 42, .35);
+    box-shadow: inset 0 3px 6px rgba(15, 23, 42, 0.35);
 }
 
 /* Categorie-kaarten zweven hoger boven het glas. */
 .categorie-box {
-    box-shadow: 0 2px 4px rgba(15, 23, 42, .06), 0 14px 30px rgba(15, 23, 42, .14);
+    box-shadow:
+        0 2px 4px rgba(15, 23, 42, 0.06),
+        0 14px 30px rgba(15, 23, 42, 0.14);
 }
 
 /* Het verbonden paginapaneel komt eveneens omhoog. */
 #waterbeheer-grote-baden-content,
 #waterbeheer-peuterbad-content,
 #waterbeheer-logboek-content {
-    box-shadow: 0 10px 26px rgba(15, 23, 42, .12);
+    box-shadow: 0 10px 26px rgba(15, 23, 42, 0.12);
 }
 
 /* App-bar zweeft sterker boven de inhoud. */
 .app-bar {
-    box-shadow: 0 6px 22px rgba(15, 23, 42, .30);
+    box-shadow: 0 6px 22px rgba(15, 23, 42, 0.3);
 }
 
 /* Gegraveerde scheidslijn onder groepskoppen: donkere rand + lichte highlight. */
 .categorie-box h3 {
-    box-shadow: 0 1px 0 rgba(255, 255, 255, .85);
+    box-shadow: 0 1px 0 rgba(255, 255, 255, 0.85);
 }
 
 /* Segmented controls met sterk reliëf: geëxtrudeerde 'toetsen' (verticaal
@@ -1191,9 +1266,9 @@ td select,
 .hoofd-nav button {
     background: linear-gradient(180deg, #3f4e64 0%, #283340 100%);
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, .16),
-        inset 0 -2px 2px rgba(0, 0, 0, .35),
-        0 2px 3px rgba(0, 0, 0, .28);
+        inset 0 1px 0 rgba(255, 255, 255, 0.16),
+        inset 0 -2px 2px rgba(0, 0, 0, 0.35),
+        0 2px 3px rgba(0, 0, 0, 0.28);
 }
 .hoofd-nav button:hover {
     background: linear-gradient(180deg, #4a5a72 0%, #313d4d 100%);
@@ -1202,17 +1277,17 @@ td select,
 .hoofd-nav button.actief:hover {
     background: linear-gradient(180deg, var(--kleur-primair-donker) 0%, var(--kleur-primair) 100%);
     box-shadow:
-        inset 0 2px 6px rgba(0, 0, 0, .45),
-        inset 0 -1px 1px rgba(255, 255, 255, .12);
+        inset 0 2px 6px rgba(0, 0, 0, 0.45),
+        inset 0 -1px 1px rgba(255, 255, 255, 0.12);
 }
 
 .tab-btn,
 .subtab-btn {
     background: linear-gradient(180deg, #ffffff 0%, #dbe3ec 100%);
     box-shadow:
-        inset 0 1px 0 rgba(255, 255, 255, .95),
-        inset 0 -2px 2px rgba(15, 23, 42, .10),
-        0 2px 3px rgba(15, 23, 42, .14);
+        inset 0 1px 0 rgba(255, 255, 255, 0.95),
+        inset 0 -2px 2px rgba(15, 23, 42, 0.1),
+        0 2px 3px rgba(15, 23, 42, 0.14);
 }
 .tab-btn:hover,
 .subtab-btn:hover {
@@ -1226,8 +1301,8 @@ td select,
     background: linear-gradient(180deg, var(--kleur-primair-donker) 0%, var(--kleur-primair) 100%);
     color: #fff;
     box-shadow:
-        inset 0 2px 6px rgba(0, 0, 0, .35),
-        inset 0 -1px 1px rgba(255, 255, 255, .15);
+        inset 0 2px 6px rgba(0, 0, 0, 0.35),
+        inset 0 -1px 1px rgba(255, 255, 255, 0.15);
 }
 
 /* ── Responsive ── */
@@ -1259,7 +1334,9 @@ td select,
 
 /* ── 768 px: tablet portrait / large phone ── */
 @media (max-width: 768px) {
-    body { margin: 8px; }
+    body {
+        margin: 8px;
+    }
 
     .container {
         --pad: 12px;
@@ -1271,10 +1348,14 @@ td select,
         align-items: center;
         gap: 8px;
     }
-    h1 { font-size: 19px; }
+    h1 {
+        font-size: 19px;
+    }
 
     /* Compacte ingelogd-zone op mobiel; menu opent links zodat het niet wegvalt. */
-    #welkom-tekst { font-size: 13px; }
+    #welkom-tekst {
+        font-size: 13px;
+    }
     .gebruiker-dropdown {
         right: auto;
         left: 0;
@@ -1288,7 +1369,8 @@ td select,
         -webkit-overflow-scrolling: touch;
         padding-bottom: 2px;
     }
-    .tab-btn, .subtab-btn {
+    .tab-btn,
+    .subtab-btn {
         flex-shrink: 0;
         white-space: nowrap;
         padding: 8px 14px;
@@ -1326,7 +1408,7 @@ td select,
         font-size: 15px;
         min-width: 0;
     }
-    .datum-navigatie input[type="date"] {
+    .datum-navigatie input[type='date'] {
         flex: 0 1 auto;
         max-width: 150px;
         min-height: 30px;
@@ -1340,15 +1422,15 @@ td select,
     }
 
     /* Bigger touch targets for all inputs */
-    input[type="number"],
-    input[type="text"],
-    input[type="time"],
+    input[type='number'],
+    input[type='text'],
+    input[type='time'],
     select,
     textarea {
         min-height: 42px;
         font-size: 15px !important;
     }
-    input[type="checkbox"] {
+    input[type='checkbox'] {
         width: 20px;
         height: 20px;
     }
@@ -1387,12 +1469,12 @@ td select,
     /* Compact waterbeheer tables on mobile */
     #waterbeheer-grote-baden-content .categorie-tabel th,
     #waterbeheer-grote-baden-content .categorie-tabel td,
-    #waterbeheer-peuterbad-content   .categorie-tabel th,
-    #waterbeheer-peuterbad-content   .categorie-tabel td {
+    #waterbeheer-peuterbad-content .categorie-tabel th,
+    #waterbeheer-peuterbad-content .categorie-tabel td {
         padding: 6px 8px;
     }
     #waterbeheer-grote-baden-content .categorie-tabel td input,
-    #waterbeheer-peuterbad-content   .categorie-tabel td input,
+    #waterbeheer-peuterbad-content .categorie-tabel td input,
     .meet-cel input,
     .meet-gebonden-veld input {
         font-size: 13px !important;
@@ -1401,19 +1483,28 @@ td select,
 
     /* Beheerpagina's (Limieten, Actie-teksten, Gebruikers, Database, Configuratie):
        inputs én cel-/labeltekst op 13px, gelijk aan de dagstaat-pagina's. */
-    #sectie-limieten input,     #sectie-limieten select,
-    #sectie-actieteksten input, #sectie-actieteksten textarea,
-    #sectie-gebruikers input,   #sectie-gebruikers select,
-    #sectie-database input,     #sectie-database select,
+    #sectie-limieten input,
+    #sectie-limieten select,
+    #sectie-actieteksten input,
+    #sectie-actieteksten textarea,
+    #sectie-gebruikers input,
+    #sectie-gebruikers select,
+    #sectie-database input,
+    #sectie-database select,
     #sectie-configuratie input {
         font-size: 13px !important;
         min-height: 34px;
     }
-    #sectie-limieten td,     #sectie-limieten th,
-    #sectie-actieteksten td, #sectie-actieteksten th,
-    #sectie-gebruikers td,   #sectie-gebruikers th,
-    #sectie-database td,     #sectie-database th,
-    #sectie-configuratie td, #sectie-configuratie th {
+    #sectie-limieten td,
+    #sectie-limieten th,
+    #sectie-actieteksten td,
+    #sectie-actieteksten th,
+    #sectie-gebruikers td,
+    #sectie-gebruikers th,
+    #sectie-database td,
+    #sectie-database th,
+    #sectie-configuratie td,
+    #sectie-configuratie th {
         font-size: 13px;
     }
 
@@ -1436,7 +1527,6 @@ td select,
 
 /* ── 600 px: phone — coordinator block tables become cards ── */
 @media (max-width: 600px) {
-
     /* Coördinator-meetblokken: houd ook in portret de normale tabel mét
        kolomkop (zoals in liggende weergave) i.p.v. een kaart-layout per rij.
        De omliggende .categorie-box (overflow-x:auto) zorgt voor horizontaal
@@ -1451,7 +1541,9 @@ td select,
     }
 
     /* Limieten boxes: single column */
-    #limietenGroepen .categorie-tabel thead { display: none; }
+    #limietenGroepen .categorie-tabel thead {
+        display: none;
+    }
     #limietenGroepen .categorie-tabel tr {
         display: flex;
         align-items: center;
@@ -1492,7 +1584,14 @@ td select,
         margin: 16px auto;
         padding: 16px;
     }
-    body { margin: 4px; }
-    .container { --pad: 8px; }
-    th, td { padding: 7px; }
+    body {
+        margin: 4px;
+    }
+    .container {
+        --pad: 8px;
+    }
+    th,
+    td {
+        padding: 7px;
+    }
 }

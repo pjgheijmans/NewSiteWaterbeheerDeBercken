@@ -15,13 +15,34 @@ describe('findByLogin', () => {
     it('verifieert een gehasht wachtwoord en geeft de gebruiker met effectieve rechten terug', async () => {
         const hash = hashWachtwoord('Paul');
         pool.execute
-            .mockResolvedValueOnce(resultaat([
-                { id: 1, voornaam: 'Paul', achternaam: 'H', inlognaam: 'pheijmans', taak: 'waterbeheerder', wachtwoord: hash },
-            ]))
-            .mockResolvedValueOnce(resultaat([
-                { naam: 'Waterbeheer', mag_historie_bewerken: 1, domein: 'waterbeheer', niveau: 'schrijven' },
-                { naam: 'Waterbeheer', mag_historie_bewerken: 1, domein: 'coordinator', niveau: 'schrijven' },
-            ]));
+            .mockResolvedValueOnce(
+                resultaat([
+                    {
+                        id: 1,
+                        voornaam: 'Paul',
+                        achternaam: 'H',
+                        inlognaam: 'pheijmans',
+                        taak: 'waterbeheerder',
+                        wachtwoord: hash,
+                    },
+                ]),
+            )
+            .mockResolvedValueOnce(
+                resultaat([
+                    {
+                        naam: 'Waterbeheer',
+                        mag_historie_bewerken: 1,
+                        domein: 'waterbeheer',
+                        niveau: 'schrijven',
+                    },
+                    {
+                        naam: 'Waterbeheer',
+                        mag_historie_bewerken: 1,
+                        domein: 'coordinator',
+                        niveau: 'schrijven',
+                    },
+                ]),
+            );
         const g = await repo.findByLogin('pheijmans', 'Paul');
         expect(g).toMatchObject({
             id: 1,
@@ -36,9 +57,16 @@ describe('findByLogin', () => {
     });
 
     it('geeft null bij een verkeerd wachtwoord', async () => {
-        pool.execute.mockResolvedValue(resultaat([
-            { id: 1, inlognaam: 'pheijmans', taak: 'waterbeheerder', wachtwoord: hashWachtwoord('Paul') },
-        ]));
+        pool.execute.mockResolvedValue(
+            resultaat([
+                {
+                    id: 1,
+                    inlognaam: 'pheijmans',
+                    taak: 'waterbeheerder',
+                    wachtwoord: hashWachtwoord('Paul'),
+                },
+            ]),
+        );
         expect(await repo.findByLogin('pheijmans', 'fout')).toBeNull();
     });
 
@@ -49,9 +77,11 @@ describe('findByLogin', () => {
 
     it('upgradet een legacy plaintext-wachtwoord naar een hash bij een geslaagde login', async () => {
         // call 0 = SELECT user (plaintext); call 1 = UPDATE upgrade; call 2 = SELECT rechten.
-        pool.execute.mockResolvedValueOnce(resultaat([
-            { id: 7, inlognaam: 'pheijmans', taak: 'waterbeheerder', wachtwoord: 'Paul' },
-        ]));
+        pool.execute.mockResolvedValueOnce(
+            resultaat([
+                { id: 7, inlognaam: 'pheijmans', taak: 'waterbeheerder', wachtwoord: 'Paul' },
+            ]),
+        );
         const g = await repo.findByLogin('pheijmans', 'Paul');
         expect(g).toMatchObject({ id: 7 });
         expect(pool.execute).toHaveBeenCalledTimes(3);
@@ -73,7 +103,13 @@ describe('getAll', () => {
 
 describe('create', () => {
     it('hasht het wachtwoord voor het opslaan (binnen een transactie)', async () => {
-        await repo.create({ voornaam: 'Jan', achternaam: 'Jansen', inlognaam: 'jjansen', wachtwoord: 'x', rol_ids: [3] });
+        await repo.create({
+            voornaam: 'Jan',
+            achternaam: 'Jansen',
+            inlognaam: 'jjansen',
+            wachtwoord: 'x',
+            rol_ids: [3],
+        });
         // call 0 = INSERT gebruikers (binnen de transactie-connection, gedeelde execute-mock).
         const params = paramsVan(pool.execute);
         expect(params[0]).toBe('Jan');
@@ -86,7 +122,13 @@ describe('create', () => {
 
 describe('update', () => {
     it('hasht een nieuw wachtwoord en zet het id als laatste parameter', async () => {
-        await repo.update('5', { voornaam: 'Jan', achternaam: 'J', inlognaam: 'jj', wachtwoord: 'x', rol_ids: [2] });
+        await repo.update('5', {
+            voornaam: 'Jan',
+            achternaam: 'J',
+            inlognaam: 'jj',
+            wachtwoord: 'x',
+            rol_ids: [2],
+        });
         const params = paramsVan(pool.execute);
         expect(sqlVan(pool.execute)).toMatch(/wachtwoord=\?/i);
         expect(isGehasht(params[3] as string)).toBe(true);
@@ -94,7 +136,13 @@ describe('update', () => {
     });
 
     it('laat het wachtwoord ongemoeid wanneer het leeg is', async () => {
-        await repo.update('5', { voornaam: 'Jan', achternaam: 'J', inlognaam: 'jj', wachtwoord: '', rol_ids: [2] });
+        await repo.update('5', {
+            voornaam: 'Jan',
+            achternaam: 'J',
+            inlognaam: 'jj',
+            wachtwoord: '',
+            rol_ids: [2],
+        });
         // call 0 = UPDATE gebruikers (zonder wachtwoord).
         expect(sqlVan(pool.execute)).not.toMatch(/wachtwoord/i);
         expect(paramsVan(pool.execute)[paramsVan(pool.execute).length - 1]).toBe('5');
@@ -122,10 +170,12 @@ describe('seedDefaults', () => {
 describe('hashBestaandeWachtwoorden', () => {
     it('hasht alleen de nog niet-gehashte wachtwoorden', async () => {
         pool.execute
-            .mockResolvedValueOnce(resultaat([
-                { id: 1, wachtwoord: 'Paul' },               // legacy → moet gehasht
-                { id: 2, wachtwoord: hashWachtwoord('al') }, // al gehasht → overslaan
-            ]))
+            .mockResolvedValueOnce(
+                resultaat([
+                    { id: 1, wachtwoord: 'Paul' }, // legacy → moet gehasht
+                    { id: 2, wachtwoord: hashWachtwoord('al') }, // al gehasht → overslaan
+                ]),
+            )
             .mockResolvedValue(resultaat([]));
         await repo.hashBestaandeWachtwoorden();
         // 1 SELECT + 1 UPDATE (alleen voor id 1)

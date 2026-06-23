@@ -4,7 +4,10 @@ import { IRollenRepository } from '../../../backend/repositories/IRollenReposito
 import { maakTestApp } from '../../helpers/testApp';
 
 const mockRepo: jest.Mocked<IRollenRepository> = {
-    getAll: jest.fn(), create: jest.fn(), update: jest.fn(), remove: jest.fn(),
+    getAll: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    remove: jest.fn(),
 };
 
 function maakApp(taak: string | null = 'Administrator') {
@@ -16,7 +19,12 @@ beforeEach(() => jest.clearAllMocks());
 describe('GET / (beheer-domein)', () => {
     it('geeft de rollen-matrix terug voor het beheer-domein', async () => {
         mockRepo.getAll.mockResolvedValue([
-            { id: 1, naam: 'Beheer', mag_historie_bewerken: true, rechten: { beheer: 'schrijven', waterbeheer: 'geen', coordinator: 'geen' } },
+            {
+                id: 1,
+                naam: 'Beheer',
+                mag_historie_bewerken: true,
+                rechten: { beheer: 'schrijven', waterbeheer: 'geen', coordinator: 'geen' },
+            },
         ]);
         const res = await request(maakApp()).get('/');
         expect(res.status).toBe(200);
@@ -48,13 +56,19 @@ describe('POST / (beheer-domein)', () => {
     });
 
     it('geeft 403 voor een niet-beheer-rol', async () => {
-        expect((await request(maakApp('coordinator')).post('/').send({ naam: 'X' })).status).toBe(403);
+        expect((await request(maakApp('coordinator')).post('/').send({ naam: 'X' })).status).toBe(
+            403,
+        );
         expect(mockRepo.create).not.toHaveBeenCalled();
     });
 });
 
 describe('PUT /:id (beheer-domein)', () => {
-    const body = { naam: 'Beheer', mag_historie_bewerken: true, rechten: { beheer: 'schrijven', waterbeheer: 'geen', coordinator: 'geen' } };
+    const body = {
+        naam: 'Beheer',
+        mag_historie_bewerken: true,
+        rechten: { beheer: 'schrijven', waterbeheer: 'geen', coordinator: 'geen' },
+    };
 
     it('werkt een rol bij met het id', async () => {
         mockRepo.update.mockResolvedValue(undefined);
@@ -64,7 +78,9 @@ describe('PUT /:id (beheer-domein)', () => {
     });
 
     it('geeft 400 bij een ongeldig niveau', async () => {
-        const res = await request(maakApp()).put('/1').send({ ...body, rechten: { beheer: 'baas' } });
+        const res = await request(maakApp())
+            .put('/1')
+            .send({ ...body, rechten: { beheer: 'baas' } });
         expect(res.status).toBe(400);
         expect(mockRepo.update).not.toHaveBeenCalled();
     });

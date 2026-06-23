@@ -16,7 +16,12 @@ describe('getMetingenTrend', () => {
         const result = await repo.getMetingenTrend('2026-05-01', '2026-05-31');
         expect(result).toHaveLength(1);
         // UNION ALL met twee BETWEEN-clausules → van,tot,van,tot
-        expect(paramsVan(pool.execute)).toEqual(['2026-05-01', '2026-05-31', '2026-05-01', '2026-05-31']);
+        expect(paramsVan(pool.execute)).toEqual([
+            '2026-05-01',
+            '2026-05-31',
+            '2026-05-01',
+            '2026-05-31',
+        ]);
     });
 });
 

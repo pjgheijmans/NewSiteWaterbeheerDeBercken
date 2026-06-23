@@ -8,7 +8,7 @@ export class ConfiguratieRepository implements IConfiguratieRepository {
 
     async getAll(): Promise<Configuratie[]> {
         const [rows] = await this.pool.execute<RowDataPacket[]>(
-            'SELECT sleutel, waarde, omschrijving, type FROM configuratie ORDER BY sleutel'
+            'SELECT sleutel, waarde, omschrijving, type FROM configuratie ORDER BY sleutel',
         );
         return rows as Configuratie[];
     }
@@ -17,7 +17,7 @@ export class ConfiguratieRepository implements IConfiguratieRepository {
         await this.pool.execute<ResultSetHeader>(
             `INSERT INTO configuratie (sleutel, waarde) VALUES (?, ?)
              ON DUPLICATE KEY UPDATE waarde = VALUES(waarde)`,
-            [sleutel, waarde]
+            [sleutel, waarde],
         );
     }
 }

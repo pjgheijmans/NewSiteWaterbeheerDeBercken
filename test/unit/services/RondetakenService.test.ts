@@ -4,19 +4,34 @@ import { IActiesRepository } from '../../../backend/repositories/IActiesReposito
 import { Gebruiker } from '../../../backend/types';
 
 const repo: jest.Mocked<IRondetakenRepository> = {
-    getRondetaken: jest.fn(), voltooi: jest.fn(), heropen: jest.fn(),
+    getRondetaken: jest.fn(),
+    voltooi: jest.fn(),
+    heropen: jest.fn(),
 };
 const actiesRepo: jest.Mocked<IActiesRepository> = {
-    getActies: jest.fn(), resolve: jest.fn(), unresolve: jest.fn(),
-    resolveFilterSpoelen: jest.fn(), unresolveFilterSpoelen: jest.fn(),
-    genereer: jest.fn(), genereerVerbruik: jest.fn(),
-    genereerBezoekers: jest.fn(), genereerSpoelbeurt: jest.fn(),
-    genereerCoordinatoren: jest.fn(), getGebondenChloorMax: jest.fn(),
+    getActies: jest.fn(),
+    resolve: jest.fn(),
+    unresolve: jest.fn(),
+    resolveFilterSpoelen: jest.fn(),
+    unresolveFilterSpoelen: jest.fn(),
+    genereer: jest.fn(),
+    genereerVerbruik: jest.fn(),
+    genereerBezoekers: jest.fn(),
+    genereerSpoelbeurt: jest.fn(),
+    genereerCoordinatoren: jest.fn(),
+    getGebondenChloorMax: jest.fn(),
 };
 
 const service = new RondetakenService(repo, actiesRepo);
 const DATUM = '2026-05-31';
-const gebruiker: Gebruiker = { id: 1, gebruikersnaam: 'tu', taak: 'waterbeheerder', voornaam: 'Test', achternaam: 'User', inlognaam: 'tu' };
+const gebruiker: Gebruiker = {
+    id: 1,
+    gebruikersnaam: 'tu',
+    taak: 'waterbeheerder',
+    voornaam: 'Test',
+    achternaam: 'User',
+    inlognaam: 'tu',
+};
 
 beforeEach(() => jest.clearAllMocks());
 

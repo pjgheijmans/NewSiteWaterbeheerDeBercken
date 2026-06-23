@@ -5,11 +5,11 @@ import { AppError } from '../../../backend/errors';
 import { maakTestApp } from '../../helpers/testApp';
 
 const mockService: jest.Mocked<IVerbruikService> = {
-    getVerbruik:       jest.fn(),
+    getVerbruik: jest.fn(),
     getVorigeVerbruik: jest.fn(),
-    saveVerbruik:      jest.fn(),
-    getVerwarming:     jest.fn(),
-    saveVerwarming:    jest.fn(),
+    saveVerbruik: jest.fn(),
+    getVerwarming: jest.fn(),
+    saveVerwarming: jest.fn(),
 };
 
 function maakApp(taak: string | null = 'waterbeheerder') {
@@ -52,7 +52,11 @@ describe('POST /diep-ondiep', () => {
     const payload = { datum: '2026-05-31', water_diep: 1000, gas: 50 };
 
     it('delegeert het opslaan naar de service (met auteur) en geeft de meta terug', async () => {
-        mockService.saveVerbruik.mockResolvedValue({ versie: 1, auteur: 'Test User', bijgewerkt_op: '2026-05-31T10:00:00' });
+        mockService.saveVerbruik.mockResolvedValue({
+            versie: 1,
+            auteur: 'Test User',
+            bijgewerkt_op: '2026-05-31T10:00:00',
+        });
         const res = await request(maakApp()).post('/diep-ondiep').send(payload);
         expect(res.status).toBe(200);
         expect(res.body).toMatchObject({ status: 'success', versie: 1, auteur: 'Test User' });
@@ -60,8 +64,12 @@ describe('POST /diep-ondiep', () => {
     });
 
     it('propageert een 409 bij een versieconflict', async () => {
-        mockService.saveVerbruik.mockRejectedValue(new AppError('Iemand anders heeft deze gegevens ondertussen gewijzigd.', 409));
-        const res = await request(maakApp()).post('/diep-ondiep').send({ ...payload, versie: 2 });
+        mockService.saveVerbruik.mockRejectedValue(
+            new AppError('Iemand anders heeft deze gegevens ondertussen gewijzigd.', 409),
+        );
+        const res = await request(maakApp())
+            .post('/diep-ondiep')
+            .send({ ...payload, versie: 2 });
         expect(res.status).toBe(409);
     });
 
@@ -74,7 +82,10 @@ describe('POST /diep-ondiep', () => {
 
 describe('GET /verwarmingssysteem', () => {
     it('delegeert naar de service', async () => {
-        mockService.getVerwarming.mockResolvedValue({ datum: '2026-05-31', verwarming_status_1: 1 });
+        mockService.getVerwarming.mockResolvedValue({
+            datum: '2026-05-31',
+            verwarming_status_1: 1,
+        });
         const res = await request(maakApp()).get('/verwarmingssysteem?datum=2026-05-31');
         expect(res.status).toBe(200);
         expect(res.body.verwarming_status_1).toBe(1);
@@ -90,7 +101,11 @@ describe('GET /verwarmingssysteem', () => {
 
 describe('POST /verwarmingssysteem', () => {
     it('delegeert het opslaan naar de service (met auteur)', async () => {
-        mockService.saveVerwarming.mockResolvedValue({ versie: 1, auteur: 'Test User', bijgewerkt_op: null });
+        mockService.saveVerwarming.mockResolvedValue({
+            versie: 1,
+            auteur: 'Test User',
+            bijgewerkt_op: null,
+        });
         const payload = { datum: '2026-05-31', verwarming_status_1: true };
         const res = await request(maakApp()).post('/verwarmingssysteem').send(payload);
         expect(res.status).toBe(200);

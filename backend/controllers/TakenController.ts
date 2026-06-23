@@ -14,6 +14,8 @@ export class TakenController {
         try {
             const datum = (req.query.datum as string) || new Date().toISOString().split('T')[0];
             res.json(await this.service.getTaken(datum));
-        } catch (err) { next(err); }
+        } catch (err) {
+            next(err);
+        }
     }
 }

@@ -9,7 +9,7 @@ export class DienstRepository implements IDienstRepository {
     async getDienst(datum: string): Promise<WaterbeheerDienst> {
         const [rows] = await this.pool.execute<RowDataPacket[]>(
             'SELECT dienst_1, dienst_2 FROM waterbeheer_dienst WHERE datum = ?',
-            [datum]
+            [datum],
         );
         return (rows[0] as WaterbeheerDienst) ?? { dienst_1: null, dienst_2: null };
     }
@@ -20,7 +20,7 @@ export class DienstRepository implements IDienstRepository {
             `INSERT INTO waterbeheer_dienst (datum, dienst_1, dienst_2)
              VALUES (?, ?, ?)
              ON DUPLICATE KEY UPDATE dienst_1 = VALUES(dienst_1), dienst_2 = VALUES(dienst_2)`,
-            [datum, dienst_1 ?? null, dienst_2 ?? null]
+            [datum, dienst_1 ?? null, dienst_2 ?? null],
         );
     }
 }

@@ -140,25 +140,25 @@ classDiagram
 
 ## 3. Verantwoordelijkheden per module
 
-| Module | Verantwoordelijkheid |
-|---|---|
-| `AppState` | Eén bron van waarheid voor gedeelde toestand en timers |
-| `ApiClient` | `fetch`-wrapper met credentials; `parseNumberValue` (komma→punt) |
-| `UIManager` | Statusberichten, veldvalidatie tegen limieten, auto-save-indicator |
-| `NavModule` | Datumnavigatie met begrenzing op de seizoengrenzen |
-| `AuthModule` | Inloggen/uitloggen, dashboard activeren, rol wisselen |
-| `MetingenModule` | Metingen laden/tonen, ⚠/✓-veldindicatoren bij de meetwaarden, coördinator-blokken |
-| `TakenModule` | Taken-subtab per bad: "Verplicht vandaag" vs "Overige taken"; afvinken via rondetaken-/acties-endpoints; een afgevinkte verplichte taak blijft in Verplicht (afgestreept, mét reden); ⚠-badges op tabs/subtabs |
-| `VerbruikModule` | Verbruik/verwarming laden, opslaan, dagdelta berekenen |
-| `OpslaanModule` | Alle auto-save-orkestratie (centraal + per blok), 1.2 s debounce |
-| `LogboekModule` | Logboekblokken voor waterbeheer en coördinatoren |
-| `GebruikersModule` | Gebruikersbeheer met auto-save per rij |
-| `DatabaseModule` | CSV-import/-export, truncate, herinitialisatie |
-| `TrendModule` | Chart.js-grafieken voor metingen en verbruik |
-| `LimietenModule` | Limieten laden/renderen/opslaan (auto-save) |
-| `ActieTekstenModule` | Actie-tekstsjablonen laden/renderen/opslaan (auto-save) met live placeholder-preview (Administrator) |
-| `DienstModule` | "Dienst vandaag"-chip: dienstpaar laden/opslaan; vult de ingelogde gebruiker voor |
-| `ConfiguratieModule` | Configuratiescherm: generieke instellingen laden/renderen en per waarde auto-saven (`PUT /api/configuratie/:sleutel`); Administrator |
+| Module               | Verantwoordelijkheid                                                                                                                                                                                           |
+| -------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `AppState`           | Eén bron van waarheid voor gedeelde toestand en timers                                                                                                                                                         |
+| `ApiClient`          | `fetch`-wrapper met credentials; `parseNumberValue` (komma→punt)                                                                                                                                               |
+| `UIManager`          | Statusberichten, veldvalidatie tegen limieten, auto-save-indicator                                                                                                                                             |
+| `NavModule`          | Datumnavigatie met begrenzing op de seizoengrenzen                                                                                                                                                             |
+| `AuthModule`         | Inloggen/uitloggen, dashboard activeren, rol wisselen                                                                                                                                                          |
+| `MetingenModule`     | Metingen laden/tonen, ⚠/✓-veldindicatoren bij de meetwaarden, coördinator-blokken                                                                                                                              |
+| `TakenModule`        | Taken-subtab per bad: "Verplicht vandaag" vs "Overige taken"; afvinken via rondetaken-/acties-endpoints; een afgevinkte verplichte taak blijft in Verplicht (afgestreept, mét reden); ⚠-badges op tabs/subtabs |
+| `VerbruikModule`     | Verbruik/verwarming laden, opslaan, dagdelta berekenen                                                                                                                                                         |
+| `OpslaanModule`      | Alle auto-save-orkestratie (centraal + per blok), 1.2 s debounce                                                                                                                                               |
+| `LogboekModule`      | Logboekblokken voor waterbeheer en coördinatoren                                                                                                                                                               |
+| `GebruikersModule`   | Gebruikersbeheer met auto-save per rij                                                                                                                                                                         |
+| `DatabaseModule`     | CSV-import/-export, truncate, herinitialisatie                                                                                                                                                                 |
+| `TrendModule`        | Chart.js-grafieken voor metingen en verbruik                                                                                                                                                                   |
+| `LimietenModule`     | Limieten laden/renderen/opslaan (auto-save)                                                                                                                                                                    |
+| `ActieTekstenModule` | Actie-tekstsjablonen laden/renderen/opslaan (auto-save) met live placeholder-preview (Administrator)                                                                                                           |
+| `DienstModule`       | "Dienst vandaag"-chip: dienstpaar laden/opslaan; vult de ingelogde gebruiker voor                                                                                                                              |
+| `ConfiguratieModule` | Configuratiescherm: generieke instellingen laden/renderen en per waarde auto-saven (`PUT /api/configuratie/:sleutel`); Administrator                                                                           |
 
 > **Optimistische concurrency & sessie (toegevoegd):** `OpslaanModule`/`MetingenModule`/
 > `VerbruikModule` houden per record een `versie` bij in `AppState.versies`, sturen die

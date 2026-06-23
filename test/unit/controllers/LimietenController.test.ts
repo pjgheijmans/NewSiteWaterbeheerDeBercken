@@ -4,7 +4,9 @@ import { ILimietenService } from '../../../backend/services/ILimietenService';
 import { maakTestApp } from '../../helpers/testApp';
 
 const mockService: jest.Mocked<ILimietenService> = {
-    getAll: jest.fn(), getDefaults: jest.fn(), save: jest.fn(),
+    getAll: jest.fn(),
+    getDefaults: jest.fn(),
+    save: jest.fn(),
 };
 
 function maakApp(taak: string | null = 'Administrator') {

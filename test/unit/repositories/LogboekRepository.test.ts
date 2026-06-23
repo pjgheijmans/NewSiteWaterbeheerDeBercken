@@ -21,7 +21,7 @@ describe('getByDatum', () => {
 describe('save', () => {
     it('voert insert uit en leest daarna id + auteur terug', async () => {
         pool.execute
-            .mockResolvedValueOnce(resultaat([]))                              // INSERT
+            .mockResolvedValueOnce(resultaat([])) // INSERT
             .mockResolvedValueOnce(resultaat([{ id: 5, auteur: 'Test User' }])); // SELECT terug
         const result = await repo.save('2026-05-31', '10:00:00', 'Tekst', 'Test User');
         expect(result).toEqual({ id: 5, auteur: 'Test User' });
@@ -30,9 +30,7 @@ describe('save', () => {
     });
 
     it('geeft null terug als de terugleesquery niets oplevert', async () => {
-        pool.execute
-            .mockResolvedValueOnce(resultaat([]))
-            .mockResolvedValueOnce(resultaat([]));
+        pool.execute.mockResolvedValueOnce(resultaat([])).mockResolvedValueOnce(resultaat([]));
         expect(await repo.save('2026-05-31', '10:00:00', '', null)).toBeNull();
     });
 });

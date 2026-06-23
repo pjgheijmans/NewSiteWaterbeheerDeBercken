@@ -12,10 +12,10 @@ import { CoordinatorenController } from '../controllers/CoordinatorenController'
  * repositories → service → controller.
  */
 export function maakCoordinatorenRouter(pool: Pool): Router {
-    const coordRepo   = new CoordinatorenRepository(pool);
+    const coordRepo = new CoordinatorenRepository(pool);
     const logboekRepo = new CoordinatorenLogboekRepository(pool);
-    const actiesRepo  = new ActiesRepository(pool, new ActieTekstenRepository(pool));
-    const service     = new CoordinatorenService(coordRepo, logboekRepo, actiesRepo);
-    const controller  = new CoordinatorenController(service);
+    const actiesRepo = new ActiesRepository(pool, new ActieTekstenRepository(pool));
+    const service = new CoordinatorenService(coordRepo, logboekRepo, actiesRepo);
+    const controller = new CoordinatorenController(service);
     return controller.router;
 }

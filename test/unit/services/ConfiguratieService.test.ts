@@ -20,7 +20,12 @@ describe('getSessieTimeoutMs', () => {
     it('gebruikt de waarde uit de cache na laadCache', async () => {
         const { service } = maakService({
             getAll: jest.fn().mockResolvedValue([
-                { sleutel: 'sessie_timeout_minuten', waarde: '10', omschrijving: null, type: 'getal' },
+                {
+                    sleutel: 'sessie_timeout_minuten',
+                    waarde: '10',
+                    omschrijving: null,
+                    type: 'getal',
+                },
             ]),
         });
         await service.laadCache();
@@ -28,7 +33,9 @@ describe('getSessieTimeoutMs', () => {
     });
 
     it('faalt zacht als laadCache de DB niet kan bereiken (defaults blijven)', async () => {
-        const { service } = maakService({ getAll: jest.fn().mockRejectedValue(new Error('geen DB')) });
+        const { service } = maakService({
+            getAll: jest.fn().mockRejectedValue(new Error('geen DB')),
+        });
         await expect(service.laadCache()).resolves.toBeUndefined();
         expect(service.getSessieTimeoutMs()).toBe(5 * 60 * 1000);
     });
@@ -42,12 +49,16 @@ describe('update', () => {
         expect(service.getSessieTimeoutMs()).toBe(15 * 60 * 1000);
     });
 
-    it.each(['0', '1441', 'abc', '5.5', '-3'])('weigert ongeldige minuten (%s) met 400', async (waarde) => {
-        const { service, repo } = maakService();
-        await expect(service.update('sessie_timeout_minuten', waarde))
-            .rejects.toMatchObject({ status: 400 });
-        expect(repo.upsert).not.toHaveBeenCalled();
-    });
+    it.each(['0', '1441', 'abc', '5.5', '-3'])(
+        'weigert ongeldige minuten (%s) met 400',
+        async (waarde) => {
+            const { service, repo } = maakService();
+            await expect(service.update('sessie_timeout_minuten', waarde)).rejects.toMatchObject({
+                status: 400,
+            });
+            expect(repo.upsert).not.toHaveBeenCalled();
+        },
+    );
 
     it.each(['1', '1440'])('accepteert de grenswaarden (%s)', async (waarde) => {
         const { service, repo } = maakService();
@@ -57,13 +68,16 @@ describe('update', () => {
 
     it('weigert een onbekende sleutel met 404', async () => {
         const { service, repo } = maakService();
-        await expect(service.update('bestaat_niet', '1'))
-            .rejects.toEqual(expect.objectContaining({ status: 404 }));
+        await expect(service.update('bestaat_niet', '1')).rejects.toEqual(
+            expect.objectContaining({ status: 404 }),
+        );
         expect(repo.upsert).not.toHaveBeenCalled();
     });
 
     it('gooit een AppError (geen kale Error)', async () => {
         const { service } = maakService();
-        await expect(service.update('sessie_timeout_minuten', 'x')).rejects.toBeInstanceOf(AppError);
+        await expect(service.update('sessie_timeout_minuten', 'x')).rejects.toBeInstanceOf(
+            AppError,
+        );
     });
 });

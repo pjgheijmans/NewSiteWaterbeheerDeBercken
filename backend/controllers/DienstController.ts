@@ -10,23 +10,44 @@ export class DienstController {
 
     constructor(private readonly service: IDienstService) {
         this.router = Router();
-        this.router.get('/',                checkAuth, this.getDienst.bind(this));
+        this.router.get('/', checkAuth, this.getDienst.bind(this));
         this.router.get('/waterbeheerders', checkAuth, this.getWaterbeheerders.bind(this));
-        this.router.post('/', checkAuth, vereist('waterbeheer', 'schrijven'), valideerBody(dienstSchema), vereistHistorieRecht, this.save.bind(this));
+        this.router.post(
+            '/',
+            checkAuth,
+            vereist('waterbeheer', 'schrijven'),
+            valideerBody(dienstSchema),
+            vereistHistorieRecht,
+            this.save.bind(this),
+        );
     }
 
     private async getDienst(req: Request, res: Response, next: NextFunction): Promise<void> {
-        try { res.json(await this.service.getDienst(req.query.datum as string)); }
-        catch (err) { next(err); }
+        try {
+            res.json(await this.service.getDienst(req.query.datum as string));
+        } catch (err) {
+            next(err);
+        }
     }
 
-    private async getWaterbeheerders(_req: Request, res: Response, next: NextFunction): Promise<void> {
-        try { res.json(await this.service.getWaterbeheerders()); }
-        catch (err) { next(err); }
+    private async getWaterbeheerders(
+        _req: Request,
+        res: Response,
+        next: NextFunction,
+    ): Promise<void> {
+        try {
+            res.json(await this.service.getWaterbeheerders());
+        } catch (err) {
+            next(err);
+        }
     }
 
     private async save(req: Request, res: Response, next: NextFunction): Promise<void> {
-        try { await this.service.saveDienst(req.body as WaterbeheerDienstInput); res.json({ status: 'success' }); }
-        catch (err) { next(err); }
+        try {
+            await this.service.saveDienst(req.body as WaterbeheerDienstInput);
+            res.json({ status: 'success' });
+        } catch (err) {
+            next(err);
+        }
     }
 }

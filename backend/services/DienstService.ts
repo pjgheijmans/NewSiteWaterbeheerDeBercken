@@ -25,8 +25,8 @@ export class DienstService implements IDienstService {
     async getWaterbeheerders(): Promise<string[]> {
         const gebruikers = await this.gebruikersRepo.getMetRecht('waterbeheer', 'schrijven');
         const namen = gebruikers
-            .map(g => [g.voornaam, g.achternaam].filter(Boolean).join(' ').trim() || g.inlognaam)
-            .filter(naam => !!naam);
+            .map((g) => [g.voornaam, g.achternaam].filter(Boolean).join(' ').trim() || g.inlognaam)
+            .filter((naam) => !!naam);
         return Array.from(new Set(namen)).sort((a, b) => a.localeCompare(b));
     }
 }

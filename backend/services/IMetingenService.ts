@@ -1,4 +1,12 @@
-import { Meting, MetingInput, Actie, Gebruiker, BezoekersResultaat, GebondenChloorResultaat, OpslaanResultaat } from '../types';
+import {
+    Meting,
+    MetingInput,
+    Actie,
+    Gebruiker,
+    BezoekersResultaat,
+    GebondenChloorResultaat,
+    OpslaanResultaat,
+} from '../types';
 
 export interface IMetingenService {
     getMetingen(datum: string): Promise<Meting[]>;

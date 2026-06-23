@@ -1,47 +1,57 @@
 version: '3.8'
 
 services:
-  db:
-    image: mysql:8.0
-    container_name: zwembad_db
-    restart: always
-    environment:
-      MYSQL_DATABASE: zwembad_status
-      MYSQL_ROOT_PASSWORD: geheim_wachtwoord
-    ports:
-      - "3306:3306"
-    volumes:
-      - db_data:/var/lib/mysql
-      - ./init.sql:/docker-entrypoint-initdb.d/init.sql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-pgeheim_wachtwoord"]
-      interval: 5s
-      timeout: 5s
-      retries: 20
-      start_period: 30s
+    db:
+        image: mysql:8.0
+        container_name: zwembad_db
+        restart: always
+        environment:
+            MYSQL_DATABASE: zwembad_status
+            MYSQL_ROOT_PASSWORD: geheim_wachtwoord
+        ports:
+            - '3306:3306'
+        volumes:
+            - db_data:/var/lib/mysql
+            - ./init.sql:/docker-entrypoint-initdb.d/init.sql
+        healthcheck:
+            test:
+                [
+                    'CMD',
+                    'mysqladmin',
+                    'ping',
+                    '-h',
+                    'localhost',
+                    '-u',
+                    'root',
+                    '-pgeheim_wachtwoord',
+                ]
+            interval: 5s
+            timeout: 5s
+            retries: 20
+            start_period: 30s
 
-  web:
-    build: .
-    container_name: zwembad_web
-    restart: always
-    ports:
-      - "3000:3000"
-      - "9229:9229" # Debug poort
-    environment:
-      - DB_HOST=db
-      - DB_USER=root
-      - DB_PASSWORD=geheim_wachtwoord
-      - DB_NAME=zwembad_status
-      - PORT=3000
-      # Lokale dev-secret. In productie MOET deze via een eigen geheim worden gezet
-      # (en NODE_ENV=production), anders weigert de app te starten.
-      - SESSION_SECRET=lokaal-dev-secret-wijzig-in-productie
-    volumes:
-      - .:/app
-      - /app/node_modules
-    depends_on:
-      db:
-        condition: service_healthy
+    web:
+        build: .
+        container_name: zwembad_web
+        restart: always
+        ports:
+            - '3000:3000'
+            - '9229:9229' # Debug poort
+        environment:
+            - DB_HOST=db
+            - DB_USER=root
+            - DB_PASSWORD=geheim_wachtwoord
+            - DB_NAME=zwembad_status
+            - PORT=3000
+            # Lokale dev-secret. In productie MOET deze via een eigen geheim worden gezet
+            # (en NODE_ENV=production), anders weigert de app te starten.
+            - SESSION_SECRET=lokaal-dev-secret-wijzig-in-productie
+        volumes:
+            - .:/app
+            - /app/node_modules
+        depends_on:
+            db:
+                condition: service_healthy
 
 volumes:
-  db_data:
+    db_data:

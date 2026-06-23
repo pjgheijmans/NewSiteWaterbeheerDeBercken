@@ -9,10 +9,17 @@ import { errorHandler } from '../../backend/middleware/errorHandler';
  */
 function rechtenVoorTaak(taak: string): { rechten: RolRechten; magHistorie: boolean } {
     switch (taak) {
-        case 'Administrator':  return { rechten: { beheer: 'schrijven' }, magHistorie: true };
-        case 'waterbeheerder': return { rechten: { waterbeheer: 'schrijven', coordinator: 'schrijven' }, magHistorie: true };
-        case 'coordinator':    return { rechten: { coordinator: 'schrijven' }, magHistorie: false };
-        default:               return { rechten: {}, magHistorie: false };
+        case 'Administrator':
+            return { rechten: { beheer: 'schrijven' }, magHistorie: true };
+        case 'waterbeheerder':
+            return {
+                rechten: { waterbeheer: 'schrijven', coordinator: 'schrijven' },
+                magHistorie: true,
+            };
+        case 'coordinator':
+            return { rechten: { coordinator: 'schrijven' }, magHistorie: false };
+        default:
+            return { rechten: {}, magHistorie: false };
     }
 }
 
@@ -39,7 +46,9 @@ export function maakSessieMiddleware(gebruiker: Gebruiker | null): RequestHandle
     return (req, _res, next) => {
         (req as any).session = {
             gebruiker: gebruiker ?? undefined,
-            destroy: jest.fn((cb?: () => void) => { if (cb) cb(); }),
+            destroy: jest.fn((cb?: () => void) => {
+                if (cb) cb();
+            }),
         };
         next();
     };

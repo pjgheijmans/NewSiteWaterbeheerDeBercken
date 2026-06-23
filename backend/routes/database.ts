@@ -9,7 +9,7 @@ import { DatabaseController } from '../controllers/DatabaseController';
  * service eromheen gebouwd en aan de controller gegeven.
  */
 export function maakDatabaseRouter(repo: IDatabaseRepository): Router {
-    const service    = new DatabaseService(repo);
+    const service = new DatabaseService(repo);
     const controller = new DatabaseController(service);
     return controller.router;
 }

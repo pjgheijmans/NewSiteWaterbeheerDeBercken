@@ -20,7 +20,10 @@ export class ConfiguratieService implements IConfiguratieService {
         sessie_timeout_minuten: (waarde) => {
             const n = Number(waarde);
             if (!Number.isInteger(n) || n < 1 || n > 1440) {
-                throw new AppError('Sessie-time-out moet een geheel getal tussen 1 en 1440 minuten zijn.', 400);
+                throw new AppError(
+                    'Sessie-time-out moet een geheel getal tussen 1 en 1440 minuten zijn.',
+                    400,
+                );
             }
         },
     };
@@ -33,7 +36,7 @@ export class ConfiguratieService implements IConfiguratieService {
         try {
             const rijen = await this.repo.getAll();
             this.cache.clear();
-            rijen.forEach(r => this.cache.set(r.sleutel, r.waarde));
+            rijen.forEach((r) => this.cache.set(r.sleutel, r.waarde));
         } catch (err) {
             // Faalt zacht (DB nog niet beschikbaar / test-context): defaults blijven gelden.
             console.warn('Configuratie laden mislukt, gebruik defaults:', (err as Error).message);
@@ -50,7 +53,7 @@ export class ConfiguratieService implements IConfiguratieService {
 
     getSessieTimeoutMs(): number {
         const minuten = parseInt(this._waarde('sessie_timeout_minuten'), 10);
-        const veilig  = Number.isFinite(minuten) && minuten > 0 ? minuten : 5;
+        const veilig = Number.isFinite(minuten) && minuten > 0 ? minuten : 5;
         return veilig * 60 * 1000;
     }
 

@@ -9,7 +9,7 @@ const pool = mysql.createPool({
     password: process.env.DB_PASSWORD || 'geheim_wachtwoord',
     database: process.env.DB_NAME || 'zwembad_status',
     waitForConnections: true,
-    connectionLimit: 10
+    connectionLimit: 10,
 });
 
 export default pool;

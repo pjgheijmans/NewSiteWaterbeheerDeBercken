@@ -1,5 +1,12 @@
 import { IDaggegevensProvider } from './IDaggegevensProvider';
-import { CoordinatorBlok, CoordinatorMetingInput, Checklist, ChecklistInput, Daggegevens, DaggegevensInput } from '../types';
+import {
+    CoordinatorBlok,
+    CoordinatorMetingInput,
+    Checklist,
+    ChecklistInput,
+    Daggegevens,
+    DaggegevensInput,
+} from '../types';
 
 export interface ICoordinatorenRepository extends IDaggegevensProvider {
     getCoordinatoren(datum: string): Promise<CoordinatorBlok[]>;

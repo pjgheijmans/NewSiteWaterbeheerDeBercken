@@ -1,13 +1,24 @@
 import {
-    metingSchema, verbruikSchema, coordinatorMetingSchema, logboekSchema,
-    gebruikerSchema, gebruikerUpdateSchema, limietSchema, loginSchema,
+    metingSchema,
+    verbruikSchema,
+    coordinatorMetingSchema,
+    logboekSchema,
+    gebruikerSchema,
+    gebruikerUpdateSchema,
+    limietSchema,
+    loginSchema,
 } from '../../../backend/validation/schemas';
 
 const DATUM = '2026-05-31';
 
 describe('metingSchema', () => {
     it('accepteert datum + bad_naam en behoudt extra meetwaardevelden', () => {
-        const r = metingSchema.safeParse({ datum: DATUM, bad_naam: 'Diep', ph_waarde: 7.2, water: '12' });
+        const r = metingSchema.safeParse({
+            datum: DATUM,
+            bad_naam: 'Diep',
+            ph_waarde: 7.2,
+            water: '12',
+        });
         expect(r.success).toBe(true);
         expect(r.data).toMatchObject({ bad_naam: 'Diep', ph_waarde: 7.2, water: '12' });
     });
@@ -17,7 +28,9 @@ describe('metingSchema', () => {
     });
 
     it('weigert een verkeerd datumformaat', () => {
-        expect(metingSchema.safeParse({ datum: '31-05-2026', bad_naam: 'Diep' }).success).toBe(false);
+        expect(metingSchema.safeParse({ datum: '31-05-2026', bad_naam: 'Diep' }).success).toBe(
+            false,
+        );
     });
 
     it('weigert een leeg bad_naam', () => {
@@ -36,7 +49,9 @@ describe('verbruik- en coordinatormeting-schema', () => {
     });
 
     it('coordinatorMetingSchema vereist datum en bad_naam', () => {
-        expect(coordinatorMetingSchema.safeParse({ datum: DATUM, bad_naam: 'Diep' }).success).toBe(true);
+        expect(coordinatorMetingSchema.safeParse({ datum: DATUM, bad_naam: 'Diep' }).success).toBe(
+            true,
+        );
         expect(coordinatorMetingSchema.safeParse({ datum: DATUM }).success).toBe(false);
     });
 });
@@ -49,7 +64,13 @@ describe('logboekSchema', () => {
 });
 
 describe('gebruikerSchema', () => {
-    const geldig = { voornaam: 'Jan', achternaam: 'J', inlognaam: 'jj', wachtwoord: 'x', rol_ids: [3] };
+    const geldig = {
+        voornaam: 'Jan',
+        achternaam: 'J',
+        inlognaam: 'jj',
+        wachtwoord: 'x',
+        rol_ids: [3],
+    };
 
     it('accepteert een geldige gebruiker', () => {
         expect(gebruikerSchema.safeParse(geldig).success).toBe(true);
@@ -82,17 +103,31 @@ describe('gebruikerUpdateSchema', () => {
     });
 
     it('accepteert ook een meegegeven wachtwoord', () => {
-        expect(gebruikerUpdateSchema.safeParse({ ...basis, wachtwoord: 'nieuw' }).success).toBe(true);
+        expect(gebruikerUpdateSchema.safeParse({ ...basis, wachtwoord: 'nieuw' }).success).toBe(
+            true,
+        );
     });
 });
 
 describe('limietSchema', () => {
     it('accepteert numerieke grenswaarden', () => {
-        expect(limietSchema.safeParse({ parameter_naam: 'ph_waarde', min_waarde: 6.8, max_waarde: 7.6 }).success).toBe(true);
+        expect(
+            limietSchema.safeParse({
+                parameter_naam: 'ph_waarde',
+                min_waarde: 6.8,
+                max_waarde: 7.6,
+            }).success,
+        ).toBe(true);
     });
 
     it('weigert niet-numerieke grenswaarden', () => {
-        expect(limietSchema.safeParse({ parameter_naam: 'ph_waarde', min_waarde: '6.8', max_waarde: 7.6 }).success).toBe(false);
+        expect(
+            limietSchema.safeParse({
+                parameter_naam: 'ph_waarde',
+                min_waarde: '6.8',
+                max_waarde: 7.6,
+            }).success,
+        ).toBe(false);
     });
 });
 

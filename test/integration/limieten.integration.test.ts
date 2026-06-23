@@ -13,8 +13,12 @@ beforeAll(async () => {
     app = maakApp(pool);
 });
 
-afterAll(async () => { await pool.end(); });
-beforeEach(async () => { await truncateData(pool); });
+afterAll(async () => {
+    await pool.end();
+});
+beforeEach(async () => {
+    await truncateData(pool);
+});
 
 describe('Limieten (integratie)', () => {
     it('vereist authenticatie voor het lezen van limieten', async () => {
@@ -32,7 +36,9 @@ describe('Limieten (integratie)', () => {
     it('slaat een gewijzigde limiet op (Administrator) en leest die terug', async () => {
         const agent = await ingelogdeAgent(app, 'administrator');
         const post = await agent.post('/api/limieten').send({
-            parameter_naam: 'ph_waarde', min_waarde: 6.9, max_waarde: 7.5,
+            parameter_naam: 'ph_waarde',
+            min_waarde: 6.9,
+            max_waarde: 7.5,
         });
         expect(post.status).toBe(200);
 
@@ -43,14 +49,18 @@ describe('Limieten (integratie)', () => {
     it('weigert opslaan door een waterbeheerder (403 — alleen Administrator)', async () => {
         const agent = await ingelogdeAgent(app, 'waterbeheerder');
         const res = await agent.post('/api/limieten').send({
-            parameter_naam: 'ph_waarde', min_waarde: 6.9, max_waarde: 7.5,
+            parameter_naam: 'ph_waarde',
+            min_waarde: 6.9,
+            max_waarde: 7.5,
         });
         expect(res.status).toBe(403);
     });
 
     it('weigert opslaan zonder sessie (401)', async () => {
         const res = await request(app).post('/api/limieten').send({
-            parameter_naam: 'ph_waarde', min_waarde: 6.9, max_waarde: 7.5,
+            parameter_naam: 'ph_waarde',
+            min_waarde: 6.9,
+            max_waarde: 7.5,
         });
         expect(res.status).toBe(401);
     });
@@ -58,7 +68,9 @@ describe('Limieten (integratie)', () => {
     it('valideert een niet-numerieke grenswaarde met 400', async () => {
         const agent = await ingelogdeAgent(app, 'administrator');
         const res = await agent.post('/api/limieten').send({
-            parameter_naam: 'ph_waarde', min_waarde: 'laag', max_waarde: 7.5,
+            parameter_naam: 'ph_waarde',
+            min_waarde: 'laag',
+            max_waarde: 7.5,
         });
         expect(res.status).toBe(400);
     });

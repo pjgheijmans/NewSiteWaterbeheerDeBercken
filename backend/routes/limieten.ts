@@ -5,8 +5,8 @@ import { LimietenService } from '../services/LimietenService';
 import { LimietenController } from '../controllers/LimietenController';
 
 export function maakLimietenRouter(pool: Pool): Router {
-    const repo       = new LimietenRepository(pool);
-    const service    = new LimietenService(repo);
+    const repo = new LimietenRepository(pool);
+    const service = new LimietenService(repo);
     const controller = new LimietenController(service);
     return controller.router;
 }

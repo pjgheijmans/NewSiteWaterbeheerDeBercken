@@ -13,19 +13,28 @@ beforeAll(async () => {
     app = maakApp(pool);
 });
 
-afterAll(async () => { await pool.end(); });
-beforeEach(async () => { await truncateData(pool); });
+afterAll(async () => {
+    await pool.end();
+});
+beforeEach(async () => {
+    await truncateData(pool);
+});
 
 describe('Auth (integratie)', () => {
     it('weigert onjuiste inloggegevens met 401', async () => {
-        const res = await request(app).post('/api/login').send({ username: 'pheijmans', password: 'fout' });
+        const res = await request(app)
+            .post('/api/login')
+            .send({ username: 'pheijmans', password: 'fout' });
         expect(res.status).toBe(401);
     });
 
     it('logt een geseede gebruiker in en geeft het gebruikersobject terug', async () => {
         const res = await request(app).post('/api/login').send(TEST_USERS.waterbeheerder);
         expect(res.status).toBe(200);
-        expect(res.body.gebruiker).toMatchObject({ inlognaam: 'pheijmans', taak: 'waterbeheerder' });
+        expect(res.body.gebruiker).toMatchObject({
+            inlognaam: 'pheijmans',
+            taak: 'waterbeheerder',
+        });
     });
 
     it('houdt de sessie vast over requests heen (agent)', async () => {

@@ -23,13 +23,17 @@ function maakApp(ingelogd = true) {
         state: { ingelogdeGebruiker: ingelogd ? { id: 1, taak: 'Administrator' } : null },
         ui: { toonBericht: jest.fn() },
     };
-    app.api  = new ApiClient(app);
+    app.api = new ApiClient(app);
     app.auth = new AuthModule(app);
     return app;
 }
 
 function mockFetch(status: number) {
-    (global as any).fetch = jest.fn(async () => ({ status, ok: status < 400, json: async () => ({}) }));
+    (global as any).fetch = jest.fn(async () => ({
+        status,
+        ok: status < 400,
+        json: async () => ({}),
+    }));
 }
 
 beforeEach(zetDom);
@@ -74,15 +78,15 @@ describe('Sessie verlopen (401) — Option A', () => {
         const app = maakApp(true);
         await app.api.call('/api/configuratie');
         const fout = document.getElementById('login-fout')!;
-        fout.innerText = 'GEWIJZIGD';   // simuleer dat de gebruiker al begint te typen
-        await app.api.call('/api/configuratie');   // tweede 401
+        fout.innerText = 'GEWIJZIGD'; // simuleer dat de gebruiker al begint te typen
+        await app.api.call('/api/configuratie'); // tweede 401
         // Guard (ingelogdeGebruiker === null) voorkomt dat de melding opnieuw gezet wordt.
         expect(fout.innerText).toBe('GEWIJZIGD');
     });
 
     it('ApiClient zonder app-referentie crasht niet op een 401', async () => {
         mockFetch(401);
-        const api = new ApiClient();           // geen app
+        const api = new ApiClient(); // geen app
         const res = await api.call('/api/configuratie');
         expect(res.status).toBe(401);
     });

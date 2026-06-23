@@ -19,10 +19,13 @@ class UIManager {
         if (state.berichtTimer) clearTimeout(state.berichtTimer);
 
         // Lege tekst betekent: verbergen.
-        if (!tekst) { this._resetBerichtBox(el); return; }
+        if (!tekst) {
+            this._resetBerichtBox(el);
+            return;
+        }
 
         el.textContent = tekst;
-        el.className   = 'status-melding ' + (type || 'info');
+        el.className = 'status-melding ' + (type || 'info');
         // Forceer reflow zodat de toast bij elke nieuwe melding opnieuw inschuift.
         void el.offsetWidth;
         el.classList.add('zichtbaar');
@@ -42,7 +45,7 @@ class UIManager {
         el.classList.remove('zichtbaar');
         this.app.state.berichtTimer = setTimeout(() => {
             el.textContent = '';
-            el.className   = 'status-melding';
+            el.className = 'status-melding';
         }, 280);
     }
 
@@ -52,8 +55,8 @@ class UIManager {
      * @returns {Promise<boolean>} true = bevestigd, false = geannuleerd
      */
     bevestig(opties) {
-        const o = typeof opties === 'string' ? { tekst: opties } : (opties || {});
-        return new Promise(resolve => this._toonModal(o, resolve));
+        const o = typeof opties === 'string' ? { tekst: opties } : opties || {};
+        return new Promise((resolve) => this._toonModal(o, resolve));
     }
 
     /**
@@ -62,7 +65,7 @@ class UIManager {
      * @returns {Promise<void>}
      */
     meld(opties) {
-        const o = typeof opties === 'string' ? { tekst: opties } : (opties || {});
+        const o = typeof opties === 'string' ? { tekst: opties } : opties || {};
         return this.bevestig({ ...o, alleenBevestig: true, bevestig: o.bevestig || 'OK' });
     }
 
@@ -99,11 +102,13 @@ class UIManager {
         };
         bevestigKnop.addEventListener('click', () => sluit(true));
         if (annuleerKnop) annuleerKnop.addEventListener('click', () => sluit(false));
-        overlay.addEventListener('mousedown', e => { if (e.target === overlay && !o.alleenBevestig) sluit(false); });
+        overlay.addEventListener('mousedown', (e) => {
+            if (e.target === overlay && !o.alleenBevestig) sluit(false);
+        });
         document.addEventListener('keydown', onKey);
 
         document.body.appendChild(overlay);
-        void overlay.offsetWidth;          // reflow → in-animatie
+        void overlay.offsetWidth; // reflow → in-animatie
         overlay.classList.add('zichtbaar');
         bevestigKnop.focus();
     }
@@ -116,7 +121,7 @@ class UIManager {
     zetInputValue(id, waarde) {
         const el = document.getElementById(id);
         if (!el) return;
-        el.value = (waarde !== undefined && waarde !== null) ? waarde : '';
+        el.value = waarde !== undefined && waarde !== null ? waarde : '';
         const param = el.getAttribute('data-param');
         if (param) this.valideerVeld(el, param);
     }
@@ -128,16 +133,25 @@ class UIManager {
      * @param {string|null} parameterNaam
      */
     valideerVeld(el, parameterNaam) {
-        if (el.value === '') { el.classList.remove('buiten-limiet'); return; }
+        if (el.value === '') {
+            el.classList.remove('buiten-limiet');
+            return;
+        }
         const waarde = parseFloat(el.value);
-        if (isNaN(waarde)) { el.classList.add('buiten-limiet'); return; }
+        if (isNaN(waarde)) {
+            el.classList.add('buiten-limiet');
+            return;
+        }
 
-        const step    = parseFloat(el.getAttribute('step'));
+        const step = parseFloat(el.getAttribute('step'));
         if (!isNaN(step) && step > 0) {
             const toegestaan = step >= 1 ? 0 : (step.toString().split('.')[1] || '').length;
-            const dotIdx     = el.value.indexOf('.');
-            const ingevoerd  = dotIdx === -1 ? 0 : el.value.length - dotIdx - 1;
-            if (ingevoerd > toegestaan) { el.classList.add('buiten-limiet'); return; }
+            const dotIdx = el.value.indexOf('.');
+            const ingevoerd = dotIdx === -1 ? 0 : el.value.length - dotIdx - 1;
+            if (ingevoerd > toegestaan) {
+                el.classList.add('buiten-limiet');
+                return;
+            }
         }
 
         const limiet = this.app.state.actieveLimieten[parameterNaam];
@@ -157,16 +171,18 @@ class UIManager {
         if (!el) return;
         const states = {
             pending: ['Wijzigingen niet opgeslagen...', '#888'],
-            saving:  ['Bewaren…',                       '#fd7e14'],
-            saved:   ['✓ Opgeslagen',                   '#28a745'],
-            warning: ['⚠ Opgeslagen met waarschuwing',  '#fd7e14'],
-            error:   ['✗ Fout bij opslaan',             '#dc3545'],
+            saving: ['Bewaren…', '#fd7e14'],
+            saved: ['✓ Opgeslagen', '#28a745'],
+            warning: ['⚠ Opgeslagen met waarschuwing', '#fd7e14'],
+            error: ['✗ Fout bij opslaan', '#dc3545'],
         };
         const [text, color] = states[status] || ['', '#333'];
-        el.textContent  = text;
-        el.style.color  = color;
+        el.textContent = text;
+        el.style.color = color;
         if (status === 'saved') {
-            setTimeout(() => { if (el.textContent.startsWith('✓')) el.textContent = ''; }, 4000);
+            setTimeout(() => {
+                if (el.textContent.startsWith('✓')) el.textContent = '';
+            }, 4000);
         }
     }
 }

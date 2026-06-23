@@ -6,7 +6,7 @@ function maakMocks() {
     const req = {} as Request;
     const res = {
         status: jest.fn().mockReturnThis(),
-        json:   jest.fn().mockReturnThis(),
+        json: jest.fn().mockReturnThis(),
     } as unknown as Response;
     const next = jest.fn() as NextFunction;
     return { req, res, next };

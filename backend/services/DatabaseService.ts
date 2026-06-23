@@ -18,20 +18,23 @@ export class DatabaseService implements IDatabaseService {
 
         const kolommen = Object.keys(rows[0]);
         let csv = kolommen.join(';') + '\r\n';
-        rows.forEach(rij => {
-            csv += kolommen.map(k => {
-                const w = rij[k];
-                if (w === null || w === undefined) return '';
-                if (w instanceof Date) return w.toISOString().split('T')[0];
-                return String(w).replace(/;/g, ',');
-            }).join(';') + '\r\n';
+        rows.forEach((rij) => {
+            csv +=
+                kolommen
+                    .map((k) => {
+                        const w = rij[k];
+                        if (w === null || w === undefined) return '';
+                        if (w instanceof Date) return w.toISOString().split('T')[0];
+                        return String(w).replace(/;/g, ',');
+                    })
+                    .join(';') + '\r\n';
         });
         return csv;
     }
 
     async importeerCsv(tabel: string, ruweTekst: string): Promise<void> {
         if (!ruweTekst) throw new AppError('Geen CSV data ontvangen', 400);
-        const regels = ruweTekst.split(/\r?\n/).filter(l => l.trim() !== '');
+        const regels = ruweTekst.split(/\r?\n/).filter((l) => l.trim() !== '');
         if (regels.length < 2) throw new AppError('CSV-bestand bevat geen data', 400);
 
         const kolommen = regels[0].split(';');
@@ -42,7 +45,9 @@ export class DatabaseService implements IDatabaseService {
                 if (waarden.length !== kolommen.length) continue;
 
                 const rij: Record<string, string | null> = {};
-                kolommen.forEach((k, i) => { rij[k] = waarden[i].trim() || null; });
+                kolommen.forEach((k, i) => {
+                    rij[k] = waarden[i].trim() || null;
+                });
 
                 if (NEED_BAD_ID.includes(tabel)) {
                     const bad_id = await this.repo.getBadId(rij['bad_naam'] ?? '');
@@ -50,8 +55,12 @@ export class DatabaseService implements IDatabaseService {
                     delete rij['bad_naam'];
                 }
 
-                const cols = Object.keys(rij).filter(k => k !== 'id');
-                await this.repo.importRow(tabel, cols, cols.map(k => rij[k]));
+                const cols = Object.keys(rij).filter((k) => k !== 'id');
+                await this.repo.importRow(
+                    tabel,
+                    cols,
+                    cols.map((k) => rij[k]),
+                );
             }
             await this.repo.setForeignKeyChecks(true);
         } catch (err) {

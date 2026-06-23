@@ -26,20 +26,35 @@ function zetDom() {
         <div id="subtab-verbruik-content"><div class="cel"><input id="chemicalien-chloor"></div></div>`;
 }
 
-const heeftActie = (id: string) => !!document.getElementById(id)?.querySelector('.tab-actie-indicator');
+const heeftActie = (id: string) =>
+    !!document.getElementById(id)?.querySelector('.tab-actie-indicator');
 
 describe('Subtab-knop krijgt ⚠ bij een open actie op een veld in die subtab', () => {
     beforeEach(zetDom);
 
     it('flow-actie (Meetwaarden) → ⚠ op de Meetwaarden-subtab, niet op Verbruik', async () => {
-        const app = maakApp([{ actie_type: 'filter_spoelen_flow', bad_naam: 'Diep', opgelost: false, beschrijving: 'Flow te laag' }]);
+        const app = maakApp([
+            {
+                actie_type: 'filter_spoelen_flow',
+                bad_naam: 'Diep',
+                opgelost: false,
+                beschrijving: 'Flow te laag',
+            },
+        ]);
         await new MetingenModule(app).laadActies('2026-07-15');
         expect(heeftActie('subtab-meetwaarden')).toBe(true);
         expect(heeftActie('subtab-verbruik')).toBe(false);
     });
 
     it('chloor-bestellen-actie (Verbruik) → ⚠ op de Verbruik-subtab', async () => {
-        const app = maakApp([{ actie_type: 'chloor_bestellen', bad_naam: 'Diep', opgelost: false, beschrijving: 'Chloor bestellen' }]);
+        const app = maakApp([
+            {
+                actie_type: 'chloor_bestellen',
+                bad_naam: 'Diep',
+                opgelost: false,
+                beschrijving: 'Chloor bestellen',
+            },
+        ]);
         await new MetingenModule(app).laadActies('2026-07-15');
         expect(heeftActie('subtab-verbruik')).toBe(true);
         expect(heeftActie('subtab-meetwaarden')).toBe(false);
@@ -53,14 +68,29 @@ describe('Subtab-knop krijgt ⚠ bij een open actie op een veld in die subtab', 
     });
 
     it('opgeloste actie telt niet mee voor de subtab-⚠', async () => {
-        const app = maakApp([{ actie_type: 'filter_spoelen_flow', bad_naam: 'Diep', opgelost: true, opgelost_op: '2026-07-15T10:00' }]);
+        const app = maakApp([
+            {
+                actie_type: 'filter_spoelen_flow',
+                bad_naam: 'Diep',
+                opgelost: true,
+                opgelost_op: '2026-07-15T10:00',
+            },
+        ]);
         await new MetingenModule(app).laadActies('2026-07-15');
         expect(heeftActie('subtab-meetwaarden')).toBe(false);
     });
 
     it('⚠ verdwijnt weer zodra de actie bij een herlaad weg is', async () => {
-        const meting = new MetingenModule(maakApp(
-            [{ actie_type: 'filter_spoelen_flow', bad_naam: 'Diep', opgelost: false, beschrijving: 'x' }]));
+        const meting = new MetingenModule(
+            maakApp([
+                {
+                    actie_type: 'filter_spoelen_flow',
+                    bad_naam: 'Diep',
+                    opgelost: false,
+                    beschrijving: 'x',
+                },
+            ]),
+        );
         await meting.laadActies('2026-07-15');
         expect(heeftActie('subtab-meetwaarden')).toBe(true);
 
@@ -71,10 +101,19 @@ describe('Subtab-knop krijgt ⚠ bij een open actie op een veld in die subtab', 
     });
 
     it('blijft staan naast de veld-indicator (de cleanup van .actie-indicator raakt de subtab-⚠ niet)', async () => {
-        const app = maakApp([{ actie_type: 'filter_spoelen_flow', bad_naam: 'Diep', opgelost: false, beschrijving: 'x' }]);
+        const app = maakApp([
+            {
+                actie_type: 'filter_spoelen_flow',
+                bad_naam: 'Diep',
+                opgelost: false,
+                beschrijving: 'x',
+            },
+        ]);
         await new MetingenModule(app).laadActies('2026-07-15');
         // Veld-indicator naast flow-diep én subtab-⚠ bestaan allebei.
-        expect(document.getElementById('flow-diep')!.parentElement!.querySelector('.actie-indicator')).not.toBeNull();
+        expect(
+            document.getElementById('flow-diep')!.parentElement!.querySelector('.actie-indicator'),
+        ).not.toBeNull();
         expect(heeftActie('subtab-meetwaarden')).toBe(true);
     });
 });

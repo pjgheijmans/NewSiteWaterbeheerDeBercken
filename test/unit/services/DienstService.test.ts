@@ -1,13 +1,22 @@
 import { DienstService } from '../../../backend/services/DienstService';
 import { IDienstRepository } from '../../../backend/repositories/IDienstRepository';
-import { IGebruikersRepository, GebruikerNaam } from '../../../backend/repositories/IGebruikersRepository';
+import {
+    IGebruikersRepository,
+    GebruikerNaam,
+} from '../../../backend/repositories/IGebruikersRepository';
 
 const dienstRepo: jest.Mocked<IDienstRepository> = {
-    getDienst: jest.fn(), saveDienst: jest.fn(),
+    getDienst: jest.fn(),
+    saveDienst: jest.fn(),
 };
 const gebruikersRepo: jest.Mocked<IGebruikersRepository> = {
-    findByLogin: jest.fn(), getAll: jest.fn(), getMetRecht: jest.fn(), create: jest.fn(),
-    update: jest.fn(), remove: jest.fn(), seedDefaults: jest.fn(),
+    findByLogin: jest.fn(),
+    getAll: jest.fn(),
+    getMetRecht: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    remove: jest.fn(),
+    seedDefaults: jest.fn(),
     hashBestaandeWachtwoorden: jest.fn(),
 };
 const service = new DienstService(dienstRepo, gebruikersRepo);
@@ -37,7 +46,7 @@ describe('getWaterbeheerders', () => {
         gebruikersRepo.getMetRecht.mockResolvedValue([
             naam('Piet', 'Jansen'),
             naam('Anna', 'Bos'),
-            naam('Piet', 'Jansen'),  // duplicaat
+            naam('Piet', 'Jansen'), // duplicaat
         ]);
         expect(await service.getWaterbeheerders()).toEqual(['Anna Bos', 'Piet Jansen']);
         expect(gebruikersRepo.getMetRecht).toHaveBeenCalledWith('waterbeheer', 'schrijven');

@@ -13,7 +13,10 @@ beforeEach(() => {
 describe('getVerbruik', () => {
     it('geeft de eerste rij terug', async () => {
         pool.execute.mockResolvedValue(resultaat([{ datum: '2026-05-31', water_diep: 1000 }]));
-        expect(await repo.getVerbruik('2026-05-31')).toEqual({ datum: '2026-05-31', water_diep: 1000 });
+        expect(await repo.getVerbruik('2026-05-31')).toEqual({
+            datum: '2026-05-31',
+            water_diep: 1000,
+        });
     });
 
     it('geeft een leeg object terug als er geen rij is', async () => {
@@ -51,11 +54,11 @@ describe('saveVerbruik', () => {
 
         expect(sqlVan(pool.execute, 0)).toContain('UPDATE verbruik_diep_ondiep');
         const p = paramsVan(pool.execute, 0); // [floculant, water_diep, ..., auteur, datum, verwachteVersie]
-        expect(p[0]).toBeNull();          // floculant ontbreekt
-        expect(p[1]).toBe(1000);          // water_diep
-        expect(p[2]).toBeNull();          // water_ondiep
+        expect(p[0]).toBeNull(); // floculant ontbreekt
+        expect(p[1]).toBe(1000); // water_diep
+        expect(p[2]).toBeNull(); // water_ondiep
         expect(p).toContain('Jan');
-        expect(p[p.length - 1]).toBe(4);  // verwachte versie
+        expect(p[p.length - 1]).toBe(4); // verwachte versie
     });
 });
 
@@ -72,7 +75,7 @@ describe('saveVerwarming', () => {
         await repo.saveVerwarming({ datum: '2026-05-31', verwarming_status_1: true }, 'Jan', null);
         expect(sqlVan(pool.execute, 0)).toContain('UPDATE verwarmings_systeem_diep_ondiep');
         const p = paramsVan(pool.execute, 0);
-        expect(p[0]).toBe(1);   // status_1 = true → 1
-        expect(p[1]).toBe(0);   // status_2 ontbreekt → 0
+        expect(p[0]).toBe(1); // status_1 = true → 1
+        expect(p[1]).toBe(0); // status_2 ontbreekt → 0
     });
 });

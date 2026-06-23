@@ -12,15 +12,17 @@ class LogboekModule {
         if (!el) return;
         const states = {
             pending: ['Wijzigingen niet opgeslagen...', '#888'],
-            saving:  ['Bewaren…',                       '#fd7e14'],
-            saved:   ['✓ Opgeslagen',                   '#28a745'],
-            error:   ['✕ Fout bij opslaan',             '#dc3545'],
+            saving: ['Bewaren…', '#fd7e14'],
+            saved: ['✓ Opgeslagen', '#28a745'],
+            error: ['✕ Fout bij opslaan', '#dc3545'],
         };
         const [text, color] = states[status] || ['', '#333'];
         el.textContent = text;
         el.style.color = color;
         if (status === 'saved')
-            setTimeout(() => { if (el.textContent.startsWith('✓')) el.textContent = ''; }, 4000);
+            setTimeout(() => {
+                if (el.textContent.startsWith('✓')) el.textContent = '';
+            }, 4000);
     }
 
     /**
@@ -35,17 +37,19 @@ class LogboekModule {
         if (!container) return;
         container.innerHTML = '';
         try {
-            const res     = await this.app.api.call(`${apiBase}?datum=${datum}`);
+            const res = await this.app.api.call(`${apiBase}?datum=${datum}`);
             const entries = await res.json();
-            entries.forEach(e => container.appendChild(
-                this._maakBlok(e.id, e.tijdstip, e.tekst, apiBase, e.auteur)
-            ));
-        } catch (e) { console.error('Fout bij laden logboek:', e); }
+            entries.forEach((e) =>
+                container.appendChild(this._maakBlok(e.id, e.tijdstip, e.tekst, apiBase, e.auteur)),
+            );
+        } catch (e) {
+            console.error('Fout bij laden logboek:', e);
+        }
     }
 
     /** @private */
     _maakBlok(id, tijdstip, tekst, apiBase = '/api/logboek', auteur = '') {
-        const normalized  = String(tijdstip).slice(0, 19).replace('T', ' ');
+        const normalized = String(tijdstip).slice(0, 19).replace('T', ' ');
         const displayTijd = normalized.slice(0, 16);
         const auteurLabel = auteur
             ? `<span style="color:#888;font-size:13px;margin-left:10px;">— ${auteur}</span>`
@@ -69,17 +73,18 @@ class LogboekModule {
                 <span class="logboek-teller">${(tekst || '').length}</span>/500
             </div>`;
 
-        const ta     = el.querySelector('textarea');
+        const ta = el.querySelector('textarea');
         const teller = el.querySelector('.logboek-teller');
 
-        ta.addEventListener('input', e => {
+        ta.addEventListener('input', (e) => {
             e.stopPropagation();
             teller.textContent = ta.value.length;
             this._scheduleAutoSave(el);
         });
-        ta.addEventListener('change', e => e.stopPropagation());
-        el.querySelector('.logboek-verwijder-btn').addEventListener('click',
-            () => this._verwijderBlok(el));
+        ta.addEventListener('change', (e) => e.stopPropagation());
+        el.querySelector('.logboek-verwijder-btn').addEventListener('click', () =>
+            this._verwijderBlok(el),
+        );
 
         return el;
     }
@@ -87,8 +92,8 @@ class LogboekModule {
     /** @private */
     _scheduleAutoSave(el) {
         const tijdstip = el.getAttribute('data-logboek-tijdstip');
-        const apiBase  = el.getAttribute('data-logboek-api') || '/api/logboek';
-        const timers   = this.app.state.logboekTimers;
+        const apiBase = el.getAttribute('data-logboek-api') || '/api/logboek';
+        const timers = this.app.state.logboekTimers;
         if (timers[tijdstip]) clearTimeout(timers[tijdstip]);
         this._setSaveStatus('pending');
         timers[tijdstip] = setTimeout(async () => {
@@ -111,7 +116,10 @@ class LogboekModule {
                     this._setSaveStatus('error');
                     this.app.ui.toonBericht('Fout bij opslaan logboek.', 'fout');
                 }
-            } catch (e) { console.error(e); this._setSaveStatus('error'); }
+            } catch (e) {
+                console.error(e);
+                this._setSaveStatus('error');
+            }
         }, 1200);
     }
 
@@ -121,12 +129,12 @@ class LogboekModule {
      * @param {string} [apiBase='/api/logboek']
      */
     async voegLogboekBlokToe(containerId = 'logboek-blokken', apiBase = '/api/logboek') {
-        const now      = new Date();
-        const pad      = n => String(n).padStart(2, '0');
-        const tijdstip = `${now.getFullYear()}-${pad(now.getMonth()+1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
-        const datum    = document.getElementById('centraleDatum').value;
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        const tijdstip = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
+        const datum = document.getElementById('centraleDatum').value;
         try {
-            const res  = await this.app.api.call(apiBase, {
+            const res = await this.app.api.call(apiBase, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ datum, tijdstip, tekst: '' }),
@@ -134,15 +142,28 @@ class LogboekModule {
             const data = await res.json();
             const blok = this._maakBlok(data.id ?? null, tijdstip, '', apiBase, data.auteur ?? '');
             const container = document.getElementById(containerId);
-            if (container) { container.appendChild(blok); blok.querySelector('textarea').focus(); }
-        } catch (e) { console.error(e); this.app.ui.toonBericht('Fout bij aanmaken logboekblok.', 'fout'); }
+            if (container) {
+                container.appendChild(blok);
+                blok.querySelector('textarea').focus();
+            }
+        } catch (e) {
+            console.error(e);
+            this.app.ui.toonBericht('Fout bij aanmaken logboekblok.', 'fout');
+        }
     }
 
     /** @private */
     async _verwijderBlok(el) {
-        const id      = el.getAttribute('data-logboek-id');
+        const id = el.getAttribute('data-logboek-id');
         const apiBase = el.getAttribute('data-logboek-api') || '/api/logboek';
-        if (!(await this.app.ui.bevestig({ tekst: 'Dit tekstblok verwijderen?', bevestig: 'Verwijderen', gevaar: true }))) return;
+        if (
+            !(await this.app.ui.bevestig({
+                tekst: 'Dit tekstblok verwijderen?',
+                bevestig: 'Verwijderen',
+                gevaar: true,
+            }))
+        )
+            return;
         if (id) {
             try {
                 const res = await this.app.api.call(`${apiBase}/${id}`, { method: 'DELETE' });
@@ -151,7 +172,11 @@ class LogboekModule {
                     this.app.ui.toonBericht(e?.error || 'Fout bij verwijderen.', 'fout');
                     return;
                 }
-            } catch (e) { console.error(e); this.app.ui.toonBericht('Verbindingsfout bij verwijderen.', 'fout'); return; }
+            } catch (e) {
+                console.error(e);
+                this.app.ui.toonBericht('Verbindingsfout bij verwijderen.', 'fout');
+                return;
+            }
         }
         el.remove();
         this._setSaveStatus('saved');

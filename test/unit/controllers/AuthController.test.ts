@@ -17,7 +17,8 @@ describe('POST /login', () => {
     it('logt in en geeft de gebruiker terug bij correcte credentials', async () => {
         mockService.login.mockResolvedValue(maakTestGebruiker('waterbeheerder'));
         const res = await request(maakApp())
-            .post('/login').send({ username: 'pheijmans', password: 'Paul' });
+            .post('/login')
+            .send({ username: 'pheijmans', password: 'Paul' });
         expect(res.status).toBe(200);
         expect(res.body.status).toBe('success');
         expect(res.body.gebruiker.taak).toBe('waterbeheerder');
@@ -27,15 +28,15 @@ describe('POST /login', () => {
     it('geeft 401 bij onjuiste credentials', async () => {
         mockService.login.mockResolvedValue(null);
         const res = await request(maakApp())
-            .post('/login').send({ username: 'wrong', password: 'wrong' });
+            .post('/login')
+            .send({ username: 'wrong', password: 'wrong' });
         expect(res.status).toBe(401);
         expect(res.body.error).toMatch(/inlognaam|wachtwoord/i);
     });
 
     it('geeft 500 bij een fout in de service (via errorHandler)', async () => {
         mockService.login.mockRejectedValue(new Error('DB onbereikbaar'));
-        const res = await request(maakApp())
-            .post('/login').send({ username: 'x', password: 'y' });
+        const res = await request(maakApp()).post('/login').send({ username: 'x', password: 'y' });
         expect(res.status).toBe(500);
         expect(res.body.error).toBe('DB onbereikbaar');
     });

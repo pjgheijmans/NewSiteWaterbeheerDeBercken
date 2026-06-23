@@ -17,7 +17,7 @@ export class TrendRepository implements ITrendRepository {
              FROM metingen_peuterbad mp JOIN baden b ON mp.bad_id = b.id
              WHERE mp.datum BETWEEN ? AND ?
              ORDER BY datum ASC, bad_naam ASC`,
-            [van, tot, van, tot]
+            [van, tot, van, tot],
         );
         return rows as TrendMetingRow[];
     }
@@ -27,16 +27,16 @@ export class TrendRepository implements ITrendRepository {
             `SELECT datum, water_diep, water_ondiep, water_totaal,
                     elektriciteit_nacht, elektriciteit_dag, gas, chemicalien_chloor, chemicalien_zwavelzuur
              FROM verbruik_diep_ondiep WHERE datum BETWEEN ? AND ? ORDER BY datum ASC`,
-            [van, tot]
+            [van, tot],
         );
         const [peuterbadRows] = await this.pool.execute<RowDataPacket[]>(
             `SELECT mp.datum, mp.water, mp.chemicalien_chloor, mp.chemicalien_zwavelzuur
              FROM metingen_peuterbad mp JOIN baden b ON mp.bad_id = b.id
              WHERE b.naam = 'Peuterbad' AND mp.datum BETWEEN ? AND ? ORDER BY mp.datum ASC`,
-            [van, tot]
+            [van, tot],
         );
         return {
-            algemeen:  algemeenRows  as TrendVerbruikRow[],
+            algemeen: algemeenRows as TrendVerbruikRow[],
             peuterbad: peuterbadRows as TrendPeuterbadRow[],
         };
     }

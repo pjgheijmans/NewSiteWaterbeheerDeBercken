@@ -15,14 +15,14 @@ export function bepaalSessionSecret(): string {
     if (process.env.NODE_ENV === 'production') {
         throw new Error(
             'SESSION_SECRET ontbreekt: stel de SESSION_SECRET-omgevingsvariabele in ' +
-            'voordat de applicatie in productie wordt gestart.'
+                'voordat de applicatie in productie wordt gestart.',
         );
     }
 
     if (process.env.NODE_ENV !== 'test') {
         console.warn(
             'WAARSCHUWING: SESSION_SECRET is niet gezet — er wordt een onveilige ' +
-            'dev-fallback gebruikt. Zet SESSION_SECRET in productie.'
+                'dev-fallback gebruikt. Zet SESSION_SECRET in productie.',
         );
     }
     return 'dev-onveilig-zwembad-secret';

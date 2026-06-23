@@ -5,24 +5,45 @@ import { IActiesRepository } from '../../../backend/repositories/IActiesReposito
 import { Gebruiker } from '../../../backend/types';
 
 const coordRepo: jest.Mocked<ICoordinatorenRepository> = {
-    getCoordinatoren: jest.fn(), getBadId: jest.fn(), saveMeting: jest.fn(),
-    deleteBlok: jest.fn(), getChecklist: jest.fn(), saveChecklist: jest.fn(),
-    getDaggegevens: jest.fn(), saveDaggegevens: jest.fn(),
+    getCoordinatoren: jest.fn(),
+    getBadId: jest.fn(),
+    saveMeting: jest.fn(),
+    deleteBlok: jest.fn(),
+    getChecklist: jest.fn(),
+    saveChecklist: jest.fn(),
+    getDaggegevens: jest.fn(),
+    saveDaggegevens: jest.fn(),
 };
 const logboekRepo: jest.Mocked<ICoordinatorenLogboekRepository> = {
-    getByDatum: jest.fn(), save: jest.fn(), getDatumById: jest.fn(), deleteById: jest.fn(),
+    getByDatum: jest.fn(),
+    save: jest.fn(),
+    getDatumById: jest.fn(),
+    deleteById: jest.fn(),
 };
 const actiesRepo: jest.Mocked<IActiesRepository> = {
-    getActies: jest.fn(), resolve: jest.fn(), unresolve: jest.fn(),
-    resolveFilterSpoelen: jest.fn(), unresolveFilterSpoelen: jest.fn(),
-    genereer: jest.fn(), genereerVerbruik: jest.fn(),
-    genereerBezoekers: jest.fn(), genereerSpoelbeurt: jest.fn(),
-    genereerCoordinatoren: jest.fn(), getGebondenChloorMax: jest.fn(),
+    getActies: jest.fn(),
+    resolve: jest.fn(),
+    unresolve: jest.fn(),
+    resolveFilterSpoelen: jest.fn(),
+    unresolveFilterSpoelen: jest.fn(),
+    genereer: jest.fn(),
+    genereerVerbruik: jest.fn(),
+    genereerBezoekers: jest.fn(),
+    genereerSpoelbeurt: jest.fn(),
+    genereerCoordinatoren: jest.fn(),
+    getGebondenChloorMax: jest.fn(),
 };
 
 const service = new CoordinatorenService(coordRepo, logboekRepo, actiesRepo);
 const DATUM = '2026-05-31';
-const gebruiker: Gebruiker = { id: 1, gebruikersnaam: 'tu', taak: 'coordinator', voornaam: 'Co', achternaam: 'Ord', inlognaam: 'co' };
+const gebruiker: Gebruiker = {
+    id: 1,
+    gebruikersnaam: 'tu',
+    taak: 'coordinator',
+    voornaam: 'Co',
+    achternaam: 'Ord',
+    inlognaam: 'co',
+};
 
 beforeEach(() => jest.clearAllMocks());
 
@@ -31,7 +52,11 @@ describe('saveMeting', () => {
         coordRepo.getBadId.mockResolvedValue(1);
         await service.saveMeting({ datum: DATUM, bad_naam: 'Diep' }, gebruiker);
         expect(coordRepo.getBadId).toHaveBeenCalledWith('Diep');
-        expect(coordRepo.saveMeting).toHaveBeenCalledWith(1, expect.objectContaining({ bad_naam: 'Diep' }), 'Co Ord');
+        expect(coordRepo.saveMeting).toHaveBeenCalledWith(
+            1,
+            expect.objectContaining({ bad_naam: 'Diep' }),
+            'Co Ord',
+        );
     });
 
     it('triggert fire-and-forget coordinator-actiegeneratie', async () => {
@@ -82,7 +107,12 @@ describe('saveLogboek', () => {
 describe('pass-through methoden', () => {
     it('delegeren naar de juiste repositories', async () => {
         coordRepo.getCoordinatoren.mockResolvedValue([]);
-        coordRepo.getChecklist.mockResolvedValue({ proef_waterspeel: 0, proef_spraypark: 0, proef_douches: 0, proef_glijbaan: 0 });
+        coordRepo.getChecklist.mockResolvedValue({
+            proef_waterspeel: 0,
+            proef_spraypark: 0,
+            proef_douches: 0,
+            proef_glijbaan: 0,
+        });
         coordRepo.getDaggegevens.mockResolvedValue({});
         logboekRepo.getByDatum.mockResolvedValue([]);
 
@@ -95,7 +125,11 @@ describe('pass-through methoden', () => {
         await service.deleteLogboek('3', gebruiker);
 
         expect(coordRepo.getCoordinatoren).toHaveBeenCalledWith(DATUM);
-        expect(coordRepo.saveChecklist).toHaveBeenCalledWith(DATUM, { proef_waterspeel: true }, 'Co Ord');
+        expect(coordRepo.saveChecklist).toHaveBeenCalledWith(
+            DATUM,
+            { proef_waterspeel: true },
+            'Co Ord',
+        );
         expect(coordRepo.deleteBlok).toHaveBeenCalledWith(DATUM, '10:00:00');
         expect(logboekRepo.getByDatum).toHaveBeenCalledWith(DATUM);
         expect(logboekRepo.deleteById).toHaveBeenCalledWith('3');

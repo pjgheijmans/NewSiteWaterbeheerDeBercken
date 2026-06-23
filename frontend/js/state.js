@@ -7,12 +7,12 @@ class AppState {
         /** @type {string} ISO datumstring van de geselecteerde dag */
         this.centraleDatum = `${vandaag.getFullYear()}-${String(vandaag.getMonth() + 1).padStart(2, '0')}-${String(vandaag.getDate()).padStart(2, '0')}`;
 
-        this.huidigeRol             = 'waterbeheer';
-        this.huidigeBadPagina       = 'grote-baden';
-        this.huidigeSubtab          = 'meetwaarden';
-        this.huidigeCoordSubtab     = 'metingen';
+        this.huidigeRol = 'waterbeheer';
+        this.huidigeBadPagina = 'grote-baden';
+        this.huidigeSubtab = 'meetwaarden';
+        this.huidigeCoordSubtab = 'metingen';
         this.huidigePeuterbadSubtab = 'meetwaarden';
-        this.huidigeTrendSubtab     = 'meetwaarden';
+        this.huidigeTrendSubtab = 'meetwaarden';
 
         /** @type {Object.<string,Chart>} Actieve Chart.js instanties per canvas-id */
         this.trendCharts = {};
@@ -24,22 +24,22 @@ class AppState {
         this.ingelogdeGebruiker = null;
 
         // Timers — beheerd per module maar centraal opgeslagen
-        this.berichtTimer               = null;
-        this.autoSaveTimer              = null;
-        this.blokTimers                 = {};
-        this.checklistAutoSaveTimer     = null;
-        this.daggegevensAutoSaveTimer   = null;
-        this.limietenAutoSaveTimer      = null;
-        this.actieTekstenAutoSaveTimer  = null;
-        this.dienstAutoSaveTimer        = null;
-        this.logboekTimers              = {};
-        this.gebruikersSaveTimers       = {};
-        this.rollenSaveTimers           = {};
-        this.configuratieSaveTimers     = {};
+        this.berichtTimer = null;
+        this.autoSaveTimer = null;
+        this.blokTimers = {};
+        this.checklistAutoSaveTimer = null;
+        this.daggegevensAutoSaveTimer = null;
+        this.limietenAutoSaveTimer = null;
+        this.actieTekstenAutoSaveTimer = null;
+        this.dienstAutoSaveTimer = null;
+        this.logboekTimers = {};
+        this.gebruikersSaveTimers = {};
+        this.rollenSaveTimers = {};
+        this.configuratieSaveTimers = {};
 
         // Optimistische concurrency: per record (sleutel → {versie, auteur, bijgewerkt_op}).
         // Sleutels: 'meting:Diep' | 'meting:Ondiep' | 'meting:Peuterbad' | 'verbruik' | 'verwarming'.
-        this.versies                    = {};
+        this.versies = {};
     }
 
     /** Schrijf de begindatum naar het datum-invoerveld in de pagina. */

@@ -10,14 +10,16 @@ class AuthModule {
     /** Start de applicatie door de inlogstatus te controleren. */
     async start() {
         try {
-            const res  = await this.app.api.call('/api/ingelogd');
+            const res = await this.app.api.call('/api/ingelogd');
             const data = await res.json();
             if (data.ingelogd) this._activeerDashboard(data.gebruiker);
             else {
-                document.getElementById('scherm-login').style.display    = 'block';
+                document.getElementById('scherm-login').style.display = 'block';
                 document.getElementById('scherm-dashboard').style.display = 'none';
             }
-        } catch (f) { console.error('Starten mislukt', f); }
+        } catch (f) {
+            console.error('Starten mislukt', f);
+        }
     }
 
     /** Verwerk het loginformulier en activeer het dashboard bij succes. */
@@ -26,7 +28,7 @@ class AuthModule {
         const p = document.getElementById('loginPassword').value;
         document.getElementById('login-fout').innerText = '';
         try {
-            const res  = await this.app.api.call('/api/login', {
+            const res = await this.app.api.call('/api/login', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: u, password: p }),
@@ -34,7 +36,9 @@ class AuthModule {
             const data = await res.json();
             if (res.ok) this._activeerDashboard(data.gebruiker);
             else document.getElementById('login-fout').innerText = data.error;
-        } catch { document.getElementById('login-fout').innerText = 'Verbindingsfout.'; }
+        } catch {
+            document.getElementById('login-fout').innerText = 'Verbindingsfout.';
+        }
     }
 
     /** Log de huidige gebruiker uit en herstart de applicatie. */
@@ -55,33 +59,47 @@ class AuthModule {
         if (!this.app.state.ingelogdeGebruiker) return; // al uitgelogd
         this._zetGebruikerMenu(false);
         this.app.state.ingelogdeGebruiker = null;
-        document.getElementById('scherm-login').style.display    = 'block';
+        document.getElementById('scherm-login').style.display = 'block';
         document.getElementById('scherm-dashboard').style.display = 'none';
         const fout = document.getElementById('login-fout');
-        if (fout) fout.innerText = 'Uw sessie is verlopen door inactiviteit. Log opnieuw in om verder te gaan.';
+        if (fout)
+            fout.innerText =
+                'Uw sessie is verlopen door inactiviteit. Log opnieuw in om verder te gaan.';
     }
 
     /** Rangorde van rechtniveaus, voor vergelijkingen. */
-    static get RANG() { return { geen: 0, lezen: 1, schrijven: 2 }; }
+    static get RANG() {
+        return { geen: 0, lezen: 1, schrijven: 2 };
+    }
 
     /** Het domein dat bij een nav-rol hoort. */
     static get DOMEIN_VAN_ROL() {
         return {
-            waterbeheer:   'waterbeheer',
+            waterbeheer: 'waterbeheer',
             coordinatoren: 'coordinator',
-            trendanalyse:  'waterbeheer',
-            limieten:      'beheer',
-            actieteksten:  'beheer',
-            gebruikers:    'beheer',
-            rollen:        'beheer',
-            database:      'beheer',
-            configuratie:  'beheer',
+            trendanalyse: 'waterbeheer',
+            limieten: 'beheer',
+            actieteksten: 'beheer',
+            gebruikers: 'beheer',
+            rollen: 'beheer',
+            database: 'beheer',
+            configuratie: 'beheer',
         };
     }
 
     /** Alle nav-rollen in vaste volgorde (= keuzevolgorde voor de startsectie). */
     static get ROLLEN() {
-        return ['waterbeheer', 'coordinatoren', 'limieten', 'actieteksten', 'gebruikers', 'rollen', 'database', 'configuratie', 'trendanalyse'];
+        return [
+            'waterbeheer',
+            'coordinatoren',
+            'limieten',
+            'actieteksten',
+            'gebruikers',
+            'rollen',
+            'database',
+            'configuratie',
+            'trendanalyse',
+        ];
     }
 
     /** Heeft de ingelogde gebruiker minstens `niveau` in `domein`? */
@@ -97,18 +115,19 @@ class AuthModule {
      */
     _activeerDashboard(gebruiker) {
         this.app.state.ingelogdeGebruiker = gebruiker;
-        document.getElementById('scherm-login').style.display    = 'none';
+        document.getElementById('scherm-login').style.display = 'none';
         document.getElementById('scherm-dashboard').style.display = 'block';
-        const rollen = (gebruiker.rolNamen && gebruiker.rolNamen.length)
-            ? gebruiker.rolNamen.join(', ')
-            : (gebruiker.taak || '');
+        const rollen =
+            gebruiker.rolNamen && gebruiker.rolNamen.length
+                ? gebruiker.rolNamen.join(', ')
+                : gebruiker.taak || '';
         document.getElementById('welkom-tekst').innerText =
             `${gebruiker.weergavenaam || gebruiker.voornaam}${rollen ? ` (${rollen})` : ''}`;
 
         // Een nav-knop is zichtbaar zodra de gebruiker minstens 'lezen' heeft in het
         // bijbehorende domein. De startsectie is de eerste zichtbare knop.
         let beginRol = null;
-        AuthModule.ROLLEN.forEach(rol => {
+        AuthModule.ROLLEN.forEach((rol) => {
             const zichtbaar = this._heeftRecht(AuthModule.DOMEIN_VAN_ROL[rol], 'lezen');
             const btn = document.getElementById(`btn-rol-${rol}`);
             if (btn) btn.style.display = zichtbaar ? 'inline-block' : 'none';
@@ -124,27 +143,40 @@ class AuthModule {
      */
     wisselRol(rol) {
         this.app.state.huidigeRol = rol;
-        AuthModule.ROLLEN.forEach(r => {
+        AuthModule.ROLLEN.forEach((r) => {
             const btn = document.getElementById(`btn-rol-${r}`);
             if (btn) btn.classList.toggle('actief', r === rol);
         });
 
-        const isDagstaat = (rol === 'waterbeheer' || rol === 'coordinatoren');
-        document.getElementById('sectie-dagstaat').style.display      = isDagstaat          ? 'block' : 'none';
-        document.getElementById('sectie-limieten').style.display       = (rol === 'limieten')       ? 'block' : 'none';
-        document.getElementById('sectie-actieteksten').style.display   = (rol === 'actieteksten')   ? 'block' : 'none';
-        document.getElementById('sectie-gebruikers').style.display     = (rol === 'gebruikers')     ? 'block' : 'none';
-        document.getElementById('sectie-rollen').style.display          = (rol === 'rollen')         ? 'block' : 'none';
-        document.getElementById('sectie-database').style.display       = (rol === 'database')       ? 'block' : 'none';
-        document.getElementById('sectie-configuratie').style.display    = (rol === 'configuratie')   ? 'block' : 'none';
-        document.getElementById('sectie-trendanalyse').style.display   = (rol === 'trendanalyse')   ? 'block' : 'none';
-        document.getElementById('waterbeheer-tabs').style.display      = (rol === 'waterbeheer')    ? 'flex'  : 'none';
-        document.getElementById('waterbeheer-dienst-bar').style.display = (rol === 'waterbeheer')   ? 'block' : 'none';
+        const isDagstaat = rol === 'waterbeheer' || rol === 'coordinatoren';
+        document.getElementById('sectie-dagstaat').style.display = isDagstaat ? 'block' : 'none';
+        document.getElementById('sectie-limieten').style.display =
+            rol === 'limieten' ? 'block' : 'none';
+        document.getElementById('sectie-actieteksten').style.display =
+            rol === 'actieteksten' ? 'block' : 'none';
+        document.getElementById('sectie-gebruikers').style.display =
+            rol === 'gebruikers' ? 'block' : 'none';
+        document.getElementById('sectie-rollen').style.display =
+            rol === 'rollen' ? 'block' : 'none';
+        document.getElementById('sectie-database').style.display =
+            rol === 'database' ? 'block' : 'none';
+        document.getElementById('sectie-configuratie').style.display =
+            rol === 'configuratie' ? 'block' : 'none';
+        document.getElementById('sectie-trendanalyse').style.display =
+            rol === 'trendanalyse' ? 'block' : 'none';
+        document.getElementById('waterbeheer-tabs').style.display =
+            rol === 'waterbeheer' ? 'flex' : 'none';
+        document.getElementById('waterbeheer-dienst-bar').style.display =
+            rol === 'waterbeheer' ? 'block' : 'none';
 
         if (rol === 'waterbeheer') {
-            ['coordinatoren-subtab-nav', 'coordinatoren-blokken-content',
-             'coordinatoren-checklist-content', 'coordinatoren-daggegevens-content',
-             'coordinatoren-logboek-content'].forEach(id => {
+            [
+                'coordinatoren-subtab-nav',
+                'coordinatoren-blokken-content',
+                'coordinatoren-checklist-content',
+                'coordinatoren-daggegevens-content',
+                'coordinatoren-logboek-content',
+            ].forEach((id) => {
                 const el = document.getElementById(id);
                 if (el) el.style.display = 'none';
             });
@@ -154,8 +186,7 @@ class AuthModule {
             this.app.limieten.laadLimietenVanServer().then(() => {
                 if (rol === 'waterbeheer')
                     this.app.metingen.wisselBadPagina(this.app.state.huidigeBadPagina);
-                else
-                    this.app.metingen.laadMetingen();
+                else this.app.metingen.laadMetingen();
                 this.actualiseerLeesmodus();
             });
         } else if (rol === 'gebruikers') {
@@ -180,13 +211,16 @@ class AuthModule {
     /** Huidige kalenderdag (Europe/Amsterdam) als YYYY-MM-DD. */
     _vandaag() {
         return new Intl.DateTimeFormat('en-CA', {
-            timeZone: 'Europe/Amsterdam', year: 'numeric', month: '2-digit', day: '2-digit',
+            timeZone: 'Europe/Amsterdam',
+            year: 'numeric',
+            month: '2-digit',
+            day: '2-digit',
         }).format(new Date());
     }
 
     /** Mag in de huidige rol (en bij dagstaten: de gekozen datum) geschreven worden? */
     magNuOpslaan() {
-        const rol    = this.app.state.huidigeRol;
+        const rol = this.app.state.huidigeRol;
         const domein = AuthModule.DOMEIN_VAN_ROL[rol];
         if (!domein || !this._heeftRecht(domein, 'schrijven')) return false;
         if (rol === 'waterbeheer' || rol === 'coordinatoren') {
@@ -199,11 +233,14 @@ class AuthModule {
 
     /** Markeer de actieve sectie als alleen-lezen wanneer opslaan niet mag. */
     actualiseerLeesmodus() {
-        const rol      = this.app.state.huidigeRol;
-        const sectieId = (rol === 'waterbeheer' || rol === 'coordinatoren') ? 'sectie-dagstaat' : `sectie-${rol}`;
-        document.querySelectorAll('.alleen-lezen').forEach(el => el.classList.remove('alleen-lezen'));
+        const rol = this.app.state.huidigeRol;
+        const sectieId =
+            rol === 'waterbeheer' || rol === 'coordinatoren' ? 'sectie-dagstaat' : `sectie-${rol}`;
+        document
+            .querySelectorAll('.alleen-lezen')
+            .forEach((el) => el.classList.remove('alleen-lezen'));
         const leesmodus = !this.magNuOpslaan();
-        const sectie    = document.getElementById(sectieId);
+        const sectie = document.getElementById(sectieId);
         if (sectie) sectie.classList.toggle('alleen-lezen', leesmodus);
         this._toonLeesmodusBanner(leesmodus, rol);
     }
@@ -211,13 +248,17 @@ class AuthModule {
     /** @private Toon/verberg de uitleg-banner boven de actieve sectie. */
     _toonLeesmodusBanner(leesmodus, rol) {
         let banner = document.getElementById('leesmodus-banner');
-        if (!leesmodus) { if (banner) banner.style.display = 'none'; return; }
+        if (!leesmodus) {
+            if (banner) banner.style.display = 'none';
+            return;
+        }
         if (!banner) {
             banner = document.createElement('div');
             banner.id = 'leesmodus-banner';
             banner.className = 'leesmodus-banner';
             const appBar = document.querySelector('.app-bar');
-            if (appBar && appBar.parentNode) appBar.parentNode.insertBefore(banner, appBar.nextSibling);
+            if (appBar && appBar.parentNode)
+                appBar.parentNode.insertBefore(banner, appBar.nextSibling);
         }
         const geenSchrijf = !this._heeftRecht(AuthModule.DOMEIN_VAN_ROL[rol], 'schrijven');
         banner.textContent = geenSchrijf
@@ -238,7 +279,7 @@ class AuthModule {
 
     /** Toon of verberg het gebruikersmenu en sluit het bij een klik erbuiten. */
     _zetGebruikerMenu(open) {
-        const dd      = document.getElementById('gebruiker-dropdown');
+        const dd = document.getElementById('gebruiker-dropdown');
         const trigger = document.querySelector('.gebruiker-trigger');
         if (!dd) return;
         dd.style.display = open ? 'block' : 'none';

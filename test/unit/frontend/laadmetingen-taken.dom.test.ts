@@ -10,9 +10,19 @@
 export {};
 const MetingenModule = require('../../../frontend/js/metingen.js');
 
-function maakApp(huidigeBadPagina: string, huidigeSubtab: string, huidigePeuterbadSubtab = 'meetwaarden') {
+function maakApp(
+    huidigeBadPagina: string,
+    huidigeSubtab: string,
+    huidigePeuterbadSubtab = 'meetwaarden',
+) {
     return {
-        state: { huidigeRol: 'waterbeheer', huidigeBadPagina, huidigeSubtab, huidigePeuterbadSubtab, versies: {} },
+        state: {
+            huidigeRol: 'waterbeheer',
+            huidigeBadPagina,
+            huidigeSubtab,
+            huidigePeuterbadSubtab,
+            versies: {},
+        },
         api: { call: jest.fn(async () => ({ json: async () => [] })) },
         dienst: { laadDienst: jest.fn() },
         taken: { laadBadTaken: jest.fn(), werkBadgeBij: jest.fn() },
@@ -38,7 +48,9 @@ function maakModule(app: any) {
     return m;
 }
 
-beforeEach(() => { document.body.innerHTML = `<input id="centraleDatum" value="2026-07-15">`; });
+beforeEach(() => {
+    document.body.innerHTML = `<input id="centraleDatum" value="2026-07-15">`;
+});
 
 describe('laadMetingen — Taken-inhoud verversen bij datumnavigatie', () => {
     it('grote-baden + Taken-subtab actief → herlaadt de inhoud (laadBadTaken), niet alleen de badge', async () => {

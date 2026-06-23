@@ -4,7 +4,10 @@ import { IGebruikersService } from '../../../backend/services/IGebruikersService
 import { maakTestApp } from '../../helpers/testApp';
 
 const mockService: jest.Mocked<IGebruikersService> = {
-    getAll: jest.fn(), create: jest.fn(), update: jest.fn(), remove: jest.fn(),
+    getAll: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    remove: jest.fn(),
 };
 
 function maakApp(taak: string | null = 'Administrator') {
@@ -16,7 +19,14 @@ beforeEach(() => jest.clearAllMocks());
 describe('GET /', () => {
     it('geeft de gebruikerslijst terug voor het beheer-domein', async () => {
         mockService.getAll.mockResolvedValue([
-            { id: 1, voornaam: 'Paul', achternaam: 'H', inlognaam: 'pheijmans', wachtwoord: '***', rol_ids: [2] },
+            {
+                id: 1,
+                voornaam: 'Paul',
+                achternaam: 'H',
+                inlognaam: 'pheijmans',
+                wachtwoord: '***',
+                rol_ids: [2],
+            },
         ]);
         const res = await request(maakApp()).get('/');
         expect(res.status).toBe(200);
@@ -46,7 +56,13 @@ describe('GET /', () => {
 });
 
 describe('POST /', () => {
-    const nieuw = { voornaam: 'Jan', achternaam: 'Jansen', inlognaam: 'jjansen', wachtwoord: 'geheim', rol_ids: [3] };
+    const nieuw = {
+        voornaam: 'Jan',
+        achternaam: 'Jansen',
+        inlognaam: 'jjansen',
+        wachtwoord: 'geheim',
+        rol_ids: [3],
+    };
 
     it('delegeert het aanmaken naar de service', async () => {
         mockService.create.mockResolvedValue(undefined);
@@ -62,7 +78,13 @@ describe('POST /', () => {
 });
 
 describe('PUT /:id', () => {
-    const wijziging = { voornaam: 'Jan', achternaam: 'Jansen', inlognaam: 'jjansen', wachtwoord: 'nieuw', rol_ids: [2] };
+    const wijziging = {
+        voornaam: 'Jan',
+        achternaam: 'Jansen',
+        inlognaam: 'jjansen',
+        wachtwoord: 'nieuw',
+        rol_ids: [2],
+    };
 
     it('delegeert de wijziging met het id', async () => {
         mockService.update.mockResolvedValue(undefined);

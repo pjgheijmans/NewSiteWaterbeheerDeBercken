@@ -22,7 +22,11 @@ export function niveauVan(gebruiker: Gebruiker | undefined, domein: Domein): Rec
 }
 
 /** True als de gebruiker minstens `vereistNiveau` heeft in `domein`. */
-export function heeftRecht(gebruiker: Gebruiker | undefined, domein: Domein, vereistNiveau: Rechtniveau): boolean {
+export function heeftRecht(
+    gebruiker: Gebruiker | undefined,
+    domein: Domein,
+    vereistNiveau: Rechtniveau,
+): boolean {
     return RANG[niveauVan(gebruiker, domein)] >= RANG[vereistNiveau];
 }
 
@@ -54,7 +58,9 @@ export function magHistorie(gebruiker: Gebruiker | undefined): boolean {
 export function vandaagAmsterdam(): string {
     return new Intl.DateTimeFormat('en-CA', {
         timeZone: 'Europe/Amsterdam',
-        year: 'numeric', month: '2-digit', day: '2-digit',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
     }).format(new Date());
 }
 

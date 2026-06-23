@@ -26,7 +26,7 @@ export class MetingenRepository implements IMetingenRepository {
              LEFT JOIN metingen_peuterbad mp ON b.id = mp.bad_id AND mp.datum = ?
              WHERE b.naam = 'Peuterbad'
              ORDER BY bad_naam`,
-            [datum, datum]
+            [datum, datum],
         );
         return rows as Meting[];
     }
@@ -34,43 +34,57 @@ export class MetingenRepository implements IMetingenRepository {
     async getBadId(bad_naam: string): Promise<number> {
         const [rows] = await this.pool.execute<RowDataPacket[]>(
             'SELECT id FROM baden WHERE naam = ?',
-            [bad_naam]
+            [bad_naam],
         );
         if (rows.length === 0) throw new AppError('Bad niet gevonden', 400);
         return (rows[0] as { id: number }).id;
     }
 
     async savePeuterbadMeting(
-        bad_id: number, data: PeuterbadMetingInput, auteur: string | null, verwachteVersie: number | null,
+        bad_id: number,
+        data: PeuterbadMetingInput,
+        auteur: string | null,
+        verwachteVersie: number | null,
     ): Promise<OpslaanResultaat> {
-        return optimistischOpslaan(this.pool, 'metingen_peuterbad',
+        return optimistischOpslaan(
+            this.pool,
+            'metingen_peuterbad',
             { bad_id, datum: data.datum },
             {
-                ph_waarde:      data.ph_waarde ?? null,
-                chloor_waarde:  data.chloor_waarde ?? null,
-                flow:           data.flow ?? null,
+                ph_waarde: data.ph_waarde ?? null,
+                chloor_waarde: data.chloor_waarde ?? null,
+                flow: data.flow ?? null,
                 filter_druk_in: data.filter_druk ?? data.filter_druk_in ?? null,
-                water:                  data.water ?? null,
-                chemicalien_chloor:     data.chemicalien_chloor ?? null,
+                water: data.water ?? null,
+                chemicalien_chloor: data.chemicalien_chloor ?? null,
                 chemicalien_zwavelzuur: data.chemicalien_zwavelzuur ?? null,
             },
-            auteur, verwachteVersie);
+            auteur,
+            verwachteVersie,
+        );
     }
 
     async saveGrootBadMeting(
-        bad_id: number, data: GrootBadMetingInput, auteur: string | null, verwachteVersie: number | null,
+        bad_id: number,
+        data: GrootBadMetingInput,
+        auteur: string | null,
+        verwachteVersie: number | null,
     ): Promise<OpslaanResultaat> {
-        return optimistischOpslaan(this.pool, 'metingen_diep_ondiep',
+        return optimistischOpslaan(
+            this.pool,
+            'metingen_diep_ondiep',
             { bad_id, datum: data.datum },
             {
-                ph_waarde:      data.ph_waarde ?? null,
-                chloor_waarde:  data.chloor_waarde ?? null,
-                temperatuur:    data.temperatuur ?? null,
-                flow:           data.flow ?? null,
+                ph_waarde: data.ph_waarde ?? null,
+                chloor_waarde: data.chloor_waarde ?? null,
+                temperatuur: data.temperatuur ?? null,
+                flow: data.flow ?? null,
                 filter_druk_in: data.filter_druk_in ?? null,
                 filter_druk_uit: data.filter_druk_uit ?? null,
                 kathodische_bescherming: data.kathodische_bescherming ?? null,
             },
-            auteur, verwachteVersie);
+            auteur,
+            verwachteVersie,
+        );
     }
 }

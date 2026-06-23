@@ -3,9 +3,14 @@ import { IDatabaseRepository } from '../../../backend/repositories/IDatabaseRepo
 import { AppError } from '../../../backend/errors';
 
 const repo: jest.Mocked<IDatabaseRepository> = {
-    exportRows: jest.fn(), runInitSql: jest.fn(), truncate: jest.fn(),
-    truncateAll: jest.fn(), seedAllDefaults: jest.fn(), getBadId: jest.fn(),
-    importRow: jest.fn(), setForeignKeyChecks: jest.fn(),
+    exportRows: jest.fn(),
+    runInitSql: jest.fn(),
+    truncate: jest.fn(),
+    truncateAll: jest.fn(),
+    seedAllDefaults: jest.fn(),
+    getBadId: jest.fn(),
+    importRow: jest.fn(),
+    setForeignKeyChecks: jest.fn(),
 };
 const service = new DatabaseService(repo);
 beforeEach(() => jest.clearAllMocks());
@@ -37,13 +42,19 @@ describe('importeerCsv', () => {
     });
 
     it('gooit AppError 400 als er alleen een header is', async () => {
-        await expect(service.importeerCsv('logboek', 'datum;tekst\r\n')).rejects.toMatchObject({ status: 400 });
+        await expect(service.importeerCsv('logboek', 'datum;tekst\r\n')).rejects.toMatchObject({
+            status: 400,
+        });
     });
 
     it('importeert rijen en toggelt FK-checks uit en weer in', async () => {
         await service.importeerCsv('logboek', 'datum;tekst\r\n2026-05-31;Test\r\n');
         expect(repo.setForeignKeyChecks).toHaveBeenNthCalledWith(1, false);
-        expect(repo.importRow).toHaveBeenCalledWith('logboek', ['datum', 'tekst'], ['2026-05-31', 'Test']);
+        expect(repo.importRow).toHaveBeenCalledWith(
+            'logboek',
+            ['datum', 'tekst'],
+            ['2026-05-31', 'Test'],
+        );
         expect(repo.setForeignKeyChecks).toHaveBeenLastCalledWith(true);
     });
 
@@ -65,7 +76,9 @@ describe('importeerCsv', () => {
 
     it('schakelt FK-checks weer in als importRow faalt', async () => {
         repo.importRow.mockRejectedValue(new Error('FK violation'));
-        await expect(service.importeerCsv('logboek', 'datum;tekst\r\n2026-05-31;Test\r\n')).rejects.toThrow('FK violation');
+        await expect(
+            service.importeerCsv('logboek', 'datum;tekst\r\n2026-05-31;Test\r\n'),
+        ).rejects.toThrow('FK violation');
         expect(repo.setForeignKeyChecks).toHaveBeenLastCalledWith(true);
     });
 });

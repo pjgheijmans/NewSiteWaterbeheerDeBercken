@@ -175,9 +175,7 @@ export interface Rondetaak extends RondetaakDefinitie {
 }
 
 /** Herkomst van een taak-item: een rondetaak (checkbox) of geaggregeerde acties (alarm). */
-export type TaakBron =
-    | { type: 'rondetaak'; sleutel: string }
-    | { type: 'actie'; ids: number[] };
+export type TaakBron = { type: 'rondetaak'; sleutel: string } | { type: 'actie'; ids: number[] };
 
 /**
  * Samengesteld taak-item voor de "Taken"-weergave: de unie van rondetaken en

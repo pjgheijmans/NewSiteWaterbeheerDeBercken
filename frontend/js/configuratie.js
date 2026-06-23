@@ -13,15 +13,17 @@ class ConfiguratieModule {
         if (!el) return;
         const states = {
             pending: ['Wijzigingen niet opgeslagen...', '#888'],
-            saving:  ['Bewaren…',                       '#fd7e14'],
-            saved:   ['✓ Opgeslagen',                   '#28a745'],
-            error:   ['✕ Fout bij opslaan',             '#dc3545'],
+            saving: ['Bewaren…', '#fd7e14'],
+            saved: ['✓ Opgeslagen', '#28a745'],
+            error: ['✕ Fout bij opslaan', '#dc3545'],
         };
         const [tekst, kleur] = states[status] || ['', '#333'];
         el.textContent = tekst;
         el.style.color = kleur;
         if (status === 'saved')
-            setTimeout(() => { if (el.textContent.startsWith('✓')) el.textContent = ''; }, 4000);
+            setTimeout(() => {
+                if (el.textContent.startsWith('✓')) el.textContent = '';
+            }, 4000);
     }
 
     /** @private Plan een autosave in voor één instelling (debounce 1,2 s). */
@@ -35,25 +37,27 @@ class ConfiguratieModule {
     /** Laad alle configuratie-instellingen en render de beheertabel. */
     async laad() {
         try {
-            const res   = await this.app.api.call('/api/configuratie');
+            const res = await this.app.api.call('/api/configuratie');
             const items = await res.json();
             const tbody = document.getElementById('configuratieTbody');
             if (!tbody) return;
             tbody.innerHTML = '';
-            (Array.isArray(items) ? items : []).forEach(item => {
+            (Array.isArray(items) ? items : []).forEach((item) => {
                 const sleutel = String(item.sleutel);
-                const label   = item.omschrijving || sleutel;
-                const type    = item.type === 'getal' ? 'number' : 'text';
+                const label = item.omschrijving || sleutel;
+                const type = item.type === 'getal' ? 'number' : 'text';
                 const tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><b>${label}</b><br><span style="font-size:12px;color:#888;">${sleutel}</span></td>
                     <td><input type="${type}" id="cfg-${sleutel}" value="${item.waarde ?? ''}"></td>`;
                 tbody.appendChild(tr);
                 const input = tr.querySelector('input');
-                input.addEventListener('input',  () => this._scheduleAutoSave(sleutel));
+                input.addEventListener('input', () => this._scheduleAutoSave(sleutel));
                 input.addEventListener('change', () => this._scheduleAutoSave(sleutel));
             });
-        } catch { this.app.ui.toonBericht('Fout bij laden configuratie.', 'fout'); }
+        } catch {
+            this.app.ui.toonBericht('Fout bij laden configuratie.', 'fout');
+        }
     }
 
     /** @private Sla één instelling op naar de backend. */
@@ -65,11 +69,14 @@ class ConfiguratieModule {
         const waarde = el.value.toString().trim();
         this._setStatus('saving');
         try {
-            const res = await this.app.api.call(`/api/configuratie/${encodeURIComponent(sleutel)}`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ waarde }),
-            });
+            const res = await this.app.api.call(
+                `/api/configuratie/${encodeURIComponent(sleutel)}`,
+                {
+                    method: 'PUT',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ waarde }),
+                },
+            );
             if (res.ok) {
                 this._setStatus('saved');
             } else {

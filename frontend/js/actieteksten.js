@@ -15,15 +15,17 @@ class ActieTekstenModule {
         if (!el) return;
         const states = {
             pending: ['Wijzigingen niet opgeslagen...', '#888'],
-            saving:  ['Bewaren…',                       '#fd7e14'],
-            saved:   ['✓ Opgeslagen',                   '#28a745'],
-            error:   ['✕ Fout bij opslaan',             '#dc3545'],
+            saving: ['Bewaren…', '#fd7e14'],
+            saved: ['✓ Opgeslagen', '#28a745'],
+            error: ['✕ Fout bij opslaan', '#dc3545'],
         };
         const [text, color] = states[status] || ['', '#333'];
         el.textContent = text;
         el.style.color = color;
         if (status === 'saved')
-            setTimeout(() => { if (el.textContent.startsWith('✓')) el.textContent = ''; }, 4000);
+            setTimeout(() => {
+                if (el.textContent.startsWith('✓')) el.textContent = '';
+            }, 4000);
     }
 
     // ── Auto-save ─────────────────────────────────────────────────────────
@@ -50,7 +52,8 @@ class ActieTekstenModule {
      */
     vulPlaatshouders(sjabloon, params) {
         return String(sjabloon).replace(/\{(\w+)\}/g, (_m, sleutel) =>
-            sleutel in params ? String(params[sleutel]) : '');
+            sleutel in params ? String(params[sleutel]) : '',
+        );
     }
 
     /** Voorbeeldwaarden voor de live preview. */
@@ -63,21 +66,31 @@ class ActieTekstenModule {
     /** Laad de sjablonen van de server en render de beheertabel. */
     async laadVanServer() {
         try {
-            const res     = await this.app.api.call('/api/actieteksten');
+            const res = await this.app.api.call('/api/actieteksten');
             const teksten = await res.json();
             this._bouwBeheertabel(teksten);
-        } catch (f) { console.error('Kon actie-teksten niet laden', f); }
+        } catch (f) {
+            console.error('Kon actie-teksten niet laden', f);
+        }
     }
 
     /** Vul de standaardteksten in en sla direct op. */
     async laadStandaardActieTeksten() {
-        if (!(await this.app.ui.bevestig({ tekst: 'Standaardteksten invullen? Dit overschrijft de huidige teksten.', bevestig: 'Invullen' }))) return;
+        if (
+            !(await this.app.ui.bevestig({
+                tekst: 'Standaardteksten invullen? Dit overschrijft de huidige teksten.',
+                bevestig: 'Invullen',
+            }))
+        )
+            return;
         try {
-            const res      = await this.app.api.call('/api/actieteksten/defaults');
+            const res = await this.app.api.call('/api/actieteksten/defaults');
             const defaults = await res.json();
             const perSleutel = {};
-            defaults.forEach(d => { perSleutel[d.actie_sleutel] = d.sjabloon; });
-            document.querySelectorAll('[data-actie-sleutel]').forEach(rij => {
+            defaults.forEach((d) => {
+                perSleutel[d.actie_sleutel] = d.sjabloon;
+            });
+            document.querySelectorAll('[data-actie-sleutel]').forEach((rij) => {
                 const sleutel = rij.getAttribute('data-actie-sleutel');
                 if (!(sleutel in perSleutel)) return;
                 const input = rij.querySelector('.at-sjabloon');
@@ -85,7 +98,9 @@ class ActieTekstenModule {
                 this._verversPreview(rij);
             });
             this.scheduleAutoSave();
-        } catch { this.app.ui.toonBericht('Kon standaardteksten niet ophalen.', 'fout'); }
+        } catch {
+            this.app.ui.toonBericht('Kon standaardteksten niet ophalen.', 'fout');
+        }
     }
 
     // ── Renderen ──────────────────────────────────────────────────────────
@@ -98,7 +113,7 @@ class ActieTekstenModule {
         box.className = 'categorie-box';
         let html = `<table class="categorie-tabel">
             <thead><tr><th>Actie</th><th>Tekst-sjabloon</th><th>Voorbeeld</th></tr></thead><tbody>`;
-        teksten.forEach(t => {
+        teksten.forEach((t) => {
             const omschrijving = t.omschrijving || t.actie_sleutel;
             html += `<tr data-actie-sleutel="${t.actie_sleutel}">
                 <td><b>${omschrijving}</b><br><code style="font-size:11px;color:#888;">${t.actie_sleutel}</code></td>
@@ -109,7 +124,7 @@ class ActieTekstenModule {
         box.innerHTML = html;
         container.appendChild(box);
 
-        box.querySelectorAll('[data-actie-sleutel]').forEach(rij => {
+        box.querySelectorAll('[data-actie-sleutel]').forEach((rij) => {
             this._verversPreview(rij);
             rij.querySelector('.at-sjabloon').addEventListener('input', () => {
                 this._verversPreview(rij);
@@ -121,7 +136,7 @@ class ActieTekstenModule {
     /** Werk de voorbeeldkolom van één rij bij op basis van het huidige sjabloon. */
     _verversPreview(rij) {
         const sjabloon = rij.querySelector('.at-sjabloon').value;
-        const cel      = rij.querySelector('.at-preview');
+        const cel = rij.querySelector('.at-preview');
         if (cel) cel.textContent = this.vulPlaatshouders(sjabloon, ActieTekstenModule.VOORBEELD);
     }
 
@@ -138,7 +153,7 @@ class ActieTekstenModule {
         for (const rij of rijen) {
             const payload = {
                 actie_sleutel: rij.getAttribute('data-actie-sleutel'),
-                sjabloon:      rij.querySelector('.at-sjabloon').value,
+                sjabloon: rij.querySelector('.at-sjabloon').value,
             };
             try {
                 const res = await this.app.api.call('/api/actieteksten', {
@@ -147,7 +162,9 @@ class ActieTekstenModule {
                     body: JSON.stringify(payload),
                 });
                 if (res.ok) teller++;
-            } catch (f) { console.error(f); }
+            } catch (f) {
+                console.error(f);
+            }
         }
         if (teller === rijen.length) {
             this.setSaveStatus('saved');

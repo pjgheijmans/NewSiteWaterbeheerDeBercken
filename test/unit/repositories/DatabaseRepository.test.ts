@@ -12,11 +12,19 @@ let gebruikersRepo: jest.Mocked<IGebruikersRepository>;
 beforeEach(() => {
     pool = maakMockPool();
     limietenRepo = {
-        getAll: jest.fn(), getDefaults: jest.fn(), seedDefaults: jest.fn(), save: jest.fn(),
+        getAll: jest.fn(),
+        getDefaults: jest.fn(),
+        seedDefaults: jest.fn(),
+        save: jest.fn(),
     };
     gebruikersRepo = {
-        findByLogin: jest.fn(), getAll: jest.fn(), getMetRecht: jest.fn(), create: jest.fn(),
-        update: jest.fn(), remove: jest.fn(), seedDefaults: jest.fn(),
+        findByLogin: jest.fn(),
+        getAll: jest.fn(),
+        getMetRecht: jest.fn(),
+        create: jest.fn(),
+        update: jest.fn(),
+        remove: jest.fn(),
+        seedDefaults: jest.fn(),
         hashBestaandeWachtwoorden: jest.fn(),
     };
     repo = new DatabaseRepository(pool as unknown as Pool, limietenRepo, gebruikersRepo);
@@ -58,7 +66,8 @@ describe('truncateAll', () => {
         pool.query.mockImplementation((sql: string) =>
             /metingen_peuterbad/.test(sql)
                 ? Promise.reject(new Error('bestaat niet'))
-                : Promise.resolve([[], []]));
+                : Promise.resolve([[], []]),
+        );
         await expect(repo.truncateAll()).resolves.toBeUndefined();
         (console.warn as jest.Mock).mockRestore();
     });
@@ -89,7 +98,9 @@ describe('importRow', () => {
         await repo.importRow('logboek', ['datum', 'tekst'], ['2026-05-31', 'Test']);
         const sql = sqlVan(pool.execute);
         expect(sql).toMatch(/INSERT INTO logboek \(datum, tekst\) VALUES \(\?, \?\)/i);
-        expect(sql).toMatch(/ON DUPLICATE KEY UPDATE datum = VALUES\(datum\), tekst = VALUES\(tekst\)/i);
+        expect(sql).toMatch(
+            /ON DUPLICATE KEY UPDATE datum = VALUES\(datum\), tekst = VALUES\(tekst\)/i,
+        );
         expect(paramsVan(pool.execute)).toEqual(['2026-05-31', 'Test']);
     });
 });

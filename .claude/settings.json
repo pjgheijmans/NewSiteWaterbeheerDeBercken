@@ -1,17 +1,17 @@
 {
-  "hooks": {
-    "PostToolUse": [
-      {
-        "matcher": "Write|Edit",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "python3 -c \"import json,sys; d=json.load(sys.stdin); f=d.get('tool_input',{}).get('file_path','') or d.get('tool_response',{}).get('filePath',''); print(f if f.endswith('.js') else '')\" | { read -r f; [ -n \"$f\" ] && cd \"C:/Users/User/OneDrive/Documenten - Waterbeheer/Software/Digital Dagstaat/nieuwe_site_tryout\" && npx eslint \"$f\"; } 2>/dev/null || true",
-            "timeout": 30,
-            "statusMessage": "ESLint..."
-          }
+    "hooks": {
+        "PostToolUse": [
+            {
+                "matcher": "Write|Edit",
+                "hooks": [
+                    {
+                        "type": "command",
+                        "command": "python3 -c \"import json,sys; d=json.load(sys.stdin); f=d.get('tool_input',{}).get('file_path','') or d.get('tool_response',{}).get('filePath',''); print(f if f.endswith('.js') else '')\" | { read -r f; [ -n \"$f\" ] && cd \"C:/Users/User/OneDrive/Documenten - Waterbeheer/Software/Digital Dagstaat/nieuwe_site_tryout\" && npx eslint \"$f\"; } 2>/dev/null || true",
+                        "timeout": 30,
+                        "statusMessage": "ESLint..."
+                    }
+                ]
+            }
         ]
-      }
-    ]
-  }
+    }
 }
