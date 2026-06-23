@@ -1,13 +1,13 @@
 # Element Design Specification (EDS)
 
-**Document ID:** EDS-DDZ-0.3
+**Document ID:** EDS-DDZ-0.4
 **Element:** Digitale Dagstaat Zwembad — full web application
-**Version:** 0.3
+**Version:** 0.4
 **Status:** DRAFT
-**Date:** 2026-06-16
+**Date:** 2026-06-23
 **Author:** P. Heijmans
 **Approver:**
-**Parent EPS:** EPS-DDZ-0.4
+**Parent EPS:** EPS-DDZ-0.5
 
 > This EDS records _how_ the application is designed to satisfy the requirements in
 > EPS-DDZ-0.4. It is descriptive of the current implementation (not aspirational):
@@ -24,6 +24,7 @@
 | 0.1     | 2026-06-03 | P. Heijmans | Initial design specification                                                                                                                                                                                                                                                                                                                                                                   |
 | 0.2     | 2026-06-11 | P. Heijmans | New domains actieteksten + dienst (repo/service/controller/route + modules); kathodische_bescherming column; auteur on checklist/daggegevens; 3-category Taken; toast + confirm/alert modal; idempotent plain-`ALTER` migrations for MySQL 8                                                                                                                                                   |
 | 0.3     | 2026-06-16 | P. Heijmans | Generic `configuratie` store + Configuratie domain/screen (DD-019); configurable sliding session time-out (DD-005 revised) with live config + global 401→login UX; optimistic concurrency on waterbeheer meetwaarden/verbruik via shared `optimistischOpslaan` helper (DD-020); passive completeness indicators + version label (DD-021); `/api/versie` endpoint; added §5.5 sequence diagrams |
+| 0.4     | 2026-06-23 | P. Heijmans | §5.4 now cross-references the new **EPS Appendix A — Input Value Catalogue** (per-field definition, unit, decimal precision and default min/max) and notes the schema `DECIMAL` precision is the authoritative fraction; parent EPS → 0.5                                                                                                                                          |
 
 ---
 
@@ -65,7 +66,7 @@ spoelbeurt, etc.).
 
 | ID      | Title                                                                                     | Version |
 | ------- | ----------------------------------------------------------------------------------------- | ------- |
-| EPS-DDZ | Element Performance Specification                                                         | 0.4     |
+| EPS-DDZ | Element Performance Specification                                                         | 0.5     |
 | —       | `docs/architecture.md` + `docs/architecture/{backend,frontend,flows,database,testing}.md` | current |
 | —       | `CLAUDE.md` — project conventions                                                         | current |
 | —       | `init.sql` — authoritative schema                                                         | current |
@@ -569,6 +570,15 @@ declare module 'express-session' {
 (computed in the coordinator UI and in `genereerCoordinatoren`); daily consumption =
 today − previous day (computed in `VerbruikModule`). Decimal input is normalised
 comma→point client-side before sending.
+
+**Input value catalogue.** The full per-field catalogue — definition, unit, decimal
+precision (fraction) and default valid range (min/max) for every input value — lives
+in **EPS Appendix A**. The decimal precision there is realised by the column types in
+this design: measurement decimals are `DECIMAL(4,2)` (pH, chlorine, filter pressure,
+cathodic protection — 2 places) or `DECIMAL(_,1)` (temperatures — 1 place); meter and
+stock/visitor counts are `INT` (0 places); the limit columns are `DECIMAL(10,2)`
+(`LIMIETEN`). The schema is the authoritative source for the fraction; the default
+min/max come from `LimietenRepository.DEFAULT_LIMIETEN` (seeded into `LIMIETEN`).
 
 ### 5.5 Sequence diagrams
 

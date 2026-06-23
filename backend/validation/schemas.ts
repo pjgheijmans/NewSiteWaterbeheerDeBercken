@@ -25,10 +25,16 @@ export const coordinatorMetingSchema = z.looseObject({
 });
 export const checklistSchema = z.looseObject({ datum });
 export const daggegevensSchema = z.looseObject({ datum });
+/** Harde limiet op de lengte van een logboekaantekening (= maxlength in logboek.js). */
+export const LOGBOEK_MAX_TEKEN = 500;
+
 export const logboekSchema = z.looseObject({
     datum,
     tijdstip,
-    tekst: z.string().optional(),
+    tekst: z
+        .string()
+        .max(LOGBOEK_MAX_TEKEN, `mag maximaal ${LOGBOEK_MAX_TEKEN} tekens bevatten`)
+        .optional(),
 });
 
 // ── Rondetaken ──────────────────────────────────────────────────────────────

@@ -61,6 +61,12 @@ describe('logboekSchema', () => {
         expect(logboekSchema.safeParse({ datum: DATUM, tijdstip: '10:00:00' }).success).toBe(true);
         expect(logboekSchema.safeParse({ datum: DATUM }).success).toBe(false);
     });
+
+    it('begrenst de lengte van tekst tot 500 tekens', () => {
+        const basis = { datum: DATUM, tijdstip: '10:00:00' };
+        expect(logboekSchema.safeParse({ ...basis, tekst: 'a'.repeat(500) }).success).toBe(true);
+        expect(logboekSchema.safeParse({ ...basis, tekst: 'a'.repeat(501) }).success).toBe(false);
+    });
 });
 
 describe('gebruikerSchema', () => {
