@@ -52,21 +52,27 @@ describe('OpslaanModule._slaCoordinatorenBlokOp', () => {
         expect(ok).toBe(true);
         expect(app.api.call).toHaveBeenCalledTimes(2);
 
-        const diep = verzonden.find(p => p.bad_naam === 'Diep');
-        const peuter = verzonden.find(p => p.bad_naam === 'Peuterbad');
+        const diep = verzonden.find((p) => p.bad_naam === 'Diep');
+        const peuter = verzonden.find((p) => p.bad_naam === 'Peuterbad');
 
         // Grote baden: helderheid uit de select, bad_gebruikt null
         expect(diep).toMatchObject({
-            datum: '2026-07-15', tijdstip: '10:00:00',
-            chloor_vrij: 0.8, chloor_totaal: 1.5, watertemperatuur: 26,
-            helderheid: 'Troebel', bad_gebruikt: null,
+            datum: '2026-07-15',
+            tijdstip: '10:00:00',
+            chloor_vrij: 0.8,
+            chloor_totaal: 1.5,
+            watertemperatuur: 26,
+            helderheid: 'Troebel',
+            bad_gebruikt: null,
         });
 
         // Peuterbad: bad_gebruikt 1 (aangevinkt), helderheid null
         // chloor_vrij/totaal voeden de gebonden-chloor-actie (totaal-vrij = 1.4)
         expect(peuter).toMatchObject({
-            chloor_vrij: 0.6, chloor_totaal: 2.0,
-            helderheid: null, bad_gebruikt: 1,
+            chloor_vrij: 0.6,
+            chloor_totaal: 2.0,
+            helderheid: null,
+            bad_gebruikt: 1,
         });
     });
 
@@ -75,11 +81,17 @@ describe('OpslaanModule._slaCoordinatorenBlokOp', () => {
         (document.querySelector('.c-gebruikt') as HTMLInputElement).checked = false;
         const verzonden: any[] = [];
         const app: any = {
-            state: {}, ui: { setAutoSaveStatus: jest.fn(), toonBericht: jest.fn() },
-            api: { call: jest.fn(async (_u: string, o: any) => { verzonden.push(JSON.parse(o.body)); return { ok: true, json: async () => ({}) }; }) },
+            state: {},
+            ui: { setAutoSaveStatus: jest.fn(), toonBericht: jest.fn() },
+            api: {
+                call: jest.fn(async (_u: string, o: any) => {
+                    verzonden.push(JSON.parse(o.body));
+                    return { ok: true, json: async () => ({}) };
+                }),
+            },
         };
         await new OpslaanModule(app)._slaCoordinatorenBlokOp('10:00:00');
-        expect(verzonden.find(p => p.bad_naam === 'Peuterbad').bad_gebruikt).toBe(0);
+        expect(verzonden.find((p) => p.bad_naam === 'Peuterbad').bad_gebruikt).toBe(0);
     });
 
     it('geeft false terug als het blok niet bestaat', async () => {

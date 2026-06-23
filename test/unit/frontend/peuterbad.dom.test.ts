@@ -21,14 +21,22 @@ function maakApp(overrides: any = {}) {
     const app: any = {
         api,
         ui: { toonBericht: jest.fn(), setAutoSaveStatus: jest.fn() },
-        metingen: { laadMetingen: jest.fn(), laadActies: jest.fn(), werkVolledigheidBij: jest.fn(),
-                    toonLaatstGewijzigd: jest.fn(), behandelConflict: jest.fn() },
+        metingen: {
+            laadMetingen: jest.fn(),
+            laadActies: jest.fn(),
+            werkVolledigheidBij: jest.fn(),
+            toonLaatstGewijzigd: jest.fn(),
+            behandelConflict: jest.fn(),
+        },
         taken: { werkBadgeBij: jest.fn() },
         verbruik: { laadEnBerekenVerbruik: jest.fn(), laadEnBerekenPeuterbadVerbruik: jest.fn() },
         state: {
-            huidigeRol: 'waterbeheer', huidigeBadPagina: 'peuterbad',
-            huidigeSubtab: 'meetwaarden', huidigeCoordSubtab: 'metingen',
-            huidigePeuterbadSubtab: 'verbruik', versies: {},
+            huidigeRol: 'waterbeheer',
+            huidigeBadPagina: 'peuterbad',
+            huidigeSubtab: 'meetwaarden',
+            huidigeCoordSubtab: 'metingen',
+            huidigePeuterbadSubtab: 'verbruik',
+            versies: {},
         },
     };
     return Object.assign(app, overrides);
@@ -121,8 +129,17 @@ describe('Fix #3 — Verbruik-subtab berekent peuterbad-verbruik', () => {
             <input id="peuterbad-water-verbruik">
             <input id="peuterbad-chemicalien-chloor-verbruik">
             <input id="peuterbad-chemicalien-zwavelzuur-verbruik">`;
-        const huidig = [{ bad_naam: 'Peuterbad', water: 130, chemicalien_chloor: 8, chemicalien_zwavelzuur: 7 }];
-        const vorige = [{ bad_naam: 'Peuterbad', water: 100, chemicalien_chloor: 20, chemicalien_zwavelzuur: 10 }];
+        const huidig = [
+            { bad_naam: 'Peuterbad', water: 130, chemicalien_chloor: 8, chemicalien_zwavelzuur: 7 },
+        ];
+        const vorige = [
+            {
+                bad_naam: 'Peuterbad',
+                water: 100,
+                chemicalien_chloor: 20,
+                chemicalien_zwavelzuur: 10,
+            },
+        ];
         const app = maakApp();
         app.api.call = jest.fn(async (url: string) => ({
             json: async () => (url.includes('2026-07-14') ? vorige : huidig),
@@ -131,8 +148,8 @@ describe('Fix #3 — Verbruik-subtab berekent peuterbad-verbruik', () => {
         await new VerbruikModule(app).laadEnBerekenPeuterbadVerbruik();
 
         const val = (id: string) => (document.getElementById(id) as HTMLInputElement).value;
-        expect(val('peuterbad-water-verbruik')).toBe('30');         // 130 − 100
-        expect(val('peuterbad-chemicalien-chloor-verbruik')).toBe('-12');    // 8 − 20
+        expect(val('peuterbad-water-verbruik')).toBe('30'); // 130 − 100
+        expect(val('peuterbad-chemicalien-chloor-verbruik')).toBe('-12'); // 8 − 20
         expect(val('peuterbad-chemicalien-zwavelzuur-verbruik')).toBe('-3'); // 7 − 10
         // De vorige dag is correct opgevraagd
         expect(app.api.call).toHaveBeenCalledWith('/api/metingen?datum=2026-07-14');

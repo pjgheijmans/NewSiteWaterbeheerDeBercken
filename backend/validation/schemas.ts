@@ -15,7 +15,7 @@ export const metingSchema = z.looseObject({
 });
 
 // ── Verbruik / Verwarming ─────────────────────────────────────────────────────
-export const verbruikSchema   = z.looseObject({ datum });
+export const verbruikSchema = z.looseObject({ datum });
 export const verwarmingSchema = z.looseObject({ datum });
 
 // ── Coordinatoren ──────────────────────────────────────────────────────────────
@@ -23,9 +23,9 @@ export const coordinatorMetingSchema = z.looseObject({
     datum,
     bad_naam: z.string().min(1, 'is verplicht'),
 });
-export const checklistSchema   = z.looseObject({ datum });
+export const checklistSchema = z.looseObject({ datum });
 export const daggegevensSchema = z.looseObject({ datum });
-export const logboekSchema     = z.looseObject({
+export const logboekSchema = z.looseObject({
     datum,
     tijdstip,
     tekst: z.string().optional(),
@@ -36,11 +36,11 @@ export const rondetaakToggleSchema = z.object({ datum });
 
 // ── Gebruikers (strikt) ─────────────────────────────────────────────────────
 export const gebruikerSchema = z.object({
-    voornaam:   z.string(),
+    voornaam: z.string(),
     achternaam: z.string(),
-    inlognaam:  z.string().min(1, 'is verplicht'),
+    inlognaam: z.string().min(1, 'is verplicht'),
     wachtwoord: z.string().min(1, 'is verplicht'),
-    rol_ids:    z.array(z.number().int()),
+    rol_ids: z.array(z.number().int()),
 });
 
 // Bij wijzigen mag het wachtwoord leeg blijven (= ongewijzigd laten).
@@ -56,10 +56,10 @@ export const rolCreateSchema = z.object({
 });
 
 export const rolUpdateSchema = z.object({
-    naam:                   z.string().min(1, 'is verplicht'),
-    mag_historie_bewerken:  z.boolean(),
+    naam: z.string().min(1, 'is verplicht'),
+    mag_historie_bewerken: z.boolean(),
     rechten: z.object({
-        beheer:      rechtniveau.optional(),
+        beheer: rechtniveau.optional(),
         waterbeheer: rechtniveau.optional(),
         coordinator: rechtniveau.optional(),
     }),
@@ -68,8 +68,8 @@ export const rolUpdateSchema = z.object({
 // ── Limieten (strikt) ─────────────────────────────────────────────────────────
 export const limietSchema = z.object({
     parameter_naam: z.string().min(1, 'is verplicht'),
-    min_waarde:     z.number(),
-    max_waarde:     z.number(),
+    min_waarde: z.number(),
+    max_waarde: z.number(),
 });
 
 // ── Configuratie (strikt) ─────────────────────────────────────────────────────
@@ -82,7 +82,7 @@ export const configuratieUpdateSchema = z.object({
 // ── Actie-teksten (strikt) ────────────────────────────────────────────────────
 export const actieTekstSchema = z.object({
     actie_sleutel: z.string().min(1, 'is verplicht'),
-    sjabloon:      z.string().min(1, 'is verplicht'),
+    sjabloon: z.string().min(1, 'is verplicht'),
 });
 
 // ── Waterbeheer-dienst ────────────────────────────────────────────────────────

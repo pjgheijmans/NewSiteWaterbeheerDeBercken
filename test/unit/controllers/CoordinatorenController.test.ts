@@ -6,15 +6,15 @@ import { maakTestApp } from '../../helpers/testApp';
 
 const mockService: jest.Mocked<ICoordinatorenService> = {
     getCoordinatoren: jest.fn(),
-    saveMeting:       jest.fn(),
-    getChecklist:     jest.fn(),
-    saveChecklist:    jest.fn(),
-    getDaggegevens:   jest.fn(),
-    saveDaggegevens:  jest.fn(),
-    deleteBlok:       jest.fn(),
-    getLogboek:       jest.fn(),
-    saveLogboek:      jest.fn(),
-    deleteLogboek:    jest.fn(),
+    saveMeting: jest.fn(),
+    getChecklist: jest.fn(),
+    saveChecklist: jest.fn(),
+    getDaggegevens: jest.fn(),
+    saveDaggegevens: jest.fn(),
+    deleteBlok: jest.fn(),
+    getLogboek: jest.fn(),
+    saveLogboek: jest.fn(),
+    deleteLogboek: jest.fn(),
 };
 
 function maakApp(taak: string | null = 'coordinator') {
@@ -23,7 +23,10 @@ function maakApp(taak: string | null = 'coordinator') {
 
 // Vandaag (Amsterdam) zodat de historie-bewaking de delegatie-tests niet blokkeert.
 const DATUM = new Intl.DateTimeFormat('en-CA', {
-    timeZone: 'Europe/Amsterdam', year: 'numeric', month: '2-digit', day: '2-digit',
+    timeZone: 'Europe/Amsterdam',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit',
 }).format(new Date());
 beforeEach(() => jest.clearAllMocks());
 
@@ -60,7 +63,8 @@ describe('POST /', () => {
         expect(res.status).toBe(200);
         expect(mockService.saveMeting).toHaveBeenCalledWith(
             expect.objectContaining({ bad_naam: 'Diep' }),
-            expect.objectContaining({ taak: 'coordinator' }));
+            expect.objectContaining({ taak: 'coordinator' }),
+        );
     });
 
     it('propageert AppError 400 als het bad niet bestaat', async () => {
@@ -73,7 +77,12 @@ describe('POST /', () => {
 
 describe('checklist', () => {
     it('GET delegeert naar de service', async () => {
-        mockService.getChecklist.mockResolvedValue({ proef_waterspeel: 1, proef_spraypark: 0, proef_douches: 1, proef_glijbaan: 0 });
+        mockService.getChecklist.mockResolvedValue({
+            proef_waterspeel: 1,
+            proef_spraypark: 0,
+            proef_douches: 1,
+            proef_glijbaan: 0,
+        });
         const res = await request(maakApp()).get(`/checklist?datum=${DATUM}`);
         expect(res.status).toBe(200);
         expect(res.body.proef_waterspeel).toBe(1);
@@ -81,16 +90,29 @@ describe('checklist', () => {
 
     it('POST geeft datum en body door', async () => {
         mockService.saveChecklist.mockResolvedValue(undefined);
-        const body = { datum: DATUM, proef_waterspeel: 1, proef_spraypark: 0, proef_douches: 1, proef_glijbaan: 0 };
+        const body = {
+            datum: DATUM,
+            proef_waterspeel: 1,
+            proef_spraypark: 0,
+            proef_douches: 1,
+            proef_glijbaan: 0,
+        };
         const res = await request(maakApp()).post('/checklist').send(body);
         expect(res.status).toBe(200);
-        expect(mockService.saveChecklist).toHaveBeenCalledWith(DATUM, body, expect.objectContaining({ taak: expect.any(String) }));
+        expect(mockService.saveChecklist).toHaveBeenCalledWith(
+            DATUM,
+            body,
+            expect.objectContaining({ taak: expect.any(String) }),
+        );
     });
 });
 
 describe('daggegevens', () => {
     it('GET delegeert naar de service', async () => {
-        mockService.getDaggegevens.mockResolvedValue({ bezoekers_vandaag: 80, lucht_temperatuur: 22 });
+        mockService.getDaggegevens.mockResolvedValue({
+            bezoekers_vandaag: 80,
+            lucht_temperatuur: 22,
+        });
         const res = await request(maakApp()).get(`/daggegevens?datum=${DATUM}`);
         expect(res.status).toBe(200);
         expect(res.body.bezoekers_vandaag).toBe(80);
@@ -101,7 +123,11 @@ describe('daggegevens', () => {
         const body = { datum: DATUM, bezoekers_vandaag: 80, lucht_temperatuur: 22 };
         const res = await request(maakApp()).post('/daggegevens').send(body);
         expect(res.status).toBe(200);
-        expect(mockService.saveDaggegevens).toHaveBeenCalledWith(DATUM, body, expect.objectContaining({ taak: expect.any(String) }));
+        expect(mockService.saveDaggegevens).toHaveBeenCalledWith(
+            DATUM,
+            body,
+            expect.objectContaining({ taak: expect.any(String) }),
+        );
     });
 });
 
@@ -122,7 +148,9 @@ describe('DELETE /', () => {
 
 describe('logboek', () => {
     it('GET delegeert naar de service', async () => {
-        mockService.getLogboek.mockResolvedValue([{ id: 1, tijdstip: '10:00:00', auteur: 'X', tekst: 'T' }]);
+        mockService.getLogboek.mockResolvedValue([
+            { id: 1, tijdstip: '10:00:00', auteur: 'X', tekst: 'T' },
+        ]);
         const res = await request(maakApp()).get(`/logboek?datum=${DATUM}`);
         expect(res.status).toBe(200);
         expect(res.body).toHaveLength(1);
@@ -130,31 +158,46 @@ describe('logboek', () => {
 
     it('POST geeft het service-resultaat (id + auteur) terug', async () => {
         mockService.saveLogboek.mockResolvedValue({ id: 5, auteur: 'Test User' });
-        const res = await request(maakApp()).post('/logboek').send({ datum: DATUM, tijdstip: '10:00:00', tekst: 'Tekst' });
+        const res = await request(maakApp())
+            .post('/logboek')
+            .send({ datum: DATUM, tijdstip: '10:00:00', tekst: 'Tekst' });
         expect(res.status).toBe(200);
         expect(res.body).toMatchObject({ status: 'success', id: 5, auteur: 'Test User' });
-        expect(mockService.saveLogboek).toHaveBeenCalledWith(DATUM, '10:00:00', 'Tekst',
-            expect.objectContaining({ taak: 'coordinator' }));
+        expect(mockService.saveLogboek).toHaveBeenCalledWith(
+            DATUM,
+            '10:00:00',
+            'Tekst',
+            expect.objectContaining({ taak: 'coordinator' }),
+        );
     });
 
     it('behandelt ontbrekende tekst als lege string', async () => {
         mockService.saveLogboek.mockResolvedValue({ id: 1, auteur: 'Test User' });
         await request(maakApp()).post('/logboek').send({ datum: DATUM, tijdstip: '10:00:00' });
-        expect(mockService.saveLogboek).toHaveBeenCalledWith(DATUM, '10:00:00', '', expect.anything());
+        expect(mockService.saveLogboek).toHaveBeenCalledWith(
+            DATUM,
+            '10:00:00',
+            '',
+            expect.anything(),
+        );
     });
 
     it('DELETE /:id verwijdert op id', async () => {
         mockService.deleteLogboek.mockResolvedValue(undefined);
         const res = await request(maakApp()).delete('/logboek/3');
         expect(res.status).toBe(200);
-        expect(mockService.deleteLogboek).toHaveBeenCalledWith('3', expect.objectContaining({ taak: 'coordinator' }));
+        expect(mockService.deleteLogboek).toHaveBeenCalledWith(
+            '3',
+            expect.objectContaining({ taak: 'coordinator' }),
+        );
     });
 });
 
 describe('historie-bewaking', () => {
     it('blokkeert een POST op een datum in het verleden zonder historie-recht', async () => {
         const res = await request(maakApp('coordinator'))
-            .post('/').send({ datum: '2000-01-01', bad_naam: 'Diep' });
+            .post('/')
+            .send({ datum: '2000-01-01', bad_naam: 'Diep' });
         expect(res.status).toBe(403);
         expect(mockService.saveMeting).not.toHaveBeenCalled();
     });

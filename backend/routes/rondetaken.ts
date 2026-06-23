@@ -12,9 +12,9 @@ import { RondetakenController } from '../controllers/RondetakenController';
  * voor de tweerichtingskoppeling tussen filter-rondetaken en filter_spoelen-acties.
  */
 export function maakRondetakenRouter(pool: Pool): Router {
-    const repo       = new RondetakenRepository(pool);
+    const repo = new RondetakenRepository(pool);
     const actiesRepo = new ActiesRepository(pool, new ActieTekstenRepository(pool));
-    const service    = new RondetakenService(repo, actiesRepo);
+    const service = new RondetakenService(repo, actiesRepo);
     const controller = new RondetakenController(service);
     return controller.router;
 }

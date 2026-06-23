@@ -15,7 +15,7 @@ function maakMocks(gebruiker: any = null) {
     const req = { session: { gebruiker } } as unknown as Request;
     const res = {
         status: jest.fn().mockReturnThis(),
-        json:   jest.fn().mockReturnThis(),
+        json: jest.fn().mockReturnThis(),
     } as unknown as Response;
     const next = jest.fn() as NextFunction;
     return { req, res, next };
@@ -43,7 +43,10 @@ describe('checkAuth', () => {
 
     it('geeft 401 terug bij ontbrekende sessie', () => {
         const req = {} as unknown as Request;
-        const res = { status: jest.fn().mockReturnThis(), json: jest.fn().mockReturnThis() } as unknown as Response;
+        const res = {
+            status: jest.fn().mockReturnThis(),
+            json: jest.fn().mockReturnThis(),
+        } as unknown as Response;
         const next = jest.fn() as NextFunction;
         checkAuth(req, res, next);
         expect(res.status).toHaveBeenCalledWith(401);
@@ -62,13 +65,15 @@ describe('niveauVan', () => {
 
 describe('heeftRecht', () => {
     it.each([
-        ['schrijven', 'lezen',     true],
+        ['schrijven', 'lezen', true],
         ['schrijven', 'schrijven', true],
-        ['lezen',     'lezen',     true],
-        ['lezen',     'schrijven', false],
-        ['geen',      'lezen',     false],
+        ['lezen', 'lezen', true],
+        ['lezen', 'schrijven', false],
+        ['geen', 'lezen', false],
     ] as const)('niveau %s vs vereist %s → %s', (heeft, vereistNiveau, verwacht) => {
-        expect(heeftRecht(gebruikerMet({ waterbeheer: heeft }), 'waterbeheer', vereistNiveau)).toBe(verwacht);
+        expect(heeftRecht(gebruikerMet({ waterbeheer: heeft }), 'waterbeheer', vereistNiveau)).toBe(
+            verwacht,
+        );
     });
 });
 
@@ -114,7 +119,7 @@ describe('vandaagAmsterdam', () => {
 
 describe('magDatumBewerken', () => {
     const zonderHistorie = gebruikerMet({}, false);
-    const metHistorie    = gebruikerMet({}, true);
+    const metHistorie = gebruikerMet({}, true);
 
     it('staat vandaag toe, ongeacht historie-recht', () => {
         expect(magDatumBewerken(vandaagAmsterdam(), zonderHistorie)).toBe(true);
@@ -129,8 +134,15 @@ describe('magDatumBewerken', () => {
 
 describe('vereistHistorieRecht (middleware)', () => {
     function maakReqMocks(datum: string | undefined, magHistorieVlag: boolean) {
-        const req = { body: { datum }, query: {}, session: { gebruiker: gebruikerMet({}, magHistorieVlag) } } as unknown as Request;
-        const res = { status: jest.fn().mockReturnThis(), json: jest.fn().mockReturnThis() } as unknown as Response;
+        const req = {
+            body: { datum },
+            query: {},
+            session: { gebruiker: gebruikerMet({}, magHistorieVlag) },
+        } as unknown as Request;
+        const res = {
+            status: jest.fn().mockReturnThis(),
+            json: jest.fn().mockReturnThis(),
+        } as unknown as Response;
         const next = jest.fn() as NextFunction;
         return { req, res, next };
     }

@@ -12,8 +12,8 @@ import { VerbruikController } from '../controllers/VerbruikController';
  */
 export function maakVerbruikRouter(pool: Pool): Router {
     const verbruikRepo = new VerbruikRepository(pool);
-    const actiesRepo   = new ActiesRepository(pool, new ActieTekstenRepository(pool));
-    const service      = new VerbruikService(verbruikRepo, actiesRepo);
-    const controller   = new VerbruikController(service);
+    const actiesRepo = new ActiesRepository(pool, new ActieTekstenRepository(pool));
+    const service = new VerbruikService(verbruikRepo, actiesRepo);
+    const controller = new VerbruikController(service);
     return controller.router;
 }

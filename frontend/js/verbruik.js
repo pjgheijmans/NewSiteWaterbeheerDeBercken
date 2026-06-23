@@ -31,29 +31,33 @@ class VerbruikModule {
                 this.app.api.call(`/api/verbruik/verwarmingssysteem?datum=${datum}`),
             ]);
             const verbruikData = await verbruikRes.json();
-            const warmteData   = await warmteRes.json();
+            const warmteData = await warmteRes.json();
             const data = { ...verbruikData, ...warmteData };
-            this.app.state.gecachteVerbruik = data;   // voor de volledigheids-markering
+            this.app.state.gecachteVerbruik = data; // voor de volledigheids-markering
             // Versie-meta per record bewaren (verbruik en verwarming zijn aparte records).
-            this._onthoudVersie('verbruik',   verbruikData);
+            this._onthoudVersie('verbruik', verbruikData);
             this._onthoudVersie('verwarming', warmteData);
 
-            document.getElementById('floculant').value                = data.floculant               || '';
-            document.getElementById('water-diep').value               = data.water_diep              || '';
-            document.getElementById('water-ondiep').value             = data.water_ondiep            || '';
-            document.getElementById('water-totaal').value             = data.water_totaal            || '';
-            document.getElementById('elektriciteit-nacht').value      = data.elektriciteit_nacht     || '';
-            document.getElementById('elektriciteit-dag').value        = data.elektriciteit_dag       || '';
-            document.getElementById('gas').value                      = data.gas                     || '';
-            document.getElementById('chemicalien-chloor').value       = data.chemicalien_chloor      || '';
-            document.getElementById('chemicalien-zwavelzuur').value   = data.chemicalien_zwavelzuur  || '';
-            document.getElementById('systeem-status-1').checked       = data.verwarming_status_1    === 1;
-            document.getElementById('systeem-status-2').checked       = data.verwarming_status_2    === 1;
-            document.getElementById('systeem-status-3').checked       = data.verwarming_status_3    === 1;
-            document.getElementById('systeem-status-4').checked       = data.verwarming_status_4    === 1;
-            document.getElementById('systeem-druk-ok').checked        = data.verwarming_druk_ok     === 1;
-            document.getElementById('visuele-inspectie').checked      = data.verwarming_visuele_controle === 1;
-        } catch (f) { console.error('Fout bij laden algemene velden:', f); }
+            document.getElementById('floculant').value = data.floculant || '';
+            document.getElementById('water-diep').value = data.water_diep || '';
+            document.getElementById('water-ondiep').value = data.water_ondiep || '';
+            document.getElementById('water-totaal').value = data.water_totaal || '';
+            document.getElementById('elektriciteit-nacht').value = data.elektriciteit_nacht || '';
+            document.getElementById('elektriciteit-dag').value = data.elektriciteit_dag || '';
+            document.getElementById('gas').value = data.gas || '';
+            document.getElementById('chemicalien-chloor').value = data.chemicalien_chloor || '';
+            document.getElementById('chemicalien-zwavelzuur').value =
+                data.chemicalien_zwavelzuur || '';
+            document.getElementById('systeem-status-1').checked = data.verwarming_status_1 === 1;
+            document.getElementById('systeem-status-2').checked = data.verwarming_status_2 === 1;
+            document.getElementById('systeem-status-3').checked = data.verwarming_status_3 === 1;
+            document.getElementById('systeem-status-4').checked = data.verwarming_status_4 === 1;
+            document.getElementById('systeem-druk-ok').checked = data.verwarming_druk_ok === 1;
+            document.getElementById('visuele-inspectie').checked =
+                data.verwarming_visuele_controle === 1;
+        } catch (f) {
+            console.error('Fout bij laden algemene velden:', f);
+        }
     }
 
     /**
@@ -64,18 +68,22 @@ class VerbruikModule {
     async cacheGroteBadenVerbruik() {
         const datum = document.getElementById('centraleDatum').value;
         try {
-            const res  = await this.app.api.call(`/api/verbruik/diep-ondiep?datum=${datum}`);
+            const res = await this.app.api.call(`/api/verbruik/diep-ondiep?datum=${datum}`);
             const data = await res.json();
             this.app.state.gecachteVerbruik = data;
             this._onthoudVersie('verbruik', data);
-        } catch (f) { console.error('Fout bij cachen verbruikstanden:', f); }
+        } catch (f) {
+            console.error('Fout bij cachen verbruikstanden:', f);
+        }
     }
 
     /** Bewaar de versie/auteur/bijgewerkt_op-meta van een verbruik-/verwarmingsrecord. */
     _onthoudVersie(sleutel, data) {
-        if (!data) return;   // mislukte JSON-parse: houd de bestaande versie aan
+        if (!data) return; // mislukte JSON-parse: houd de bestaande versie aan
         this.app.state.versies[sleutel] = {
-            versie: data.versie ?? null, auteur: data.auteur ?? null, bijgewerkt_op: data.bijgewerkt_op ?? null,
+            versie: data.versie ?? null,
+            auteur: data.auteur ?? null,
+            bijgewerkt_op: data.bijgewerkt_op ?? null,
         };
     }
 
@@ -89,10 +97,16 @@ class VerbruikModule {
      */
     static verbruikOnvolledig(payload) {
         return [
-            payload.water_diep, payload.water_ondiep, payload.water_totaal,
-            payload.elektriciteit_nacht, payload.elektriciteit_dag, payload.gas,
-            payload.floculant, payload.chemicalien_chloor, payload.chemicalien_zwavelzuur,
-        ].some(v => v == null);
+            payload.water_diep,
+            payload.water_ondiep,
+            payload.water_totaal,
+            payload.elektriciteit_nacht,
+            payload.elektriciteit_dag,
+            payload.gas,
+            payload.floculant,
+            payload.chemicalien_chloor,
+            payload.chemicalien_zwavelzuur,
+        ].some((v) => v == null);
     }
 
     /**
@@ -102,45 +116,56 @@ class VerbruikModule {
      *   anders wijzigde de gegevens); de aanroeper herlaadt dan via behandelConflict.
      */
     async slaAlgemeenGegevensOp() {
-        const api   = this.app.api;
+        const api = this.app.api;
         const datum = document.getElementById('centraleDatum').value;
         const versies = this.app.state.versies;
 
         const verbruikPayload = {
             datum,
-            floculant:           document.getElementById('floculant').value || null,
-            water_diep:          api.parseNumberValue('water-diep'),
-            water_ondiep:        api.parseNumberValue('water-ondiep'),
-            water_totaal:        api.parseNumberValue('water-totaal'),
+            floculant: document.getElementById('floculant').value || null,
+            water_diep: api.parseNumberValue('water-diep'),
+            water_ondiep: api.parseNumberValue('water-ondiep'),
+            water_totaal: api.parseNumberValue('water-totaal'),
             elektriciteit_nacht: api.parseNumberValue('elektriciteit-nacht'),
-            elektriciteit_dag:   api.parseNumberValue('elektriciteit-dag'),
-            gas:                 api.parseNumberValue('gas'),
-            chemicalien_chloor:    document.getElementById('chemicalien-chloor').value    || null,
-            chemicalien_zwavelzuur:document.getElementById('chemicalien-zwavelzuur').value || null,
+            elektriciteit_dag: api.parseNumberValue('elektriciteit-dag'),
+            gas: api.parseNumberValue('gas'),
+            chemicalien_chloor: document.getElementById('chemicalien-chloor').value || null,
+            chemicalien_zwavelzuur: document.getElementById('chemicalien-zwavelzuur').value || null,
             versie: versies['verbruik']?.versie ?? null,
         };
         const verwarmingsPayload = {
             datum,
-            verwarming_status_1:         document.getElementById('systeem-status-1').checked,
-            verwarming_status_2:         document.getElementById('systeem-status-2').checked,
-            verwarming_status_3:         document.getElementById('systeem-status-3').checked,
-            verwarming_status_4:         document.getElementById('systeem-status-4').checked,
-            verwarming_druk_ok:          document.getElementById('systeem-druk-ok').checked,
+            verwarming_status_1: document.getElementById('systeem-status-1').checked,
+            verwarming_status_2: document.getElementById('systeem-status-2').checked,
+            verwarming_status_3: document.getElementById('systeem-status-3').checked,
+            verwarming_status_4: document.getElementById('systeem-status-4').checked,
+            verwarming_druk_ok: document.getElementById('systeem-druk-ok').checked,
             verwarming_visuele_controle: document.getElementById('visuele-inspectie').checked,
             versie: versies['verwarming']?.versie ?? null,
         };
 
         try {
             const [r1, r2] = await Promise.all([
-                api.call('/api/verbruik/diep-ondiep',      { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(verbruikPayload) }),
-                api.call('/api/verbruik/verwarmingssysteem',{ method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(verwarmingsPayload) }),
+                api.call('/api/verbruik/diep-ondiep', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(verbruikPayload),
+                }),
+                api.call('/api/verbruik/verwarmingssysteem', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(verwarmingsPayload),
+                }),
             ]);
             if (r1.status === 409 || r2.status === 409) return { ok: false, conflict: true };
-            if (r1.ok) this._onthoudVersie('verbruik',   await r1.json().catch(() => null));
+            if (r1.ok) this._onthoudVersie('verbruik', await r1.json().catch(() => null));
             if (r2.ok) this._onthoudVersie('verwarming', await r2.json().catch(() => null));
             this.app.metingen.toonLaatstGewijzigd();
             return { ok: r1.ok && r2.ok, conflict: false };
-        } catch (f) { console.error('Fout bij opslaan algemene gegevens:', f); return { ok: false, conflict: false }; }
+        } catch (f) {
+            console.error('Fout bij opslaan algemene gegevens:', f);
+            return { ok: false, conflict: false };
+        }
     }
 
     /** Laad verbruikdeltas (huidig − vorige dag) en vul de berekeningsvelden. */
@@ -161,10 +186,20 @@ class VerbruikModule {
                 el.value = VerbruikModule.berekenVerbruik(huidig[dbSleutel], vorige[dbSleutel]);
             };
 
-            ['water-diep','water-ondiep','water-totaal','elektriciteit-nacht',
-             'elektriciteit-dag','gas','floculant','chemicalien-chloor','chemicalien-zwavelzuur']
-                .forEach(id => berekenEnZet(id, id.replace(/-/g, '_')));
-        } catch (f) { console.error('Fout bij laden verbruik:', f); }
+            [
+                'water-diep',
+                'water-ondiep',
+                'water-totaal',
+                'elektriciteit-nacht',
+                'elektriciteit-dag',
+                'gas',
+                'floculant',
+                'chemicalien-chloor',
+                'chemicalien-zwavelzuur',
+            ].forEach((id) => berekenEnZet(id, id.replace(/-/g, '_')));
+        } catch (f) {
+            console.error('Fout bij laden verbruik:', f);
+        }
     }
 
     /** Laad peuterbad-meterstanden (huidig − vorige dag) en vul de peuterbad-verbruikvelden. */
@@ -179,7 +214,8 @@ class VerbruikModule {
                 this.app.api.call(`/api/metingen?datum=${datum}`),
                 this.app.api.call(`/api/metingen?datum=${vorigeDatum}`),
             ]);
-            const vindPeuter = arr => (Array.isArray(arr) ? arr.find(m => m.bad_naam === 'Peuterbad') : null) || {};
+            const vindPeuter = (arr) =>
+                (Array.isArray(arr) ? arr.find((m) => m.bad_naam === 'Peuterbad') : null) || {};
             const huidig = vindPeuter(await huidigRes.json());
             const vorige = vindPeuter(await vorigeRes.json());
 
@@ -188,10 +224,12 @@ class VerbruikModule {
                 if (!el) return;
                 el.value = VerbruikModule.berekenVerbruik(huidig[sleutel], vorige[sleutel]);
             };
-            berekenEnZet('peuterbad-water',                 'water');
-            berekenEnZet('peuterbad-chemicalien-chloor',    'chemicalien_chloor');
-            berekenEnZet('peuterbad-chemicalien-zwavelzuur','chemicalien_zwavelzuur');
-        } catch (f) { console.error('Fout bij laden peuterbad-verbruik:', f); }
+            berekenEnZet('peuterbad-water', 'water');
+            berekenEnZet('peuterbad-chemicalien-chloor', 'chemicalien_chloor');
+            berekenEnZet('peuterbad-chemicalien-zwavelzuur', 'chemicalien_zwavelzuur');
+        } catch (f) {
+            console.error('Fout bij laden peuterbad-verbruik:', f);
+        }
     }
 }
 

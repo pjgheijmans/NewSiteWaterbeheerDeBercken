@@ -5,8 +5,11 @@ import { AppError } from '../../../backend/errors';
 import { maakTestApp } from '../../helpers/testApp';
 
 const mockService: jest.Mocked<IDatabaseService> = {
-    exporteerCsv: jest.fn(), importeerCsv: jest.fn(),
-    truncate: jest.fn(), wisAlles: jest.fn(), initialiseer: jest.fn(),
+    exporteerCsv: jest.fn(),
+    importeerCsv: jest.fn(),
+    truncate: jest.fn(),
+    wisAlles: jest.fn(),
+    initialiseer: jest.fn(),
 };
 
 function maakApp(taak: string | null = 'Administrator') {
@@ -71,34 +74,51 @@ describe('POST /import/:tabelnaam', () => {
     it('delegeert het importeren naar de service', async () => {
         mockService.importeerCsv.mockResolvedValue(undefined);
         const res = await request(maakApp())
-            .post('/import/logboek').set('Content-Type', 'text/csv').send(csv);
+            .post('/import/logboek')
+            .set('Content-Type', 'text/csv')
+            .send(csv);
         expect(res.status).toBe(200);
         expect(mockService.importeerCsv).toHaveBeenCalledWith('logboek', csv);
     });
 
     it('propageert een AppError 400 van de service', async () => {
-        mockService.importeerCsv.mockRejectedValue(new AppError('CSV-bestand bevat geen data', 400));
+        mockService.importeerCsv.mockRejectedValue(
+            new AppError('CSV-bestand bevat geen data', 400),
+        );
         const res = await request(maakApp())
-            .post('/import/logboek').set('Content-Type', 'text/csv').send('alleen-een-header\r\n');
+            .post('/import/logboek')
+            .set('Content-Type', 'text/csv')
+            .send('alleen-een-header\r\n');
         expect(res.status).toBe(400);
         expect(res.body.error).toMatch(/geen data/i);
     });
 
     it('geeft 400 voor een niet-toegestane tabelnaam', async () => {
         const res = await request(maakApp())
-            .post('/import/geheim_schema').set('Content-Type', 'text/csv').send(csv);
+            .post('/import/geheim_schema')
+            .set('Content-Type', 'text/csv')
+            .send(csv);
         expect(res.status).toBe(400);
         expect(mockService.importeerCsv).not.toHaveBeenCalled();
     });
 
     it('geeft 403 voor coordinator', async () => {
-        expect((await request(maakApp('coordinator')).post('/import/logboek').set('Content-Type', 'text/csv').send(csv)).status).toBe(403);
+        expect(
+            (
+                await request(maakApp('coordinator'))
+                    .post('/import/logboek')
+                    .set('Content-Type', 'text/csv')
+                    .send(csv)
+            ).status,
+        ).toBe(403);
     });
 });
 
 describe('actie_teksten is opgenomen in de whitelists', () => {
     it('mag geëxporteerd worden', async () => {
-        mockService.exporteerCsv.mockResolvedValue('actie_sleutel;sjabloon\r\nchloor_bestellen;Chloor bestellen\r\n');
+        mockService.exporteerCsv.mockResolvedValue(
+            'actie_sleutel;sjabloon\r\nchloor_bestellen;Chloor bestellen\r\n',
+        );
         const res = await request(maakApp()).get('/export/actie_teksten');
         expect(res.status).toBe(200);
         expect(mockService.exporteerCsv).toHaveBeenCalledWith('actie_teksten');
@@ -108,7 +128,9 @@ describe('actie_teksten is opgenomen in de whitelists', () => {
         const csv = 'actie_sleutel;sjabloon\r\nchloor_bestellen;Chloor bestellen\r\n';
         mockService.importeerCsv.mockResolvedValue(undefined);
         const res = await request(maakApp())
-            .post('/import/actie_teksten').set('Content-Type', 'text/csv').send(csv);
+            .post('/import/actie_teksten')
+            .set('Content-Type', 'text/csv')
+            .send(csv);
         expect(res.status).toBe(200);
         expect(mockService.importeerCsv).toHaveBeenCalledWith('actie_teksten', csv);
     });
@@ -123,13 +145,17 @@ describe('actie_teksten is opgenomen in de whitelists', () => {
 
 describe('waterbeheer_dienst is opgenomen in de whitelists', () => {
     it('mag geëxporteerd, geïmporteerd en geleegd worden', async () => {
-        mockService.exporteerCsv.mockResolvedValue('datum;dienst_1;dienst_2\r\n2026-06-08;Jan;Piet\r\n');
+        mockService.exporteerCsv.mockResolvedValue(
+            'datum;dienst_1;dienst_2\r\n2026-06-08;Jan;Piet\r\n',
+        );
         mockService.importeerCsv.mockResolvedValue(undefined);
         mockService.truncate.mockResolvedValue(undefined);
 
         expect((await request(maakApp()).get('/export/waterbeheer_dienst')).status).toBe(200);
         const imp = await request(maakApp())
-            .post('/import/waterbeheer_dienst').set('Content-Type', 'text/csv').send('datum;dienst_1\r\n2026-06-08;Jan\r\n');
+            .post('/import/waterbeheer_dienst')
+            .set('Content-Type', 'text/csv')
+            .send('datum;dienst_1\r\n2026-06-08;Jan\r\n');
         expect(imp.status).toBe(200);
         expect((await request(maakApp()).post('/truncate/waterbeheer_dienst')).status).toBe(200);
     });

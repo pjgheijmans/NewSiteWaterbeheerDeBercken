@@ -4,7 +4,9 @@ import { IDienstService } from '../../../backend/services/IDienstService';
 import { maakTestApp } from '../../helpers/testApp';
 
 const mockService: jest.Mocked<IDienstService> = {
-    getDienst: jest.fn(), saveDienst: jest.fn(), getWaterbeheerders: jest.fn(),
+    getDienst: jest.fn(),
+    saveDienst: jest.fn(),
+    getWaterbeheerders: jest.fn(),
 };
 
 function maakApp(taak: string | null = 'waterbeheerder') {

@@ -10,8 +10,12 @@ const mod = new ActieTekstenModule({}); // vulPlaatshouders gebruikt this.app ni
 
 describe('ActieTekstenModule.vulPlaatshouders', () => {
     it('vult bekende plaatshouders in', () => {
-        expect(mod.vulPlaatshouders('Flow {bad} onder {drempel} m³/h', { bad: 'Diep', drempel: '250' }))
-            .toBe('Flow Diep onder 250 m³/h');
+        expect(
+            mod.vulPlaatshouders('Flow {bad} onder {drempel} m³/h', {
+                bad: 'Diep',
+                drempel: '250',
+            }),
+        ).toBe('Flow Diep onder 250 m³/h');
     });
 
     it('laat onbekende plaatshouders leeg', () => {
@@ -24,7 +28,8 @@ describe('ActieTekstenModule.vulPlaatshouders', () => {
 
     it('rendert het voorbeeld met de standaard voorbeeldwaarden', () => {
         const v = ActieTekstenModule.VOORBEELD;
-        expect(mod.vulPlaatshouders('Gebonden chloor {bad} {waarde} > {drempel} mg/l', v))
-            .toBe('Gebonden chloor Diep 1.25 > 0.4 mg/l');
+        expect(mod.vulPlaatshouders('Gebonden chloor {bad} {waarde} > {drempel} mg/l', v)).toBe(
+            'Gebonden chloor Diep 1.25 > 0.4 mg/l',
+        );
     });
 });

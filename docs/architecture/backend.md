@@ -153,24 +153,24 @@ classDiagram
 
 ## 3. Endpoints per domein
 
-| Router (factory) | Mount | Endpoints | Rol |
-|---|---|---|---|
-| `auth.ts` | `/api` | `POST /login`, `POST /logout`, `GET /ingelogd` | — / sessie |
-| `metingen.ts` | `/api` | `GET/POST /metingen`, `GET /acties`, `POST /acties/:id/resolve`, `POST /acties/:id/unresolve`, `GET /bezoekers` | waterbeheerder |
-| `rondetaken.ts` | `/api/rondetaken` | `GET /`, `POST /:sleutel/voltooi`, `POST /:sleutel/heropen` | waterbeheerder |
-| `taken.ts` | `/api/taken` | `GET /` — samengestelde taken-/actielijst per bad-pagina | waterbeheerder |
-| `coordinatoren.ts` | `/api/coordinatoren` | `GET/POST /`, `DELETE /`, `GET/POST /checklist`, `GET/POST /daggegevens`, `GET/POST /logboek`, `DELETE /logboek/:id` | waterbeheerder of coördinator |
-| `verbruik.ts` | `/api/verbruik` | `GET/POST /diep-ondiep`, `GET /diep-ondiep/vorige`, `GET/POST /verwarmingssysteem` | waterbeheerder |
-| `limieten.ts` | `/api/limieten` | `GET /`, `GET /defaults`, `POST /` | lezen: elke rol · schrijven: **Administrator** |
-| `actieteksten.ts` | `/api/actieteksten` | `GET /`, `GET /defaults`, `POST /` | lezen: elke rol · schrijven: **Administrator** |
-| `dienst.ts` | `/api/dienst` | `GET /`, `GET /waterbeheerders`, `POST /` | lezen: elke rol · schrijven: admin/waterbeheerder |
-| `logboek.ts` | `/api/logboek` | `GET /`, `POST /`, `DELETE /:id` | waterbeheerder |
-| `gebruikers.ts` | `/api/gebruikers` | `GET /`, `POST /`, `PUT /:id`, `DELETE /:id` | admin/waterbeheerder |
-| `database.ts` | `/api/database` | `POST /truncate/:tabel`, `POST /verwijder-alles`, `POST /initialiseer`, `GET /export/:tabel`, `POST /import/:tabel` | admin/waterbeheerder |
-| `trend.ts` | `/api/trend` | `GET /metingen`, `GET /verbruik` | waterbeheerder |
-| `configuratie.ts` | `/api/configuratie` | `GET /`, `PUT /:sleutel` | lezen: elke rol · schrijven: **Administrator** |
-| `versie.ts` | `/api/versie` | `GET /` — `{ versie, commit }` voor het kop-label | ingelogd |
-| `frontend.ts` | `/` | `GET /` — HTML-partials samenvoegen | — |
+| Router (factory)   | Mount                | Endpoints                                                                                                            | Rol                                               |
+| ------------------ | -------------------- | -------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| `auth.ts`          | `/api`               | `POST /login`, `POST /logout`, `GET /ingelogd`                                                                       | — / sessie                                        |
+| `metingen.ts`      | `/api`               | `GET/POST /metingen`, `GET /acties`, `POST /acties/:id/resolve`, `POST /acties/:id/unresolve`, `GET /bezoekers`      | waterbeheerder                                    |
+| `rondetaken.ts`    | `/api/rondetaken`    | `GET /`, `POST /:sleutel/voltooi`, `POST /:sleutel/heropen`                                                          | waterbeheerder                                    |
+| `taken.ts`         | `/api/taken`         | `GET /` — samengestelde taken-/actielijst per bad-pagina                                                             | waterbeheerder                                    |
+| `coordinatoren.ts` | `/api/coordinatoren` | `GET/POST /`, `DELETE /`, `GET/POST /checklist`, `GET/POST /daggegevens`, `GET/POST /logboek`, `DELETE /logboek/:id` | waterbeheerder of coördinator                     |
+| `verbruik.ts`      | `/api/verbruik`      | `GET/POST /diep-ondiep`, `GET /diep-ondiep/vorige`, `GET/POST /verwarmingssysteem`                                   | waterbeheerder                                    |
+| `limieten.ts`      | `/api/limieten`      | `GET /`, `GET /defaults`, `POST /`                                                                                   | lezen: elke rol · schrijven: **Administrator**    |
+| `actieteksten.ts`  | `/api/actieteksten`  | `GET /`, `GET /defaults`, `POST /`                                                                                   | lezen: elke rol · schrijven: **Administrator**    |
+| `dienst.ts`        | `/api/dienst`        | `GET /`, `GET /waterbeheerders`, `POST /`                                                                            | lezen: elke rol · schrijven: admin/waterbeheerder |
+| `logboek.ts`       | `/api/logboek`       | `GET /`, `POST /`, `DELETE /:id`                                                                                     | waterbeheerder                                    |
+| `gebruikers.ts`    | `/api/gebruikers`    | `GET /`, `POST /`, `PUT /:id`, `DELETE /:id`                                                                         | admin/waterbeheerder                              |
+| `database.ts`      | `/api/database`      | `POST /truncate/:tabel`, `POST /verwijder-alles`, `POST /initialiseer`, `GET /export/:tabel`, `POST /import/:tabel`  | admin/waterbeheerder                              |
+| `trend.ts`         | `/api/trend`         | `GET /metingen`, `GET /verbruik`                                                                                     | waterbeheerder                                    |
+| `configuratie.ts`  | `/api/configuratie`  | `GET /`, `PUT /:sleutel`                                                                                             | lezen: elke rol · schrijven: **Administrator**    |
+| `versie.ts`        | `/api/versie`        | `GET /` — `{ versie, commit }` voor het kop-label                                                                    | ingelogd                                          |
+| `frontend.ts`      | `/`                  | `GET /` — HTML-partials samenvoegen                                                                                  | —                                                 |
 
 > `POST /api/metingen` en `POST /api/verbruik/{diep-ondiep,verwarmingssysteem}`
 > nemen een verwachte `versie` mee en geven `{ versie, auteur, bijgewerkt_op }`
@@ -180,15 +180,15 @@ classDiagram
 
 ## 4. Middleware en gedeelde bouwstenen
 
-| Bestand | Verantwoordelijkheid |
-|---|---|
-| `middleware/auth.ts` | `checkAuth` (401 zonder sessie) + rol-helpers `isWaterbeheerder`, `isWaterbeheerderOrCoordinator`, `isAdminOrWaterbeheerder` |
-| `middleware/valideer.ts` | `valideerBody(schema)` — valideert `req.body` met Zod, vervangt door geparste waarde, gooit `AppError(400)` |
-| `middleware/errorHandler.ts` | centrale foutafhandeling: `AppError.status` of 500, logt alleen 5xx |
-| `validation/schemas.ts` | Zod-schema's per domein (los voor metingen/verbruik/coordinatoren, strikt voor gebruiker/limiet/login) |
-| `errors.ts` | `AppError(message, status)` |
-| `auteur.ts` | `bepaalAuteur(gebruiker)` — naamafleiding voor logboek/acties |
-| `types/index.ts` | domeintypes + `declare module 'express-session'` augmentatie voor `req.session.gebruiker` |
+| Bestand                      | Verantwoordelijkheid                                                                                                         |
+| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| `middleware/auth.ts`         | `checkAuth` (401 zonder sessie) + rol-helpers `isWaterbeheerder`, `isWaterbeheerderOrCoordinator`, `isAdminOrWaterbeheerder` |
+| `middleware/valideer.ts`     | `valideerBody(schema)` — valideert `req.body` met Zod, vervangt door geparste waarde, gooit `AppError(400)`                  |
+| `middleware/errorHandler.ts` | centrale foutafhandeling: `AppError.status` of 500, logt alleen 5xx                                                          |
+| `validation/schemas.ts`      | Zod-schema's per domein (los voor metingen/verbruik/coordinatoren, strikt voor gebruiker/limiet/login)                       |
+| `errors.ts`                  | `AppError(message, status)`                                                                                                  |
+| `auteur.ts`                  | `bepaalAuteur(gebruiker)` — naamafleiding voor logboek/acties                                                                |
+| `types/index.ts`             | domeintypes + `declare module 'express-session'` augmentatie voor `req.session.gebruiker`                                    |
 
 ---
 
@@ -201,10 +201,10 @@ lagen daarboven kennen alleen interfaces.
 // routes/metingen.ts
 export function maakMetingenRouter(pool: Pool): Router {
     const metingenRepo = new MetingenRepository(pool);
-    const actiesRepo   = new ActiesRepository(pool);
-    const coordRepo    = new CoordinatorenRepository(pool);
-    const service      = new MetingenService(metingenRepo, actiesRepo, coordRepo);
-    const controller   = new MetingenController(service);
+    const actiesRepo = new ActiesRepository(pool);
+    const coordRepo = new CoordinatorenRepository(pool);
+    const service = new MetingenService(metingenRepo, actiesRepo, coordRepo);
+    const controller = new MetingenController(service);
     return controller.router;
 }
 ```

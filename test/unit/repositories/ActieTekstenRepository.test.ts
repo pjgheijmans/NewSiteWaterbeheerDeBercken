@@ -13,7 +13,9 @@ beforeEach(() => {
 describe('render — plaatshouders', () => {
     it('vult bekende plaatshouders in', () => {
         const tekst = ActieTekstenRepository.render(
-            'Flow {bad} onder {drempel} m³/h — Filter spoelen', { bad: 'Diep', drempel: 250 });
+            'Flow {bad} onder {drempel} m³/h — Filter spoelen',
+            { bad: 'Diep', drempel: 250 },
+        );
         expect(tekst).toBe('Flow Diep onder 250 m³/h — Filter spoelen');
     });
 
@@ -30,21 +32,24 @@ describe('getDefaults', () => {
     it('geeft alle standaard-sjablonen synchroon terug zonder DB-toegang', () => {
         const defaults = repo.getDefaults();
         expect(defaults.length).toBe(14);
-        expect(defaults.find(t => t.actie_sleutel === 'chloor_bestellen')).toBeDefined();
+        expect(defaults.find((t) => t.actie_sleutel === 'chloor_bestellen')).toBeDefined();
         expect(pool.execute).not.toHaveBeenCalled();
     });
 });
 
 describe('getAll — standaarden samengevoegd met overrides', () => {
     it('overschrijft een standaard met de DB-waarde', async () => {
-        pool.execute.mockResolvedValue(resultaat([
-            { actie_sleutel: 'chloor_bestellen', sjabloon: 'Eigen tekst' },
-        ]));
+        pool.execute.mockResolvedValue(
+            resultaat([{ actie_sleutel: 'chloor_bestellen', sjabloon: 'Eigen tekst' }]),
+        );
         const alle = await repo.getAll();
-        expect(alle.find(t => t.actie_sleutel === 'chloor_bestellen')!.sjabloon).toBe('Eigen tekst');
+        expect(alle.find((t) => t.actie_sleutel === 'chloor_bestellen')!.sjabloon).toBe(
+            'Eigen tekst',
+        );
         // Niet-overschreven sleutels behouden hun standaard
-        expect(alle.find(t => t.actie_sleutel === 'peuterbad_aftappen')!.sjabloon)
-            .toMatch(/Peuterbad/);
+        expect(alle.find((t) => t.actie_sleutel === 'peuterbad_aftappen')!.sjabloon).toMatch(
+            /Peuterbad/,
+        );
     });
 });
 
@@ -56,9 +61,9 @@ describe('getSjablonen — sleutel→sjabloon map', () => {
     });
 
     it('gebruikt de DB-override waar aanwezig', async () => {
-        pool.execute.mockResolvedValue(resultaat([
-            { actie_sleutel: 'filter_spoelen_flow', sjabloon: 'Aangepast {bad}' },
-        ]));
+        pool.execute.mockResolvedValue(
+            resultaat([{ actie_sleutel: 'filter_spoelen_flow', sjabloon: 'Aangepast {bad}' }]),
+        );
         const map = await repo.getSjablonen();
         expect(map['filter_spoelen_flow']).toBe('Aangepast {bad}');
     });

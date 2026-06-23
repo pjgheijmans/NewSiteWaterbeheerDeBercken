@@ -2,7 +2,10 @@ import { LimietenService } from '../../../backend/services/LimietenService';
 import { ILimietenRepository } from '../../../backend/repositories/ILimietenRepository';
 
 const repo: jest.Mocked<ILimietenRepository> = {
-    getAll: jest.fn(), getDefaults: jest.fn(), seedDefaults: jest.fn(), save: jest.fn(),
+    getAll: jest.fn(),
+    getDefaults: jest.fn(),
+    seedDefaults: jest.fn(),
+    save: jest.fn(),
 };
 const service = new LimietenService(repo);
 beforeEach(() => jest.clearAllMocks());

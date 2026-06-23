@@ -24,13 +24,25 @@ function zetDom() {
 }
 
 function maakApp() {
-    return { api: new ApiClient(), state: { huidigeRol: 'waterbeheer', huidigeBadPagina: 'grote-baden' } };
+    return {
+        api: new ApiClient(),
+        state: { huidigeRol: 'waterbeheer', huidigeBadPagina: 'grote-baden' },
+    };
 }
 
-const actieItem = { sleutel: 'a1', pagina: 'grote-baden', categorie: 'verplicht', voltooid: false, gebied: 'Diep', label: 'Filter spoelen' };
+const actieItem = {
+    sleutel: 'a1',
+    pagina: 'grote-baden',
+    categorie: 'verplicht',
+    voltooid: false,
+    gebied: 'Diep',
+    label: 'Filter spoelen',
+};
 
-const heeftActie = (id: string) => !!document.getElementById(id)?.querySelector('.tab-actie-indicator');
-const heeftDot   = (id: string) => !!document.getElementById(id)?.querySelector('.tab-onvolledig-indicator');
+const heeftActie = (id: string) =>
+    !!document.getElementById(id)?.querySelector('.tab-actie-indicator');
+const heeftDot = (id: string) =>
+    !!document.getElementById(id)?.querySelector('.tab-onvolledig-indicator');
 
 describe('Actie-badge en volledigheids-markering naast elkaar', () => {
     beforeEach(zetDom);
@@ -67,11 +79,11 @@ describe('Actie-badge en volledigheids-markering naast elkaar', () => {
     });
 
     it('actie verdwijnt (heeft=false) → ⚠ weg, bolletje en label blijven', async () => {
-        new MetingenModule(maakApp()).werkVolledigheidBij();         // bolletje op pagina-tab
+        new MetingenModule(maakApp()).werkVolledigheidBij(); // bolletje op pagina-tab
         const taken = new TakenModule(maakApp());
         taken._haalOp = jest.fn(async () => [actieItem]);
-        await taken.werkBadgeBij('2026-07-15');                      // ⚠ erbij
-        taken._haalOp = jest.fn(async () => []);                     // geen open acties meer
+        await taken.werkBadgeBij('2026-07-15'); // ⚠ erbij
+        taken._haalOp = jest.fn(async () => []); // geen open acties meer
         await taken.werkBadgeBij('2026-07-15');
 
         expect(heeftActie('tab-grote-baden')).toBe(false);

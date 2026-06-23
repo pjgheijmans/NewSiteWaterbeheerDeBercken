@@ -14,7 +14,9 @@ beforeAll(async () => {
     app = maakApp(pool);
 });
 
-afterAll(async () => { await pool.end(); });
+afterAll(async () => {
+    await pool.end();
+});
 beforeEach(async () => {
     await truncateData(pool);
     agent = await ingelogdeAgent(app, 'waterbeheerder');
@@ -23,7 +25,10 @@ beforeEach(async () => {
 describe('Verbruik (integratie)', () => {
     it('slaat verbruik op en leest het terug', async () => {
         const post = await agent.post('/api/verbruik/diep-ondiep').send({
-            datum: '2026-06-01', water_diep: 1000, water_ondiep: 500, gas: 50,
+            datum: '2026-06-01',
+            water_diep: 1000,
+            water_ondiep: 500,
+            gas: 50,
         });
         expect(post.status).toBe(200);
 
@@ -34,7 +39,9 @@ describe('Verbruik (integratie)', () => {
     });
 
     it('haalt de meterstand van de vorige dag op', async () => {
-        await agent.post('/api/verbruik/diep-ondiep').send({ datum: '2026-05-31', water_diep: 900 });
+        await agent
+            .post('/api/verbruik/diep-ondiep')
+            .send({ datum: '2026-05-31', water_diep: 900 });
         const vorige = await agent.get('/api/verbruik/diep-ondiep/vorige?datum=2026-06-01');
         expect(vorige.status).toBe(200);
         expect(parseFloat(vorige.body.water_diep)).toBe(900);
@@ -42,7 +49,9 @@ describe('Verbruik (integratie)', () => {
 
     it('slaat en leest de verwarmingsstatus', async () => {
         await agent.post('/api/verbruik/verwarmingssysteem').send({
-            datum: '2026-06-01', verwarming_status_1: true, verwarming_druk_ok: true,
+            datum: '2026-06-01',
+            verwarming_status_1: true,
+            verwarming_druk_ok: true,
         });
         const get = await agent.get('/api/verbruik/verwarmingssysteem?datum=2026-06-01');
         expect(get.status).toBe(200);

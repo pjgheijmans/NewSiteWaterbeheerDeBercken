@@ -1,4 +1,10 @@
-import { VerbruikData, VerbruikInput, VerwarmingData, VerwarmingInput, OpslaanResultaat } from '../types';
+import {
+    VerbruikData,
+    VerbruikInput,
+    VerwarmingData,
+    VerwarmingInput,
+    OpslaanResultaat,
+} from '../types';
 
 export interface IVerbruikService {
     getVerbruik(datum: string): Promise<VerbruikData>;

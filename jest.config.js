@@ -8,9 +8,6 @@ module.exports = {
     transform: {
         '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.test.json' }],
     },
-    collectCoverageFrom: [
-        'backend/**/*.ts',
-        '!backend/**/*.d.ts',
-    ],
+    collectCoverageFrom: ['backend/**/*.ts', '!backend/**/*.d.ts'],
     coverageDirectory: 'coverage',
 };

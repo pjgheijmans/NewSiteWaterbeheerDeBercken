@@ -12,17 +12,17 @@ beforeEach(() => {
 
 describe('getAll — normalisatie van aliassen', () => {
     it('zet min/max om naar floats', async () => {
-        pool.execute.mockResolvedValue(resultaat([
-            { parameter_naam: 'ph_waarde', min_waarde: '6.80', max_waarde: '7.60' },
-        ]));
+        pool.execute.mockResolvedValue(
+            resultaat([{ parameter_naam: 'ph_waarde', min_waarde: '6.80', max_waarde: '7.60' }]),
+        );
         const map = await repo.getAll();
         expect(map['ph_waarde']).toEqual({ min: 6.8, max: 7.6 });
     });
 
     it('splitst oude "flow" uit naar flow_diep/ondiep/peuterbad', async () => {
-        pool.execute.mockResolvedValue(resultaat([
-            { parameter_naam: 'flow', min_waarde: '50', max_waarde: '200' },
-        ]));
+        pool.execute.mockResolvedValue(
+            resultaat([{ parameter_naam: 'flow', min_waarde: '50', max_waarde: '200' }]),
+        );
         const map = await repo.getAll();
         expect(map['flow_diep']).toEqual({ min: 50, max: 200 });
         expect(map['flow_ondiep']).toEqual({ min: 50, max: 200 });
@@ -32,19 +32,21 @@ describe('getAll — normalisatie van aliassen', () => {
     });
 
     it('mapt oude "temperatuur" naar watertemperatuur', async () => {
-        pool.execute.mockResolvedValue(resultaat([
-            { parameter_naam: 'temperatuur', min_waarde: '20', max_waarde: '30' },
-        ]));
+        pool.execute.mockResolvedValue(
+            resultaat([{ parameter_naam: 'temperatuur', min_waarde: '20', max_waarde: '30' }]),
+        );
         const map = await repo.getAll();
         expect(map['watertemperatuur']).toEqual({ min: 20, max: 30 });
         expect(map['temperatuur']).toBeUndefined();
     });
 
     it('overschrijft bestaande flow_diep NIET met de alias', async () => {
-        pool.execute.mockResolvedValue(resultaat([
-            { parameter_naam: 'flow',      min_waarde: '50',  max_waarde: '200' },
-            { parameter_naam: 'flow_diep', min_waarde: '250', max_waarde: '450' },
-        ]));
+        pool.execute.mockResolvedValue(
+            resultaat([
+                { parameter_naam: 'flow', min_waarde: '50', max_waarde: '200' },
+                { parameter_naam: 'flow_diep', min_waarde: '250', max_waarde: '450' },
+            ]),
+        );
         const map = await repo.getAll();
         expect(map['flow_diep']).toEqual({ min: 250, max: 450 });
     });

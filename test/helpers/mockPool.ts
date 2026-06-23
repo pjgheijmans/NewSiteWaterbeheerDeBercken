@@ -3,7 +3,7 @@ import { Pool } from 'mysql2/promise';
 /** Mock van de mysql2 Pool met execute en query als jest-mocks. */
 export interface MockPool {
     execute: jest.Mock;
-    query:   jest.Mock;
+    query: jest.Mock;
     getConnection: jest.Mock;
     /** De mock-connection die getConnection teruggeeft (deelt dezelfde execute). */
     connection: {
@@ -26,13 +26,13 @@ export function maakMockPool(): MockPool {
     const connection = {
         execute,
         beginTransaction: jest.fn().mockResolvedValue(undefined),
-        commit:           jest.fn().mockResolvedValue(undefined),
-        rollback:         jest.fn().mockResolvedValue(undefined),
-        release:          jest.fn(),
+        commit: jest.fn().mockResolvedValue(undefined),
+        rollback: jest.fn().mockResolvedValue(undefined),
+        release: jest.fn(),
     };
     return {
         execute,
-        query:         jest.fn().mockResolvedValue([[], []]),
+        query: jest.fn().mockResolvedValue([[], []]),
         getConnection: jest.fn().mockResolvedValue(connection),
         connection,
     };

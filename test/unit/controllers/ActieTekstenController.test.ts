@@ -4,7 +4,9 @@ import { IActieTekstenService } from '../../../backend/services/IActieTekstenSer
 import { maakTestApp } from '../../helpers/testApp';
 
 const mockService: jest.Mocked<IActieTekstenService> = {
-    getAll: jest.fn(), getDefaults: jest.fn(), save: jest.fn(),
+    getAll: jest.fn(),
+    getDefaults: jest.fn(),
+    save: jest.fn(),
 };
 
 function maakApp(taak: string | null = 'Administrator') {
@@ -73,7 +75,9 @@ describe('POST / (alleen Administrator)', () => {
     });
 
     it('geeft 400 bij een leeg sjabloon', async () => {
-        const res = await request(maakApp('Administrator')).post('/').send({ actie_sleutel: 'x', sjabloon: '' });
+        const res = await request(maakApp('Administrator'))
+            .post('/')
+            .send({ actie_sleutel: 'x', sjabloon: '' });
         expect(res.status).toBe(400);
         expect(mockService.save).not.toHaveBeenCalled();
     });

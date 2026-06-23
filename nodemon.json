@@ -1,5 +1,5 @@
 {
-  "watch": ["backend"],
-  "ext": "ts,js,json",
-  "exec": "node --inspect=0.0.0.0:9229 -r ts-node/register backend/server.ts"
+    "watch": ["backend"],
+    "ext": "ts,js,json",
+    "exec": "node --inspect=0.0.0.0:9229 -r ts-node/register backend/server.ts"
 }

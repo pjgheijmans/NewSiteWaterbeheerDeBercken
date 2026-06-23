@@ -16,7 +16,9 @@ beforeAll(async () => {
     app = maakApp(pool);
 });
 
-afterAll(async () => { await pool.end(); });
+afterAll(async () => {
+    await pool.end();
+});
 beforeEach(async () => {
     await truncateData(pool);
     agent = await ingelogdeAgent(app, 'waterbeheerder');
@@ -25,9 +27,14 @@ beforeEach(async () => {
 describe('Metingen (integratie)', () => {
     it('slaat een grootbad-meting op en leest die terug', async () => {
         const post = await agent.post('/api/metingen').send({
-            datum: DATUM, bad_naam: 'Diep',
-            ph_waarde: 7.2, chloor_waarde: 1.0, temperatuur: 28,
-            flow: 300, filter_druk_in: 0.5, filter_druk_uit: 0.3,
+            datum: DATUM,
+            bad_naam: 'Diep',
+            ph_waarde: 7.2,
+            chloor_waarde: 1.0,
+            temperatuur: 28,
+            flow: 300,
+            filter_druk_in: 0.5,
+            filter_druk_uit: 0.3,
         });
         expect(post.status).toBe(200);
 
@@ -52,12 +59,15 @@ describe('Metingen (integratie)', () => {
 
     it('genereert een filter-spoelen-actie bij te lage flow en lost die op', async () => {
         // flow 100 < drempel 250 (Diep) → filter_spoelen_flow actie
-        const post = await agent.post('/api/metingen').send({ datum: DATUM, bad_naam: 'Diep', flow: 100 });
+        const post = await agent
+            .post('/api/metingen')
+            .send({ datum: DATUM, bad_naam: 'Diep', flow: 100 });
         expect(post.status).toBe(200);
 
         const acties = await agent.get(`/api/acties?datum=${DATUM}`);
         const actie = acties.body.find(
-            (a: { actie_type: string; bad_naam: string }) => a.actie_type === 'filter_spoelen_flow' && a.bad_naam === 'Diep',
+            (a: { actie_type: string; bad_naam: string }) =>
+                a.actie_type === 'filter_spoelen_flow' && a.bad_naam === 'Diep',
         );
         expect(actie).toBeDefined();
         expect(actie.opgelost).toBeFalsy();
@@ -74,7 +84,9 @@ describe('Metingen (integratie)', () => {
     it('verwijdert geen actie zolang flow boven de drempel blijft', async () => {
         await agent.post('/api/metingen').send({ datum: DATUM, bad_naam: 'Diep', flow: 300 });
         const acties = await agent.get(`/api/acties?datum=${DATUM}`);
-        const flowActie = acties.body.find((a: { actie_type: string }) => a.actie_type === 'filter_spoelen_flow');
+        const flowActie = acties.body.find(
+            (a: { actie_type: string }) => a.actie_type === 'filter_spoelen_flow',
+        );
         expect(flowActie).toBeUndefined();
     });
 });

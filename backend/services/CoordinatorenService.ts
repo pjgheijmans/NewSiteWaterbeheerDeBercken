@@ -5,8 +5,17 @@ import { ICoordinatorenService } from './ICoordinatorenService';
 import { bepaalAuteur } from '../auteur';
 import { magDatumBewerken } from '../middleware/auth';
 import { AppError } from '../errors';
-import { CoordinatorBlok, CoordinatorMetingInput, Checklist, ChecklistInput,
-         Daggegevens, DaggegevensInput, LogboekEntry, LogboekOpslaanResultaat, Gebruiker } from '../types';
+import {
+    CoordinatorBlok,
+    CoordinatorMetingInput,
+    Checklist,
+    ChecklistInput,
+    Daggegevens,
+    DaggegevensInput,
+    LogboekEntry,
+    LogboekOpslaanResultaat,
+    Gebruiker,
+} from '../types';
 
 /**
  * Bedrijfslogica voor coordinatoren: metingen-blokken, checklist, daggegevens
@@ -42,7 +51,11 @@ export class CoordinatorenService implements ICoordinatorenService {
         return this.coordRepo.getDaggegevens(datum);
     }
 
-    async saveDaggegevens(datum: string, body: DaggegevensInput, gebruiker: Gebruiker): Promise<void> {
+    async saveDaggegevens(
+        datum: string,
+        body: DaggegevensInput,
+        gebruiker: Gebruiker,
+    ): Promise<void> {
         await this.coordRepo.saveDaggegevens(datum, body, bepaalAuteur(gebruiker));
         // Fire-and-forget: geen transactionele garantie vereist
         void this.actiesRepo.genereerBezoekers(datum, body.bezoekers_vandaag ?? null);
@@ -59,7 +72,12 @@ export class CoordinatorenService implements ICoordinatorenService {
         return this.logboekRepo.getByDatum(datum);
     }
 
-    async saveLogboek(datum: string, tijdstip: string, tekst: string, gebruiker: Gebruiker): Promise<LogboekOpslaanResultaat> {
+    async saveLogboek(
+        datum: string,
+        tijdstip: string,
+        tekst: string,
+        gebruiker: Gebruiker,
+    ): Promise<LogboekOpslaanResultaat> {
         const auteur = bepaalAuteur(gebruiker);
         const row = await this.logboekRepo.save(datum, tijdstip, tekst, auteur);
         return { id: row?.id ?? null, auteur: row?.auteur ?? auteur };

@@ -24,7 +24,10 @@ describe('validatie-bedrading in de routes', () => {
         const service = { create: jest.fn() } as any;
         const app = maakTestApp(new GebruikersController(service).router, 'Administrator');
         const res = await request(app).post('/').send({
-            voornaam: 'Jan', achternaam: 'J', inlognaam: 'jj', wachtwoord: 'x',
+            voornaam: 'Jan',
+            achternaam: 'J',
+            inlognaam: 'jj',
+            wachtwoord: 'x',
         });
         expect(res.status).toBe(400);
         expect(service.create).not.toHaveBeenCalled();
@@ -33,7 +36,9 @@ describe('validatie-bedrading in de routes', () => {
     it('POST /limieten met niet-numerieke grenswaarde → 400', async () => {
         const service = { save: jest.fn() } as any;
         const app = maakTestApp(new LimietenController(service).router, 'Administrator');
-        const res = await request(app).post('/').send({ parameter_naam: 'ph_waarde', min_waarde: 'x', max_waarde: 7.6 });
+        const res = await request(app)
+            .post('/')
+            .send({ parameter_naam: 'ph_waarde', min_waarde: 'x', max_waarde: 7.6 });
         expect(res.status).toBe(400);
         expect(service.save).not.toHaveBeenCalled();
     });
@@ -57,7 +62,9 @@ describe('validatie-bedrading in de routes', () => {
     it('laat een geldige body wél door naar de service', async () => {
         const service = { saveMeting: jest.fn().mockResolvedValue(undefined) } as any;
         const app = maakTestApp(new MetingenController(service).router, 'waterbeheerder');
-        const res = await request(app).post('/metingen').send({ datum: '2026-05-31', bad_naam: 'Diep', ph_waarde: 7.2 });
+        const res = await request(app)
+            .post('/metingen')
+            .send({ datum: '2026-05-31', bad_naam: 'Diep', ph_waarde: 7.2 });
         expect(res.status).toBe(200);
         expect(service.saveMeting).toHaveBeenCalled();
     });

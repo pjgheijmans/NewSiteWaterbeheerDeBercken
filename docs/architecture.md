@@ -3,13 +3,13 @@
 Overzicht en index van de architectuurdocumentatie. De detailhoofdstukken staan
 in [`docs/architecture/`](architecture/).
 
-| Deel | Inhoud |
-|------|--------|
+| Deel                                 | Inhoud                                                                                          |
+| ------------------------------------ | ----------------------------------------------------------------------------------------------- |
 | [Backend](architecture/backend.md)   | Gelaagde opbouw, request-lifecycle, klassendiagram, middleware, endpoints, dependency injection |
-| [Frontend](architecture/frontend.md) | ES6-class modules, klassendiagram en de `Application`-container |
-| [Flows](architecture/flows.md)       | Sequencediagrammen: opstarten, acties &amp; taken, autosave |
-| [Database](architecture/database.md) | ER-diagram en tabellen |
-| [Testing](architecture/testing.md)   | Teststrategie per laag |
+| [Frontend](architecture/frontend.md) | ES6-class modules, klassendiagram en de `Application`-container                                 |
+| [Flows](architecture/flows.md)       | Sequencediagrammen: opstarten, acties &amp; taken, autosave                                     |
+| [Database](architecture/database.md) | ER-diagram en tabellen                                                                          |
+| [Testing](architecture/testing.md)   | Teststrategie per laag                                                                          |
 
 ---
 

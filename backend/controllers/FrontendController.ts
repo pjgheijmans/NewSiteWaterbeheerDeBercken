@@ -3,14 +3,41 @@ import path from 'path';
 import { Router, Request, Response } from 'express';
 
 const ORDER = [
-    'head', 'login', 'dashboard-open', 'nav',
-    'dagstaat', 'limieten', 'actieteksten', 'gebruikers', 'rollen', 'database', 'configuratie', 'trendanalyse', 'footer',
+    'head',
+    'login',
+    'dashboard-open',
+    'nav',
+    'dagstaat',
+    'limieten',
+    'actieteksten',
+    'gebruikers',
+    'rollen',
+    'database',
+    'configuratie',
+    'trendanalyse',
+    'footer',
 ];
 
 const JS_FILES = [
-    'state', 'api', 'ui', 'limieten', 'actieteksten', 'dienst', 'auth',
-    'metingen', 'taken', 'verbruik', 'opslaan', 'logboek',
-    'gebruikers', 'rollen', 'database', 'configuratie', 'nav', 'trend', 'app',
+    'state',
+    'api',
+    'ui',
+    'limieten',
+    'actieteksten',
+    'dienst',
+    'auth',
+    'metingen',
+    'taken',
+    'verbruik',
+    'opslaan',
+    'logboek',
+    'gebruikers',
+    'rollen',
+    'database',
+    'configuratie',
+    'nav',
+    'trend',
+    'app',
 ];
 
 export class FrontendController {
@@ -29,9 +56,9 @@ export class FrontendController {
     }
 
     private servePage(_req: Request, res: Response): void {
-        const scripts = JS_FILES.map(f => `<script src="/js/${f}.js"></script>`).join('\n    ');
-        const body    = ORDER.map(n => this.readPartial(n)).join('\n');
-        const page    = `${body}\n    ${scripts}\n</body>\n</html>`;
+        const scripts = JS_FILES.map((f) => `<script src="/js/${f}.js"></script>`).join('\n    ');
+        const body = ORDER.map((n) => this.readPartial(n)).join('\n');
+        const page = `${body}\n    ${scripts}\n</body>\n</html>`;
         res.setHeader('Content-Type', 'text/html; charset=utf-8');
         res.send(page);
     }

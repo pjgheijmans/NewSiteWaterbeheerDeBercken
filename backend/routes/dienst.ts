@@ -6,9 +6,9 @@ import { DienstService } from '../services/DienstService';
 import { DienstController } from '../controllers/DienstController';
 
 export function maakDienstRouter(pool: Pool): Router {
-    const dienstRepo     = new DienstRepository(pool);
+    const dienstRepo = new DienstRepository(pool);
     const gebruikersRepo = new GebruikersRepository(pool);
-    const service        = new DienstService(dienstRepo, gebruikersRepo);
-    const controller     = new DienstController(service);
+    const service = new DienstService(dienstRepo, gebruikersRepo);
+    const controller = new DienstController(service);
     return controller.router;
 }

@@ -2,7 +2,11 @@ import { ActieTekstenService } from '../../../backend/services/ActieTekstenServi
 import { IActieTekstenRepository } from '../../../backend/repositories/IActieTekstenRepository';
 
 const repo: jest.Mocked<IActieTekstenRepository> = {
-    getAll: jest.fn(), getDefaults: jest.fn(), getSjablonen: jest.fn(), seedDefaults: jest.fn(), save: jest.fn(),
+    getAll: jest.fn(),
+    getDefaults: jest.fn(),
+    getSjablonen: jest.fn(),
+    seedDefaults: jest.fn(),
+    save: jest.fn(),
 };
 const service = new ActieTekstenService(repo);
 beforeEach(() => jest.clearAllMocks());

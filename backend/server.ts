@@ -1,7 +1,7 @@
 import pool from './repositories/db';
-import { LimietenRepository }   from './repositories/LimietenRepository';
+import { LimietenRepository } from './repositories/LimietenRepository';
 import { GebruikersRepository } from './repositories/GebruikersRepository';
-import { DatabaseRepository }   from './repositories/DatabaseRepository';
+import { DatabaseRepository } from './repositories/DatabaseRepository';
 import { maakApp } from './app';
 
 /**
@@ -12,11 +12,7 @@ const PORT = parseInt(process.env.PORT || '3000', 10);
 
 // DatabaseRepository voor runInitSql() bij het opstarten.
 const gebruikersRepo = new GebruikersRepository(pool);
-const databaseRepo = new DatabaseRepository(
-    pool,
-    new LimietenRepository(pool),
-    gebruikersRepo,
-);
+const databaseRepo = new DatabaseRepository(pool, new LimietenRepository(pool), gebruikersRepo);
 
 async function waitForDb(maxAttempts = 15, intervalMs = 2000): Promise<void> {
     for (let i = 0; i < maxAttempts; i++) {
@@ -25,7 +21,7 @@ async function waitForDb(maxAttempts = 15, intervalMs = 2000): Promise<void> {
             return;
         } catch {
             console.log(`Wachten op database (${i + 1}/${maxAttempts})...`);
-            await new Promise(r => setTimeout(r, intervalMs));
+            await new Promise((r) => setTimeout(r, intervalMs));
         }
     }
     throw new Error('Database niet bereikbaar na meerdere pogingen');
@@ -38,4 +34,7 @@ async function waitForDb(maxAttempts = 15, intervalMs = 2000): Promise<void> {
     await gebruikersRepo.hashBestaandeWachtwoorden();
     const app = maakApp(pool);
     app.listen(PORT, () => console.log(`Server gestart op http://localhost:${PORT}`));
-})().catch((err: Error) => { console.error('Startfout:', err); process.exit(1); });
+})().catch((err: Error) => {
+    console.error('Startfout:', err);
+    process.exit(1);
+});

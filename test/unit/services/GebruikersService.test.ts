@@ -2,14 +2,25 @@ import { GebruikersService } from '../../../backend/services/GebruikersService';
 import { IGebruikersRepository } from '../../../backend/repositories/IGebruikersRepository';
 
 const repo: jest.Mocked<IGebruikersRepository> = {
-    findByLogin: jest.fn(), getAll: jest.fn(), getMetRecht: jest.fn(), create: jest.fn(),
-    update: jest.fn(), remove: jest.fn(), seedDefaults: jest.fn(),
+    findByLogin: jest.fn(),
+    getAll: jest.fn(),
+    getMetRecht: jest.fn(),
+    create: jest.fn(),
+    update: jest.fn(),
+    remove: jest.fn(),
+    seedDefaults: jest.fn(),
     hashBestaandeWachtwoorden: jest.fn(),
 };
 const service = new GebruikersService(repo);
 beforeEach(() => jest.clearAllMocks());
 
-const input = { voornaam: 'Jan', achternaam: 'Jansen', inlognaam: 'jjansen', wachtwoord: 'x', rol_ids: [3] };
+const input = {
+    voornaam: 'Jan',
+    achternaam: 'Jansen',
+    inlognaam: 'jjansen',
+    wachtwoord: 'x',
+    rol_ids: [3],
+};
 
 describe('GebruikersService delegeert naar de repository', () => {
     it('getAll', async () => {

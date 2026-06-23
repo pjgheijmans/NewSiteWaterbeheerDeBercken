@@ -10,14 +10,28 @@ export class ActieTekstenController {
 
     constructor(private readonly service: IActieTekstenService) {
         this.router = Router();
-        this.router.get('/',         checkAuth, vereist('beheer', 'lezen'),     this.getAll.bind(this));
-        this.router.get('/defaults', checkAuth, vereist('beheer', 'lezen'),     this.getDefaults.bind(this));
-        this.router.post('/',        checkAuth, vereist('beheer', 'schrijven'), valideerBody(actieTekstSchema), this.save.bind(this));
+        this.router.get('/', checkAuth, vereist('beheer', 'lezen'), this.getAll.bind(this));
+        this.router.get(
+            '/defaults',
+            checkAuth,
+            vereist('beheer', 'lezen'),
+            this.getDefaults.bind(this),
+        );
+        this.router.post(
+            '/',
+            checkAuth,
+            vereist('beheer', 'schrijven'),
+            valideerBody(actieTekstSchema),
+            this.save.bind(this),
+        );
     }
 
     private async getAll(_req: Request, res: Response, next: NextFunction): Promise<void> {
-        try { res.json(await this.service.getAll()); }
-        catch (err) { next(err); }
+        try {
+            res.json(await this.service.getAll());
+        } catch (err) {
+            next(err);
+        }
     }
 
     private getDefaults(_req: Request, res: Response): void {
@@ -25,7 +39,11 @@ export class ActieTekstenController {
     }
 
     private async save(req: Request, res: Response, next: NextFunction): Promise<void> {
-        try { await this.service.save(req.body as ActieTekstInput); res.json({ status: 'success' }); }
-        catch (err) { next(err); }
+        try {
+            await this.service.save(req.body as ActieTekstInput);
+            res.json({ status: 'success' });
+        } catch (err) {
+            next(err);
+        }
     }
 }

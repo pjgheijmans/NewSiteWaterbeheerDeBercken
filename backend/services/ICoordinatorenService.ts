@@ -1,5 +1,14 @@
-import { CoordinatorBlok, CoordinatorMetingInput, Checklist, ChecklistInput,
-         Daggegevens, DaggegevensInput, LogboekEntry, LogboekOpslaanResultaat, Gebruiker } from '../types';
+import {
+    CoordinatorBlok,
+    CoordinatorMetingInput,
+    Checklist,
+    ChecklistInput,
+    Daggegevens,
+    DaggegevensInput,
+    LogboekEntry,
+    LogboekOpslaanResultaat,
+    Gebruiker,
+} from '../types';
 
 export interface ICoordinatorenService {
     getCoordinatoren(datum: string): Promise<CoordinatorBlok[]>;
@@ -10,6 +19,11 @@ export interface ICoordinatorenService {
     saveDaggegevens(datum: string, body: DaggegevensInput, gebruiker: Gebruiker): Promise<void>;
     deleteBlok(datum: string, tijdstip: string): Promise<void>;
     getLogboek(datum: string): Promise<LogboekEntry[]>;
-    saveLogboek(datum: string, tijdstip: string, tekst: string, gebruiker: Gebruiker): Promise<LogboekOpslaanResultaat>;
+    saveLogboek(
+        datum: string,
+        tijdstip: string,
+        tekst: string,
+        gebruiker: Gebruiker,
+    ): Promise<LogboekOpslaanResultaat>;
     deleteLogboek(id: string, gebruiker: Gebruiker): Promise<void>;
 }

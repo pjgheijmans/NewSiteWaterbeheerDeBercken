@@ -17,7 +17,7 @@ class ApiClient {
      */
     async call(url, options = {}) {
         const defaults = { credentials: 'include', headers: options.headers || {} };
-        const merged   = { ...defaults, ...options };
+        const merged = { ...defaults, ...options };
         if (options.headers) merged.headers = { ...defaults.headers, ...options.headers };
         const res = await fetch(url, merged);
         if (res.status === 401 && !url.includes('/api/login') && this.app?.auth?.sessieVerlopen) {

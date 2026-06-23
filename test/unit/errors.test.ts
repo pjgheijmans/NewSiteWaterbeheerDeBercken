@@ -18,6 +18,8 @@ describe('AppError', () => {
     });
 
     it('is vangbaar als Error', () => {
-        expect(() => { throw new AppError('Test', 422); }).toThrow('Test');
+        expect(() => {
+            throw new AppError('Test', 422);
+        }).toThrow('Test');
     });
 });

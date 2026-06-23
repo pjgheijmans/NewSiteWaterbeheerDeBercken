@@ -35,7 +35,7 @@ describe('LimietenModule._normaliseer', () => {
     it('mapt hernoemde parameters naar hun nieuwe namen en verwijdert de oude', () => {
         const g = mod._normaliseer({
             temperatuur: { min: 20, max: 30 },
-            flow:        { min: 3,  max: 4 },
+            flow: { min: 3, max: 4 },
             filter_druk: { min: 0.2, max: 1.5 },
         });
         expect(g.watertemperatuur).toEqual({ min: 20, max: 30 });
@@ -52,7 +52,7 @@ describe('LimietenModule._normaliseer', () => {
 
     it('overschrijft bestaande specifieke waarden niet', () => {
         const g = mod._normaliseer({
-            flow:      { min: 3, max: 4 },
+            flow: { min: 3, max: 4 },
             flow_diep: { min: 9, max: 9 },
         });
         expect(g.flow_diep).toEqual({ min: 9, max: 9 }); // blijft staan
@@ -65,15 +65,21 @@ describe('LimietenModule GROEPEN/LABELS consistentie', () => {
         const labels = LimietenModule.LABELS;
         const ontbrekend: string[] = [];
         LimietenModule.GROEPEN.forEach((groep: any) => {
-            groep.params.forEach((p: string) => { if (!labels[p]) ontbrekend.push(p); });
+            groep.params.forEach((p: string) => {
+                if (!labels[p]) ontbrekend.push(p);
+            });
         });
         expect(ontbrekend).toEqual([]);
     });
 
     it('bevat de nieuwe actie-drempels', () => {
         const alleParams = LimietenModule.GROEPEN.flatMap((g: any) => g.params);
-        expect(alleParams).toEqual(expect.arrayContaining([
-            'actie_gebonden_chloor_max', 'actie_chloor_peuterbad_min', 'actie_zwavelzuur_peuterbad_min',
-        ]));
+        expect(alleParams).toEqual(
+            expect.arrayContaining([
+                'actie_gebonden_chloor_max',
+                'actie_chloor_peuterbad_min',
+                'actie_zwavelzuur_peuterbad_min',
+            ]),
+        );
     });
 });

@@ -9,6 +9,7 @@ Full-stack pool management web app ("Digitale Dagstaat Zwembad") — TypeScript/
 ## Dev commands
 
 **Docker (preferred):**
+
 ```
 docker compose up -d              # start full stack (app on :3000, debugger on :9229)
 docker compose restart web        # apply backend changes without losing DB state
@@ -19,6 +20,7 @@ docker exec -it zwembad_db mysql -u root -pgeheim_wachtwoord zwembad_status  # D
 ```
 
 **Local (requires a running MySQL instance):**
+
 ```
 npm install
 npm run dev      # nodemon + ts-node (hot reload)
@@ -73,6 +75,7 @@ Feature branches → PR → merge to `master`. Branch names should describe the 
 **Stack**: Jest + ts-jest + Supertest — `npm run test:unit` (no database required).
 
 **Run:**
+
 ```
 npm run test           # all tests
 npm run test:unit      # unit tests only
@@ -80,6 +83,7 @@ npm run test:coverage  # with coverage report
 ```
 
 **Structure:**
+
 ```
 test/
   helpers/testApp.ts              # maakTestApp(), maakSessieMiddleware(), maakTestGebruiker()

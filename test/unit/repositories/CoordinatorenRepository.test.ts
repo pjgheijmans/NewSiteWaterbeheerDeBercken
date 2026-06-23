@@ -13,11 +13,13 @@ beforeEach(() => {
 
 describe('getCoordinatoren — groepering per tijdstip', () => {
     it('groepeert rijen met hetzelfde tijdstip in één blok', async () => {
-        pool.execute.mockResolvedValue(resultaat([
-            { bad_naam: 'Diep',   tijdstip: '10:00:00', auteur: 'A', ph_waarde: 7.2 },
-            { bad_naam: 'Ondiep', tijdstip: '10:00:00', auteur: 'A', ph_waarde: 7.1 },
-            { bad_naam: 'Diep',   tijdstip: '14:00:00', auteur: 'B', ph_waarde: 7.3 },
-        ]));
+        pool.execute.mockResolvedValue(
+            resultaat([
+                { bad_naam: 'Diep', tijdstip: '10:00:00', auteur: 'A', ph_waarde: 7.2 },
+                { bad_naam: 'Ondiep', tijdstip: '10:00:00', auteur: 'A', ph_waarde: 7.1 },
+                { bad_naam: 'Diep', tijdstip: '14:00:00', auteur: 'B', ph_waarde: 7.3 },
+            ]),
+        );
         const blokken = await repo.getCoordinatoren('2026-05-31');
         expect(blokken).toHaveLength(2);
         expect(blokken[0].tijdstip).toBe('10:00:00');
@@ -28,9 +30,9 @@ describe('getCoordinatoren — groepering per tijdstip', () => {
     });
 
     it('valt terug op lege auteur als die null is', async () => {
-        pool.execute.mockResolvedValue(resultaat([
-            { bad_naam: 'Diep', tijdstip: '10:00:00', auteur: null, ph_waarde: 7.2 },
-        ]));
+        pool.execute.mockResolvedValue(
+            resultaat([{ bad_naam: 'Diep', tijdstip: '10:00:00', auteur: null, ph_waarde: 7.2 }]),
+        );
         const blokken = await repo.getCoordinatoren('2026-05-31');
         expect(blokken[0].auteur).toBe('');
     });
@@ -61,16 +63,27 @@ describe('getChecklist', () => {
     it('geeft standaardwaarden (alles 0) terug zonder rij', async () => {
         pool.execute.mockResolvedValue(resultaat([]));
         expect(await repo.getChecklist('2026-05-31')).toEqual({
-            proef_waterspeel: 0, proef_spraypark: 0, proef_douches: 0, proef_glijbaan: 0, auteur: null,
+            proef_waterspeel: 0,
+            proef_spraypark: 0,
+            proef_douches: 0,
+            proef_glijbaan: 0,
+            auteur: null,
         });
     });
 });
 
 describe('saveChecklist', () => {
     it('zet booleans om naar 1/0', async () => {
-        await repo.saveChecklist('2026-05-31', {
-            proef_waterspeel: true, proef_spraypark: false, proef_douches: true, proef_glijbaan: false,
-        }, 'Co Ord');
+        await repo.saveChecklist(
+            '2026-05-31',
+            {
+                proef_waterspeel: true,
+                proef_spraypark: false,
+                proef_douches: true,
+                proef_glijbaan: false,
+            },
+            'Co Ord',
+        );
         const params = paramsVan(pool.execute);
         expect(params).toEqual(['2026-05-31', 1, 0, 1, 0, 'Co Ord']);
     });
@@ -80,7 +93,10 @@ describe('getDaggegevens', () => {
     it('geeft null-defaults terug zonder rij', async () => {
         pool.execute.mockResolvedValue(resultaat([]));
         expect(await repo.getDaggegevens('2026-05-31')).toEqual({
-            lucht_temperatuur: null, bezoekers_vandaag: null, bezoekers_totaal_spoelbeurt: null, auteur: null,
+            lucht_temperatuur: null,
+            bezoekers_vandaag: null,
+            bezoekers_totaal_spoelbeurt: null,
+            auteur: null,
         });
     });
 });

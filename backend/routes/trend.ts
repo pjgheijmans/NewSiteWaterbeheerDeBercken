@@ -5,8 +5,8 @@ import { TrendService } from '../services/TrendService';
 import { TrendController } from '../controllers/TrendController';
 
 export function maakTrendRouter(pool: Pool): Router {
-    const repo       = new TrendRepository(pool);
-    const service    = new TrendService(repo);
+    const repo = new TrendRepository(pool);
+    const service = new TrendService(repo);
     const controller = new TrendController(service);
     return controller.router;
 }

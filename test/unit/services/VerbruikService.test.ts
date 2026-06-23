@@ -3,15 +3,24 @@ import { IVerbruikRepository } from '../../../backend/repositories/IVerbruikRepo
 import { IActiesRepository } from '../../../backend/repositories/IActiesRepository';
 
 const verbruikRepo: jest.Mocked<IVerbruikRepository> = {
-    getVerbruik: jest.fn(), getVorigeVerbruik: jest.fn(), saveVerbruik: jest.fn(),
-    getVerwarming: jest.fn(), saveVerwarming: jest.fn(),
+    getVerbruik: jest.fn(),
+    getVorigeVerbruik: jest.fn(),
+    saveVerbruik: jest.fn(),
+    getVerwarming: jest.fn(),
+    saveVerwarming: jest.fn(),
 };
 const actiesRepo: jest.Mocked<IActiesRepository> = {
-    getActies: jest.fn(), resolve: jest.fn(), unresolve: jest.fn(),
-    resolveFilterSpoelen: jest.fn(), unresolveFilterSpoelen: jest.fn(),
-    genereer: jest.fn(), genereerVerbruik: jest.fn(),
-    genereerBezoekers: jest.fn(), genereerSpoelbeurt: jest.fn(),
-    genereerCoordinatoren: jest.fn(), getGebondenChloorMax: jest.fn(),
+    getActies: jest.fn(),
+    resolve: jest.fn(),
+    unresolve: jest.fn(),
+    resolveFilterSpoelen: jest.fn(),
+    unresolveFilterSpoelen: jest.fn(),
+    genereer: jest.fn(),
+    genereerVerbruik: jest.fn(),
+    genereerBezoekers: jest.fn(),
+    genereerSpoelbeurt: jest.fn(),
+    genereerCoordinatoren: jest.fn(),
+    getGebondenChloorMax: jest.fn(),
 };
 
 const service = new VerbruikService(verbruikRepo, actiesRepo);
@@ -32,7 +41,9 @@ describe('saveVerbruik', () => {
 
     it('genereert geen acties als het opslaan faalt (bv. conflict)', async () => {
         verbruikRepo.saveVerbruik.mockRejectedValue(new Error('DB fout'));
-        await expect(service.saveVerbruik({ datum: DATUM }, 'Test User')).rejects.toThrow('DB fout');
+        await expect(service.saveVerbruik({ datum: DATUM }, 'Test User')).rejects.toThrow(
+            'DB fout',
+        );
         expect(actiesRepo.genereerVerbruik).not.toHaveBeenCalled();
     });
 });
@@ -50,7 +61,11 @@ describe('pass-through methoden', () => {
         expect(verbruikRepo.getVerbruik).toHaveBeenCalledWith(DATUM);
         expect(verbruikRepo.getVorigeVerbruik).toHaveBeenCalledWith(DATUM);
         expect(verbruikRepo.getVerwarming).toHaveBeenCalledWith(DATUM);
-        expect(verbruikRepo.saveVerwarming).toHaveBeenCalledWith({ datum: DATUM }, 'Test User', null);
+        expect(verbruikRepo.saveVerwarming).toHaveBeenCalledWith(
+            { datum: DATUM },
+            'Test User',
+            null,
+        );
         // saveVerwarming triggert géén acties
         expect(actiesRepo.genereerVerbruik).not.toHaveBeenCalled();
     });

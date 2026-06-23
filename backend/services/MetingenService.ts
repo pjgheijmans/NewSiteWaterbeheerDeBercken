@@ -3,7 +3,15 @@ import { IActiesRepository } from '../repositories/IActiesRepository';
 import { IDaggegevensProvider } from '../repositories/IDaggegevensProvider';
 import { IMetingenService } from './IMetingenService';
 import { bepaalAuteur } from '../auteur';
-import { Meting, MetingInput, Actie, Gebruiker, BezoekersResultaat, GebondenChloorResultaat, OpslaanResultaat } from '../types';
+import {
+    Meting,
+    MetingInput,
+    Actie,
+    Gebruiker,
+    BezoekersResultaat,
+    GebondenChloorResultaat,
+    OpslaanResultaat,
+} from '../types';
 
 /**
  * Bedrijfslogica voor metingen en acties.
@@ -25,9 +33,10 @@ export class MetingenService implements IMetingenService {
         const verwachteVersie = body.versie ?? null;
         // Bij een versieconflict gooit de repo AppError(409); de actiegeneratie
         // hieronder wordt dan terecht overgeslagen (er is niets opgeslagen).
-        const resultaat = body.bad_naam === 'Peuterbad'
-            ? await this.metingenRepo.savePeuterbadMeting(bad_id, body, auteur, verwachteVersie)
-            : await this.metingenRepo.saveGrootBadMeting(bad_id, body, auteur, verwachteVersie);
+        const resultaat =
+            body.bad_naam === 'Peuterbad'
+                ? await this.metingenRepo.savePeuterbadMeting(bad_id, body, auteur, verwachteVersie)
+                : await this.metingenRepo.saveGrootBadMeting(bad_id, body, auteur, verwachteVersie);
         await this.actiesRepo.genereer(bad_id, body.datum, body.bad_naam, body);
         return resultaat;
     }
@@ -50,9 +59,9 @@ export class MetingenService implements IMetingenService {
         void this.actiesRepo.genereerBezoekers(datum, dag.bezoekers_vandaag ?? null);
         const totalen = await this.actiesRepo.genereerSpoelbeurt(datum);
         return {
-            bezoekers_vandaag:       dag.bezoekers_vandaag ?? null,
-            bezoekers_totaal_diep:   totalen.diep          ?? null,
-            bezoekers_totaal_ondiep: totalen.ondiep        ?? null,
+            bezoekers_vandaag: dag.bezoekers_vandaag ?? null,
+            bezoekers_totaal_diep: totalen.diep ?? null,
+            bezoekers_totaal_ondiep: totalen.ondiep ?? null,
         };
     }
 

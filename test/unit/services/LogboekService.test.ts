@@ -3,11 +3,21 @@ import { ILogboekRepository } from '../../../backend/repositories/ILogboekReposi
 import { Gebruiker } from '../../../backend/types';
 
 const repo: jest.Mocked<ILogboekRepository> = {
-    getByDatum: jest.fn(), save: jest.fn(), getDatumById: jest.fn(), deleteById: jest.fn(),
+    getByDatum: jest.fn(),
+    save: jest.fn(),
+    getDatumById: jest.fn(),
+    deleteById: jest.fn(),
 };
 const service = new LogboekService(repo);
 const DATUM = '2026-05-31';
-const gebruiker: Gebruiker = { id: 1, gebruikersnaam: 'tu', taak: 'waterbeheerder', voornaam: 'Test', achternaam: 'User', inlognaam: 'tu' };
+const gebruiker: Gebruiker = {
+    id: 1,
+    gebruikersnaam: 'tu',
+    taak: 'waterbeheerder',
+    voornaam: 'Test',
+    achternaam: 'User',
+    inlognaam: 'tu',
+};
 beforeEach(() => jest.clearAllMocks());
 
 describe('save', () => {
@@ -42,8 +52,9 @@ describe('deleteById (historie-bewaking)', () => {
 
     it('blokkeert het verwijderen van een datum in het verleden zonder historie-recht', async () => {
         repo.getDatumById.mockResolvedValue('2000-01-01');
-        await expect(service.deleteById('3', { ...gebruiker, magHistorie: false }))
-            .rejects.toMatchObject({ status: 403 });
+        await expect(
+            service.deleteById('3', { ...gebruiker, magHistorie: false }),
+        ).rejects.toMatchObject({ status: 403 });
         expect(repo.deleteById).not.toHaveBeenCalled();
     });
 

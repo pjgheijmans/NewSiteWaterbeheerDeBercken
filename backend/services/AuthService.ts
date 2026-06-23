@@ -23,15 +23,19 @@ export class AuthService implements IAuthService {
         if (!voornaam) return (g.inlognaam ?? '').trim() || g.gebruikersnaam;
 
         const alle = (await this.gebruikersRepo.getAll()) ?? [];
-        const zelfdeVoornaam = alle.filter(u => (u.voornaam ?? '').trim().toLowerCase() === voornaam.toLowerCase());
+        const zelfdeVoornaam = alle.filter(
+            (u) => (u.voornaam ?? '').trim().toLowerCase() === voornaam.toLowerCase(),
+        );
         if (zelfdeVoornaam.length <= 1) return voornaam;
 
         const achternaam = (g.achternaam ?? '').trim();
         if (!achternaam) return voornaam;
 
         const initiaal = achternaam.charAt(0).toUpperCase();
-        const initiaalBotst = zelfdeVoornaam.some(u =>
-            u.id !== g.id && (u.achternaam ?? '').trim().charAt(0).toUpperCase() === initiaal);
+        const initiaalBotst = zelfdeVoornaam.some(
+            (u) =>
+                u.id !== g.id && (u.achternaam ?? '').trim().charAt(0).toUpperCase() === initiaal,
+        );
         return initiaalBotst ? `${voornaam} ${achternaam}` : `${voornaam} ${initiaal}`;
     }
 }

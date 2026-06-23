@@ -12,7 +12,7 @@ export function valideerBody(schema: ZodType): RequestHandler {
         const resultaat = schema.safeParse(req.body);
         if (!resultaat.success) {
             const bericht = resultaat.error.issues
-                .map(i => {
+                .map((i) => {
                     const pad = i.path.join('.');
                     return pad ? `${pad}: ${i.message}` : i.message;
                 })

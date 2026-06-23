@@ -2,7 +2,8 @@ import { TrendService } from '../../../backend/services/TrendService';
 import { ITrendRepository } from '../../../backend/repositories/ITrendRepository';
 
 const repo: jest.Mocked<ITrendRepository> = {
-    getMetingenTrend: jest.fn(), getVerbruikTrend: jest.fn(),
+    getMetingenTrend: jest.fn(),
+    getVerbruikTrend: jest.fn(),
 };
 const service = new TrendService(repo);
 beforeEach(() => jest.clearAllMocks());

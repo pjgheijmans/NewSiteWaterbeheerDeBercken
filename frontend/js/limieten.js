@@ -14,15 +14,17 @@ class LimietenModule {
         if (!el) return;
         const states = {
             pending: ['Wijzigingen niet opgeslagen...', '#888'],
-            saving:  ['Bewaren…',                       '#fd7e14'],
-            saved:   ['✓ Opgeslagen',                   '#28a745'],
-            error:   ['✕ Fout bij opslaan',             '#dc3545'],
+            saving: ['Bewaren…', '#fd7e14'],
+            saved: ['✓ Opgeslagen', '#28a745'],
+            error: ['✕ Fout bij opslaan', '#dc3545'],
         };
         const [text, color] = states[status] || ['', '#333'];
         el.textContent = text;
         el.style.color = color;
         if (status === 'saved')
-            setTimeout(() => { if (el.textContent.startsWith('✓')) el.textContent = ''; }, 4000);
+            setTimeout(() => {
+                if (el.textContent.startsWith('✓')) el.textContent = '';
+            }, 4000);
     }
 
     // ── Auto-save ─────────────────────────────────────────────────────────
@@ -41,68 +43,110 @@ class LimietenModule {
 
     static get LABELS() {
         return {
-            ph_waarde:             'pH',
-            chloor_waarde:         'Chloor (mg/l)',
-            watertemperatuur:      'Watertemperatuur (°C)',
-            flow_diep:             'Flow Diep (m³/h)',
-            flow_ondiep:           'Flow Ondiep (m³/h)',
-            flow_peuterbad:        'Flow (m³/h)',
-            filter_druk_in:        'Filterdruk In (bar)',
-            filter_druk_uit:       'Filterdruk Uit (bar)',
+            ph_waarde: 'pH',
+            chloor_waarde: 'Chloor (mg/l)',
+            watertemperatuur: 'Watertemperatuur (°C)',
+            flow_diep: 'Flow Diep (m³/h)',
+            flow_ondiep: 'Flow Ondiep (m³/h)',
+            flow_peuterbad: 'Flow (m³/h)',
+            filter_druk_in: 'Filterdruk In (bar)',
+            filter_druk_uit: 'Filterdruk Uit (bar)',
             filter_druk_peuterbad: 'Filterdruk (bar)',
             kathodische_bescherming: 'Kathodische bescherming (V)',
-            elektriciteit_nacht:   'Elektriciteit Nacht (kWh)',
-            elektriciteit_dag:     'Elektriciteit Dag (kWh)',
-            gas:                   'Gas (m³)',
-            water_diep:            'Water Diep (m³)',
-            water_ondiep:          'Water Ondiep (m³)',
-            water_totaal:          'Water Totaal (m³)',
-            water_peuterbad:       'Water Peuterbad (m³)',
-            chloor_vrij:           'Chloor Vrij (mg/l)',
-            chloor_totaal:         'Chloor Totaal (mg/l)',
-            chloor_gebonden:       'Chloor Gebonden (mg/l)',
-            actie_druk_verschil:   'Filterdruk verschil max (bar)',
-            actie_druk_peuterbad:  'Filterdruk Peuterbad max (bar)',
-            actie_flow_diep:       'Flow Diep min (m³/h)',
-            actie_flow_ondiep:     'Flow Ondiep min (m³/h)',
-            actie_flow_peuterbad:  'Flow Peuterbad min (m³/h)',
-            actie_chloor_min:      'Chloorvoorraad min (L)',
-            actie_zwavelzuur_min:  'Zwavelzuurvoorraad min (L)',
-            actie_bezoekers_max:   'Bezoekers max (per dag)',
-            actie_spoelbeurt_max:  'Bezoekers max (sinds spoelbeurt)',
-            actie_spoelbeurt_dagen:'Dagen max (sinds spoelbeurt)',
-            actie_floculant_min:   'Floculant min',
-            actie_gebonden_chloor_max:      'Gebonden chloor max (mg/l)',
-            actie_chloor_peuterbad_min:     'Chloor Peuterbad min (vat)',
+            elektriciteit_nacht: 'Elektriciteit Nacht (kWh)',
+            elektriciteit_dag: 'Elektriciteit Dag (kWh)',
+            gas: 'Gas (m³)',
+            water_diep: 'Water Diep (m³)',
+            water_ondiep: 'Water Ondiep (m³)',
+            water_totaal: 'Water Totaal (m³)',
+            water_peuterbad: 'Water Peuterbad (m³)',
+            chloor_vrij: 'Chloor Vrij (mg/l)',
+            chloor_totaal: 'Chloor Totaal (mg/l)',
+            chloor_gebonden: 'Chloor Gebonden (mg/l)',
+            actie_druk_verschil: 'Filterdruk verschil max (bar)',
+            actie_druk_peuterbad: 'Filterdruk Peuterbad max (bar)',
+            actie_flow_diep: 'Flow Diep min (m³/h)',
+            actie_flow_ondiep: 'Flow Ondiep min (m³/h)',
+            actie_flow_peuterbad: 'Flow Peuterbad min (m³/h)',
+            actie_chloor_min: 'Chloorvoorraad min (L)',
+            actie_zwavelzuur_min: 'Zwavelzuurvoorraad min (L)',
+            actie_bezoekers_max: 'Bezoekers max (per dag)',
+            actie_spoelbeurt_max: 'Bezoekers max (sinds spoelbeurt)',
+            actie_spoelbeurt_dagen: 'Dagen max (sinds spoelbeurt)',
+            actie_floculant_min: 'Floculant min',
+            actie_gebonden_chloor_max: 'Gebonden chloor max (mg/l)',
+            actie_chloor_peuterbad_min: 'Chloor Peuterbad min (vat)',
             actie_zwavelzuur_peuterbad_min: 'Zwavelzuur Peuterbad min (vat)',
-            seizoen_begin:         'Begin seizoen',
-            seizoen_eind:          'Eind seizoen',
+            seizoen_begin: 'Begin seizoen',
+            seizoen_eind: 'Eind seizoen',
         };
     }
 
     static get GROEPEN() {
         return [
-            { titel: 'Diep / Ondiep – Meetwaarden',
-              info:  'pH, chloor en temperatuur gelden ook voor het Peuterbad.',
-              params: ['ph_waarde','chloor_waarde','watertemperatuur','flow_diep','flow_ondiep','filter_druk_in','filter_druk_uit','kathodische_bescherming'] },
-            { titel: 'Peuterbad – Meetwaarden',
-              params: ['flow_peuterbad','filter_druk_peuterbad'] },
-            { titel: 'Verbruik',
-              params: ['elektriciteit_nacht','elektriciteit_dag','gas','water_diep','water_ondiep','water_totaal','water_peuterbad'] },
-            { titel: 'Coördinatoren – Chloor',
-              info:  'Chloor Vrij geldt ook als grenswaarde voor de waterbeheer-meting (chloor_waarde).',
-              params: ['chloor_vrij','chloor_totaal','chloor_gebonden'] },
-            { titel: 'Actie-drempelwaarden',
-              info:  'Drempelwaarden die bepalen wanneer een actie wordt aangemaakt.',
-              enkelvoudig: true,
-              params: ['actie_druk_verschil','actie_druk_peuterbad','actie_flow_diep','actie_flow_ondiep',
-                       'actie_flow_peuterbad','actie_chloor_min','actie_zwavelzuur_min',
-                       'actie_bezoekers_max','actie_spoelbeurt_max','actie_spoelbeurt_dagen','actie_floculant_min',
-                       'actie_gebonden_chloor_max','actie_chloor_peuterbad_min','actie_zwavelzuur_peuterbad_min'] },
-            { titel: 'Seizoen',
-              info:  'Begin- en einddatum van het seizoen. Datumnavigatie kan niet buiten deze grenzen.',
-              enkelvoudig: true, datum: true,
-              params: ['seizoen_begin','seizoen_eind'] },
+            {
+                titel: 'Diep / Ondiep – Meetwaarden',
+                info: 'pH, chloor en temperatuur gelden ook voor het Peuterbad.',
+                params: [
+                    'ph_waarde',
+                    'chloor_waarde',
+                    'watertemperatuur',
+                    'flow_diep',
+                    'flow_ondiep',
+                    'filter_druk_in',
+                    'filter_druk_uit',
+                    'kathodische_bescherming',
+                ],
+            },
+            {
+                titel: 'Peuterbad – Meetwaarden',
+                params: ['flow_peuterbad', 'filter_druk_peuterbad'],
+            },
+            {
+                titel: 'Verbruik',
+                params: [
+                    'elektriciteit_nacht',
+                    'elektriciteit_dag',
+                    'gas',
+                    'water_diep',
+                    'water_ondiep',
+                    'water_totaal',
+                    'water_peuterbad',
+                ],
+            },
+            {
+                titel: 'Coördinatoren – Chloor',
+                info: 'Chloor Vrij geldt ook als grenswaarde voor de waterbeheer-meting (chloor_waarde).',
+                params: ['chloor_vrij', 'chloor_totaal', 'chloor_gebonden'],
+            },
+            {
+                titel: 'Actie-drempelwaarden',
+                info: 'Drempelwaarden die bepalen wanneer een actie wordt aangemaakt.',
+                enkelvoudig: true,
+                params: [
+                    'actie_druk_verschil',
+                    'actie_druk_peuterbad',
+                    'actie_flow_diep',
+                    'actie_flow_ondiep',
+                    'actie_flow_peuterbad',
+                    'actie_chloor_min',
+                    'actie_zwavelzuur_min',
+                    'actie_bezoekers_max',
+                    'actie_spoelbeurt_max',
+                    'actie_spoelbeurt_dagen',
+                    'actie_floculant_min',
+                    'actie_gebonden_chloor_max',
+                    'actie_chloor_peuterbad_min',
+                    'actie_zwavelzuur_peuterbad_min',
+                ],
+            },
+            {
+                titel: 'Seizoen',
+                info: 'Begin- en einddatum van het seizoen. Datumnavigatie kan niet buiten deze grenzen.',
+                enkelvoudig: true,
+                datum: true,
+                params: ['seizoen_begin', 'seizoen_eind'],
+            },
         ];
     }
 
@@ -125,29 +169,39 @@ class LimietenModule {
     /** Laad limieten van de server en render de beheertabel. */
     async laadLimietenVanServer() {
         try {
-            const res      = await this.app.api.call('/api/limieten');
+            const res = await this.app.api.call('/api/limieten');
             const limieten = await res.json();
             this.app.state.actieveLimieten = this._normaliseer(limieten);
             this._bouwBeheertabel();
             this.app.nav.pasSeizoenAan();
-        } catch (f) { console.error('Kon limieten niet laden', f); }
+        } catch (f) {
+            console.error('Kon limieten niet laden', f);
+        }
     }
 
     /** Vul standaardwaarden in via de backend en sla direct op. */
     async laadStandaardLimieten() {
-        if (!(await this.app.ui.bevestig({ tekst: 'Standaardwaarden invullen? Dit overschrijft de huidige waarden.', bevestig: 'Invullen' }))) return;
+        if (
+            !(await this.app.ui.bevestig({
+                tekst: 'Standaardwaarden invullen? Dit overschrijft de huidige waarden.',
+                bevestig: 'Invullen',
+            }))
+        )
+            return;
         try {
-            const res      = await this.app.api.call('/api/limieten/defaults');
+            const res = await this.app.api.call('/api/limieten/defaults');
             const defaults = await res.json();
-            document.querySelectorAll('[data-limiet-param]').forEach(rij => {
+            document.querySelectorAll('[data-limiet-param]').forEach((rij) => {
                 const param = rij.getAttribute('data-limiet-param');
-                const def   = defaults[param];
+                const def = defaults[param];
                 if (!def) return;
                 rij.querySelector('.l-min').value = def.min;
                 rij.querySelector('.l-max').value = def.max;
             });
             this.scheduleAutoSaveLimieten();
-        } catch { this.app.ui.toonBericht('Kon standaardwaarden niet ophalen.', 'fout'); }
+        } catch {
+            this.app.ui.toonBericht('Kon standaardwaarden niet ophalen.', 'fout');
+        }
     }
 
     // ── Renderen ──────────────────────────────────────────────────────────
@@ -155,22 +209,23 @@ class LimietenModule {
     _bouwBeheertabel() {
         const container = document.getElementById('limietenGroepen');
         container.innerHTML = '';
-        const labels   = LimietenModule.LABELS;
+        const labels = LimietenModule.LABELS;
         const limieten = this.app.state.actieveLimieten;
 
-        LimietenModule.GROEPEN.forEach(groep => {
+        LimietenModule.GROEPEN.forEach((groep) => {
             const box = document.createElement('div');
             box.className = 'categorie-box';
 
             let html = `<h3>${groep.titel}</h3>`;
-            if (groep.info) html += `<p style="font-size:13px;color:#666;margin:-8px 0 10px;">${groep.info}</p>`;
+            if (groep.info)
+                html += `<p style="font-size:13px;color:#666;margin:-8px 0 10px;">${groep.info}</p>`;
 
             if (groep.enkelvoudig) {
                 const isDatum = !!groep.datum;
                 html += `<table class="categorie-tabel">
                     <thead><tr><th>Parameter</th><th>${isDatum ? 'Datum' : 'Drempelwaarde'}</th></tr></thead><tbody>`;
-                groep.params.forEach(param => {
-                    const val   = limieten[param] || { min: 0, max: '' };
+                groep.params.forEach((param) => {
+                    const val = limieten[param] || { min: 0, max: '' };
                     const label = labels[param] || param;
                     const invoer = isDatum
                         ? `<input type="date" class="l-max l-datum" value="${this._yyyymmddNaarIso(val.max)}">`
@@ -182,8 +237,8 @@ class LimietenModule {
             } else {
                 html += `<table class="categorie-tabel">
                     <thead><tr><th>Parameter</th><th>Minimum</th><th>Maximum</th></tr></thead><tbody>`;
-                groep.params.forEach(param => {
-                    const val   = limieten[param] || { min: '', max: '' };
+                groep.params.forEach((param) => {
+                    const val = limieten[param] || { min: '', max: '' };
                     const label = labels[param] || param;
                     html += `<tr data-limiet-param="${param}">
                         <td><b>${label}</b></td>
@@ -195,7 +250,7 @@ class LimietenModule {
             box.innerHTML = html;
             container.appendChild(box);
 
-            box.querySelectorAll('input:not([type="hidden"])').forEach(input => {
+            box.querySelectorAll('input:not([type="hidden"])').forEach((input) => {
                 input.addEventListener('input', () => this.scheduleAutoSaveLimieten());
             });
         });
@@ -205,18 +260,20 @@ class LimietenModule {
 
     _normaliseer(limieten) {
         const g = { ...limieten };
-        if (!g.watertemperatuur && g.temperatuur)  g.watertemperatuur    = g.temperatuur;
+        if (!g.watertemperatuur && g.temperatuur) g.watertemperatuur = g.temperatuur;
         if (g.flow) {
-            if (!g.flow_diep)      g.flow_diep      = g.flow;
-            if (!g.flow_ondiep)    g.flow_ondiep    = g.flow;
+            if (!g.flow_diep) g.flow_diep = g.flow;
+            if (!g.flow_ondiep) g.flow_ondiep = g.flow;
             if (!g.flow_peuterbad) g.flow_peuterbad = g.flow;
         }
         if (g.filter_druk) {
-            if (!g.filter_druk_in)        g.filter_druk_in        = g.filter_druk;
-            if (!g.filter_druk_uit)       g.filter_druk_uit       = g.filter_druk;
+            if (!g.filter_druk_in) g.filter_druk_in = g.filter_druk;
+            if (!g.filter_druk_uit) g.filter_druk_uit = g.filter_druk;
             if (!g.filter_druk_peuterbad) g.filter_druk_peuterbad = g.filter_druk;
         }
-        delete g.temperatuur; delete g.flow; delete g.filter_druk;
+        delete g.temperatuur;
+        delete g.flow;
+        delete g.filter_druk;
         return g;
     }
 
@@ -227,15 +284,15 @@ class LimietenModule {
         const rijen = document.querySelectorAll('[data-limiet-param]');
         let teller = 0;
         for (const rij of rijen) {
-            const param  = rij.getAttribute('data-limiet-param');
-            const maxEl  = rij.querySelector('.l-max');
+            const param = rij.getAttribute('data-limiet-param');
+            const maxEl = rij.querySelector('.l-max');
             const maxVal = maxEl.classList.contains('l-datum')
                 ? this._isoNaarYyyymmdd(maxEl.value)
                 : parseFloat(maxEl.value);
             const payload = {
                 parameter_naam: param,
-                min_waarde:     parseFloat(rij.querySelector('.l-min').value),
-                max_waarde:     maxVal,
+                min_waarde: parseFloat(rij.querySelector('.l-min').value),
+                max_waarde: maxVal,
             };
             try {
                 const res = await this.app.api.call('/api/limieten', {
@@ -244,7 +301,9 @@ class LimietenModule {
                     body: JSON.stringify(payload),
                 });
                 if (res.ok) teller++;
-            } catch (f) { console.error(f); }
+            } catch (f) {
+                console.error(f);
+            }
         }
         if (teller === rijen.length) {
             this.setLimietenSaveStatus('saved');

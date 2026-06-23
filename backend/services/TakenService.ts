@@ -42,30 +42,37 @@ export class TakenService implements ITakenService {
             // sectie staan (afgestreept + reden) i.p.v. terug te zakken naar
             // Belangrijk/Overig — zo blijft zichtbaar dát en waaróm het moest.
             const filterAlarmen = badVanFilter
-                ? acties.filter(a => a.bad_naam === badVanFilter
-                                     && a.actie_type.startsWith('filter_spoelen'))
+                ? acties.filter(
+                      (a) =>
+                          a.bad_naam === badVanFilter && a.actie_type.startsWith('filter_spoelen'),
+                  )
                 : [];
-            const openAlarmen = filterAlarmen.filter(a => !a.opgelost);
-            const heeftAlarm  = filterAlarmen.length > 0;
+            const openAlarmen = filterAlarmen.filter((a) => !a.opgelost);
+            const heeftAlarm = filterAlarmen.length > 0;
             // Een (ooit) getriggerd alarm maakt de taak verplicht; anders bepaalt
             // de rondetaakprioriteit of het belangrijk (kritiek) of overig (normaal) is.
-            const categorie: TaakCategorie =
-                heeftAlarm ? 'verplicht' : (rt.prioriteit === 'kritiek' ? 'belangrijk' : 'overig');
+            const categorie: TaakCategorie = heeftAlarm
+                ? 'verplicht'
+                : rt.prioriteit === 'kritiek'
+                  ? 'belangrijk'
+                  : 'overig';
             // Toon bij voorkeur de reden van nog openstaande alarmen; is alles
             // afgehandeld, dan die van de opgeloste alarmen.
             const redenBron = openAlarmen.length ? openAlarmen : filterAlarmen;
             items.push({
-                sleutel:       rt.sleutel,
-                pagina:        rt.pagina,
-                gebied:        rt.gebied,
-                label:         rt.label,
-                prioriteit:    heeftAlarm ? 'alarm' : rt.prioriteit,
-                voltooid:      rt.voltooid,
-                voltooid_op:   rt.voltooid_op,
+                sleutel: rt.sleutel,
+                pagina: rt.pagina,
+                gebied: rt.gebied,
+                label: rt.label,
+                prioriteit: heeftAlarm ? 'alarm' : rt.prioriteit,
+                voltooid: rt.voltooid,
+                voltooid_op: rt.voltooid_op,
                 voltooid_door: rt.voltooid_door,
-                reden:         heeftAlarm ? redenBron.map(a => TakenService._reden(a.beschrijving)).join('; ') : null,
+                reden: heeftAlarm
+                    ? redenBron.map((a) => TakenService._reden(a.beschrijving)).join('; ')
+                    : null,
                 categorie,
-                bron:          { type: 'rondetaak', sleutel: rt.sleutel },
+                bron: { type: 'rondetaak', sleutel: rt.sleutel },
             });
         }
 
@@ -74,17 +81,17 @@ export class TakenService implements ITakenService {
             if (a.actie_type.startsWith('filter_spoelen')) continue; // al verwerkt via de filtertaak
             const algemeen = ALGEMEEN_TYPES.has(a.actie_type);
             items.push({
-                sleutel:       `actie:${a.id}`,
-                pagina:        algemeen ? 'grote-baden' : TakenService._paginaVoorBad(a.bad_naam),
-                gebied:        algemeen ? 'Algemeen' : a.bad_naam,
-                label:         TakenService._handeling(a.beschrijving),
-                prioriteit:    'alarm',
-                voltooid:      !!a.opgelost,
-                voltooid_op:   a.opgelost_op ? String(a.opgelost_op) : null,
+                sleutel: `actie:${a.id}`,
+                pagina: algemeen ? 'grote-baden' : TakenService._paginaVoorBad(a.bad_naam),
+                gebied: algemeen ? 'Algemeen' : a.bad_naam,
+                label: TakenService._handeling(a.beschrijving),
+                prioriteit: 'alarm',
+                voltooid: !!a.opgelost,
+                voltooid_op: a.opgelost_op ? String(a.opgelost_op) : null,
                 voltooid_door: a.opgelost_door ?? null,
-                reden:         TakenService._reden(a.beschrijving),
-                categorie:     'verplicht',
-                bron:          { type: 'actie', ids: [a.id] },
+                reden: TakenService._reden(a.beschrijving),
+                categorie: 'verplicht',
+                bron: { type: 'actie', ids: [a.id] },
             });
         }
 

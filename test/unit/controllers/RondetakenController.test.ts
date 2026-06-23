@@ -5,8 +5,8 @@ import { maakTestApp } from '../../helpers/testApp';
 
 const mockService: jest.Mocked<IRondetakenService> = {
     getRondetaken: jest.fn(),
-    voltooi:       jest.fn(),
-    heropen:       jest.fn(),
+    voltooi: jest.fn(),
+    heropen: jest.fn(),
 };
 
 function maakApp(taak: string | null = 'waterbeheerder') {
@@ -41,7 +41,10 @@ describe('POST /:sleutel/voltooi', () => {
         const res = await request(maakApp()).post('/regelaar_diep/voltooi').send({ datum: DATUM });
         expect(res.status).toBe(200);
         expect(mockService.voltooi).toHaveBeenCalledWith(
-            'regelaar_diep', DATUM, expect.objectContaining({ taak: 'waterbeheerder' }));
+            'regelaar_diep',
+            DATUM,
+            expect.objectContaining({ taak: 'waterbeheerder' }),
+        );
     });
 
     it('valideert de body (datum verplicht)', async () => {

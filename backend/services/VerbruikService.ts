@@ -1,7 +1,13 @@
 import { IVerbruikRepository } from '../repositories/IVerbruikRepository';
 import { IActiesRepository } from '../repositories/IActiesRepository';
 import { IVerbruikService } from './IVerbruikService';
-import { VerbruikData, VerbruikInput, VerwarmingData, VerwarmingInput, OpslaanResultaat } from '../types';
+import {
+    VerbruikData,
+    VerbruikInput,
+    VerwarmingData,
+    VerwarmingInput,
+    OpslaanResultaat,
+} from '../types';
 
 /**
  * Bedrijfslogica voor verbruik en verwarmingssysteem.

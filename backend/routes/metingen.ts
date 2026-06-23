@@ -13,9 +13,9 @@ import { MetingenController } from '../controllers/MetingenController';
  */
 export function maakMetingenRouter(pool: Pool): Router {
     const metingenRepo = new MetingenRepository(pool);
-    const actiesRepo   = new ActiesRepository(pool, new ActieTekstenRepository(pool));
-    const coordRepo    = new CoordinatorenRepository(pool);
-    const service      = new MetingenService(metingenRepo, actiesRepo, coordRepo);
-    const controller   = new MetingenController(service);
+    const actiesRepo = new ActiesRepository(pool, new ActieTekstenRepository(pool));
+    const coordRepo = new CoordinatorenRepository(pool);
+    const service = new MetingenService(metingenRepo, actiesRepo, coordRepo);
+    const controller = new MetingenController(service);
     return controller.router;
 }

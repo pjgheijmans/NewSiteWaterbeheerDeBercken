@@ -9,7 +9,12 @@ export {};
 const ConfiguratieModule = require('../../../frontend/js/configuratie.js');
 
 const ITEMS = [
-    { sleutel: 'sessie_timeout_minuten', waarde: '5', omschrijving: 'Sessie-time-out', type: 'getal' },
+    {
+        sleutel: 'sessie_timeout_minuten',
+        waarde: '5',
+        omschrijving: 'Sessie-time-out',
+        type: 'getal',
+    },
 ];
 
 function maakApp() {
@@ -69,9 +74,11 @@ describe('Configuratie — autosave (geen knop)', () => {
         await new ConfiguratieModule(app).laad();
         const input = document.getElementById('cfg-sessie_timeout_minuten') as HTMLInputElement;
 
-        input.value = '1'; input.dispatchEvent(new Event('input'));
+        input.value = '1';
+        input.dispatchEvent(new Event('input'));
         await jest.advanceTimersByTimeAsync(400);
-        input.value = '12'; input.dispatchEvent(new Event('input'));
+        input.value = '12';
+        input.dispatchEvent(new Event('input'));
         await jest.advanceTimersByTimeAsync(1200);
 
         const put = putCalls(app);
@@ -83,13 +90,20 @@ describe('Configuratie — autosave (geen knop)', () => {
         const app = maakApp();
         app.api.call = jest.fn(async (url: string, opts?: any) => {
             if (url === '/api/configuratie' && !opts) return { json: async () => ITEMS };
-            return { ok: false, json: async () => ({ error: 'Sessie-time-out moet 1–1440 zijn.' }) };
+            return {
+                ok: false,
+                json: async () => ({ error: 'Sessie-time-out moet 1–1440 zijn.' }),
+            };
         });
         await new ConfiguratieModule(app).laad();
         const input = document.getElementById('cfg-sessie_timeout_minuten') as HTMLInputElement;
-        input.value = '0'; input.dispatchEvent(new Event('input'));
+        input.value = '0';
+        input.dispatchEvent(new Event('input'));
         await jest.advanceTimersByTimeAsync(1200);
-        expect(app.ui.toonBericht).toHaveBeenCalledWith('Sessie-time-out moet 1–1440 zijn.', 'fout');
+        expect(app.ui.toonBericht).toHaveBeenCalledWith(
+            'Sessie-time-out moet 1–1440 zijn.',
+            'fout',
+        );
         expect(document.getElementById('configuratieSaveStatus')!.textContent).toContain('Fout');
     });
 });
