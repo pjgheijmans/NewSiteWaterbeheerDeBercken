@@ -50,6 +50,10 @@ final class AuthControllerTest extends AppTestCase
 
     public function testIngelogdFalseEnTrue(): void
     {
+        // ingelogd gebruikt de service niet, maar AuthController autowiret 'm wel —
+        // mock 'm zodat er geen echte DB-verbinding wordt opgebouwd.
+        $this->override(IAuthService::class, $this->createMock(IAuthService::class));
+
         $res = $this->dispatch('GET', '/api/ingelogd');
         self::assertSame(['ingelogd' => false], $this->json($res));
 
@@ -61,6 +65,8 @@ final class AuthControllerTest extends AppTestCase
 
     public function testLogout(): void
     {
+        $this->override(IAuthService::class, $this->createMock(IAuthService::class));
+
         $res = $this->dispatch('POST', '/api/logout');
 
         self::assertSame(200, $res->getStatusCode());
