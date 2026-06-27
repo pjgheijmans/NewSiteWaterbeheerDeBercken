@@ -15,7 +15,9 @@ class AppError extends \RuntimeException
         string $message,
         private int $status,
     ) {
-        parent::__construct($message);
+        // Geef de HTTP-status ook als exception-code mee (conventioneel, zoals
+        // Slim's HttpException), zodat getCode() en getStatus() consistent zijn.
+        parent::__construct($message, $status);
     }
 
     public function getStatus(): int
