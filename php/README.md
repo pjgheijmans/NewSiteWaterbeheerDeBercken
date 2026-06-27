@@ -1,5 +1,7 @@
 # PHP-backend (Slim 4 + PHP-DI)
 
+[![PHP tests](https://github.com/pjgheijmans/NewSiteWaterbeheerDeBercken/actions/workflows/php-tests.yml/badge.svg)](https://github.com/pjgheijmans/NewSiteWaterbeheerDeBercken/actions/workflows/php-tests.yml)
+
 Port van de Node/Express-backend naar PHP, zodat de app op gedeelde Apache+MySQL-hosting
 (PHP 8.0, `pdo_mysql`) kan draaien. De **frontend (`../frontend/`) en het databaseschema
 (`../init.sql`) blijven ongewijzigd** — alleen de backend wordt herschreven. De HTTP-API en
