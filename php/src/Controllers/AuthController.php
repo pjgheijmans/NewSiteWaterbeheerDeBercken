@@ -42,11 +42,15 @@ class AuthController
     public function logout(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         $_SESSION = [];
-        if (ini_get('session.use_cookies')) {
-            $p = session_get_cookie_params();
-            setcookie(session_name(), '', time() - 42000, $p['path'], $p['domain'], $p['secure'], $p['httponly']);
+        // Alleen opruimen als er een actieve sessie is (in de app start SessionMiddleware
+        // die voor /api; zo blijft logout ook zonder actieve sessie veilig — bv. in tests).
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            if (ini_get('session.use_cookies')) {
+                $p = session_get_cookie_params();
+                setcookie(session_name(), '', time() - 42000, $p['path'], $p['domain'], $p['secure'], $p['httponly']);
+            }
+            session_destroy();
         }
-        session_destroy();
 
         return Json::write($response, ['status' => 'success']);
     }

@@ -1,0 +1,31 @@
+# Test de PHP-port naast de bestaande db-service.
+#
+#   docker compose -f docker-compose.yml -f docker-compose.php.yml up -d db php
+#
+# Start BEWUST alleen `db` + `php` (niet de Node-`web`): de Node-backend hasht bij
+# het opstarten de seed-wachtwoorden naar scrypt, en dat formaat kan de PHP-port
+# (bcrypt/plaintext) niet verifiëren. Houd de stacks dus gescheiden per database.
+#
+# De `db`-service komt uit docker-compose.yml; hier voegen we alleen `php` toe.
+services:
+    php:
+        build:
+            context: ./php
+            dockerfile: Dockerfile
+        container_name: zwembad_php
+        restart: unless-stopped
+        ports:
+            - '8080:80'
+        environment:
+            - DB_HOST=db
+            - DB_USER=root
+            - DB_PASSWORD=geheim_wachtwoord
+            - DB_NAME=zwembad_status
+        volumes:
+            # Hele repo gemount: php/ (app + vendor), frontend/ (assets/partials) en init.sql.
+            # Codewijzigingen zijn meteen actief. Ontbreekt vendor/, dan installeert de
+            # container het bij het opstarten (zie de CMD in php/Dockerfile).
+            - .:/var/www/html
+        depends_on:
+            db:
+                condition: service_healthy

@@ -19,6 +19,7 @@ use Zwembad\Controllers\RondetakenController;
 use Zwembad\Controllers\TakenController;
 use Zwembad\Controllers\TrendController;
 use Zwembad\Controllers\VerbruikController;
+use Zwembad\Controllers\VersieController;
 use Zwembad\Middleware\AuthMiddleware;
 use Zwembad\Middleware\RechtenMiddleware;
 
@@ -34,10 +35,11 @@ use Zwembad\Middleware\RechtenMiddleware;
  * als eerste draait.
  */
 return function (App $app): void {
-    // ── Auth (geen middleware) ────────────────────────────────────────────────
+    // ── Auth + versie (publiek, geen middleware) ──────────────────────────────
     $app->post('/api/login', [AuthController::class, 'login']);
     $app->post('/api/logout', [AuthController::class, 'logout']);
     $app->get('/api/ingelogd', [AuthController::class, 'ingelogd']);
+    $app->get('/api/versie', [VersieController::class, 'get']);
 
     // Herbruikbare recht-middleware (beheer-domein).
     $rf = $app->getResponseFactory();
@@ -64,9 +66,12 @@ return function (App $app): void {
     $app->delete('/api/rollen/{id}', [RollenController::class, 'remove'])
         ->add($beheerSchrijven)->add(AuthMiddleware::class);
 
-    // ── Limieten (beheer-domein) ──────────────────────────────────────────────
+    // ── Limieten ──────────────────────────────────────────────────────────────
+    // De actieve limieten zijn leesbaar voor élke ingelogde gebruiker: de dagstaat
+    // (waterbeheer/coördinator) gebruikt ze voor de grenswaarde-markering. Beheren
+    // (defaults ophalen + opslaan) blijft voorbehouden aan het beheer-domein.
     $app->get('/api/limieten', [LimietenController::class, 'getAll'])
-        ->add($beheerLezen)->add(AuthMiddleware::class);
+        ->add(AuthMiddleware::class);
     $app->get('/api/limieten/defaults', [LimietenController::class, 'getDefaults'])
         ->add($beheerLezen)->add(AuthMiddleware::class);
     $app->post('/api/limieten', [LimietenController::class, 'save'])

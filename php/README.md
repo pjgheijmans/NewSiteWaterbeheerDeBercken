@@ -119,13 +119,15 @@ curl -i -b cookies.txt localhost:8080/api/ingelogd
 
 ## Deployen naar de gedeelde host
 
-1. Draai **`../init.sql` één keer** op de MySQL van de host (schema + seed-accounts).
-2. `composer install` **lokaal**, en upload de hele `php/`-map **inclusief `vendor/`**
-   (de host heeft geen Composer nodig).
-3. Upload ook **`frontend/`** en **`init.sql`**. De app zoekt ze in de project-root
-   (`frontend/` en `init.sql` naast `php/`) óf binnen `php/` zelf — kopieer ze dus naast
-   `php/`, of in `php/`, afhankelijk van je maplayout. (`init.sql` is alleen nodig voor de
-   `/api/database/initialiseer`-knop; het schema zelf zet je in stap 1.)
+1. `composer install` **lokaal**, en upload de hele `php/`-map **inclusief `vendor/`**
+   (de host heeft geen Composer nodig). Let op: `composer.json` pint het platform op PHP
+   8.0, zodat de dependencies 8.0-compatibel zijn.
+2. Upload ook **`frontend/`** en **`init.sql`** (in de project-root naast `php/`, óf binnen
+   `php/` — de app zoekt op beide plekken).
+3. Provisioneer het schema **één keer** met `php bin/init-db.php` (zet eerst de DB-env-vars).
+   Dit draait `init.sql` met per-statement try/catch en seedt de standaardaccounts.
+   ⚠️ `mysql < init.sql` werkt NIET: `init.sql` bevat bewuste dubbele `ALTER TABLE … ADD
+   COLUMN`-migraties waarop de mysql-client afbreekt (zie de gotcha in `../CLAUDE.md`).
 4. Zet de DB-gegevens via env-vars óf vul ze rechtstreeks in `config/settings.php`.
 5. **Docroot**: laat de webroot naar `php/public/` wijzen. Kan dat niet, zet dan in de
    webroot een `.htaccess` die alles naar `public/index.php` stuurt en directe toegang
