@@ -1,0 +1,4 @@
+# Stuur elk verzoek dat geen bestaand bestand is naar de Slim front controller.
+RewriteEngine On
+RewriteCond %{REQUEST_FILENAME} !-f
+RewriteRule ^ index.php [QSA,L]

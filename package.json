@@ -1,17 +1,13 @@
 {
     "name": "zwembad-status",
     "version": "1.0.0",
-    "main": "dist/backend/server.js",
+    "description": "Frontend-tests (jsdom) + lint/format. De backend is gepoort naar PHP (zie backend/).",
     "scripts": {
-        "build": "tsc",
-        "start": "node dist/backend/server.js",
-        "dev": "nodemon",
         "test": "jest",
         "test:unit": "jest test/unit",
-        "test:integration": "jest -c jest.integration.config.js",
         "test:coverage": "jest --coverage",
-        "lint": "eslint backend frontend test",
-        "lint:fix": "eslint backend frontend test --fix",
+        "lint": "eslint frontend test",
+        "lint:fix": "eslint frontend test --fix",
         "format": "prettier --write .",
         "format:check": "prettier --check ."
     },

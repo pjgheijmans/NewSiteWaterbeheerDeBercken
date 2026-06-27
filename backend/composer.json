@@ -1,0 +1,35 @@
+{
+    "name": "zwembad/dagstaat-php",
+    "description": "PHP-backend (Slim 4 + PHP-DI) voor de Digitale Dagstaat Zwembad — port van de Node/Express-backend.",
+    "type": "project",
+    "require": {
+        "php": ">=8.0",
+        "ext-pdo": "*",
+        "slim/slim": "^4.12",
+        "slim/psr7": "^1.6",
+        "php-di/php-di": "^7.0"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^9.6"
+    },
+    "autoload": {
+        "psr-4": {
+            "Zwembad\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Zwembad\\Tests\\": "test/"
+        }
+    },
+    "scripts": {
+        "test": "phpunit",
+        "test:integration": "phpunit -c phpunit.integration.xml"
+    },
+    "config": {
+        "platform": {
+            "php": "8.0.30"
+        },
+        "sort-packages": true
+    }
+}
