@@ -5,19 +5,19 @@ on:
   push:
     branches: [master, 'feat/**']
     paths:
-      - 'php/**'
+      - 'backend/**'
       - 'init.sql'
       - '.github/workflows/php-tests.yml'
   pull_request:
     paths:
-      - 'php/**'
+      - 'backend/**'
       - 'init.sql'
       - '.github/workflows/php-tests.yml'
   workflow_dispatch:
 
 defaults:
   run:
-    working-directory: php
+    working-directory: backend
 
 jobs:
   unit:
@@ -38,7 +38,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.composer/cache
-          key: composer-${{ hashFiles('php/composer.lock') }}
+          key: composer-${{ hashFiles('backend/composer.lock') }}
           restore-keys: composer-
 
       - name: Dependencies installeren
@@ -79,7 +79,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ~/.composer/cache
-          key: composer-${{ hashFiles('php/composer.lock') }}
+          key: composer-${{ hashFiles('backend/composer.lock') }}
           restore-keys: composer-
 
       - name: Dependencies installeren

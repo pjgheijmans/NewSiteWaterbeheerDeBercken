@@ -49,7 +49,7 @@ Domeinen:
 - **database** — `POST /api/database/truncate/{tabel}`, `GET /api/database/export/{tabel}`,
   `POST /api/database/import/{tabel}`, `POST /api/database/verwijder-alles`,
   `POST /api/database/initialiseer` (beheer-domein; tabelnaam-allowlists, semicolon-CSV,
-  `runInitSql` zoekt `init.sql` in de project-root of in `php/`)
+  `runInitSql` zoekt `init.sql` in de project-root of in `backend/`)
 - **frontend** — `GET /` stelt de pagina samen uit `../frontend/partials/*.html` (zelfde
   volgorde als Node) en serveert `/js`, `/css`, `/images` uit de frontend-map
   (`FrontendController`; publiek, geen auth)
@@ -88,11 +88,21 @@ De RBAC-keten staat op de routes: `AuthMiddleware` (401 als niet ingelogd) +
 
 ## Lokaal draaien (testen)
 
-Vereist PHP 8.0+ met `pdo_mysql`, Composer en een bereikbare MySQL met het schema uit
-`../init.sql` ingeladen.
+**Docker (aanbevolen):** vanuit de project-root draait de hele stack (Apache + mod_php op
+PHP 8.0 + MySQL 8) met één commando. De web-container installeert `vendor/` als die
+ontbreekt en provisioneert het schema bij start (zie `Dockerfile`).
 
 ```bash
-cd php
+docker compose up -d              # app op http://localhost:8080, DB op :3306
+docker logs -f zwembad_web        # logs volgen
+docker compose down               # stoppen (down -v wist ook de DB)
+```
+
+**Zonder Docker:** vereist PHP 8.0+ met `pdo_mysql`, Composer en een bereikbare MySQL met
+het schema uit `../init.sql` ingeladen.
+
+```bash
+cd backend
 composer install
 # DB-gegevens via omgevingsvariabelen (of pas config/settings.php aan):
 DB_HOST=127.0.0.1 DB_USER=root DB_PASSWORD=geheim_wachtwoord DB_NAME=zwembad_status \
@@ -116,22 +126,37 @@ curl -i -b cookies.txt localhost:8080/api/ingelogd
 > eenmalig de docroot in: `cp -r ../frontend/js ../frontend/css ../frontend/images public/`
 > (de built-in server serveert ze dan rechtstreeks; op Apache laat je dit weg).
 
-> Tip: laat de Node-backend ernaast draaien (`docker compose up`) en vergelijk de
-> JSON-antwoorden per endpoint — dat is je referentie.
+## Tests
+
+PHPUnit 9.6 (laatste reeks die PHP 8.0 ondersteunt). De unit-suite draait zonder DB; de
+integratie-suite heeft een MySQL nodig.
+
+```bash
+# In de draaiende container:
+docker compose exec web composer test              # unit (geen DB)
+docker compose exec web composer test:integration  # integratie (echte DB)
+
+# Of lokaal vanuit backend/ (met DB-env-vars voor de integratietests):
+cd backend && composer test
+```
+
+Dezelfde twee suites draaien in CI op PHP 8.0 (zie `.github/workflows/php-tests.yml` en de
+badge bovenaan). De frontend-tests (jsdom) blijven in de project-root onder Node
+(`npm test`).
 
 ## Deployen naar de gedeelde host
 
-1. `composer install` **lokaal**, en upload de hele `php/`-map **inclusief `vendor/`**
+1. `composer install` **lokaal**, en upload de hele `backend/`-map **inclusief `vendor/`**
    (de host heeft geen Composer nodig). Let op: `composer.json` pint het platform op PHP
    8.0, zodat de dependencies 8.0-compatibel zijn.
-2. Upload ook **`frontend/`** en **`init.sql`** (in de project-root naast `php/`, óf binnen
-   `php/` — de app zoekt op beide plekken).
+2. Upload ook **`frontend/`** en **`init.sql`** (in de project-root naast `backend/`, óf binnen
+   `backend/` — de app zoekt op beide plekken).
 3. Provisioneer het schema **één keer** met `php bin/init-db.php` (zet eerst de DB-env-vars).
    Dit draait `init.sql` met per-statement try/catch en seedt de standaardaccounts.
    ⚠️ `mysql < init.sql` werkt NIET: `init.sql` bevat bewuste dubbele `ALTER TABLE … ADD
    COLUMN`-migraties waarop de mysql-client afbreekt (zie de gotcha in `../CLAUDE.md`).
 4. Zet de DB-gegevens via env-vars óf vul ze rechtstreeks in `config/settings.php`.
-5. **Docroot**: laat de webroot naar `php/public/` wijzen. Kan dat niet, zet dan in de
+5. **Docroot**: laat de webroot naar `backend/public/` wijzen. Kan dat niet, zet dan in de
    webroot een `.htaccess` die alles naar `public/index.php` stuurt en directe toegang
    tot `src/`, `config/`, `vendor/` (en bij voorkeur `frontend/partials/`) weigert.
 6. Zet `'secure' => true` aan in `SessionMiddleware` (HTTPS).
