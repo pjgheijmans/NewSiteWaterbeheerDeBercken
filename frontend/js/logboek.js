@@ -129,6 +129,9 @@ class LogboekModule {
      * @param {string} [apiBase='/api/logboek']
      */
     async voegLogboekBlokToe(containerId = 'logboek-blokken', apiBase = '/api/logboek') {
+        // Geen schrijfrecht (of historie zonder recht)? Niets toevoegen — de knop
+        // is in alleen-lezen modus ook visueel uitgeschakeld (.schrijf-actie).
+        if (!this.app.auth.magNuOpslaan()) return;
         const now = new Date();
         const pad = (n) => String(n).padStart(2, '0');
         const tijdstip = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())} ${pad(now.getHours())}:${pad(now.getMinutes())}:${pad(now.getSeconds())}`;
@@ -181,4 +184,10 @@ class LogboekModule {
         el.remove();
         this._setSaveStatus('saved');
     }
+}
+
+// Node/Jest: exporteer de klasse zodat hij in jsdom-tests gebruikt kan worden.
+// In de browser bestaat `module` niet en wordt dit genegeerd.
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = LogboekModule;
 }
