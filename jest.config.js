@@ -3,11 +3,11 @@ module.exports = {
     preset: 'ts-jest',
     testEnvironment: 'node',
     roots: ['<rootDir>/test'],
-    // Integratietests (echte DB) draaien via jest.integration.config.js, niet hier.
-    testPathIgnorePatterns: ['/node_modules/', '<rootDir>/test/integration/'],
+    testPathIgnorePatterns: ['/node_modules/'],
     transform: {
         '^.+\\.ts$': ['ts-jest', { tsconfig: 'tsconfig.test.json' }],
     },
-    collectCoverageFrom: ['backend/**/*.ts', '!backend/**/*.d.ts'],
+    // De backend is naar PHP gemigreerd; deze Jest-suite test nu de frontend (jsdom).
+    collectCoverageFrom: ['frontend/js/**/*.js'],
     coverageDirectory: 'coverage',
 };
