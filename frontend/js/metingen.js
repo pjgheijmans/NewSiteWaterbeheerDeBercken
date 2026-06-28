@@ -622,7 +622,7 @@ class MetingenModule {
             const btnRij = document.createElement('div');
             btnRij.className = 'actie-container';
             btnRij.style.cssText = 'justify-content:flex-start;margin-top:12px;';
-            btnRij.innerHTML = `<button class="btn-centraal-opslaan" onclick="voegNieuwBlokToe()">+ Nieuw blok toevoegen</button>`;
+            btnRij.innerHTML = `<button class="btn-centraal-opslaan schrijf-actie" onclick="voegNieuwBlokToe()">+ Nieuw blok toevoegen</button>`;
             blokkContainer.appendChild(btnRij);
             this.wisselCoordSubtab(huidigeCoordSubtab);
             return;
@@ -963,6 +963,9 @@ class MetingenModule {
     }
 
     voegNieuwBlokToe() {
+        // Geen schrijfrecht (of historie zonder recht)? Niets toevoegen — de knop
+        // is in alleen-lezen modus ook visueel uitgeschakeld (.schrijf-actie).
+        if (!this.app.auth.magNuOpslaan()) return;
         const now = new Date();
         const tijdstip = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}:00`;
         const blokkContainer = document.getElementById('coordinatoren-blokken-content');

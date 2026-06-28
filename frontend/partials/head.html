@@ -15,6 +15,12 @@
         .alleen-lezen input:not(#centraleDatum):not(#trend-van):not(#trend-tot),
         .alleen-lezen select,
         .alleen-lezen textarea { pointer-events: none; opacity: 0.55; }
+        /* Schrijf-actieknoppen (blok/tekstblok toevoegen of verwijderen) ook
+           uitschakelen in alleen-lezen modus. Navigatie- en tabknoppen houden
+           geen .schrijf-actie en blijven dus bruikbaar. */
+        .alleen-lezen .schrijf-actie,
+        .alleen-lezen .blok-verwijder-btn,
+        .alleen-lezen .logboek-verwijder-btn { pointer-events: none; opacity: 0.55; }
         .leesmodus-banner { background:#fff3cd; color:#856404; border:1px solid #ffeeba;
             padding:8px 14px; border-radius:6px; margin:10px 0; font-size:14px; }
         /* Gebruikersbeheer: vaste kolommen zodat de naam/wachtwoord-velden smaller
