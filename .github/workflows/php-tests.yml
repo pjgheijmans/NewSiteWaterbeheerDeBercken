@@ -2,95 +2,95 @@ name: PHP tests
 
 # Draait de PHP-port-tests op PHP 8.0 (= de productie-hostversie).
 on:
-  push:
-    branches: [master, 'feat/**']
-    paths:
-      - 'backend/**'
-      - 'init.sql'
-      - '.github/workflows/php-tests.yml'
-  pull_request:
-    paths:
-      - 'backend/**'
-      - 'init.sql'
-      - '.github/workflows/php-tests.yml'
-  workflow_dispatch:
+    push:
+        branches: [master, 'feat/**']
+        paths:
+            - 'backend/**'
+            - 'init.sql'
+            - '.github/workflows/php-tests.yml'
+    pull_request:
+        paths:
+            - 'backend/**'
+            - 'init.sql'
+            - '.github/workflows/php-tests.yml'
+    workflow_dispatch:
 
 defaults:
-  run:
-    working-directory: backend
+    run:
+        working-directory: backend
 
 jobs:
-  unit:
-    name: Unit (PHP 8.0)
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
+    unit:
+        name: Unit (PHP 8.0)
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v4
 
-      - name: PHP 8.0 instellen
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.0'
-          extensions: pdo_mysql, mbstring
-          coverage: none
-          tools: composer:v2
+            - name: PHP 8.0 instellen
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.0'
+                  extensions: pdo_mysql, mbstring
+                  coverage: none
+                  tools: composer:v2
 
-      - name: Composer-cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.composer/cache
-          key: composer-${{ hashFiles('backend/composer.lock') }}
-          restore-keys: composer-
+            - name: Composer-cache
+              uses: actions/cache@v4
+              with:
+                  path: ~/.composer/cache
+                  key: composer-${{ hashFiles('backend/composer.lock') }}
+                  restore-keys: composer-
 
-      - name: Dependencies installeren
-        run: composer install --no-interaction --no-progress --prefer-dist
+            - name: Dependencies installeren
+              run: composer install --no-interaction --no-progress --prefer-dist
 
-      - name: Unit-tests
-        run: composer test
+            - name: Unit-tests
+              run: composer test
 
-  integration:
-    name: Integratie (PHP 8.0 + MySQL 8)
-    runs-on: ubuntu-latest
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: geheim_wachtwoord
-          MYSQL_DATABASE: zwembad_status
-        ports:
-          - 3306:3306
-        # De runner wacht tot deze healthcheck slaagt voordat de stappen draaien.
-        options: >-
-          --health-cmd="mysqladmin ping -h 127.0.0.1 -u root -pgeheim_wachtwoord"
-          --health-interval=5s
-          --health-timeout=5s
-          --health-retries=20
-    steps:
-      - uses: actions/checkout@v4
+    integration:
+        name: Integratie (PHP 8.0 + MySQL 8)
+        runs-on: ubuntu-latest
+        services:
+            mysql:
+                image: mysql:8.0
+                env:
+                    MYSQL_ROOT_PASSWORD: geheim_wachtwoord
+                    MYSQL_DATABASE: zwembad_status
+                ports:
+                    - 3306:3306
+                # De runner wacht tot deze healthcheck slaagt voordat de stappen draaien.
+                options: >-
+                    --health-cmd="mysqladmin ping -h 127.0.0.1 -u root -pgeheim_wachtwoord"
+                    --health-interval=5s
+                    --health-timeout=5s
+                    --health-retries=20
+        steps:
+            - uses: actions/checkout@v4
 
-      - name: PHP 8.0 instellen
-        uses: shivammathur/setup-php@v2
-        with:
-          php-version: '8.0'
-          extensions: pdo_mysql, mbstring
-          coverage: none
-          tools: composer:v2
+            - name: PHP 8.0 instellen
+              uses: shivammathur/setup-php@v2
+              with:
+                  php-version: '8.0'
+                  extensions: pdo_mysql, mbstring
+                  coverage: none
+                  tools: composer:v2
 
-      - name: Composer-cache
-        uses: actions/cache@v4
-        with:
-          path: ~/.composer/cache
-          key: composer-${{ hashFiles('backend/composer.lock') }}
-          restore-keys: composer-
+            - name: Composer-cache
+              uses: actions/cache@v4
+              with:
+                  path: ~/.composer/cache
+                  key: composer-${{ hashFiles('backend/composer.lock') }}
+                  restore-keys: composer-
 
-      - name: Dependencies installeren
-        run: composer install --no-interaction --no-progress --prefer-dist
+            - name: Dependencies installeren
+              run: composer install --no-interaction --no-progress --prefer-dist
 
-      # Het schema wordt door de testsuite zelf gezet (IntegrationTestCase →
-      # runInitSql leest ../init.sql). Hier alleen de DB-gegevens meegeven.
-      - name: Integratietests
-        env:
-          DB_HOST: 127.0.0.1
-          DB_USER: root
-          DB_PASSWORD: geheim_wachtwoord
-          DB_NAME: zwembad_status
-        run: composer test:integration
+            # Het schema wordt door de testsuite zelf gezet (IntegrationTestCase →
+            # runInitSql leest ../init.sql). Hier alleen de DB-gegevens meegeven.
+            - name: Integratietests
+              env:
+                  DB_HOST: 127.0.0.1
+                  DB_USER: root
+                  DB_PASSWORD: geheim_wachtwoord
+                  DB_NAME: zwembad_status
+              run: composer test:integration

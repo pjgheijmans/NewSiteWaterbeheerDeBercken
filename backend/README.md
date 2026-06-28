@@ -37,7 +37,7 @@ Domeinen:
   `IDaggegevensProvider`); logboektekst is hard gecapt op 500 tekens.
 
 - **rondetaken** — `GET /api/rondetaken`, `POST /api/rondetaken/{sleutel}/voltooi|heropen`
-  (waterbeheer-domein; filter-rondetaken synchroniseren met de filter_spoelen_*-acties)
+  (waterbeheer-domein; filter-rondetaken synchroniseren met de filter*spoelen*\*-acties)
 - **taken** — `GET /api/taken` (samengestelde Verplicht/Belangrijk/Overig-weergave uit
   rondetaken + acties, read-only)
 - **logboek** — `GET/POST /api/logboek`, `DELETE /api/logboek/{id}` (waterbeheer-logboek;
@@ -72,19 +72,19 @@ De RBAC-keten staat op de routes: `AuthMiddleware` (401 als niet ingelogd) +
 
 ## Architectuur (1-op-1 met de Node-backend)
 
-| Node (TypeScript/Express)        | Hier (PHP)                                  |
-| -------------------------------- | ------------------------------------------- |
-| `app.ts` route-wiring            | `config/routes.php`                         |
-| `maak*Router()`-factories        | `config/dependencies.php` (DI-bindingen)    |
-| `controllers/*Controller.ts`     | `src/Controllers/*Controller.php`           |
-| `services/*Service.ts` + `I*`    | `src/Services/*Service.php` + `I*`          |
-| `repositories/*Repository.ts`    | `src/Repositories/*Repository.php` (PDO)    |
-| `middleware/auth.ts` (checkAuth) | `src/Middleware/AuthMiddleware.php`         |
-| `middleware/errorHandler.ts`     | `src/Errors/JsonErrorHandler.php`           |
-| `validation/schemas.ts` (Zod)    | `src/Validation/Validator.php`              |
-| `wachtwoord.ts` (scrypt)         | `src/Support/Wachtwoord.php` (bcrypt)       |
-| `express-session` (MemoryStore)  | `src/Middleware/SessionMiddleware.php` (`$_SESSION`, alleen `/api`) |
-| `FrontendController.ts` (partials)| `src/Controllers/FrontendController.php`   |
+| Node (TypeScript/Express)          | Hier (PHP)                                                          |
+| ---------------------------------- | ------------------------------------------------------------------- |
+| `app.ts` route-wiring              | `config/routes.php`                                                 |
+| `maak*Router()`-factories          | `config/dependencies.php` (DI-bindingen)                            |
+| `controllers/*Controller.ts`       | `src/Controllers/*Controller.php`                                   |
+| `services/*Service.ts` + `I*`      | `src/Services/*Service.php` + `I*`                                  |
+| `repositories/*Repository.ts`      | `src/Repositories/*Repository.php` (PDO)                            |
+| `middleware/auth.ts` (checkAuth)   | `src/Middleware/AuthMiddleware.php`                                 |
+| `middleware/errorHandler.ts`       | `src/Errors/JsonErrorHandler.php`                                   |
+| `validation/schemas.ts` (Zod)      | `src/Validation/Validator.php`                                      |
+| `wachtwoord.ts` (scrypt)           | `src/Support/Wachtwoord.php` (bcrypt)                               |
+| `express-session` (MemoryStore)    | `src/Middleware/SessionMiddleware.php` (`$_SESSION`, alleen `/api`) |
+| `FrontendController.ts` (partials) | `src/Controllers/FrontendController.php`                            |
 
 ## Lokaal draaien (testen)
 
@@ -154,7 +154,7 @@ badge bovenaan). De frontend-tests (jsdom) blijven in de project-root onder Node
 3. Provisioneer het schema **één keer** met `php bin/init-db.php` (zet eerst de DB-env-vars).
    Dit draait `init.sql` met per-statement try/catch en seedt de standaardaccounts.
    ⚠️ `mysql < init.sql` werkt NIET: `init.sql` bevat bewuste dubbele `ALTER TABLE … ADD
-   COLUMN`-migraties waarop de mysql-client afbreekt (zie de gotcha in `../CLAUDE.md`).
+COLUMN`-migraties waarop de mysql-client afbreekt (zie de gotcha in `../CLAUDE.md`).
 4. Zet de DB-gegevens via env-vars óf vul ze rechtstreeks in `config/settings.php`.
 5. **Docroot**: laat de webroot naar `backend/public/` wijzen. Kan dat niet, zet dan in de
    webroot een `.htaccess` die alles naar `public/index.php` stuurt en directe toegang
