@@ -9,7 +9,7 @@
  * magNuOpslaan() false is (bv. toetsenbord-/programmatische activatie).
  */
 export {};
-/* eslint-disable @typescript-eslint/no-var-requires */
+
 const MetingenModule = require('../../../frontend/js/metingen.js');
 const LogboekModule = require('../../../frontend/js/logboek.js');
 

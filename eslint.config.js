@@ -39,6 +39,8 @@ module.exports = [
         rules: {
             // Tests dynamically require() modules for jsdom/jest mocking setups
             '@typescript-eslint/no-require-imports': 'off',
+            // Test-mocks gebruiken bewust `any` voor compacte app/repository-stubs.
+            '@typescript-eslint/no-explicit-any': 'off',
         },
     },
     {

@@ -7,7 +7,7 @@
  * die subtab ziet dat er een open actie op staat — ongeacht of de velden volledig
  * zijn ingevuld.
  */
-/* eslint-disable @typescript-eslint/no-var-requires */
+
 export {};
 const MetingenModule = require('../../../frontend/js/metingen.js');
 

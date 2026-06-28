@@ -4,7 +4,7 @@
  * consistentie-invariant tussen GROEPEN en LABELS.
  */
 export {};
-/* eslint-disable @typescript-eslint/no-var-requires */
+
 const LimietenModule = require('../../../frontend/js/limieten.js');
 
 const mod = new LimietenModule({}); // _-helpers gebruiken this.app niet

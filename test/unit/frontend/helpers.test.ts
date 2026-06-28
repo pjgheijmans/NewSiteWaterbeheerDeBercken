@@ -4,9 +4,9 @@
  * OpslaanModule.peuterbadOnvolledig zijn zuivere functies.
  */
 export {}; // markeer als module zodat top-level consts niet botsen met andere testbestanden
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+
 const VerbruikModule = require('../../../frontend/js/verbruik.js');
-// eslint-disable-next-line @typescript-eslint/no-var-requires
+
 const OpslaanModule = require('../../../frontend/js/opslaan.js');
 
 describe('VerbruikModule.berekenVerbruik', () => {

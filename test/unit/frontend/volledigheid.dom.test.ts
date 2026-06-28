@@ -6,7 +6,7 @@
  * na-elke-opslag: een gedempt bolletje op Meetwaarden/Verbruik zolang die subtab
  * onvolledig is, live meelopend met de invoer.
  */
-/* eslint-disable @typescript-eslint/no-var-requires */
+
 export {}; // markeer als module zodat top-level consts niet botsen met andere testbestanden
 const ApiClient = require('../../../frontend/js/api.js');
 const OpslaanModule = require('../../../frontend/js/opslaan.js');

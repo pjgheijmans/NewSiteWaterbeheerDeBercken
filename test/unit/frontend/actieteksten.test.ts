@@ -3,7 +3,7 @@
  * spiegelt ActieTekstenRepository.render in de backend.
  */
 export {};
-/* eslint-disable @typescript-eslint/no-var-requires */
+
 const ActieTekstenModule = require('../../../frontend/js/actieteksten.js');
 
 const mod = new ActieTekstenModule({}); // vulPlaatshouders gebruikt this.app niet

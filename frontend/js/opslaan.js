@@ -302,7 +302,7 @@ class OpslaanModule {
                     const e = await res.json().catch(() => null);
                     opError(e?.error || 'Niet alle gegevens konden worden opgeslagen.');
                 }
-            } catch (e) {
+            } catch {
                 opError('Niet alle gegevens konden worden opgeslagen.');
             }
             return;

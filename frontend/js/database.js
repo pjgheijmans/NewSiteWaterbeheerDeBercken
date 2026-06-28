@@ -156,3 +156,9 @@ class DatabaseModule {
         window.location.href = `/api/database/export/${tabelnaam}`;
     }
 }
+
+// Node/Jest: exporteer de klasse zodat hij in jsdom-tests gebruikt kan worden.
+// In de browser bestaat `module` niet en wordt dit genegeerd.
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = DatabaseModule;
+}
