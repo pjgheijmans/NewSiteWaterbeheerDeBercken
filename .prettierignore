@@ -3,6 +3,9 @@ node_modules
 coverage
 package-lock.json
 
+# Composer-dependencies (PHP-backend) — third-party, niet formatteren.
+backend/vendor
+
 # HTML partials are fragments assembled at runtime by FrontendController,
 # not full documents — Prettier's HTML parser fails on them.
 frontend/partials/**/*.html

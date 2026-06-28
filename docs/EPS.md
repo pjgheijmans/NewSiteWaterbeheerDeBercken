@@ -20,13 +20,13 @@
 
 ## Revision History
 
-| Version | Date       | Author      | Description                                                                                                                                                                                                                                                                                                                       |
-| ------- | ---------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0.1     | 2026-06-03 | P. Heijmans | Initial draft (flat requirement list)                                                                                                                                                                                                                                                                                             |
-| 0.2     | 2026-06-03 | P. Heijmans | Requirements regrouped by actor / functional block; block-prefixed IDs                                                                                                                                                                                                                                                            |
-| 0.3     | 2026-06-11 | P. Heijmans | Added duty registration (WB-009), editable action texts (ACT-006), cathodic-protection measurement (WB-001), coordinator author stamping (GEN-006); 3-category task view; toast/modal feedback                                                                                                                                    |
-| 0.4     | 2026-06-16 | P. Heijmans | Configurable sliding session time-out + generic configuration block (CFG-001, UI-014, AUTH-006/007); concurrent-edit conflict detection and author stamping on waterbeheer data (GEN-007, GEN-006 upgraded); passive "fields incomplete" indicators replacing the autosave warning (GEN-003/GEN-008); app version label (GEN-009) |
-| 0.5     | 2026-06-23 | P. Heijmans | Added **Appendix A — Input Value Catalogue**: per-field definition, unit, decimal precision (fraction) and default valid range (min/max) for every input value across Waterbeheer, Coördinatoren, Limieten, Configuratie and Gebruikers, plus the free-text logboek entries (now hard-capped at 500 chars, client + server) and duty fields (A.13); §4.4 now points to it                |
+| Version | Date       | Author      | Description                                                                                                                                                                                                                                                                                                                                                               |
+| ------- | ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0.1     | 2026-06-03 | P. Heijmans | Initial draft (flat requirement list)                                                                                                                                                                                                                                                                                                                                     |
+| 0.2     | 2026-06-03 | P. Heijmans | Requirements regrouped by actor / functional block; block-prefixed IDs                                                                                                                                                                                                                                                                                                    |
+| 0.3     | 2026-06-11 | P. Heijmans | Added duty registration (WB-009), editable action texts (ACT-006), cathodic-protection measurement (WB-001), coordinator author stamping (GEN-006); 3-category task view; toast/modal feedback                                                                                                                                                                            |
+| 0.4     | 2026-06-16 | P. Heijmans | Configurable sliding session time-out + generic configuration block (CFG-001, UI-014, AUTH-006/007); concurrent-edit conflict detection and author stamping on waterbeheer data (GEN-007, GEN-006 upgraded); passive "fields incomplete" indicators replacing the autosave warning (GEN-003/GEN-008); app version label (GEN-009)                                         |
+| 0.5     | 2026-06-23 | P. Heijmans | Added **Appendix A — Input Value Catalogue**: per-field definition, unit, decimal precision (fraction) and default valid range (min/max) for every input value across Waterbeheer, Coördinatoren, Limieten, Configuratie and Gebruikers, plus the free-text logboek entries (now hard-capped at 500 chars, client + server) and duty fields (A.13); §4.4 now points to it |
 
 ---
 
@@ -647,29 +647,29 @@ previously implicit in the schema and limit defaults.
   advisory (a flag/colour), not a hard input rejection. For the **`actie_*`** rows
   the single configured value is the **threshold** that triggers an action (ACT-001).
 - **Decimal comma** is normalised to a point on entry; an empty field is stored as
-  *null* (not `0`) (GEN-004).
+  _null_ (not `0`) (GEN-004).
 
 ### A.1 Waterbeheer — Meetwaarden Diep & Ondiep (per bath)
 
-| Field (UI label)             | Definition                                       | Unit | Decimals | Default min – max | Limit key / notes              |
-| ---------------------------- | ------------------------------------------------ | ---- | -------- | ----------------- | ------------------------------ |
-| pH                           | Acidity of the pool water                        | pH   | 2        | 6.80 – 7.60       | `ph_waarde`                    |
-| Chloor                       | Free chlorine level                              | mg/l | 2        | 0.50 – 1.50       | `chloor_waarde`                |
-| Temperatuur                  | Water temperature                                | °C   | 1        | 20.0 – 30.0       | `watertemperatuur`             |
-| Flow (Diep)                  | Circulation flow, deep pool                      | m³/h | 0        | 250 – 450         | `flow_diep`                    |
-| Flow (Ondiep)                | Circulation flow, shallow pool                   | m³/h | 0        | 50 – 120          | `flow_ondiep`                  |
-| Filterdruk In                | Pressure before the filter                       | bar  | 2        | 0.20 – 1.50       | `filter_druk_in`               |
-| Filterdruk Uit               | Pressure after the filter                        | bar  | 2        | 0.20 – 1.50       | `filter_druk_uit`              |
-| Kathodische bescherming      | Cathodic-protection voltage                      | V    | 2        | 0.20 – 2.50       | `kathodische_bescherming`      |
+| Field (UI label)        | Definition                     | Unit | Decimals | Default min – max | Limit key / notes         |
+| ----------------------- | ------------------------------ | ---- | -------- | ----------------- | ------------------------- |
+| pH                      | Acidity of the pool water      | pH   | 2        | 6.80 – 7.60       | `ph_waarde`               |
+| Chloor                  | Free chlorine level            | mg/l | 2        | 0.50 – 1.50       | `chloor_waarde`           |
+| Temperatuur             | Water temperature              | °C   | 1        | 20.0 – 30.0       | `watertemperatuur`        |
+| Flow (Diep)             | Circulation flow, deep pool    | m³/h | 0        | 250 – 450         | `flow_diep`               |
+| Flow (Ondiep)           | Circulation flow, shallow pool | m³/h | 0        | 50 – 120          | `flow_ondiep`             |
+| Filterdruk In           | Pressure before the filter     | bar  | 2        | 0.20 – 1.50       | `filter_druk_in`          |
+| Filterdruk Uit          | Pressure after the filter      | bar  | 2        | 0.20 – 1.50       | `filter_druk_uit`         |
+| Kathodische bescherming | Cathodic-protection voltage    | V    | 2        | 0.20 – 2.50       | `kathodische_bescherming` |
 
 ### A.2 Waterbeheer — Meetwaarden Peuterbad
 
-| Field          | Definition                  | Unit | Decimals | Default min – max | Limit key / notes        |
-| -------------- | --------------------------- | ---- | -------- | ----------------- | ------------------------ |
-| pH             | Acidity of the pool water   | pH   | 2        | 6.80 – 7.60       | `ph_waarde` (shared)     |
-| Chloor         | Free chlorine level         | mg/l | 2        | 0.50 – 1.50       | `chloor_waarde` (shared) |
-| Flow           | Circulation flow            | m³/h | 0        | 3 – 10            | `flow_peuterbad`         |
-| Filterdruk     | Filter pressure             | bar  | 2        | 0.20 – 1.50       | `filter_druk_peuterbad`  |
+| Field      | Definition                | Unit | Decimals | Default min – max | Limit key / notes        |
+| ---------- | ------------------------- | ---- | -------- | ----------------- | ------------------------ |
+| pH         | Acidity of the pool water | pH   | 2        | 6.80 – 7.60       | `ph_waarde` (shared)     |
+| Chloor     | Free chlorine level       | mg/l | 2        | 0.50 – 1.50       | `chloor_waarde` (shared) |
+| Flow       | Circulation flow          | m³/h | 0        | 3 – 10            | `flow_peuterbad`         |
+| Filterdruk | Filter pressure           | bar  | 2        | 0.20 – 1.50       | `filter_druk_peuterbad`  |
 
 ### A.3 Waterbeheer — Verbruik Diep/Ondiep (daily meter / stock readings)
 
@@ -677,25 +677,25 @@ All values are whole numbers (meters and stock counts have no decimals). The dai
 consumption shown per meter is derived (today − previous day, WB-005) and is not an
 input.
 
-| Field                   | Definition                          | Unit | Decimals | Default min – max | Notes                                   |
-| ----------------------- | ----------------------------------- | ---- | -------- | ----------------- | --------------------------------------- |
-| Floculant               | Flocculant stock/dosing             | —    | 0        | n/a               | threshold `actie_floculant_min` = 10    |
-| Water Diep              | Water meter reading, deep           | m³   | 0        | 0 – 99999         | `water_diep` (cumulative meter)         |
-| Water Ondiep            | Water meter reading, shallow        | m³   | 0        | 0 – 99999         | `water_ondiep`                          |
-| Water Totaal            | Water meter reading, total          | m³   | 0        | 0 – 99999         | `water_totaal`                          |
-| Elektriciteit Nacht     | Electricity meter, night tariff     | kWh  | 0        | 0 – 500           | `elektriciteit_nacht`                   |
-| Elektriciteit Dag       | Electricity meter, day tariff       | kWh  | 0        | 0 – 500           | `elektriciteit_dag`                     |
-| Gas                     | Gas meter reading                   | m³   | 0        | 0 – 500           | `gas`                                   |
-| Chemicaliën Chloor      | Chlorine stock                      | L    | 0        | n/a               | threshold `actie_chloor_min` = 200      |
-| Chemicaliën Zwavelzuur  | Sulphuric-acid stock                | L    | 0        | n/a               | threshold `actie_zwavelzuur_min` = 50   |
+| Field                  | Definition                      | Unit | Decimals | Default min – max | Notes                                 |
+| ---------------------- | ------------------------------- | ---- | -------- | ----------------- | ------------------------------------- |
+| Floculant              | Flocculant stock/dosing         | —    | 0        | n/a               | threshold `actie_floculant_min` = 10  |
+| Water Diep             | Water meter reading, deep       | m³   | 0        | 0 – 99999         | `water_diep` (cumulative meter)       |
+| Water Ondiep           | Water meter reading, shallow    | m³   | 0        | 0 – 99999         | `water_ondiep`                        |
+| Water Totaal           | Water meter reading, total      | m³   | 0        | 0 – 99999         | `water_totaal`                        |
+| Elektriciteit Nacht    | Electricity meter, night tariff | kWh  | 0        | 0 – 500           | `elektriciteit_nacht`                 |
+| Elektriciteit Dag      | Electricity meter, day tariff   | kWh  | 0        | 0 – 500           | `elektriciteit_dag`                   |
+| Gas                    | Gas meter reading               | m³   | 0        | 0 – 500           | `gas`                                 |
+| Chemicaliën Chloor     | Chlorine stock                  | L    | 0        | n/a               | threshold `actie_chloor_min` = 200    |
+| Chemicaliën Zwavelzuur | Sulphuric-acid stock            | L    | 0        | n/a               | threshold `actie_zwavelzuur_min` = 50 |
 
 ### A.4 Waterbeheer — Verbruik Peuterbad
 
-| Field                   | Definition                      | Unit | Decimals | Default min – max | Notes                                          |
-| ----------------------- | ------------------------------- | ---- | -------- | ----------------- | ---------------------------------------------- |
-| Water                   | Water meter reading, toddler    | m³   | 0        | 0 – 99999         | `water_peuterbad`                              |
-| Chemicaliën Chloor      | Chlorine vessel level           | —    | 0        | n/a               | threshold `actie_chloor_peuterbad_min` = 10    |
-| Chemicaliën Zwavelzuur  | Sulphuric-acid vessel level     | —    | 0        | n/a               | threshold `actie_zwavelzuur_peuterbad_min` = 5 |
+| Field                  | Definition                   | Unit | Decimals | Default min – max | Notes                                          |
+| ---------------------- | ---------------------------- | ---- | -------- | ----------------- | ---------------------------------------------- |
+| Water                  | Water meter reading, toddler | m³   | 0        | 0 – 99999         | `water_peuterbad`                              |
+| Chemicaliën Chloor     | Chlorine vessel level        | —    | 0        | n/a               | threshold `actie_chloor_peuterbad_min` = 10    |
+| Chemicaliën Zwavelzuur | Sulphuric-acid vessel level  | —    | 0        | n/a               | threshold `actie_zwavelzuur_peuterbad_min` = 5 |
 
 ### A.5 Waterbeheer — Verwarmingssysteem (checkboxes)
 
@@ -705,23 +705,23 @@ Each is a boolean on/off checkbox (no unit, no decimals, no range): `verwarming_
 
 ### A.6 Coördinatoren — Metingen (per timeslot, per bath)
 
-| Field            | Definition                                    | Unit | Decimals | Default min – max | Notes                                       |
-| ---------------- | --------------------------------------------- | ---- | -------- | ----------------- | ------------------------------------------- |
-| pH               | Acidity of the pool water                     | pH   | 2        | 6.80 – 7.60       | `ph_waarde` (shared)                        |
-| Chloor Vrij      | Free chlorine                                 | mg/l | 2        | 0.50 – 1.50       | `chloor_vrij`                               |
-| Chloor Totaal    | Total chlorine                                | mg/l | 2        | 0.30 – 3.50       | `chloor_totaal`                             |
-| Chloor Gebonden  | Combined chlorine = total − free (**derived**) | mg/l | 2        | 0.30 – 3.50       | read-only; `chloor_gebonden`                |
-| Watertemperatuur | Water temperature                             | °C   | 1        | 20.0 – 30.0       | `watertemperatuur`                          |
-| Helderheid       | Water clarity (large baths)                   | text | —        | n/a               | free text / label                           |
-| Bad gebruikt     | Toddler pool used today                       | bool | —        | n/a               | checkbox (Peuterbad); drives `peuterbad_aftappen` |
+| Field            | Definition                                     | Unit | Decimals | Default min – max | Notes                                             |
+| ---------------- | ---------------------------------------------- | ---- | -------- | ----------------- | ------------------------------------------------- |
+| pH               | Acidity of the pool water                      | pH   | 2        | 6.80 – 7.60       | `ph_waarde` (shared)                              |
+| Chloor Vrij      | Free chlorine                                  | mg/l | 2        | 0.50 – 1.50       | `chloor_vrij`                                     |
+| Chloor Totaal    | Total chlorine                                 | mg/l | 2        | 0.30 – 3.50       | `chloor_totaal`                                   |
+| Chloor Gebonden  | Combined chlorine = total − free (**derived**) | mg/l | 2        | 0.30 – 3.50       | read-only; `chloor_gebonden`                      |
+| Watertemperatuur | Water temperature                              | °C   | 1        | 20.0 – 30.0       | `watertemperatuur`                                |
+| Helderheid       | Water clarity (large baths)                    | text | —        | n/a               | free text / label                                 |
+| Bad gebruikt     | Toddler pool used today                        | bool | —        | n/a               | checkbox (Peuterbad); drives `peuterbad_aftappen` |
 
 ### A.7 Coördinatoren — Daggegevens
 
-| Field                       | Definition                              | Unit   | Decimals | Default min – max | Notes                                      |
-| --------------------------- | --------------------------------------- | ------ | -------- | ----------------- | ------------------------------------------ |
-| Luchttemperatuur            | Air temperature                         | °C     | 1        | n/a               | no configured limit                        |
-| Bezoekers vandaag           | Visitors today                          | count  | 0        | n/a               | threshold `actie_bezoekers_max` = 750      |
-| Bezoekers sinds spoelbeurt  | Cumulative visitors since last backwash | count  | 0        | n/a               | threshold `actie_spoelbeurt_max` = 1500    |
+| Field                      | Definition                              | Unit  | Decimals | Default min – max | Notes                                   |
+| -------------------------- | --------------------------------------- | ----- | -------- | ----------------- | --------------------------------------- |
+| Luchttemperatuur           | Air temperature                         | °C    | 1        | n/a               | no configured limit                     |
+| Bezoekers vandaag          | Visitors today                          | count | 0        | n/a               | threshold `actie_bezoekers_max` = 750   |
+| Bezoekers sinds spoelbeurt | Cumulative visitors since last backwash | count | 0        | n/a               | threshold `actie_spoelbeurt_max` = 1500 |
 
 ### A.8 Coördinatoren — Checklist (checkboxes)
 
@@ -734,45 +734,45 @@ Single configured value per row (the threshold; `max_waarde`). An action is gene
 when the measured value crosses it (ACT-001 / §3.5.1). Stored with up to 2 decimals
 (`DECIMAL(10,2)`).
 
-| Field (UI label)                   | Definition                                          | Unit  | Decimals | Default (threshold) | Key                              |
-| ---------------------------------- | --------------------------------------------------- | ----- | -------- | ------------------- | -------------------------------- |
-| Filterdruk verschil max            | Max in−out pressure difference (Diep/Ondiep)        | bar   | 2        | 0.40                | `actie_druk_verschil`            |
-| Filterdruk Peuterbad max           | Max filter pressure (Peuterbad)                     | bar   | 2        | 1.00                | `actie_druk_peuterbad`           |
-| Flow Diep min                      | Minimum flow, deep                                  | m³/h  | 0        | 250                 | `actie_flow_diep`                |
-| Flow Ondiep min                    | Minimum flow, shallow                               | m³/h  | 0        | 75                  | `actie_flow_ondiep`              |
-| Flow Peuterbad min                 | Minimum flow, toddler                               | m³/h  | 0        | 4                   | `actie_flow_peuterbad`           |
-| Chloorvoorraad min                 | Minimum chlorine stock before reorder               | L     | 0        | 200                 | `actie_chloor_min`               |
-| Zwavelzuurvoorraad min             | Minimum sulphuric-acid stock                        | L     | 0        | 50                  | `actie_zwavelzuur_min`           |
-| Bezoekers max (per dag)            | Max daily visitors before backwash                  | count | 0        | 750                 | `actie_bezoekers_max`            |
-| Bezoekers max (sinds spoelbeurt)   | Max cumulative visitors since backwash              | count | 0        | 1500                | `actie_spoelbeurt_max`           |
-| Dagen max (sinds spoelbeurt)       | Max days since last backwash                        | days  | 0        | 7                   | `actie_spoelbeurt_dagen`         |
-| Floculant min                      | Minimum flocculant before top-up                    | —     | 0        | 10                  | `actie_floculant_min`            |
-| Gebonden chloor max                | Max combined chlorine                               | mg/l  | 2        | 1.00                | `actie_gebonden_chloor_max`      |
-| Chloor Peuterbad min (vat)         | Minimum chlorine vessel level (toddler)             | —     | 0        | 10                  | `actie_chloor_peuterbad_min`     |
-| Zwavelzuur Peuterbad min (vat)     | Minimum sulphuric-acid vessel level (toddler)       | —     | 0        | 5                   | `actie_zwavelzuur_peuterbad_min` |
+| Field (UI label)                 | Definition                                    | Unit  | Decimals | Default (threshold) | Key                              |
+| -------------------------------- | --------------------------------------------- | ----- | -------- | ------------------- | -------------------------------- |
+| Filterdruk verschil max          | Max in−out pressure difference (Diep/Ondiep)  | bar   | 2        | 0.40                | `actie_druk_verschil`            |
+| Filterdruk Peuterbad max         | Max filter pressure (Peuterbad)               | bar   | 2        | 1.00                | `actie_druk_peuterbad`           |
+| Flow Diep min                    | Minimum flow, deep                            | m³/h  | 0        | 250                 | `actie_flow_diep`                |
+| Flow Ondiep min                  | Minimum flow, shallow                         | m³/h  | 0        | 75                  | `actie_flow_ondiep`              |
+| Flow Peuterbad min               | Minimum flow, toddler                         | m³/h  | 0        | 4                   | `actie_flow_peuterbad`           |
+| Chloorvoorraad min               | Minimum chlorine stock before reorder         | L     | 0        | 200                 | `actie_chloor_min`               |
+| Zwavelzuurvoorraad min           | Minimum sulphuric-acid stock                  | L     | 0        | 50                  | `actie_zwavelzuur_min`           |
+| Bezoekers max (per dag)          | Max daily visitors before backwash            | count | 0        | 750                 | `actie_bezoekers_max`            |
+| Bezoekers max (sinds spoelbeurt) | Max cumulative visitors since backwash        | count | 0        | 1500                | `actie_spoelbeurt_max`           |
+| Dagen max (sinds spoelbeurt)     | Max days since last backwash                  | days  | 0        | 7                   | `actie_spoelbeurt_dagen`         |
+| Floculant min                    | Minimum flocculant before top-up              | —     | 0        | 10                  | `actie_floculant_min`            |
+| Gebonden chloor max              | Max combined chlorine                         | mg/l  | 2        | 1.00                | `actie_gebonden_chloor_max`      |
+| Chloor Peuterbad min (vat)       | Minimum chlorine vessel level (toddler)       | —     | 0        | 10                  | `actie_chloor_peuterbad_min`     |
+| Zwavelzuur Peuterbad min (vat)   | Minimum sulphuric-acid vessel level (toddler) | —     | 0        | 5                   | `actie_zwavelzuur_peuterbad_min` |
 
 ### A.10 Limieten — Seizoen (season window)
 
-| Field          | Definition                | Type | Default      | Notes                                            |
-| -------------- | ------------------------- | ---- | ------------ | ------------------------------------------------ |
-| Begin seizoen  | Season start date         | date | 2026-04-25   | stored as `YYYYMMDD` integer; bounds date nav    |
-| Eind seizoen   | Season end date           | date | 2026-09-01   | stored as `YYYYMMDD` integer                     |
+| Field         | Definition        | Type | Default    | Notes                                         |
+| ------------- | ----------------- | ---- | ---------- | --------------------------------------------- |
+| Begin seizoen | Season start date | date | 2026-04-25 | stored as `YYYYMMDD` integer; bounds date nav |
+| Eind seizoen  | Season end date   | date | 2026-09-01 | stored as `YYYYMMDD` integer                  |
 
 ### A.11 Configuratie (Administrator settings)
 
-| Field                    | Definition                            | Unit    | Decimals | Valid range | Notes                                          |
-| ------------------------ | ------------------------------------- | ------- | -------- | ----------- | ---------------------------------------------- |
-| Sessie-time-out          | Idle/sliding session lifetime         | minutes | 0        | 1 – 1440    | `sessie_timeout_minuten`; validated in service |
+| Field           | Definition                    | Unit    | Decimals | Valid range | Notes                                          |
+| --------------- | ----------------------------- | ------- | -------- | ----------- | ---------------------------------------------- |
+| Sessie-time-out | Idle/sliding session lifetime | minutes | 0        | 1 – 1440    | `sessie_timeout_minuten`; validated in service |
 
 ### A.12 Gebruikers (account fields)
 
-| Field       | Definition                       | Type    | Max length | Notes                                   |
-| ----------- | -------------------------------- | ------- | ---------- | --------------------------------------- |
-| Voornaam    | First name                       | text    | 50         |                                         |
-| Achternaam  | Surname                          | text    | 50         |                                         |
-| Inlognaam   | Login name (unique)              | text    | 50         | must be unique                          |
-| Wachtwoord  | Password                         | text    | —          | hashed at rest (scrypt); never returned |
-| Rollen      | Assigned role(s)                 | select  | —          | one or more roles                       |
+| Field      | Definition          | Type   | Max length | Notes                                   |
+| ---------- | ------------------- | ------ | ---------- | --------------------------------------- |
+| Voornaam   | First name          | text   | 50         |                                         |
+| Achternaam | Surname             | text   | 50         |                                         |
+| Inlognaam  | Login name (unique) | text   | 50         | must be unique                          |
+| Wachtwoord | Password            | text   | —          | hashed at rest (scrypt); never returned |
+| Rollen     | Assigned role(s)    | select | —          | one or more roles                       |
 
 ### A.13 Free-text & duty inputs
 
@@ -783,11 +783,11 @@ logs); over-length input is rejected with **400**. The column itself is `TEXT`
 (65,535-byte ceiling), so the 500-character app cap is the binding limit. A logboek
 row is keyed by `(datum, tijdstip)`, so there is a new entry per timestamp.
 
-| Field                       | Definition                                  | Type            | Max length               | Notes                                          |
-| --------------------------- | ------------------------------------------- | --------------- | ------------------------ | ---------------------------------------------- |
-| Logboek tekst (Waterbeheer) | Free-text day note, water management         | `TEXT`          | 500 chars (hard cap)     | client `maxlength` + server Zod; one row/timestamp |
-| Logboek tekst (Coördinator) | Free-text day note, coordinator              | `TEXT`          | 500 chars (hard cap)     | client `maxlength` + server Zod; one row/timestamp |
-| Dienst 1 / Dienst 2         | The two persons on water-management duty     | text            | 100 chars                | `VARCHAR(100)`; one logs in, one typed/picked  |
+| Field                       | Definition                               | Type   | Max length           | Notes                                              |
+| --------------------------- | ---------------------------------------- | ------ | -------------------- | -------------------------------------------------- |
+| Logboek tekst (Waterbeheer) | Free-text day note, water management     | `TEXT` | 500 chars (hard cap) | client `maxlength` + server Zod; one row/timestamp |
+| Logboek tekst (Coördinator) | Free-text day note, coordinator          | `TEXT` | 500 chars (hard cap) | client `maxlength` + server Zod; one row/timestamp |
+| Dienst 1 / Dienst 2         | The two persons on water-management duty | text   | 100 chars            | `VARCHAR(100)`; one logs in, one typed/picked      |
 
 ---
 
