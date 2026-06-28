@@ -7,7 +7,7 @@
  * (bad_gebruikt 1/0, helderheid null) versus de grote baden.
  */
 export {};
-/* eslint-disable @typescript-eslint/no-var-requires */
+
 const OpslaanModule = require('../../../frontend/js/opslaan.js');
 
 function bouwBlok() {

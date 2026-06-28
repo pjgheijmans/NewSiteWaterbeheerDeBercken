@@ -8,7 +8,7 @@
  *   2) waarschuwing is subtab-bewust
  *   3) de Verbruik-subtab vult de peuterbad verbruik-cellen
  */
-/* eslint-disable @typescript-eslint/no-var-requires */
+
 export {}; // markeer als module zodat top-level consts niet botsen met andere testbestanden
 const ApiClient = require('../../../frontend/js/api.js');
 const OpslaanModule = require('../../../frontend/js/opslaan.js');

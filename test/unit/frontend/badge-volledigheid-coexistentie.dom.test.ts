@@ -4,7 +4,7 @@
  * Reproductie: tonen de actie-badge (⚠ op pagina-/Taken-tab) en de
  * volledigheids-markering (• op Meetwaarden/Verbruik) tegelijk correct?
  */
-/* eslint-disable @typescript-eslint/no-var-requires */
+
 export {};
 const ApiClient = require('../../../frontend/js/api.js');
 const OpslaanModule = require('../../../frontend/js/opslaan.js');

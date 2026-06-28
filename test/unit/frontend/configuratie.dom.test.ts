@@ -4,7 +4,7 @@
  * jsdom-tests voor de autosave (1,2 s debounce) van het configuratiescherm:
  * geen opslaan-knop meer, een wijziging slaat zichzelf op zoals elders in de app.
  */
-/* eslint-disable @typescript-eslint/no-var-requires */
+
 export {};
 const ConfiguratieModule = require('../../../frontend/js/configuratie.js');
 

@@ -5,7 +5,7 @@
  * de negen verbruik-cellen krijgen (huidig − vorige dag).
  */
 export {};
-/* eslint-disable @typescript-eslint/no-var-requires */
+
 const VerbruikModule = require('../../../frontend/js/verbruik.js');
 
 describe('VerbruikModule.laadEnBerekenVerbruik (Diep/Ondiep)', () => {

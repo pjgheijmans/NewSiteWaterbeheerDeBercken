@@ -134,7 +134,7 @@ class DienstModule {
                 });
                 this.setStatus(res.ok ? 'saved' : 'error');
                 if (!res.ok) this.app.ui.toonBericht('Fout bij opslaan dienst.', 'fout');
-            } catch (f) {
+            } catch {
                 this.setStatus('error');
             }
         }, 1200);

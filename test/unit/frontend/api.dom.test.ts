@@ -5,7 +5,7 @@
  * de peuterbad-opslag (lege velden -> null, komma -> punt).
  */
 export {};
-/* eslint-disable @typescript-eslint/no-var-requires */
+
 const ApiClient = require('../../../frontend/js/api.js');
 
 function zetVeld(id: string, value: string) {

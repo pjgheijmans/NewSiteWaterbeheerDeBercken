@@ -6,7 +6,7 @@
  * de verplichte taken pas na een volledige refresh verschenen. laadMetingen herlaadt
  * de Taken-inhoud nu (laadBadTaken) wanneer die subtab actief is.
  */
-/* eslint-disable @typescript-eslint/no-var-requires */
+
 export {};
 const MetingenModule = require('../../../frontend/js/metingen.js');
 

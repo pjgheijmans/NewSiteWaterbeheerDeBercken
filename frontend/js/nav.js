@@ -50,3 +50,9 @@ class NavModule {
         this.app.auth.actualiseerLeesmodus();
     }
 }
+
+// Node/Jest: exporteer de klasse zodat hij in jsdom-tests gebruikt kan worden.
+// In de browser bestaat `module` niet en wordt dit genegeerd.
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = NavModule;
+}

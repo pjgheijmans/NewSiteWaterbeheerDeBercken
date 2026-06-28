@@ -3,7 +3,7 @@
  * (Verplicht/Belangrijk/Overig) bepaalt de achtergrondtint van een rij.
  */
 export {};
-/* eslint-disable @typescript-eslint/no-var-requires */
+
 const TakenModule = require('../../../frontend/js/taken.js');
 
 describe('TakenModule._categorieTint', () => {

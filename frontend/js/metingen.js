@@ -755,7 +755,7 @@ class MetingenModule {
                 this.app.ui.setAutoSaveStatus(res.ok ? 'saved' : 'error');
                 if (res.ok) this._toonChecklistAuteur(this._ingelogdeAuteur());
                 else this.app.ui.toonBericht('Fout bij opslaan checklist.', 'fout');
-            } catch (e) {
+            } catch {
                 this.app.ui.setAutoSaveStatus('error');
             }
         }, 1200);
@@ -817,7 +817,7 @@ class MetingenModule {
                 this.app.ui.setAutoSaveStatus(res.ok ? 'saved' : 'error');
                 if (res.ok) this._toonDaggegevensAuteur(this._ingelogdeAuteur());
                 else this.app.ui.toonBericht('Fout bij opslaan daggegevens.', 'fout');
-            } catch (e) {
+            } catch {
                 this.app.ui.setAutoSaveStatus('error');
             }
         }, 1200);

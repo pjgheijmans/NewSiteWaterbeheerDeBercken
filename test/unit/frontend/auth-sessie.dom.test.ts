@@ -5,7 +5,7 @@
  * ApiClient vangt de 401 en AuthModule.sessieVerlopen keert terug naar het
  * loginscherm met een blijvende uitleg in #login-fout (Option A).
  */
-/* eslint-disable @typescript-eslint/no-var-requires */
+
 export {};
 const ApiClient = require('../../../frontend/js/api.js');
 const AuthModule = require('../../../frontend/js/auth.js');
