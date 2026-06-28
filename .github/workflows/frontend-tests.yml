@@ -1,0 +1,48 @@
+name: Frontend tests
+
+# Draait de frontend-checks (jsdom-tests + ESLint) op elke push/PR die de
+# frontend of de tests raakt. Tegenhanger van php-tests.yml voor de backend.
+on:
+  push:
+    branches: [master, 'feat/**', 'fix/**', 'ci/**']
+    paths:
+      - 'frontend/**'
+      - 'test/**'
+      - 'package.json'
+      - 'jest.config.js'
+      - 'eslint.config.js'
+      - 'tsconfig*.json'
+      - '.github/workflows/frontend-tests.yml'
+  pull_request:
+    paths:
+      - 'frontend/**'
+      - 'test/**'
+      - 'package.json'
+      - 'jest.config.js'
+      - 'eslint.config.js'
+      - 'tsconfig*.json'
+      - '.github/workflows/frontend-tests.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Jest (jsdom) + ESLint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Node instellen
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Geen `npm ci`/cache: package-lock.json staat in .gitignore en wordt niet
+      # meegecommit, dus we installeren met `npm install`.
+      - name: Dependencies installeren
+        run: npm install --no-audit --no-fund
+
+      - name: Tests (jsdom)
+        run: npm test
+
+      - name: Lint
+        run: npm run lint
