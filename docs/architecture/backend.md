@@ -61,7 +61,7 @@ patroon.
 classDiagram
     class MetingenController {
         -service: IMetingenService
-        +__invoke / actie-methoden
+        +actieMethoden()
     }
 
     class IMetingenService {
