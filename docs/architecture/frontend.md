@@ -158,7 +158,7 @@ classDiagram
 | `LimietenModule`     | Limieten laden/renderen/opslaan (auto-save)                                                                                                                                                                    |
 | `ActieTekstenModule` | Actie-tekstsjablonen laden/renderen/opslaan (auto-save) met live placeholder-preview (Administrator)                                                                                                           |
 | `DienstModule`       | "Dienst vandaag"-chip: dienstpaar laden/opslaan; vult de ingelogde gebruiker voor                                                                                                                              |
-| `ConfiguratieModule` | Configuratiescherm: generieke instellingen laden/renderen en per waarde auto-saven (`PUT /api/configuratie/:sleutel`); Administrator                                                                           |
+| `ConfiguratieModule` | Configuratiescherm: generieke instellingen laden/renderen en per waarde auto-saven (`PUT /api/configuratie/{sleutel}`); Administrator                                                                          |
 
 > **Optimistische concurrency & sessie (toegevoegd):** `OpslaanModule`/`MetingenModule`/
 > `VerbruikModule` houden per record een `versie` bij in `AppState.versies`, sturen die
@@ -173,10 +173,11 @@ classDiagram
 
 ## 4. Levering
 
-De HTML wordt server-side samengesteld uit partials (`frontend/partials/`) door
-`FrontendController` — geen buildstap. De JS-modules worden als losse
-`<script>`-bestanden geserveerd vanuit `frontend/js/`.
+De HTML wordt server-side samengesteld uit partials (`frontend/partials/`) door de
+PHP `FrontendController` — geen buildstap. De JS-modules worden als losse
+`<script>`-bestanden geserveerd vanuit `frontend/js/` (op Apache via de
+`FrontendController::serveAsset`-route in `.htaccess`).
 
-> Let op: de frontend blijft bewust vanilla JS (geen TypeScript, geen bundler),
-> zodat de applicatie ook achter een eenvoudige statische webserver of Apache
-> reverse-proxy kan draaien zonder buildpijplijn.
+> Let op: de frontend bleef bij de PHP-port volledig ongewijzigd — bewust vanilla JS
+> (geen TypeScript, geen bundler), zodat hij rechtstreeks door Apache + mod_php (of
+> elke statische webserver) geserveerd kan worden zonder buildpijplijn.

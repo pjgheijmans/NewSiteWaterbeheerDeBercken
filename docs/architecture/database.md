@@ -1,8 +1,9 @@
 # Database
 
-MySQL 8. Schema wordt idempotent aangemaakt door `init.sql` bij elke serverstart
-(`CREATE TABLE IF NOT EXISTS` + `INSERT IGNORE`); er is geen migratietool.
-Terug naar het [overzicht](../architecture.md).
+MySQL 8. Het schema wordt idempotent aangemaakt door `init.sql`, toegepast via
+`bin/init-db.php` (`runInitSql`, per-statement try/catch met `CREATE TABLE IF NOT EXISTS`,
+`INSERT IGNORE` en losse `ALTER`-migraties); er is geen migratietool. Terug naar het
+[overzicht](../architecture.md).
 
 ```mermaid
 erDiagram
@@ -172,16 +173,16 @@ De waterbeheer meetwaarden/verbruik-tabellen (`metingen_diep_ondiep`,
 `metingen_peuterbad`, `verbruik_diep_ondiep`, `verwarmings_systeem_diep_ondiep`)
 hebben elk `versie` (INT, optimistic-concurrency-token), `auteur` (wie sloeg als
 laatste op) en `bijgewerkt_op` (TIMESTAMP). Opslaan loopt via de gedeelde helper
-`optimistischOpslaan()` (`backend/repositories/optimistisch.ts`): een conditionele
-`UPDATE … WHERE sleutel AND versie = ?` (de rij-lock serialiseert gelijktijdige
-schrijvers); komt de versie niet overeen, dan krijgt de client **409** in plaats
-van een stille overschrijving. De `configuratie`-tabel is een generieke
-sleutel/waarde-store (o.a. `sessie_timeout_minuten`).
+`Support\Optimistisch`: een conditionele `UPDATE … WHERE sleutel AND versie = ?` (de
+rij-lock serialiseert gelijktijdige schrijvers); komt de versie niet overeen, dan
+krijgt de client **409** in plaats van een stille overschrijving. De
+`configuratie`-tabel is een generieke sleutel/waarde-store (o.a.
+`sessie_timeout_minuten`).
 
 ## Toegang
 
-Alle tabellen worden uitsluitend benaderd via de repositories
-(`backend/repositories/`), die de gedeelde `mysql2`-pool uit `db.ts` gebruiken.
-`LIMIETEN`, `GEBRUIKERS` en `CONFIGURATIE` worden bij een verse database voorzien
-van standaardwaarden (limieten + 2 gebruikers via `seedDefaults()`; de
-`configuratie`-seed staat in `init.sql`).
+Alle tabellen worden uitsluitend benaderd via de repositories (`src/Repositories/`),
+elk met een per-request PDO-connectie (geen pool). `LIMIETEN`, `GEBRUIKERS` en
+`CONFIGURATIE` worden bij een verse database voorzien van standaardwaarden (de
+limieten en 2 gebruikers via de seed in `DatabaseRepository`; de `configuratie`-seed
+staat in `init.sql`). Wachtwoorden worden met bcrypt gehasht (`Support\Wachtwoord`).

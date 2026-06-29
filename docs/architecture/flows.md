@@ -28,11 +28,11 @@ sequenceDiagram
     alt Niet ingelogd
         Auth-->>B: { ingelogd: false }
         B->>Auth: POST /api/login { username, password }
-        Note over Auth: valideerBody(loginSchema)
+        Note over Auth: Validator (login)
         Auth->>Svc: AuthService.login(u, p)
         Svc->>DB: findByLogin()
         DB-->>Svc: gebruiker | null
-        Auth->>Auth: req.session.gebruiker = gebruiker
+        Auth->>Auth: $_SESSION['gebruiker'] = gebruiker
         Auth-->>B: { gebruiker }
     else Al ingelogd
         Auth-->>B: { ingelogd: true, gebruiker }
@@ -82,7 +82,7 @@ sequenceDiagram
     Note over WB,Svc: Trigger via meetwaarden
     WB->>FE: Meetwaarden invullen
     FE->>Ctrl: POST /api/metingen
-    Note over Ctrl: valideerBody(metingSchema)
+    Note over Ctrl: Validator (meting)
     Ctrl->>Svc: MetingenService.saveMeting(body)
     Svc->>Repo: getBadId() + save(Groot|Peuter)BadMeting()
     Svc->>Repo: ActiesRepository.genereer()
@@ -110,11 +110,11 @@ sequenceDiagram
     Note over WB,Svc: Afvinken / heropenen
     WB->>FE: Checkbox aan/uit
     alt rondetaak (incl. filtertaak)
-        FE->>Ctrl: POST /api/rondetaken/:sleutel/voltooi | /heropen
+        FE->>Ctrl: POST /api/rondetaken/{sleutel}/voltooi | /heropen
         Ctrl->>Svc: RondetakenService.voltooi/heropen
         Note over Svc: filtertaak → ook resolveFilterSpoelen(bad, datum)
     else losse actie (bv. chloor bestellen)
-        FE->>Ctrl: POST /api/acties/:id/resolve | /unresolve
+        FE->>Ctrl: POST /api/acties/{id}/resolve | /unresolve
         Ctrl->>Svc: resolveActie(id, gebruiker) | unresolveActie(id)
     end
     FE->>Ctrl: GET /api/taken (refresh)
@@ -144,7 +144,7 @@ sequenceDiagram
     alt Waterbeheer — meetwaarden
         Save->>Ctrl: POST /api/metingen [Diep + Ondiep] (incl. verwachte versie)
         Ctrl->>Svc: MetingenService.saveMeting(body, auteur)
-        Svc->>DB: optimistischOpslaan (UPDATE WHERE versie=?) + genereer acties
+        Svc->>DB: Support\Optimistisch (UPDATE WHERE versie=?) + genereer acties
         Save->>Ctrl: GET /api/acties (veldindicatoren) + GET /api/taken (badges)
     else Waterbeheer — verbruik/verwarming
         Save->>Ctrl: POST /api/verbruik/diep-ondiep (+ /verwarmingssysteem) (incl. versie)
