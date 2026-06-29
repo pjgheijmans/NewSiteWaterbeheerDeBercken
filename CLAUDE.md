@@ -8,6 +8,16 @@ Full-stack pool management web app ("Digitale Dagstaat Zwembad") — **PHP 8.0 b
 
 > The backend was ported from TypeScript/Express to PHP so the app can run on shared Apache + MySQL hosting (PHP 8.0, `pdo_mysql`). The HTTP API and JSON shapes are unchanged, so `frontend/js/*.js` works against it as-is. The pre-port TypeScript backend is tagged `pre-php-migration` if you ever need it.
 
+## Reference docs (`docs/`)
+
+Living specification + architecture notes, kept in sync with the PHP backend:
+
+- **`docs/EPS.md`** — Element Performance Specification (the requirements: functional + non-functional, grouped per role; Appendix A is the per-field input-value catalogue).
+- **`docs/EDS.md`** — Element Design Specification (how the design meets the EPS: design decisions `DD-…`, interfaces, data model, deployment, test strategy, traceability).
+- **`docs/architecture.md`** + **`docs/architecture/{backend,frontend,flows,database,testing}.md`** — architecture overview with Mermaid diagrams (request lifecycle, layering, ER diagram, sequence flows).
+
+Update these when you change behaviour, the HTTP API, the schema or the stack (bump the version + revision-history row in EPS/EDS). The Mermaid blocks render on GitHub — keep them valid; in prose, avoid a mid-sentence `+`/`-` that can wrap to a line start (Prettier turns it into a list bullet).
+
 ## Dev commands
 
 **Docker (preferred)** — the `web` service runs Apache + mod_php (built from `backend/`); the `db` service runs MySQL 8:
@@ -109,10 +119,13 @@ test/
 The frontend tests live at the repo root and run under Node (the only remaining use of the Node tooling). They exercise `frontend/js/*.js` via jsdom.
 
 ```
-npm test               # frontend jsdom tests — 98 tests
+npm test               # frontend jsdom tests — 102 tests
 npm run test:coverage  # with coverage (frontend/js only)
 ```
 
 ### CI
 
-`.github/workflows/php-tests.yml` runs both PHP suites on PHP 8.0 (unit job: no DB; integration job: MySQL 8 service). The badge is in `backend/README.md`.
+Two GitHub Actions workflows run on every push/PR (paths-filtered):
+
+- **`.github/workflows/php-tests.yml`** — both PHP suites on PHP 8.0 (unit job: no DB; integration job: MySQL 8 service). The badge is in `backend/README.md`.
+- **`.github/workflows/frontend-tests.yml`** — frontend under Node: `npm test` (Jest + jsdom) + `npm run lint` (ESLint).
