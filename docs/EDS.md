@@ -1,16 +1,16 @@
 # Element Design Specification (EDS)
 
-**Document ID:** EDS-DDZ-0.4
+**Document ID:** EDS-DDZ-0.5
 **Element:** Digitale Dagstaat Zwembad — full web application
-**Version:** 0.4
+**Version:** 0.5
 **Status:** DRAFT
-**Date:** 2026-06-23
+**Date:** 2026-06-28
 **Author:** P. Heijmans
 **Approver:**
-**Parent EPS:** EPS-DDZ-0.5
+**Parent EPS:** EPS-DDZ-0.6
 
 > This EDS records _how_ the application is designed to satisfy the requirements in
-> EPS-DDZ-0.4. It is descriptive of the current implementation (not aspirational):
+> EPS-DDZ-0.6. It is descriptive of the current implementation (not aspirational):
 > where the design has known gaps relative to the EPS, they are recorded as design
 > decisions and risks rather than hidden. Requirement IDs referenced here (AUTH-,
 > GEN-, WB-, CO-, ACT-, LIM-, ADM-, TRD-) are defined in the parent EPS.
@@ -19,12 +19,13 @@
 
 ## Revision History
 
-| Version | Date       | Author      | Description                                                                                                                                                                                                                                                                                                                                                                                    |
-| ------- | ---------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0.1     | 2026-06-03 | P. Heijmans | Initial design specification                                                                                                                                                                                                                                                                                                                                                                   |
-| 0.2     | 2026-06-11 | P. Heijmans | New domains actieteksten + dienst (repo/service/controller/route + modules); kathodische_bescherming column; auteur on checklist/daggegevens; 3-category Taken; toast + confirm/alert modal; idempotent plain-`ALTER` migrations for MySQL 8                                                                                                                                                   |
-| 0.3     | 2026-06-16 | P. Heijmans | Generic `configuratie` store + Configuratie domain/screen (DD-019); configurable sliding session time-out (DD-005 revised) with live config + global 401→login UX; optimistic concurrency on waterbeheer meetwaarden/verbruik via shared `optimistischOpslaan` helper (DD-020); passive completeness indicators + version label (DD-021); `/api/versie` endpoint; added §5.5 sequence diagrams |
-| 0.4     | 2026-06-23 | P. Heijmans | §5.4 now cross-references the new **EPS Appendix A — Input Value Catalogue** (per-field definition, unit, decimal precision and default min/max) and notes the schema `DECIMAL` precision is the authoritative fraction; parent EPS → 0.5                                                                                                                                                      |
+| Version | Date       | Author      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ------- | ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| 0.1     | 2026-06-03 | P. Heijmans | Initial design specification                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| 0.2     | 2026-06-11 | P. Heijmans | New domains actieteksten + dienst (repo/service/controller/route + modules); kathodische_bescherming column; auteur on checklist/daggegevens; 3-category Taken; toast + confirm/alert modal; idempotent plain-`ALTER` migrations for MySQL 8                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| 0.3     | 2026-06-16 | P. Heijmans | Generic `configuratie` store + Configuratie domain/screen (DD-019); configurable sliding session time-out (DD-005 revised) with live config + global 401→login UX; optimistic concurrency on waterbeheer meetwaarden/verbruik via shared `optimistischOpslaan` helper (DD-020); passive completeness indicators + version label (DD-021); `/api/versie` endpoint; added §5.5 sequence diagrams                                                                                                                                                                                                                                                                                       |
+| 0.4     | 2026-06-23 | P. Heijmans | §5.4 now cross-references the new **EPS Appendix A — Input Value Catalogue** (per-field definition, unit, decimal precision and default min/max) and notes the schema `DECIMAL` precision is the authoritative fraction; parent EPS → 0.5                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| 0.5     | 2026-06-28 | P. Heijmans | **Backend re-platformed from Node/Express/TypeScript to PHP 8.0 (Slim 4 + PHP-DI)** for shared Apache/MySQL hosting (DD-022). Re-described the server-side design throughout: Slim+PSR-15 middleware, PHP-DI container wiring (`config/dependencies.php`/`routes.php`), PDO-per-request (DD-012), native `$_SESSION` via `SessionMiddleware` (DD-005/017), `JsonErrorHandler`+`AppError` (DD-008), `Validator` instead of Zod (DD-007), bcrypt instead of scrypt (DD-018), `bin/init-db.php` for schema bootstrap (DD-006). Updated §1.3, §2, §3, §5, §7, §8 (8080; CI now exists), §9 (PHPUnit; tooling) and §10/§11. Frontend, data model and HTTP API unchanged; parent EPS → 0.6 |
 
 ---
 
@@ -46,30 +47,33 @@ sensor/PLC integration and any out-of-scope items listed in the EPS §1.2.
 
 ### 1.3 Definitions & Acronyms
 
-| Term          | Definition                                                                         |
-| ------------- | ---------------------------------------------------------------------------------- |
-| DI            | Dependency Injection                                                               |
-| ISP           | Interface Segregation Principle                                                    |
-| SPA-like      | Single HTML page whose sections are toggled client-side (no client router/bundler) |
-| MPA           | Multi-Page Application                                                             |
-| Repository    | Class encapsulating all SQL for one domain                                         |
-| Service       | Class holding business logic for one domain                                        |
-| Controller    | Express request handler for one domain (HTTP concerns only)                        |
-| Route factory | `maakXxxRouter(pool)` that wires repo→service→controller→Router                    |
-| Upsert        | `INSERT … ON DUPLICATE KEY UPDATE` (idempotent write)                              |
-| Autosave      | Debounced background save of edited fields                                         |
+| Term         | Definition                                                                         |
+| ------------ | ---------------------------------------------------------------------------------- |
+| DI           | Dependency Injection                                                               |
+| ISP          | Interface Segregation Principle                                                    |
+| SPA-like     | Single HTML page whose sections are toggled client-side (no client router/bundler) |
+| MPA          | Multi-Page Application                                                             |
+| Repository   | Class encapsulating all SQL for one domain                                         |
+| Service      | Class holding business logic for one domain                                        |
+| Controller   | Slim request handler for one domain (HTTP concerns only)                           |
+| PHP-DI       | The dependency-injection container wiring repo→service→controller (`config/`)      |
+| PSR-7/PSR-15 | PHP standards for HTTP messages (PSR-7) and middleware (PSR-15) used by Slim 4     |
+| PDO          | PHP Data Objects — DB access layer (one connection per request)                    |
+| Upsert       | `INSERT … ON DUPLICATE KEY UPDATE` (idempotent write)                              |
+| Autosave     | Debounced background save of edited fields                                         |
 
 Plus all domain terms from EPS §1.3 (Diep, Ondiep, Peuterbad, gebonden chloor,
 spoelbeurt, etc.).
 
 ### 1.4 Reference Documents
 
-| ID      | Title                                                                                     | Version |
-| ------- | ----------------------------------------------------------------------------------------- | ------- |
-| EPS-DDZ | Element Performance Specification                                                         | 0.5     |
-| —       | `docs/architecture.md` + `docs/architecture/{backend,frontend,flows,database,testing}.md` | current |
-| —       | `CLAUDE.md` — project conventions                                                         | current |
-| —       | `init.sql` — authoritative schema                                                         | current |
+| ID      | Title                                                                                     | Version                      |
+| ------- | ----------------------------------------------------------------------------------------- | ---------------------------- |
+| EPS-DDZ | Element Performance Specification                                                         | 0.6                          |
+| —       | `docs/architecture.md` + `docs/architecture/{backend,frontend,flows,database,testing}.md` | ⚠ pre-PHP (Node/TS); pending |
+| —       | `CLAUDE.md` — project conventions                                                         | current (PHP)                |
+| —       | `backend/README.md` — PHP backend run/deploy notes                                        | current                      |
+| —       | `init.sql` — authoritative schema                                                         | current                      |
 
 ---
 
@@ -81,8 +85,8 @@ spoelbeurt, etc.).
   AI-assisted developer. Favour readable code and conventions over heavyweight
   frameworks; no client bundler, no ORM, no migration tool.
 - **Layered backend with strict dependency inversion.** Every domain follows
-  route-factory → controller → service → repository; upper layers depend only on
-  interfaces, so each layer is unit-testable by mocking the layer below.
+  controller → service → repository, wired by the PHP-DI container; upper layers
+  depend only on interfaces, so each layer is unit-testable by mocking the layer below.
 - **Convention-driven uniformity.** Each of the nine domains looks the same, so a
   new domain is added by copying the pattern.
 - **Idempotent, date-keyed data.** One record per day per domain; writes are
@@ -93,29 +97,30 @@ spoelbeurt, etc.).
 
 ### 2.2 Key Design Decisions Summary
 
-| ID     | Decision                                                                                                                                                                                                                  | Section          |
-| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
-| DD-001 | Layered OO backend with DI (route-factory → controller → service → repository)                                                                                                                                            | §3, §7           |
-| DD-002 | Upper layers depend on interfaces; concretes wired only in route factory; ISP via `IDaggegevensProvider`                                                                                                                  | §3, §7           |
-| DD-003 | Frontend is vanilla ES6 classes, no bundler/build step                                                                                                                                                                    | §3, §6           |
-| DD-004 | Single `Application` container + minimal `window.*` globals for `onclick`                                                                                                                                                 | §6               |
-| DD-005 | Session-based authentication (`express-session`); sliding/idle `rolling` cookie whose max-age comes from the live configuration (default 5 min)                                                                           | §5.2             |
-| DD-006 | MySQL with idempotent `init.sql` at startup; no migration tool                                                                                                                                                            | §7.3             |
-| DD-007 | Runtime validation with Zod via `valideerBody` middleware                                                                                                                                                                 | §7.4             |
-| DD-008 | Central `errorHandler` + `AppError(message, status)`                                                                                                                                                                      | §7.5             |
-| DD-009 | Action generation is fire-and-forget (no transaction with the save)                                                                                                                                                       | §3, §7           |
-| DD-010 | Dagstaat edits autosave on a 1.2 s debounce (no manual save button)                                                                                                                                                       | §4.5, §6         |
-| DD-011 | CSV export/import is semicolon-delimited (EU-Excel)                                                                                                                                                                       | §5.1             |
-| DD-012 | Single shared `mysql2` connection pool injected everywhere                                                                                                                                                                | §7.1             |
-| DD-013 | `maakApp(pool)` separated from `server.ts` for Supertest mounting                                                                                                                                                         | §7.1             |
-| DD-014 | Each backwash reason is its own action row; the frontend groups them per bath                                                                                                                                             | §3, §4           |
-| DD-015 | Frontend classes carry `module.exports` guards; tested with Jest + jsdom                                                                                                                                                  | §9.3             |
-| DD-016 | Combined chlorine and consumption deltas are derived, not stored                                                                                                                                                          | §5.4             |
-| DD-017 | Session secret required in production (`SESSION_SECRET`); fail fast if unset, dev/test fallback only                                                                                                                      | §5.2, §8.2       |
-| DD-018 | Password hashing with Node's built-in scrypt (no external dependency); legacy plaintext upgraded on login + startup migration                                                                                             | §5.2, §7.2       |
-| DD-019 | Generic `configuratie` key/value table + a single shared `ConfiguratieService` (in-memory cache) feeding both the session middleware and the admin router                                                                 | §3.1, §5.2, §7.3 |
-| DD-020 | Optimistic concurrency on the waterbeheer meetwaarden/verbruik tables via a shared `optimistischOpslaan()` helper (conditional UPDATE on `versie`, `AppError(409)` on mismatch); `auteur`/`bijgewerkt_op` for attribution | §3.1, §5.4, §7.3 |
-| DD-021 | Passive completeness indicators (subtab/page-tab dot) replace the post-save warning; app-version label from `/api/versie`; global 401 handler returns the UI to the login screen                                          | §4.2, §5.1, §6.2 |
+| ID     | Decision                                                                                                                                                                                                            | Section          |
+| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------- |
+| DD-001 | Layered OO backend with DI (controller → service → repository, wired by PHP-DI)                                                                                                                                     | §3, §7           |
+| DD-002 | Upper layers depend on interfaces; concretes wired only in the PHP-DI container; ISP via `IDaggegevensProvider`                                                                                                     | §3, §7           |
+| DD-003 | Frontend is vanilla ES6 classes, no bundler/build step                                                                                                                                                              | §3, §6           |
+| DD-004 | Single `Application` container + minimal `window.*` globals for `onclick`                                                                                                                                           | §6               |
+| DD-005 | Session-based authentication (native PHP `$_SESSION` via `SessionMiddleware`); sliding/idle time-out whose duration comes from the live configuration (default 5 min)                                               | §5.2             |
+| DD-006 | MySQL with idempotent `init.sql` at startup; no migration tool                                                                                                                                                      | §7.3             |
+| DD-007 | Runtime validation via a hand-rolled `Validator` (per-domain rules; replaces Zod)                                                                                                                                   | §7.4             |
+| DD-008 | Central `JsonErrorHandler` + `AppError(message, status)`                                                                                                                                                            | §7.5             |
+| DD-009 | Action generation is fire-and-forget (no transaction with the save)                                                                                                                                                 | §3, §7           |
+| DD-010 | Dagstaat edits autosave on a 1.2 s debounce (no manual save button)                                                                                                                                                 | §4.5, §6         |
+| DD-011 | CSV export/import is semicolon-delimited (EU-Excel)                                                                                                                                                                 | §5.1             |
+| DD-012 | One PDO connection per request (no pool), provided via the DI container                                                                                                                                             | §7.1             |
+| DD-013 | App assembled by an `AppFactory` so PHPUnit can mount it without a running web server                                                                                                                               | §7.1             |
+| DD-014 | Each backwash reason is its own action row; the frontend groups them per bath                                                                                                                                       | §3, §4           |
+| DD-015 | Frontend classes carry `module.exports` guards; tested with Jest + jsdom                                                                                                                                            | §9.3             |
+| DD-016 | Combined chlorine and consumption deltas are derived, not stored                                                                                                                                                    | §5.4             |
+| DD-017 | Native PHP session cookie secured by the runtime — no application-level session secret to manage (supersedes the former Node `SESSION_SECRET`)                                                                      | §5.2, §8.2       |
+| DD-018 | Password hashing with bcrypt (`password_hash`, `PASSWORD_DEFAULT`); legacy plaintext upgraded on login + startup migration                                                                                          | §5.2, §7.2       |
+| DD-019 | Generic `configuratie` key/value table + a single shared `ConfiguratieService` (in-memory cache) feeding both the session middleware and the admin router                                                           | §3.1, §5.2, §7.3 |
+| DD-020 | Optimistic concurrency on the waterbeheer meetwaarden/verbruik tables via the `Support\Optimistisch` helper (conditional UPDATE on `versie`, `AppError(409)` on mismatch); `auteur`/`bijgewerkt_op` for attribution | §3.1, §5.4, §7.3 |
+| DD-021 | Passive completeness indicators (subtab/page-tab dot) replace the post-save warning; app-version label from `/api/versie`; global 401 handler returns the UI to the login screen                                    | §4.2, §5.1, §6.2 |
+| DD-022 | Backend re-platformed Node/Express/TypeScript → **PHP 8.0 (Slim 4 + PHP-DI)** to fit the shared Apache/MySQL host; same layered design, HTTP API, JSON shapes, data model and frontend                              | §3.2, §7         |
 
 ### 2.3 Architecture Overview
 
@@ -128,15 +133,15 @@ spoelbeurt, etc.).
 └───────────────────────────────┬─────────────────────────────┘
                                 │ HTTP(S) · JSON · session cookie
 ┌───────────────────────────────▼─────────────────────────────┐
-│ Express app (maakApp(pool))                                  │
-│  express.json → session → [domain routers] → frontend → static│
-│  per route: checkAuth → valideerBody(schema) → controller    │
+│ Slim 4 app (AppFactory + PHP-DI container)                   │
+│  SessionMiddleware(/api) → [domain routes] → Frontend assets │
+│  per route: AuthMiddleware → RechtenMiddleware → controller  │
 │             controller → service → repository                │
-│  errorHandler (last)                                         │
+│  JsonErrorHandler (error middleware)                         │
 └───────────────────────────────┬─────────────────────────────┘
-                                │ SQL via shared mysql2 pool
+                                │ SQL via PDO (one connection/request)
                         ┌────────▼────────┐
-                        │   MySQL 8        │  init.sql (idempotent)
+                        │   MySQL 8        │  init.sql (idempotent, bin/init-db.php)
                         └─────────────────┘
 ```
 
@@ -144,16 +149,16 @@ spoelbeurt, etc.).
 
 ```mermaid
 graph LR
-    R["Request /api/..."] --> CA["checkAuth"]
+    R["Request /api/..."] --> CA["AuthMiddleware"]
     CA -->|"geen sessie"| E401["401 Niet ingelogd"]
-    CA -->|"ok"| VB["valideerBody(schema)\n(POST/PUT met JSON)"]
-    VB -->|"ongeldig"| EH
-    VB -->|"ok, req.body geparst"| H["controller-handler"]
-    H -->|"verkeerde rol"| E403["403 Geen toegang"]
+    CA -->|"ok"| RM["RechtenMiddleware(domein, recht)"]
+    RM -->|"geen recht"| E403["403 Geen toegang"]
+    RM -->|"ok"| H["controller-handler\n+ Validator (POST/PUT met JSON)"]
+    H -->|"ongeldig"| EH
     H -->|"ok"| SVC["service"]
     SVC --> REPO["repository"]
-    REPO --> POOL[("mysql2 pool")]
-    H -.->|"next(err)"| EH["errorHandler"]
+    REPO --> PDO[("PDO connection")]
+    H -.->|"throw AppError"| EH["JsonErrorHandler"]
     SVC -.->|"throw AppError"| EH
     REPO -.->|"throw AppError"| EH
     EH --> RESP["JSON { error } met status"]
@@ -165,48 +170,49 @@ graph LR
 
 ### 3.1 Decision Log
 
-| ID     | Decision                                                                                                                                                                                                                                   | Rationale                                                                                                                        | Alternatives                                                        | Trade-offs                                                                                           |
-| ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| DD-001 | Layered OO + DI per domain                                                                                                                                                                                                                 | Testability, uniform structure, clear separation                                                                                 | Single-file handlers; framework (NestJS)                            | More files/boilerplate per domain                                                                    |
-| DD-002 | Depend on interfaces; wire concretes in route factory; ISP                                                                                                                                                                                 | Each layer mockable; minimal coupling (`IDaggegevensProvider`)                                                                   | Concrete deps; service locator                                      | Extra interface files                                                                                |
-| DD-003 | Vanilla ES6 frontend, no bundler                                                                                                                                                                                                           | Runs behind any static server/proxy; no build pipeline; low complexity for solo dev                                              | React/Vue + Vite                                                    | No components/JSX; manual DOM; no tree-shaking                                                       |
-| DD-004 | `Application` container + few `window.*` globals                                                                                                                                                                                           | Single wiring point; inline `onclick` handlers still work                                                                        | Full module system; event delegation only                           | Globals are a small surface to manage                                                                |
-| DD-005 | Session auth; sliding/idle `rolling` cookie, max-age from live config (default 5 min)                                                                                                                                                      | Simple, server-controlled; idle-out limits unattended access; tunable without restart                                            | JWT; OAuth; fixed absolute lifetime                                 | Server holds session state (fine at this scale); short idle-out needs graceful 401 handling (DD-021) |
-| DD-006 | Idempotent `init.sql` at startup (plain `ALTER … ADD/DROP COLUMN`, errors swallowed per statement)                                                                                                                                         | Zero-friction schema bootstrap; no migration tooling to maintain; works on MySQL 8 (no MariaDB-only `IF NOT EXISTS`)             | Knex/Prisma migrations                                              | No ordered migration history; harmless `Duplicate column` warnings when already applied              |
-| DD-007 | Zod `valideerBody`; `looseObject` for measurement domains                                                                                                                                                                                  | Runtime safety at the edge; lenient where the UI mixes strings/numbers                                                           | Manual checks; strict schemas everywhere                            | `looseObject` lets unknown fields through by design                                                  |
-| DD-008 | `AppError` + central `errorHandler`                                                                                                                                                                                                        | Consistent error→status mapping; logs only 5xx                                                                                   | Per-handler try/catch responses                                     | Must remember to `next(err)`/throw                                                                   |
-| DD-009 | Fire-and-forget action generation                                                                                                                                                                                                          | Keeps the save fast; action is derived state                                                                                     | Transactional save+generate                                         | No atomic guarantee; recomputed on next save                                                         |
-| DD-010 | Autosave 1.2 s debounce                                                                                                                                                                                                                    | No "save" button; fewer lost edits                                                                                               | Explicit save; per-field save                                       | Many small writes; brief unsaved window                                                              |
-| DD-011 | Semicolon CSV                                                                                                                                                                                                                              | Opens directly in EU-locale Excel                                                                                                | Comma CSV; XLSX                                                     | Non-standard delimiter                                                                               |
-| DD-012 | One shared pool injected                                                                                                                                                                                                                   | Connection reuse; single config point                                                                                            | Per-request connections                                             | Shared resource to size correctly                                                                    |
-| DD-013 | `maakApp(pool)` vs `server.ts`                                                                                                                                                                                                             | App can be mounted by Supertest without listening                                                                                | App built in server.ts                                              | Slight indirection                                                                                   |
-| DD-014 | Per-reason action rows, grouped client-side                                                                                                                                                                                                | Backend stays simple (one row per `actie_type`); UI shows one card per bath                                                      | Merge reasons server-side                                           | Grouping logic lives in the client                                                                   |
-| DD-015 | `module.exports` guards + jsdom tests                                                                                                                                                                                                      | Frontend classes become unit-testable without a bundler                                                                          | No frontend tests; Cypress only                                     | A guard line per file; script-mode `export {}` in tests                                              |
-| DD-016 | Combined chlorine & deltas derived                                                                                                                                                                                                         | Single source of truth; no stored duplication to keep consistent                                                                 | Persist computed columns                                            | Recomputed on read                                                                                   |
-| DD-017 | Require `SESSION_SECRET` in production via `bepaalSessionSecret()` (fail fast under `NODE_ENV=production`); dev/test use a labelled fallback                                                                                               | No insecure default reaches production; dev/tests keep working without config                                                    | Always require (breaks dev); keep insecure default (rejected)       | Relies on `NODE_ENV=production` being set in the deployment                                          |
-| DD-018 | Hash passwords with Node's built-in `crypto.scrypt` (format `scrypt$N$salt$hash`); verify supports legacy plaintext; upgrade on login + a startup migration                                                                                | Zero new dependency (works on Alpine; avoids the container `node_modules` gotcha); secure KDF; smooth migration of existing rows | bcrypt/argon2 (native build on Alpine); accept plaintext (rejected) | Hand-rolled format string; scrypt cost fixed at N=16384                                              |
-| DD-019 | Generic `configuratie` (sleutel/waarde/type) + one shared `ConfiguratieService` with an in-memory cache; the same instance feeds the session middleware (per-request max-age) and the `/api/configuratie` router                           | Add settings without schema changes; no DB hit per request; admin edits take effect immediately (same cache)                     | Per-setting columns/endpoints; env-only config (needs restart)      | Service instance shared, not pool-injected like other domains (documented exception)                 |
-| DD-020 | Optimistic concurrency via `optimistischOpslaan()`: conditional `UPDATE … WHERE key AND versie = ?` (row-lock serialises writers), new-record/conflict/duplicate-insert handling, `AppError(409)` on mismatch; client round-trips `versie` | Turns silent lost-updates into a visible, recoverable conflict; cheap; reuses the layered pattern                                | Pessimistic locks; CRDT/real-time merge; field-level PATCH          | Conflict reload discards the user's just-typed value (accepted; autosave makes the window tiny)      |
-| DD-021 | Passive completeness dot (subtab/page-tab) instead of a post-save warning; `/api/versie` header label; global 401 → login screen with explanation                                                                                          | Less nagging; clearer "what's incomplete"; short idle-out needs a graceful re-login path; version aids support                   | Keep transient warning; per-tab modal on expiry                     | Extra client state (per-record version + completeness)                                               |
+| ID     | Decision                                                                                                                                                                                                                                             | Rationale                                                                                                            | Alternatives                                                           | Trade-offs                                                                                           |
+| ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| DD-001 | Layered OO + DI per domain                                                                                                                                                                                                                           | Testability, uniform structure, clear separation                                                                     | Single-file handlers; framework (NestJS)                               | More files/boilerplate per domain                                                                    |
+| DD-002 | Depend on interfaces; wire concretes in the PHP-DI container; ISP                                                                                                                                                                                    | Each layer mockable; minimal coupling (`IDaggegevensProvider`)                                                       | Concrete deps; service locator                                         | Extra interface files                                                                                |
+| DD-003 | Vanilla ES6 frontend, no bundler                                                                                                                                                                                                                     | Runs behind any static server/proxy; no build pipeline; low complexity for solo dev                                  | React/Vue + Vite                                                       | No components/JSX; manual DOM; no tree-shaking                                                       |
+| DD-004 | `Application` container + few `window.*` globals                                                                                                                                                                                                     | Single wiring point; inline `onclick` handlers still work                                                            | Full module system; event delegation only                              | Globals are a small surface to manage                                                                |
+| DD-005 | Session auth (native PHP `$_SESSION`); sliding/idle time-out, duration from live config (default 5 min)                                                                                                                                              | Simple, server-controlled; idle-out limits unattended access; tunable without restart                                | JWT; OAuth; fixed absolute lifetime                                    | Server holds session state (fine at this scale); short idle-out needs graceful 401 handling (DD-021) |
+| DD-006 | Idempotent `init.sql` at startup (plain `ALTER … ADD/DROP COLUMN`, errors swallowed per statement)                                                                                                                                                   | Zero-friction schema bootstrap; no migration tooling to maintain; works on MySQL 8 (no MariaDB-only `IF NOT EXISTS`) | Knex/Prisma migrations                                                 | No ordered migration history; harmless `Duplicate column` warnings when already applied              |
+| DD-007 | Hand-rolled `Validator`; lenient rules for measurement domains                                                                                                                                                                                       | Runtime safety at the edge; lenient where the UI mixes strings/numbers                                               | Zod (Node-only); strict schemas everywhere                             | Lenient rules let unknown fields through by design                                                   |
+| DD-008 | `AppError` + central `JsonErrorHandler`                                                                                                                                                                                                              | Consistent error→status mapping; logs only 5xx                                                                       | Per-handler try/catch responses                                        | Must remember to throw `AppError`                                                                    |
+| DD-009 | Fire-and-forget action generation                                                                                                                                                                                                                    | Keeps the save fast; action is derived state                                                                         | Transactional save+generate                                            | No atomic guarantee; recomputed on next save                                                         |
+| DD-010 | Autosave 1.2 s debounce                                                                                                                                                                                                                              | No "save" button; fewer lost edits                                                                                   | Explicit save; per-field save                                          | Many small writes; brief unsaved window                                                              |
+| DD-011 | Semicolon CSV                                                                                                                                                                                                                                        | Opens directly in EU-locale Excel                                                                                    | Comma CSV; XLSX                                                        | Non-standard delimiter                                                                               |
+| DD-012 | One PDO connection per request (no pool)                                                                                                                                                                                                             | Matches shared PHP hosting (process-per-request); single config point                                                | Persistent/pooled connections                                          | A fresh connect per request (negligible at this scale)                                               |
+| DD-013 | `AppFactory` builds the Slim app object                                                                                                                                                                                                              | App can be mounted by PHPUnit without a running web server                                                           | App built inline in the entry script                                   | Slight indirection                                                                                   |
+| DD-014 | Per-reason action rows, grouped client-side                                                                                                                                                                                                          | Backend stays simple (one row per `actie_type`); UI shows one card per bath                                          | Merge reasons server-side                                              | Grouping logic lives in the client                                                                   |
+| DD-015 | `module.exports` guards + jsdom tests                                                                                                                                                                                                                | Frontend classes become unit-testable without a bundler                                                              | No frontend tests; Cypress only                                        | A guard line per file; script-mode `export {}` in tests                                              |
+| DD-016 | Combined chlorine & deltas derived                                                                                                                                                                                                                   | Single source of truth; no stored duplication to keep consistent                                                     | Persist computed columns                                               | Recomputed on read                                                                                   |
+| DD-017 | Native PHP session cookie secured by the runtime; no application-level session secret                                                                                                                                                                | One less secret to manage/leak; the PHP engine signs the session id                                                  | App-managed signing secret (former Node `SESSION_SECRET`)              | Relies on a correct PHP session config on the host                                                   |
+| DD-018 | Hash passwords with bcrypt (`password_hash`, `PASSWORD_DEFAULT`); verify supports legacy plaintext; upgrade on login + a startup migration                                                                                                           | Built into PHP; guaranteed on shared hosting (unlike Argon2); secure KDF; smooth migration of existing rows          | Argon2 (not guaranteed on shared hosting); accept plaintext (rejected) | bcrypt's 72-byte input limit (irrelevant here); cost left at the PHP default                         |
+| DD-019 | Generic `configuratie` (sleutel/waarde/type) + one shared `ConfiguratieService` with an in-memory cache; the same instance feeds the session middleware (per-request max-age) and the `/api/configuratie` router                                     | Add settings without schema changes; no DB hit per request; admin edits take effect immediately (same cache)         | Per-setting columns/endpoints; env-only config (needs restart)         | Service instance shared, not pool-injected like other domains (documented exception)                 |
+| DD-020 | Optimistic concurrency via the `Support\Optimistisch` helper: conditional `UPDATE … WHERE key AND versie = ?` (row-lock serialises writers), new-record/conflict/duplicate-insert handling, `AppError(409)` on mismatch; client round-trips `versie` | Turns silent lost-updates into a visible, recoverable conflict; cheap; reuses the layered pattern                    | Pessimistic locks; CRDT/real-time merge; field-level PATCH             | Conflict reload discards the user's just-typed value (accepted; autosave makes the window tiny)      |
+| DD-021 | Passive completeness dot (subtab/page-tab) instead of a post-save warning; `/api/versie` header label; global 401 → login screen with explanation                                                                                                    | Less nagging; clearer "what's incomplete"; short idle-out needs a graceful re-login path; version aids support       | Keep transient warning; per-tab modal on expiry                        | Extra client state (per-record version + completeness)                                               |
 
 ### 3.2 Decision Narratives (selected)
 
 #### DD-001 / DD-002: Layered backend with dependency inversion
 
 **Decision.** Each domain (auth, gebruikers, limieten, metingen, coordinatoren,
-verbruik, trend, database, logboek) is implemented as `route-factory → controller →
-service → repository`. Controllers depend on a service **interface**
-(`IXxxService`); services depend on repository **interfaces**; concrete classes are
-instantiated only inside the route factory.
+verbruik, trend, database, logboek) is implemented as `controller → service →
+repository`, with the concrete classes bound in the PHP-DI container
+(`config/dependencies.php`) and the routes registered in `config/routes.php`.
+Controllers depend on a service **interface** (`IXxxService`); services depend on
+repository **interfaces**; concrete classes are instantiated only by the container.
 
 **Rationale.** Every layer can be unit-tested by mocking the layer beneath
-(controller mocks service, service mocks repositories, repository mocks the pool).
+(controller mocks service, service mocks repositories, repository mocks PDO).
 The `MetingenService` consumes a narrow `IDaggegevensProvider` (only
 `getDaggegevens`) implemented by `CoordinatorenRepository` — Interface Segregation,
 so the service sees only what it needs.
 
 **Alternatives.** Single-file route handlers (rejected: poor testability/uniformity)
-or a DI framework like NestJS (rejected: too much machinery for the size).
+or a heavier framework like Laravel/Symfony (rejected: too much machinery for the size).
 
 **Trade-offs.** More files and interfaces per domain, accepted for the testability
 and consistency payoff.
@@ -247,6 +253,33 @@ or coordinator-block delete (ACT-005).
 **Trade-offs.** No atomic guarantee between the save and the generated action; a
 crash between the two would be reconciled on the next save. Acceptable for this
 domain.
+
+#### DD-022: Re-platforming the backend from Node/TypeScript to PHP
+
+**Decision.** The backend was ported from Node/Express/TypeScript to **PHP 8.0**
+using **Slim 4** (PSR-7/PSR-15) and **PHP-DI**. The layered design (controller →
+service → repository + interfaces), the HTTP API and JSON shapes, the MySQL data
+model and the entire frontend are preserved one-to-one, so `frontend/js/*.js` works
+unchanged. Mechanical mappings: Express routers → `config/routes.php`; route
+factories → `config/dependencies.php` (DI bindings); `mysql2` pool → PDO per request;
+`express-session` → native `$_SESSION` via `SessionMiddleware` (only on `/api`); Zod
+→ `Validator`; `errorHandler` → `JsonErrorHandler`; scrypt → bcrypt; `runInitSql` →
+`bin/init-db.php`. The code stays within **PHP 8.0** syntax (no `readonly` promoted
+properties, etc.) to match the host.
+
+**Rationale.** The production host the operator controls offers **shared Apache +
+MySQL with PHP 8.0 only — no Node runtime**. Re-platforming onto the host's native
+stack removes the dependency on a runtime that cannot be installed there, while
+keeping the design the team already knows.
+
+**Alternatives.** Keep Node and find different hosting (rejected: host is fixed);
+port to Python/WSGI (rejected: host is PHP-only); a heavier PHP framework
+(rejected: Slim mirrors the existing minimal, layered approach most closely).
+
+**Trade-offs.** Two language ecosystems briefly coexisted during the port; the old
+TypeScript backend is preserved behind the git tag `pre-php-migration`. PDO opens a
+connection per request instead of pooling (negligible at this scale, and natural for
+PHP's process-per-request model).
 
 ---
 
@@ -443,36 +476,40 @@ best-effort (EPS §5.4). No dedicated breakpoints are formally specified.
 
 ### 5.1 API Design
 
-| Item         | Choice                                                   |
-| ------------ | -------------------------------------------------------- |
-| Style        | REST-ish JSON over HTTP, single origin                   |
-| Base path    | `/api` (+ domain sub-paths)                              |
-| Auth         | `express-session` cookie; `checkAuth` middleware         |
-| Versioning   | None (single internal deployment)                        |
-| Validation   | Zod via `valideerBody(schema)` on mutating routes        |
-| Error format | `{ "error": "<message>" }` with `AppError.status` or 500 |
-| CSV          | Semicolon-delimited export/import (DD-011)               |
+| Item         | Choice                                                                  |
+| ------------ | ----------------------------------------------------------------------- |
+| Style        | REST-ish JSON over HTTP, single origin                                  |
+| Base path    | `/api` (+ domain sub-paths)                                             |
+| Auth         | native PHP `$_SESSION` cookie; `AuthMiddleware` (+ `RechtenMiddleware`) |
+| Versioning   | None (single internal deployment)                                       |
+| Validation   | `Validator` (per-domain rules) on mutating routes                       |
+| Error format | `{ "error": "<message>" }` with `AppError.status` or 500                |
+| CSV          | Semicolon-delimited export/import (DD-011)                              |
 
 #### Endpoint catalogue
 
-| Router (factory)   | Mount                | Endpoints                                                                                                            | Role                                                           |
-| ------------------ | -------------------- | -------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| `auth.ts`          | `/api`               | `POST /login`, `POST /logout`, `GET /ingelogd`                                                                       | — / session                                                    |
-| `metingen.ts`      | `/api`               | `GET/POST /metingen`, `GET /acties`, `POST /acties/:id/resolve`, `POST /acties/:id/unresolve`, `GET /bezoekers`      | waterbeheerder                                                 |
-| `rondetaken.ts`    | `/api/rondetaken`    | `GET /`, `POST /:sleutel/voltooi`, `POST /:sleutel/heropen`                                                          | waterbeheerder                                                 |
-| `taken.ts`         | `/api/taken`         | `GET /` — composed task list (rondetaken + acties) per bath page                                                     | waterbeheerder                                                 |
-| `coordinatoren.ts` | `/api/coordinatoren` | `GET/POST /`, `DELETE /`, `GET/POST /checklist`, `GET/POST /daggegevens`, `GET/POST /logboek`, `DELETE /logboek/:id` | waterbeheerder or coördinator                                  |
-| `verbruik.ts`      | `/api/verbruik`      | `GET/POST /diep-ondiep`, `GET /diep-ondiep/vorige`, `GET/POST /verwarmingssysteem`                                   | waterbeheerder                                                 |
-| `limieten.ts`      | `/api/limieten`      | `GET /`, `GET /defaults`, `POST /`                                                                                   | read: authenticated (any role) · write: **Administrator only** |
-| `actieteksten.ts`  | `/api/actieteksten`  | `GET /`, `GET /defaults`, `POST /`                                                                                   | read: authenticated · write: **Administrator only**            |
-| `dienst.ts`        | `/api/dienst`        | `GET /`, `GET /waterbeheerders`, `POST /`                                                                            | read: authenticated · write: admin/waterbeheerder              |
-| `logboek.ts`       | `/api/logboek`       | `GET /`, `POST /`, `DELETE /:id`                                                                                     | waterbeheerder                                                 |
-| `gebruikers.ts`    | `/api/gebruikers`    | `GET /`, `POST /`, `PUT /:id`, `DELETE /:id`                                                                         | admin/waterbeheerder                                           |
-| `database.ts`      | `/api/database`      | `POST /truncate/:tabel`, `POST /verwijder-alles`, `POST /initialiseer`, `GET /export/:tabel`, `POST /import/:tabel`  | admin/waterbeheerder                                           |
-| `trend.ts`         | `/api/trend`         | `GET /metingen`, `GET /verbruik`                                                                                     | waterbeheerder                                                 |
-| `configuratie.ts`  | `/api/configuratie`  | `GET /`, `PUT /:sleutel`                                                                                             | read: authenticated · write: **Administrator only**            |
-| `versie.ts`        | `/api/versie`        | `GET /` — `{ versie, commit }` for the header label                                                                  | authenticated (public, non-sensitive)                          |
-| `frontend.ts`      | `/`                  | `GET /` — assemble HTML partials                                                                                     | —                                                              |
+> Routes are registered in `config/routes.php` and dispatched to the controllers
+> below; the role column is enforced by `AuthMiddleware` + `RechtenMiddleware`. Path
+> parameters use Slim's `{name}` syntax.
+
+| Controller                | Mount                | Endpoints                                                                                                              | Role                                                           |
+| ------------------------- | -------------------- | ---------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
+| `AuthController`          | `/api`               | `POST /login`, `POST /logout`, `GET /ingelogd`                                                                         | — / session                                                    |
+| `MetingenController`      | `/api`               | `GET/POST /metingen`, `GET /acties`, `POST /acties/{id}/resolve`, `POST /acties/{id}/unresolve`, `GET /bezoekers`      | waterbeheerder                                                 |
+| `RondetakenController`    | `/api/rondetaken`    | `GET /`, `POST /{sleutel}/voltooi`, `POST /{sleutel}/heropen`                                                          | waterbeheerder                                                 |
+| `TakenController`         | `/api/taken`         | `GET /` — composed task list (rondetaken + acties) per bath page                                                       | waterbeheerder                                                 |
+| `CoordinatorenController` | `/api/coordinatoren` | `GET/POST /`, `DELETE /`, `GET/POST /checklist`, `GET/POST /daggegevens`, `GET/POST /logboek`, `DELETE /logboek/{id}`  | waterbeheerder or coördinator                                  |
+| `VerbruikController`      | `/api/verbruik`      | `GET/POST /diep-ondiep`, `GET /diep-ondiep/vorige`, `GET/POST /verwarmingssysteem`                                     | waterbeheerder                                                 |
+| `LimietenController`      | `/api/limieten`      | `GET /`, `GET /defaults`, `POST /`                                                                                     | read: authenticated (any role) · write: **Administrator only** |
+| `ActieTekstenController`  | `/api/actieteksten`  | `GET /`, `GET /defaults`, `POST /`                                                                                     | read: authenticated · write: **Administrator only**            |
+| `DienstController`        | `/api/dienst`        | `GET /`, `GET /waterbeheerders`, `POST /`                                                                              | read: authenticated · write: admin/waterbeheerder              |
+| `LogboekController`       | `/api/logboek`       | `GET /`, `POST /`, `DELETE /{id}`                                                                                      | waterbeheerder                                                 |
+| `GebruikersController`    | `/api/gebruikers`    | `GET /`, `POST /`, `PUT /{id}`, `DELETE /{id}`                                                                         | admin/waterbeheerder                                           |
+| `DatabaseController`      | `/api/database`      | `POST /truncate/{tabel}`, `POST /verwijder-alles`, `POST /initialiseer`, `GET /export/{tabel}`, `POST /import/{tabel}` | admin/waterbeheerder                                           |
+| `TrendController`         | `/api/trend`         | `GET /metingen`, `GET /verbruik`                                                                                       | waterbeheerder                                                 |
+| `ConfiguratieController`  | `/api/configuratie`  | `GET /`, `PUT /{sleutel}`                                                                                              | read: authenticated · write: **Administrator only**            |
+| `VersieController`        | `/api/versie`        | `GET /` — `{ versie, commit }` for the header label                                                                    | authenticated (public, non-sensitive)                          |
+| `FrontendController`      | `/`                  | `GET /` — assemble HTML partials; serve `/js`, `/css`, `/images`                                                       | —                                                              |
 
 > **Concurrency on saves.** `POST /api/metingen` and `POST /api/verbruik/{diep-ondiep,verwarmingssysteem}`
 > accept an expected `versie` and return the new `{ versie, auteur, bijgewerkt_op }`;
@@ -480,91 +517,78 @@ best-effort (EPS §5.4). No dedicated breakpoints are formally specified.
 > same meta so the client can round-trip the version and show "last edited by".
 
 > **Role policy (EPS R-006, resolved 2026-06-03).** Trend (`/api/trend/*`) is
-> **Waterbeheerder only** (strict `isWaterbeheerder`; Administrators and Coördinators
-> receive 403). Limieten reads (`GET /`, `/defaults`) require authentication and are
-> allowed for **any role** (the dagstaat field-validation and season bounds depend on
-> them); the Limieten management screen and writes (`POST /`) are **Administrator
-> only** (`isAdmin`). The nav (`auth.js`) matches: the Limieten button is hidden from
-> Waterbeheerder and the Trend button from Administrator.
+> **Waterbeheerder only** (Administrators and Coördinators receive 403). Limieten
+> reads (`GET /`, `/defaults`) require authentication and are allowed for **any role**
+> (the dagstaat field-validation and season bounds depend on them); the Limieten
+> management screen and writes (`POST /`) are **Administrator only**. The policy is
+> enforced by `RechtenMiddleware(domein, 'lezen'|'schrijven')` on the routes; the nav
+> (`auth.js`) matches: the Limieten button is hidden from Waterbeheerder and the Trend
+> button from Administrator.
 
 ### 5.2 Authentication & Session Model
 
-- **Mechanism:** `express-session` with `secret = bepaalSessionSecret()`
-  (`backend/config.ts`), `resave: false`, `saveUninitialized: false`, and a
-  **sliding/idle** cookie: `rolling: true` re-issues the cookie on every response,
-  and a small middleware after `session()` sets `req.session.cookie.maxAge` from the
-  live `ConfiguratieService.getSessieTimeoutMs()` (default 5 min, key
-  `sessie_timeout_minuten`). So the time-out resets on activity and is changeable
-  without a restart (DD-019). `bepaalSessionSecret` returns `SESSION_SECRET` if set;
-  under `NODE_ENV=production` it **throws if unset** (fail fast, no insecure default);
-  in dev/test it falls back to a labelled value. (R-003 resolved.)
+- **Mechanism:** native PHP sessions (`$_SESSION`), started by `SessionMiddleware`
+  **only on `/api` paths** (so the public page and assets open no DB connection). On
+  each `/api` request the middleware records the last-activity time; if it is older
+  than the configured idle window the session is cleared, otherwise the expiry slides
+  forward and the session cookie's `Max-Age` is refreshed. The window comes from the
+  live `ConfiguratieService` (default 5 min, key `sessie_timeout_minuten`), so it is
+  changeable without a restart (DD-019). The middleware is given the **container** (not
+  the service) so the config/PDO chain is built lazily, per `/api` request only. The
+  PHP runtime signs/secures the session id — there is no app-level `SESSION_SECRET`
+  (DD-017; R-003 superseded).
 - **Expiry UX:** `ApiClient` treats a 401 (other than the login call) as an expired
   session and returns the UI to the login screen with a persistent
   "session expired due to inactivity" message (AUTH-007 / DD-021).
-- **Login:** `POST /api/login` validates `{username, password}` (Zod), looks up the
-  user, and stores `req.session.gebruiker` (typed via a `declare module
-'express-session'` augmentation in `backend/types/index.ts`).
-- **Authorisation:** `checkAuth` rejects sessionless requests (401); role helpers
-  (`isWaterbeheerder`, `isWaterbeheerderOrCoordinator`, `isAdminOrWaterbeheerder`)
-  gate handlers (403).
-- **Logout:** `POST /api/logout` destroys the session. **Status:** `GET
-/api/ingelogd` reports the current user for client bootstrap.
-- **Password storage:** passwords are hashed with `crypto.scrypt` via
-  `backend/wachtwoord.ts` (`hashWachtwoord`/`verifieerWachtwoord`/`isGehasht`).
-  `findByLogin` fetches by login name and verifies in code (so per-row salts work);
-  `getAll` never returns the hash; create/update/seed hash on write; legacy plaintext
-  is upgraded on login and by a startup migration (`hashBestaandeWachtwoorden`).
-  (R-002 resolved.) The session secret is now required in production (R-003 resolved;
-  see §5.2 / `bepaalSessionSecret`).
+- **Login:** `POST /api/login` validates `{username, password}` (`Validator`), looks up
+  the user, and stores the user in `$_SESSION`.
+- **Authorisation:** `AuthMiddleware` rejects sessionless requests (401);
+  `RechtenMiddleware(domein, 'lezen'|'schrijven')` enforces the per-domain role rights
+  (403), the equivalent of the former `checkAuth` + role helpers.
+- **Logout:** `POST /api/logout` destroys the session. **Status:** `GET /api/ingelogd`
+  reports the current user for client bootstrap.
+- **Password storage:** passwords are hashed with bcrypt (`password_hash`,
+  `PASSWORD_DEFAULT`) via `Support\Wachtwoord`. `findByLogin` fetches by login name and
+  verifies in code (so per-row salts work); listing never returns the hash;
+  create/update/seed hash on write; legacy plaintext is upgraded on login and by a
+  startup migration. (R-002 resolved.)
 
 ### 5.3 Internal Interfaces
 
 - **Client↔server:** `ApiClient.call(url, options)` (fetch with
   `credentials: 'include'`); JSON bodies; the session cookie carries identity.
 - **Within the server:** controllers call service interfaces; services call
-  repository interfaces; all repositories share the injected pool. The route
-  factory is the only place concrete classes meet.
+  repository interfaces; every repository receives its own PDO connection via the
+  container. The PHP-DI container (`config/dependencies.php`) is the only place
+  concrete classes meet.
 
 ### 5.4 Data Structures & Formats
 
-Representative shared types (`backend/types/index.ts`):
+The API exchanges plain JSON; on the server, repositories return/accept associative
+arrays mapped straight from the table columns (no central type file as in the former
+TypeScript build). Representative JSON shapes:
 
-```typescript
-interface Actie {
-    id: number;
-    bad_naam: string;
-    beschrijving: string;
-    actie_type: string;
-    opgelost: boolean;
-    opgelost_op: Date | null;
-    opgelost_door: string | null;
+```jsonc
+// Actie (one open/resolved action row)
+{
+    "id": 12,
+    "bad_naam": "Diep",
+    "beschrijving": "Flow < 50 m³/h",
+    "actie_type": "filter_spoelen_flow",
+    "opgelost": false,
+    "opgelost_op": null,
+    "opgelost_door": null,
 }
 
-interface Drempelwaarden {
-    // action thresholds, loaded from LIMIETEN
-    actie_druk_verschil: number;
-    actie_druk_peuterbad: number;
-    actie_flow_diep: number;
-    actie_flow_ondiep: number;
-    actie_flow_peuterbad: number;
-    actie_chloor_min: number;
-    actie_zwavelzuur_min: number;
-    actie_bezoekers_max: number;
-    actie_spoelbeurt_max: number;
-    actie_spoelbeurt_dagen: number;
-    actie_floculant_min: number;
-    actie_gebonden_chloor_max: number;
-    actie_chloor_peuterbad_min: number;
-    actie_zwavelzuur_peuterbad_min: number;
-}
-
-// express-session augmentation keeps req.session.gebruiker typed at runtime
-declare module 'express-session' {
-    interface SessionData {
-        gebruiker?: Gebruiker;
-    }
-}
+// Drempelwaarden (action thresholds, loaded from LIMIETEN) — numeric keys:
+// actie_druk_verschil, actie_druk_peuterbad, actie_flow_{diep,ondiep,peuterbad},
+// actie_chloor_min, actie_zwavelzuur_min, actie_bezoekers_max,
+// actie_spoelbeurt_max, actie_spoelbeurt_dagen, actie_floculant_min,
+// actie_gebonden_chloor_max, actie_chloor_peuterbad_min, actie_zwavelzuur_peuterbad_min
 ```
+
+The logged-in user is held in `$_SESSION` (no type augmentation needed — PHP is
+dynamically typed); `SessionMiddleware` reads/writes it per `/api` request.
 
 **Derived (not stored):** combined chlorine = `chloor_totaal − chloor_vrij`
 (computed in the coordinator UI and in `genereerCoordinatoren`); daily consumption =
@@ -593,7 +617,7 @@ sequenceDiagram
     participant U as <<Actor>><br/>User
     participant C as <<Frontend>><br/>AuthModule
     participant A as <<Frontend>><br/>ApiClient
-    participant S as <<Backend>><br/>Express /api/login
+    participant S as <<Backend>><br/>Slim /api/login
     participant SR as <<Backend>><br/>AuthService
     participant R as <<Backend>><br/>GebruikersRepository
     participant SS as <<Backend>><br/>Session store
@@ -688,7 +712,7 @@ sequenceDiagram
     participant F2 as <<Frontend>><br/>Browser B
     participant A as <<Frontend>><br/>ApiClient
     participant S as <<Backend>><br/>POST /api/metingen or /api/verbruik
-    participant R as <<Backend>><br/>optimistischOpslaan()
+    participant R as <<Backend>><br/>Support\Optimistisch
     participant DB as <<Database>><br/>MySQL row
 
     U1->>F1: edit value on page
@@ -880,65 +904,72 @@ derived views (field markers, task badges, consumption).
 
 ### 7.1 Runtime & Framework
 
-| Item            | Choice                                                                                                                       | Rationale                   |
-| --------------- | ---------------------------------------------------------------------------------------------------------------------------- | --------------------------- |
-| Runtime         | Node.js                                                                                                                      | —                           |
-| Framework       | Express 4                                                                                                                    | Minimal, well-understood    |
-| Language        | TypeScript (ts-node in dev; `tsc → dist/` in prod)                                                                           | Type safety server-side     |
-| DB driver       | `mysql2/promise` (shared pool, DD-012)                                                                                       | Promise API + pooling       |
-| App composition | `maakApp(pool)` builds the Express app without `listen()` (DD-013); `server.ts` does startup (waitForDb, runInitSql, listen) | Supertest can mount the app |
+| Item            | Choice                                                                                                                                               | Rationale                          |
+| --------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| Runtime         | PHP 8.0 (Apache + mod_php)                                                                                                                           | The shared host's stack            |
+| Framework       | Slim 4 (PSR-7/PSR-15) + PHP-DI                                                                                                                       | Minimal; mirrors the old layering  |
+| Language        | PHP (PSR-4 autoload under `Zwembad\`); 8.0-compatible syntax only                                                                                    | Host runs 8.0                      |
+| DB driver       | PDO (`pdo_mysql`), one connection per request (DD-012)                                                                                               | Built-in; fits process-per-request |
+| App composition | An `AppFactory` builds the Slim `App` from the DI container (DD-013); `public/index.php` is the entry point; `bin/init-db.php` provisions the schema | PHPUnit can mount the app          |
 
-Composition (DI) — the route factory is the only wiring point:
+Composition (DI) — concrete classes are bound in `config/dependencies.php`:
 
-```typescript
-export function maakMetingenRouter(pool: Pool): Router {
-    const metingenRepo = new MetingenRepository(pool);
-    const actiesRepo = new ActiesRepository(pool);
-    const coordRepo = new CoordinatorenRepository(pool);
-    const service = new MetingenService(metingenRepo, actiesRepo, coordRepo);
-    return new MetingenController(service).router;
-}
+```php
+// config/dependencies.php (excerpt)
+IMetingenRepository::class => fn (ContainerInterface $c) => new MetingenRepository($c->get(PDO::class)),
+IActiesRepository::class   => fn (ContainerInterface $c) => new ActiesRepository($c->get(PDO::class)),
+IMetingenService::class    => fn (ContainerInterface $c) => new MetingenService(
+    $c->get(IMetingenRepository::class),
+    $c->get(IActiesRepository::class),
+    $c->get(ICoordinatorenRepository::class), // also implements IDaggegevensProvider
+),
+// config/routes.php then maps the HTTP routes onto MetingenController, guarded by the middleware.
 ```
 
 ### 7.2 Module & Directory Structure
 
 ```
 backend/
-├── app.ts            # maakApp(pool): middleware + routers + errorHandler
-├── server.ts         # startup: waitForDb → runInitSql → maakApp → listen
-├── errors.ts         # AppError(message, status)
-├── auteur.ts         # bepaalAuteur(gebruiker)
-├── types/index.ts    # domain types + express-session augmentation
-├── middleware/        auth.ts · valideer.ts · errorHandler.ts
-├── validation/        schemas.ts (Zod)
-├── controllers/       *Controller.ts            (HTTP only)
-├── services/          I*Service.ts + *Service.ts (business logic)
-├── repositories/      I*Repository.ts + *Repository.ts + db.ts (SQL only)
-└── routes/            maakXxxRouter(pool) factories
+├── public/index.php       # entry point: build container → AppFactory → run
+├── config/
+│   ├── dependencies.php    # PHP-DI bindings (the only wiring point)
+│   ├── routes.php          # HTTP routes → controllers, guarded by middleware
+│   └── settings.php        # runtime settings (DB env-vars, etc.)
+├── bin/init-db.php         # provisions the schema (runInitSql) — run once
+├── src/
+│   ├── Controllers/        *Controller.php             (HTTP only)
+│   ├── Services/           I*Service.php + *Service.php (business logic)
+│   ├── Repositories/       I*Repository.php + *Repository.php (SQL only, PDO)
+│   ├── Middleware/         AuthMiddleware · RechtenMiddleware · SessionMiddleware
+│   ├── Errors/             AppError + JsonErrorHandler
+│   ├── Validation/         Validator.php
+│   └── Support/            Optimistisch · Historie · Wachtwoord · Auteur · Frontend · Json
+├── composer.json          # PSR-4 (Zwembad\ → src/); pins platform php 8.0
+└── test/                  # PHPUnit (Unit/ + Integration/ + Support/)
 ```
 
 Per-domain layering (metingen example):
 
 ```mermaid
 graph TB
-    F["routes/metingen.ts"] --> Ctrl["MetingenController"]
+    F["config/routes.php + PHP-DI"] --> Ctrl["MetingenController"]
     Ctrl -->|IMetingenService| Svc["MetingenService"]
     Svc -->|IMetingenRepository| R1["MetingenRepository"]
     Svc -->|IActiesRepository| R2["ActiesRepository"]
     Svc -->|IDaggegevensProvider| R3["CoordinatorenRepository"]
-    R1 & R2 & R3 -->|pool| DB[("MySQL")]
+    R1 & R2 & R3 -->|PDO| DB[("MySQL")]
 ```
 
 ### 7.3 Database Design
 
-| Item              | Choice                                                                                                                                                                            | Rationale                                        |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| Database          | MySQL 8                                                                                                                                                                           | —                                                |
-| Access            | Repositories only, via shared pool                                                                                                                                                | Single SQL boundary                              |
-| Query style       | Hand-written SQL (`mysql2`), no ORM                                                                                                                                               | Simplicity, control                              |
-| Schema management | `init.sql` run at startup; `CREATE TABLE IF NOT EXISTS` + `INSERT IGNORE` + plain `ALTER … ADD/DROP COLUMN` (errors per statement swallowed, MySQL-8-safe)                        | DD-006 (no migration tool)                       |
-| Write pattern     | Upsert keyed by date / (bad,datum) / (bad,datum,actie_type). Waterbeheer meetwaarden/verbruik use a version-checked upsert (`optimistischOpslaan`, DD-020) for conflict detection | Idempotent daily records; no silent lost updates |
-| Seeding           | `seedAllDefaults()` seeds 36 limieten + 2 users on a fresh DB (`actie_teksten`/`waterbeheer_dienst` survive a reset via `init.sql`)                                               | First-run usability                              |
+| Item              | Choice                                                                                                                                                                                                                                                 | Rationale                                        |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------ |
+| Database          | MySQL 8                                                                                                                                                                                                                                                | —                                                |
+| Access            | Repositories only, via a per-request PDO connection                                                                                                                                                                                                    | Single SQL boundary                              |
+| Query style       | Hand-written SQL (PDO prepared statements), no ORM                                                                                                                                                                                                     | Simplicity, control                              |
+| Schema management | `init.sql` applied by `bin/init-db.php` (`runInitSql`, per-statement try/catch); `CREATE TABLE IF NOT EXISTS` + `INSERT IGNORE` + plain `ALTER … ADD/DROP COLUMN` (MySQL-8-safe). **Not** `mysql < init.sql` (the duplicate `ALTER`s abort the client) | DD-006 (no migration tool)                       |
+| Write pattern     | Upsert keyed by date / (bad,datum) / (bad,datum,actie_type). Waterbeheer meetwaarden/verbruik use a version-checked upsert (`Support\Optimistisch`, DD-020) for conflict detection                                                                     | Idempotent daily records; no silent lost updates |
+| Seeding           | `seedAllDefaults()` seeds 36 limieten + 2 users on a fresh DB (`actie_teksten`/`waterbeheer_dienst` survive a reset via `init.sql`)                                                                                                                    | First-run usability                              |
 
 Entity-relationship (key tables):
 
@@ -981,19 +1012,22 @@ generic key/value settings store seeded with `sessie_timeout_minuten` (DD-019).
 
 ### 7.4 Middleware Stack
 
-Order in `maakApp`: `express.json()` → `express-session` → domain routers →
-`FrontendController` (`/`) → `express.static('frontend')` → `errorHandler`.
+Slim's PSR-15 pipeline: `SessionMiddleware` (only on `/api`) → routing →
+per-route `AuthMiddleware` → `RechtenMiddleware(domein, recht)` → controller;
+`FrontendController` serves `/` and the static assets; the `JsonErrorHandler` is
+registered as Slim's error middleware (outermost).
 
-Per mutating route: `checkAuth` → `valideerBody(schema)` → controller (role check
-first). Zod schemas are `looseObject` for measurement/consumption/coordinator
-domains (the UI mixes strings and numbers) and strict for gebruiker/limiet/login.
+Per mutating route the controller calls the `Validator` for that domain;
+measurement/consumption/coordinator rules are lenient (the UI mixes strings and
+numbers) and strict for gebruiker/limiet/login. `RechtenMiddleware` runs the role
+check before the handler body.
 
 ### 7.5 Error Handling Strategy
 
-`AppError(message, httpStatus)` is thrown by services/repositories for known
-errors; controllers `next(err)` or let throws propagate. The central `errorHandler`
-maps `AppError.status` (or 500) to `{ error }`, and logs only 5xx. `valideerBody`
-throws `AppError(…, 400)` on invalid input.
+`AppError(message, httpStatus)` is thrown by controllers/services/repositories for
+known errors. Slim's error middleware (`JsonErrorHandler`) maps `AppError`'s status
+(or 500 for anything else) to `{ "error": "<message>" }`, and logs only 5xx. The
+`Validator` throws `AppError(…, 400)` on invalid input.
 
 ---
 
@@ -1001,32 +1035,40 @@ throws `AppError(…, 400)` on invalid input.
 
 ### 8.1 Hosting & Infrastructure
 
-| Item          | Choice                                                                             | Notes                             |
-| ------------- | ---------------------------------------------------------------------------------- | --------------------------------- |
-| Hosting       | On-premises / local (operator network)                                             | Internal tool                     |
-| Container     | Docker Compose: `web` (3000, debug 9229) + `db` (MySQL 8, 3306)                    | `restart: always`; db healthcheck |
-| Reverse proxy | Optional (none required); app can sit behind Apache/Nginx                          | Static-friendly (DD-003)          |
-| TLS/HTTPS     | To be provided by the proxy/host in production                                     | Not handled in-app                |
-| Volumes       | `db_data` (MySQL); repo bind-mounted in dev; `init.sql` mounted to the DB init dir | —                                 |
+| Item            | Choice                                                                      | Notes                                             |
+| --------------- | --------------------------------------------------------------------------- | ------------------------------------------------- |
+| Hosting (prod)  | Shared Apache + MySQL hosting with PHP 8.0 (`pdo_mysql`)                    | Docroot → `backend/public/`; Slim via `.htaccess` |
+| Container (dev) | Docker Compose: `web` (Apache + mod_php, 8080) + `db` (MySQL 8, 3306)       | `restart`; db healthcheck; dev/test only          |
+| Web server      | Apache + mod_php (both prod and the dev container)                          | `.htaccess` rewrites to `public/index.php`        |
+| TLS/HTTPS       | Provided by the host in production                                          | Not handled in-app                                |
+| Schema setup    | Run `php bin/init-db.php` once (the dev container does this on first start) | Not `mysql < init.sql` (see §7.3)                 |
 
 ### 8.2 Environment Configuration
 
-| Variable         | Purpose                | Default / Example                                                                                    |
-| ---------------- | ---------------------- | ---------------------------------------------------------------------------------------------------- |
-| `DB_HOST`        | MySQL host             | `db` (compose) / `localhost`                                                                         |
-| `DB_USER`        | MySQL user             | `root`                                                                                               |
-| `DB_PASSWORD`    | MySQL password         | `geheim_wachtwoord` (dev)                                                                            |
-| `DB_NAME`        | Database name          | `zwembad_status`                                                                                     |
-| `PORT`           | App port               | `3000`                                                                                               |
-| `SESSION_SECRET` | Session signing secret | **Required in production** (`NODE_ENV=production` → app fails fast if unset); dev/test fallback only |
-| `NODE_ENV`       | Runtime mode           | Set to `production` in production (enforces SESSION_SECRET)                                          |
+| Variable      | Purpose        | Default / Example           |
+| ------------- | -------------- | --------------------------- |
+| `DB_HOST`     | MySQL host     | `db` (compose) / host value |
+| `DB_USER`     | MySQL user     | `root`                      |
+| `DB_PASSWORD` | MySQL password | `geheim_wachtwoord` (dev)   |
+| `DB_NAME`     | Database name  | `zwembad_status`            |
+
+> Only the DB connection is configured via environment (read in `config/settings.php`,
+> with the same values settable directly there for hosts without env support). There is
+> no `PORT` (Apache serves), no `SESSION_SECRET` and no `NODE_ENV` — the PHP runtime
+> handles the session cookie and there is no build-mode switch (DD-017).
 
 ### 8.3 CI/CD Pipeline
 
-No automated pipeline at present. Build/test commands: `npm run build` (tsc),
-`npm run test:unit`, `npm run test:integration` (needs MySQL), `npm run test:coverage`.
-Deployment is manual via Docker Compose. (Adding CI to run unit tests on push is a
-recommended follow-up.)
+GitHub Actions runs on every push/PR (paths-filtered):
+
+- **`php-tests.yml`** — backend on PHP 8.0: a unit job (`composer test`, no DB) and an
+  integration job (`composer test:integration` against a MySQL 8 service).
+- **`frontend-tests.yml`** — frontend under Node: `npm test` (Jest + jsdom) and
+  `npm run lint` (ESLint).
+
+Deployment to the shared host is manual (upload `backend/` incl. `vendor/`, `frontend/`
+and `init.sql`; run `php bin/init-db.php` once). The dev/test stack runs via Docker
+Compose. (R-007: no automated deploy — acceptable for a single internal app.)
 
 ---
 
@@ -1040,36 +1082,37 @@ pure, testable helpers (see §9.3). Schema changes go in `init.sql` only.
 
 ### 9.2 Coding Conventions
 
-| Item            | Convention                                                           |
-| --------------- | -------------------------------------------------------------------- |
-| Language        | Dutch identifiers, comments, UI and DB labels                        |
-| Backend naming  | Classes PascalCase; methods/vars camelCase (Dutch)                   |
-| Private helpers | `_`-prefix; static lookup tables via `static get`                    |
-| Docs            | JSDoc on public methods                                              |
-| Async           | `async/await` throughout; controllers `try/catch`→`stuurFout`/`next` |
-| Decimal input   | Normalise comma→point at the edge                                    |
-| Formatting      | No linter/formatter configured — manual consistency                  |
-| Commits         | Feature branch → PR → merge to `master`                              |
+| Item             | Convention                                                                          |
+| ---------------- | ----------------------------------------------------------------------------------- |
+| Language         | Dutch identifiers, comments, UI and DB labels                                       |
+| Backend naming   | Classes PascalCase (PSR-4 `Zwembad\`); methods/vars camelCase (Dutch); typed params |
+| PHP version      | 8.0-compatible syntax only (no `readonly` promoted properties, no 8.1+ features)    |
+| Frontend helpers | `_`-prefix; static lookup tables via `static get`                                   |
+| Docs             | Doc-comments on public methods (`/** … */`)                                         |
+| Decimal input    | Normalise comma→point at the edge                                                   |
+| Formatting       | Frontend: Prettier + ESLint (`npm run format`/`lint`); backend: manual consistency  |
+| Commits          | Feature branch → PR → merge to `master`                                             |
 
 ### 9.3 Testing Approach
 
-| Test type       | Tool                     | Scope                                                                                                                                                                                                                                                                          |
-| --------------- | ------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Unit (backend)  | Jest + ts-jest           | Each layer mocks the layer below (controller↔IService, service↔IRepository, repository↔mock pool); plus AppError, auth middleware, errorHandler, Zod schemas & wiring                                                                                                          |
-| Unit (frontend) | Jest (node + jsdom)      | Pure helpers in node env (`berekenVerbruik`, `peuterbadOnvolledig`, limieten conversions); DOM flows under `@jest-environment jsdom` (peuterbad save payload, consumption calc, coordinator-block save). Classes exposed via a browser-ignored `module.exports` guard (DD-015) |
-| Integration     | Jest + Supertest + MySQL | Full stack against an isolated `zwembad_status_test` DB (`jest.integration.config.js`); `npm test` stays DB-free                                                                                                                                                               |
-| E2E             | —                        | **Gap:** no automated browser smoke test yet (R-004)                                                                                                                                                                                                                           |
+| Test type       | Tool                | Scope                                                                                                                                                                                                                                                                                             |
+| --------------- | ------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Unit (backend)  | PHPUnit 9.6         | No DB. Each layer mocks the layer below (controller↔IService, service↔IRepository); plus `AppError`, the `Validator` rules and the `Support` helpers (`Optimistisch`, `Wachtwoord`)                                                                                                               |
+| Unit (frontend) | Jest (node + jsdom) | Pure helpers in node env (`berekenVerbruik`, `peuterbadOnvolledig`, limieten conversions); DOM flows under `@jest-environment jsdom` (peuterbad save payload, consumption calc, coordinator-block save, read-only buttons). Classes exposed via a browser-ignored `module.exports` guard (DD-015) |
+| Integration     | PHPUnit + MySQL     | Full stack via `AppTestCase`/`IntegrationTestCase` against a real MySQL (`composer test:integration`); the unit suite stays DB-free. Cleanup uses future-date/`itest_`/`ITest` prefixes (repos open their own transactions)                                                                       |
+| E2E             | —                   | **Gap:** no automated browser smoke test yet (R-004)                                                                                                                                                                                                                                              |
 
-Current counts (indicative): ~494 unit (incl. frontend jsdom) + integration. New
-coverage in 0.3: `optimistisch` helper (all conflict branches), `ConfiguratieController`/
-`ConfiguratieService`, and frontend jsdom tests for the version round-trip + 409
-handling, completeness markers, session-expiry and the Configuratie autosave.
+Current counts (indicative): PHPUnit **87 unit + 18 integration**; frontend Jest
+**102** (jsdom). Both suites run in CI (§8.3). The PHP port reproduced the
+TypeScript backend's coverage (controllers, services, validation, optimistic-locking
+conflict branches, password hashing, action generation).
 
 ### 9.4 Known Constraints
 
 - Solo, AI-assisted developer; complexity must stay manageable.
-- No client build step (DD-003); no DB migration tool (DD-006); no linter/formatter.
-- On-premises, low-concurrency deployment.
+- No client build step (DD-003); no DB migration tool (DD-006).
+- **PHP 8.0** is the hard backend ceiling (the shared host); no 8.1+ syntax (DD-022).
+- Shared-hosting, low-concurrency deployment; process-per-request (no long-lived state).
 
 ---
 
@@ -1077,14 +1120,16 @@ handling, completeness markers, session-expiry and the Configuratie autosave.
 
 | ID    | Risk                                                                    | Likelihood | Impact | Mitigation                                                                                                                                   | Residual |
 | ----- | ----------------------------------------------------------------------- | ---------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------- | -------- |
-| R-002 | ~~Passwords stored in plain text~~ **RESOLVED 2026-06-04**              | —          | —      | Done: scrypt hashing (`wachtwoord.ts`); verify+upgrade legacy on login; startup migration; hash never sent to client                         | Closed   |
-| R-003 | ~~Hardcoded default session secret~~ **RESOLVED 2026-06-04**            | —          | —      | Done: `bepaalSessionSecret()` requires `SESSION_SECRET` under `NODE_ENV=production` (fail fast); dev/test fallback; compose sets a dev value | Closed   |
+| R-002 | ~~Passwords stored in plain text~~ **RESOLVED 2026-06-04**              | —          | —      | Done: bcrypt hashing (`Support\Wachtwoord`, `password_hash`); verify+upgrade legacy on login; startup migration; hash never sent to client   | Closed   |
+| R-003 | ~~Hardcoded default session secret~~ **RESOLVED 2026-06-04**            | —          | —      | Originally Node `SESSION_SECRET`; since the PHP port the runtime secures the native session cookie — no app-level secret (DD-017)            | Closed   |
 | R-001 | No defined DB backup schedule                                           | Medium     | High   | Automate `mysqldump`/volume snapshots; document restore                                                                                      | Low      |
 | R-004 | No browser E2E coverage                                                 | Medium     | Medium | Add a Playwright smoke test for W1–W3; wire into CI                                                                                          | Low      |
+| R-007 | No automated deployment to the shared host (manual upload)              | Low        | Low    | Acceptable for one internal app; document the steps (see §8.3 / `backend/README.md`)                                                         | Accepted |
 | R-009 | Action generation is non-transactional (DD-009)                         | Low        | Low    | Recomputed on next save/delete; acceptable for derived state                                                                                 | Accepted |
 | R-005 | Accessibility (WCAG AA) unverified                                      | Low        | Medium | Audit if public-sector rules apply                                                                                                           | Open     |
 | R-006 | ~~Role access to Limieten/Trend not finalised~~ **RESOLVED 2026-06-03** | —          | —      | Policy confirmed & enforced: TRD waterbeheerder-only; LIM read any-role / edit Administrator-only; backend guards + nav aligned; tests added | Closed   |
-| R-010 | `looseObject` schemas accept unknown fields                             | Low        | Low    | Tighten to specific shapes if abuse becomes a concern                                                                                        | Accepted |
+| R-010 | `Validator` rules are lenient on measurement domains (unknown fields)   | Low        | Low    | Tighten to specific shapes if abuse becomes a concern                                                                                        | Accepted |
+| R-008 | ~~No CI~~ **RESOLVED 2026-06-27**                                       | —          | —      | Done: GitHub Actions `php-tests.yml` (PHPUnit unit + integration) and `frontend-tests.yml` (Jest + ESLint) run on every push/PR              | Closed   |
 
 ---
 
@@ -1092,17 +1137,17 @@ handling, completeness markers, session-expiry and the Configuratie autosave.
 
 | EPS block / requirement                           | Design section(s)                                                                   | Notes                                                                                                                                 |
 | ------------------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
-| AUTH-001..004 (login/session/roles/logout)        | §5.2, §7.4                                                                          | express-session + checkAuth/role helpers                                                                                              |
-| AUTH-005 (credential security)                    | §5.2 (DD-018)                                                                       | Met — scrypt hashing; unit + integration tested                                                                                       |
-| AUTH-006/007 (idle/sliding time-out; expiry UX)   | §5.2 (DD-005/DD-019/DD-021)                                                         | `rolling` cookie + per-request max-age from config; 401 → login message                                                               |
+| AUTH-001..004 (login/session/roles/logout)        | §5.2, §7.4                                                                          | native `$_SESSION` + `AuthMiddleware`/`RechtenMiddleware`                                                                             |
+| AUTH-005 (credential security)                    | §5.2 (DD-018)                                                                       | Met — bcrypt hashing; unit + integration tested                                                                                       |
+| AUTH-006/007 (idle/sliding time-out; expiry UX)   | §5.2 (DD-005/DD-019/DD-021)                                                         | `SessionMiddleware` sliding idle time-out from config; 401 → login message                                                            |
 | CFG-001/002 (general configuration)               | §4.3 (UI-014), §5.1 (`/api/configuratie`), §6.2 (ConfiguratieModule), §7.3 (DD-019) | Generic key/value store; shared cache; Administrator-only write                                                                       |
-| GEN-007 (concurrent-edit detection + attribution) | §5.1, §5.4, §5.5.4, §7.3 (DD-020)                                                   | `optimistischOpslaan` version check (409); `auteur`/`bijgewerkt_op`; client round-trips `versie`                                      |
+| GEN-007 (concurrent-edit detection + attribution) | §5.1, §5.4, §5.5.4, §7.3 (DD-020)                                                   | `Support\Optimistisch` version check (409); `auteur`/`bijgewerkt_op`; client round-trips `versie`                                     |
 | GEN-008/009 (passive completeness; version label) | §4.2 (DD-021), §6.2                                                                 | Subtab/page-tab dot; `/api/versie` header label                                                                                       |
 | GEN-001/002 (date scoping, season bounds)         | §4.4, §6.2 (NavModule)                                                              | Client date state + season limits                                                                                                     |
 | GEN-003 (autosave + status)                       | §4.5, §6.2 (OpslaanModule), flows §3                                                | 1.2 s debounce (DD-010)                                                                                                               |
-| GEN-004 (validation, comma)                       | §4.2, §6.2 (UIManager/ApiClient), §7.4                                              | Zod + client validation                                                                                                               |
+| GEN-004 (validation, comma)                       | §4.2, §6.2 (UIManager/ApiClient), §7.4                                              | `Validator` (server) + client validation                                                                                              |
 | GEN-005 (idempotent persistence)                  | §7.3                                                                                | Upserts keyed by date/block                                                                                                           |
-| GEN-006 (author stamping)                         | §5.4 (`bepaalAuteur`), §7.3                                                         | Partial                                                                                                                               |
+| GEN-006 (author stamping)                         | §5.4 (`Support\Auteur`), §7.3                                                       | Partial                                                                                                                               |
 | WB-001..008 (water log)                           | §4.3 (UI-002/003/004), §5.1, §7.2/7.3                                               | metingen (incl. kathodische bescherming) + verbruik + verwarming + logboek                                                            |
 | WB-009 (duty registration)                        | §4.3 (UI-002), §5.1 (`/api/dienst`), §6.2 (DienstModule)                            | `waterbeheer_dienst` table; chip pre-fills logged-in user, datalist of water managers                                                 |
 | ACT-006 (editable action texts)                   | §4.3 (UI-010b), §5.1 (`/api/actieteksten`), §6.2 (ActieTekstenModule)               | `actie_teksten` templates rendered with placeholders; built-in defaults; Administrator-only edit                                      |
