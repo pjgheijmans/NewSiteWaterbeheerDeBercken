@@ -67,13 +67,13 @@ spoelbeurt, etc.).
 
 ### 1.4 Reference Documents
 
-| ID      | Title                                                                                     | Version                      |
-| ------- | ----------------------------------------------------------------------------------------- | ---------------------------- |
-| EPS-DDZ | Element Performance Specification                                                         | 0.6                          |
-| —       | `docs/architecture.md` + `docs/architecture/{backend,frontend,flows,database,testing}.md` | ⚠ pre-PHP (Node/TS); pending |
-| —       | `CLAUDE.md` — project conventions                                                         | current (PHP)                |
-| —       | `backend/README.md` — PHP backend run/deploy notes                                        | current                      |
-| —       | `init.sql` — authoritative schema                                                         | current                      |
+| ID      | Title                                                                                     | Version       |
+| ------- | ----------------------------------------------------------------------------------------- | ------------- |
+| EPS-DDZ | Element Performance Specification                                                         | 0.6           |
+| —       | `docs/architecture.md` + `docs/architecture/{backend,frontend,flows,database,testing}.md` | current (PHP) |
+| —       | `CLAUDE.md` — project conventions                                                         | current (PHP) |
+| —       | `backend/README.md` — PHP backend run/deploy notes                                        | current       |
+| —       | `init.sql` — authoritative schema                                                         | current       |
 
 ---
 
