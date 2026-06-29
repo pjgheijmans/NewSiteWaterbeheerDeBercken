@@ -1,10 +1,10 @@
 # Element Performance Specification (EPS)
 
-**Document ID:** EPS-DDZ-0.5
+**Document ID:** EPS-DDZ-0.6
 **Element:** Digitale Dagstaat Zwembad — full web application
-**Version:** 0.5
+**Version:** 0.6
 **Status:** DRAFT
-**Date:** 2026-06-23
+**Date:** 2026-06-28
 **Author:** P. Heijmans
 **Approver:**
 
@@ -20,13 +20,14 @@
 
 ## Revision History
 
-| Version | Date       | Author      | Description                                                                                                                                                                                                                                                                                                                                                               |
-| ------- | ---------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0.1     | 2026-06-03 | P. Heijmans | Initial draft (flat requirement list)                                                                                                                                                                                                                                                                                                                                     |
-| 0.2     | 2026-06-03 | P. Heijmans | Requirements regrouped by actor / functional block; block-prefixed IDs                                                                                                                                                                                                                                                                                                    |
-| 0.3     | 2026-06-11 | P. Heijmans | Added duty registration (WB-009), editable action texts (ACT-006), cathodic-protection measurement (WB-001), coordinator author stamping (GEN-006); 3-category task view; toast/modal feedback                                                                                                                                                                            |
-| 0.4     | 2026-06-16 | P. Heijmans | Configurable sliding session time-out + generic configuration block (CFG-001, UI-014, AUTH-006/007); concurrent-edit conflict detection and author stamping on waterbeheer data (GEN-007, GEN-006 upgraded); passive "fields incomplete" indicators replacing the autosave warning (GEN-003/GEN-008); app version label (GEN-009)                                         |
-| 0.5     | 2026-06-23 | P. Heijmans | Added **Appendix A — Input Value Catalogue**: per-field definition, unit, decimal precision (fraction) and default valid range (min/max) for every input value across Waterbeheer, Coördinatoren, Limieten, Configuratie and Gebruikers, plus the free-text logboek entries (now hard-capped at 500 chars, client + server) and duty fields (A.13); §4.4 now points to it |
+| Version | Date       | Author      | Description                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
+| ------- | ---------- | ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0.1     | 2026-06-03 | P. Heijmans | Initial draft (flat requirement list)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| 0.2     | 2026-06-03 | P. Heijmans | Requirements regrouped by actor / functional block; block-prefixed IDs                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
+| 0.3     | 2026-06-11 | P. Heijmans | Added duty registration (WB-009), editable action texts (ACT-006), cathodic-protection measurement (WB-001), coordinator author stamping (GEN-006); 3-category task view; toast/modal feedback                                                                                                                                                                                                                                                                                                                                                       |
+| 0.4     | 2026-06-16 | P. Heijmans | Configurable sliding session time-out + generic configuration block (CFG-001, UI-014, AUTH-006/007); concurrent-edit conflict detection and author stamping on waterbeheer data (GEN-007, GEN-006 upgraded); passive "fields incomplete" indicators replacing the autosave warning (GEN-003/GEN-008); app version label (GEN-009)                                                                                                                                                                                                                    |
+| 0.5     | 2026-06-23 | P. Heijmans | Added **Appendix A — Input Value Catalogue**: per-field definition, unit, decimal precision (fraction) and default valid range (min/max) for every input value across Waterbeheer, Coördinatoren, Limieten, Configuratie and Gebruikers, plus the free-text logboek entries (now hard-capped at 500 chars, client + server) and duty fields (A.13); §4.4 now points to it                                                                                                                                                                            |
+| 0.6     | 2026-06-28 | P. Heijmans | **Backend ported from Node/Express/TypeScript to PHP 8.0 (Slim 4 + PHP-DI)** so the app runs on shared Apache + MySQL hosting (the host offers no Node). The HTTP API, JSON shapes, data model and frontend are unchanged — requirements are unaffected; only the implementation/deployment statements change. Password hashing is now bcrypt; sessions use native PHP `$_SESSION` (no `SESSION_SECRET`); CI added (PHPUnit backend + Jest/ESLint frontend). Updated §2.3, §5.1/5.3, §6.1, §7.2/7.3, §8.1, §9 R-002/R-003 and Appendix A accordingly |
 
 ---
 
@@ -150,10 +151,10 @@ exported/imported as CSV.
    Coördinator, └───────────────────────┬─────────────────────┘
    Administrator)                        │ HTTP(S) · JSON · session cookie
                 ┌───────────────────────▼─────────────────────┐
-                │  Application server (Express / TypeScript)    │
+                │  Application server (PHP 8 · Slim 4 + PHP-DI) │
                 │   auth · validation · controllers · services  │
                 └───────────────────────┬─────────────────────┘
-                                        │ SQL (mysql2)
+                                        │ SQL (PDO)
                                 ┌────────▼────────┐
                                 │   MySQL 8 DB     │
                                 └─────────────────┘
@@ -206,7 +207,7 @@ above, the LIM/TRD blocks, the screen table (§3.9) and the modes (§3.12).
 | AUTH-002 | On successful login the system shall establish a server-side session and keep the user signed in across requests until logout/expiry.                                                                                       | Must     | Yes                                                                     |
 | AUTH-003 | The system shall restrict navigation and operations according to the user's role (Waterbeheerder / Coördinator / Administrator).                                                                                            | Must     | Yes                                                                     |
 | AUTH-004 | A user shall be able to log out, ending the session.                                                                                                                                                                        | Must     | Yes                                                                     |
-| AUTH-005 | User credentials shall be stored securely (hashed, non-reversible).                                                                                                                                                         | Should   | Yes (scrypt; legacy plaintext upgraded on login + at startup)           |
+| AUTH-005 | User credentials shall be stored securely (hashed, non-reversible).                                                                                                                                                         | Should   | Yes (bcrypt; legacy plaintext upgraded on login + at startup)           |
 | AUTH-006 | The session shall expire after a period of **inactivity** (idle/sliding time-out: the timer resets on each request). The duration shall be **configurable** (CFG-001; default 5 minutes) and take effect without a restart. | Should   | Yes (`rolling` cookie; per-request max-age from the live configuration) |
 | AUTH-007 | When a request is rejected because the session has expired, the UI shall return to the login screen with a **persistent explanation** ("session expired due to inactivity"), rather than failing silently.                  | Should   | Yes (global 401 handling → login screen message)                        |
 
@@ -479,7 +480,7 @@ table, clear a table, or reset the database (double confirmation). _(ADM-002..00
 | -------------------- | -------------------------- | ---------------------------------------------- |
 | Staff browser        | Browser (HTTP/HTML/JS)     | Primary user interface served by the app       |
 | Application REST API | REST / JSON                | Client ↔ server data exchange under one origin |
-| MySQL                | Database (TCP)             | Persistent storage via connection pool         |
+| MySQL                | Database (TCP)             | Persistent storage via PDO (per-request)       |
 | Chart.js             | Client JS library          | Rendering of trend charts                      |
 | CSV files            | File (semicolon-delimited) | Manual export/import of table data             |
 
@@ -493,8 +494,10 @@ table, clear a table, or reset the database (double confirmation). _(ADM-002..00
 
 ### 5.3 Physical / Infrastructure Interfaces
 
-- Containerised with Docker Compose: web service on port 3000 (debugger 9229) and
-  MySQL on 3306.
+- **Production:** runs on shared Apache + MySQL hosting with PHP 8.0 (`pdo_mysql`);
+  the docroot points at `backend/public/` (Slim front controller via `.htaccess`).
+- **Dev/test:** containerised with Docker Compose — web service (Apache + mod_php) on
+  port 8080 and MySQL on 3306.
 - Single-origin deployment (client and API same host); no public exposure assumed
   beyond the operator's network.
 
@@ -514,13 +517,13 @@ table, clear a table, or reset the database (double confirmation). _(ADM-002..00
 
 ### 6.1 Deployment Environment
 
-| Item             | Value                                                                |
-| ---------------- | -------------------------------------------------------------------- |
-| Hosting          | Local / on-premises (operator network)                               |
-| Operating System | Linux container host (Docker)                                        |
-| Runtime          | Node.js (TypeScript via ts-node in dev; compiled to `dist/` in prod) |
-| Database         | MySQL 8                                                              |
-| Container        | Docker / Docker Compose                                              |
+| Item             | Value                                                                          |
+| ---------------- | ------------------------------------------------------------------------------ |
+| Hosting          | Shared Apache + MySQL hosting (production); local/on-premises also supported   |
+| Operating System | Host-provided (Linux); dev/test via a Linux Docker container                   |
+| Runtime          | PHP 8.0 (Slim 4 + PHP-DI), served by Apache + mod_php; `pdo_mysql` required    |
+| Database         | MySQL 8                                                                        |
+| Container        | Docker / Docker Compose (dev/test only; production uses the host's PHP/Apache) |
 
 ### 6.2 Browser & Client Environment
 
@@ -552,12 +555,13 @@ table, clear a table, or reset the database (double confirmation). _(ADM-002..00
 - **GDPR:** staff-account data must be limited to what is necessary and accounts
   must be removable (supported via ADM-001).
 - **Security status:**
-    - Passwords are hashed with scrypt (AUTH-005 met; R-002 resolved 2026-06-04).
-      Legacy plaintext values are upgraded to a hash on the next login and by a
-      one-time startup migration.
-    - The session secret is **required in production**: with `NODE_ENV=production`
-      the app fails fast at startup if `SESSION_SECRET` is unset (no insecure default).
-      Dev/test fall back to a clearly-marked value. (R-003 resolved 2026-06-04.)
+    - Passwords are hashed with bcrypt (`password_hash`, `PASSWORD_DEFAULT`)
+      (AUTH-005 met; R-002 resolved 2026-06-04). Legacy plaintext values are upgraded
+      to a hash on the next login and by a one-time startup migration.
+    - Sessions use native PHP `$_SESSION` (the PHP runtime signs/secures the session
+      cookie; there is no application-level `SESSION_SECRET` to manage). Session
+      handling is scoped to `/api` paths so public pages open no DB connection.
+      (R-003 resolved 2026-06-04; superseded by the PHP session model in 0.6.)
 
 ### 7.3 Design Constraints
 
@@ -565,7 +569,8 @@ table, clear a table, or reset the database (double confirmation). _(ADM-002..00
 - Solo developer — complexity must remain manageable; conventions favour a small,
   readable codebase over heavy frameworks.
 - Frontend is intentionally framework-free (vanilla ES6 classes, no bundler/build
-  step); the backend is layered TypeScript with dependency injection.
+  step); the backend is layered PHP (Slim 4 + PHP-DI) with dependency injection, and
+  must stay PHP 8.0-compatible (the shared host's version — no 8.1+ syntax).
 - Schema changes are made in `init.sql` only (idempotent run on startup); there is
   no migrations tool.
 
@@ -580,7 +585,7 @@ Methods: Test (T) · Analysis (A) · Inspection (I) · Demonstration (D).
 | Requirement(s)                | Method | Notes                                                                                                                                                    |
 | ----------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | AUTH-001..004                 | T      | Auth middleware + integration tests                                                                                                                      |
-| AUTH-005                      | T      | Met — scrypt hashing; unit (`wachtwoord.test`, GebruikersRepository) + integration (login) tests                                                         |
+| AUTH-005                      | T      | Met — bcrypt hashing; unit (`WachtwoordTest`) + integration (`GebruikersRepository`, login) PHPUnit tests                                                |
 | AUTH-006/007                  | T / D  | ConfiguratieService unit tests (timeout value/validation); session-expiry jsdom tests (401 → login message); cookie max-age demonstrated in Docker       |
 | CFG-001/002                   | T / D  | ConfiguratieController/Service unit tests (role gate, validation, cache); autosave jsdom test                                                            |
 | GEN-007                       | T / D  | `optimistisch` helper unit tests (all conflict branches); frontend version round-trip + 409 jsdom tests; load→save→stale-save demonstrated (200/200/409) |
@@ -608,8 +613,8 @@ Methods: Test (T) · Analysis (A) · Inspection (I) · Demonstration (D).
 - [ ] Saved data reloads identically across sessions (durability).
 - [ ] UI performance targets met on the target LAN environment.
 - [ ] All screens render and function on target desktop/tablet viewports.
-- [x] Passwords hashed (AUTH-005 / R-002 resolved).
-- [x] Session secret required in production (R-003 resolved).
+- [x] Passwords hashed (AUTH-005 / R-002 resolved; bcrypt).
+- [x] Session handling secured by the PHP runtime; no app-level secret to leak (R-003).
 - [ ] No critical or high OWASP vulnerabilities remaining (ongoing review).
 - [ ] A defined database backup procedure is in place (R-001).
 
@@ -620,8 +625,8 @@ Methods: Test (T) · Analysis (A) · Inspection (I) · Demonstration (D).
 | ID    | Item                                                                                               | Recommendation                                                                                                                        |
 | ----- | -------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
 | R-001 | No defined DB backup schedule (relies on Docker volume + manual CSV)                               | Define and automate periodic backups                                                                                                  |
-| R-002 | ~~Passwords stored in plain text (AUTH-005)~~ **RESOLVED 2026-06-04**                              | Done: scrypt hashing on create/update/seed; legacy plaintext upgraded on login + startup migration                                    |
-| R-003 | ~~Hardcoded default session secret~~ **RESOLVED 2026-06-04**                                       | Done: `SESSION_SECRET` required under `NODE_ENV=production` (fail fast); dev/test fallback only                                       |
+| R-002 | ~~Passwords stored in plain text (AUTH-005)~~ **RESOLVED 2026-06-04**                              | Done: bcrypt hashing (`password_hash`) on create/update/seed; legacy plaintext upgraded on login + startup migration                  |
+| R-003 | ~~Hardcoded default session secret~~ **RESOLVED 2026-06-04**                                       | Done: originally `SESSION_SECRET` (Node); since 0.6 the PHP runtime secures the native session cookie — no app-level secret to manage |
 | R-004 | Browser E2E coverage absent                                                                        | Add an automated end-to-end smoke test for W1–W3                                                                                      |
 | R-005 | Accessibility (WCAG AA) unverified                                                                 | Audit and remediate if public-sector accessibility rules apply                                                                        |
 | R-006 | ~~Role access to Limieten (LIM) and Trendanalyse (TRD) not yet confirmed~~ **RESOLVED 2026-06-03** | Policy confirmed and enforced: TRD = Waterbeheerder only; LIM read = any authenticated role, LIM edit = Administrator only (see §3.0) |
@@ -771,23 +776,23 @@ when the measured value crosses it (ACT-001 / §3.5.1). Stored with up to 2 deci
 | Voornaam   | First name          | text   | 50         |                                         |
 | Achternaam | Surname             | text   | 50         |                                         |
 | Inlognaam  | Login name (unique) | text   | 50         | must be unique                          |
-| Wachtwoord | Password            | text   | —          | hashed at rest (scrypt); never returned |
+| Wachtwoord | Password            | text   | —          | hashed at rest (bcrypt); never returned |
 | Rollen     | Assigned role(s)    | select | —          | one or more roles                       |
 
 ### A.13 Free-text & duty inputs
 
 Free-text logboek entries are **hard-capped at 500 characters**, enforced on both
 layers: the textarea `maxlength` (with a live counter, `logboek.js`) and the
-server-side Zod schema (`LOGBOEK_MAX_TEKEN`, shared by the Waterbeheer and Coördinator
-logs); over-length input is rejected with **400**. The column itself is `TEXT`
+server-side validator (`Validator::LOGBOEK_MAX_TEKEN`, shared by the Waterbeheer and
+Coördinator logs); over-length input is rejected with **400**. The column itself is `TEXT`
 (65,535-byte ceiling), so the 500-character app cap is the binding limit. A logboek
 row is keyed by `(datum, tijdstip)`, so there is a new entry per timestamp.
 
-| Field                       | Definition                               | Type   | Max length           | Notes                                              |
-| --------------------------- | ---------------------------------------- | ------ | -------------------- | -------------------------------------------------- |
-| Logboek tekst (Waterbeheer) | Free-text day note, water management     | `TEXT` | 500 chars (hard cap) | client `maxlength` + server Zod; one row/timestamp |
-| Logboek tekst (Coördinator) | Free-text day note, coordinator          | `TEXT` | 500 chars (hard cap) | client `maxlength` + server Zod; one row/timestamp |
-| Dienst 1 / Dienst 2         | The two persons on water-management duty | text   | 100 chars            | `VARCHAR(100)`; one logs in, one typed/picked      |
+| Field                       | Definition                               | Type   | Max length           | Notes                                                    |
+| --------------------------- | ---------------------------------------- | ------ | -------------------- | -------------------------------------------------------- |
+| Logboek tekst (Waterbeheer) | Free-text day note, water management     | `TEXT` | 500 chars (hard cap) | client `maxlength` + server validator; one row/timestamp |
+| Logboek tekst (Coördinator) | Free-text day note, coordinator          | `TEXT` | 500 chars (hard cap) | client `maxlength` + server validator; one row/timestamp |
+| Dienst 1 / Dienst 2         | The two persons on water-management duty | text   | 100 chars            | `VARCHAR(100)`; one logs in, one typed/picked            |
 
 ---
 
