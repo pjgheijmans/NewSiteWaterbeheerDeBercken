@@ -16,19 +16,20 @@ in [`docs/architecture/`](architecture/).
 ## Systeemoverzicht
 
 Full-stack applicatie voor het bijhouden van de dagelijkse waterkwaliteit van een
-zwembad. TypeScript/Express-backend, vanilla-JS-frontend (ES6-klassen), MySQL 8,
+zwembad. PHP-backend (Slim 4 + PHP-DI), vanilla-JS-frontend (ES6-klassen), MySQL 8.
+Productie draait op gedeelde Apache+MySQL-hosting (PHP 8.0); dev/test draait
 gecontaineriseerd met Docker. Code en commentaar zijn in het Nederlands.
 
 ```mermaid
 graph TB
-    subgraph Docker["Docker Stack"]
-        subgraph Web["Container: zwembad_web (Node 20 + ts-node)"]
-            Express["Express\nserver.ts\n• wacht op DB (retry)\n• runInitSql()\n• luistert op :3000"]
+    subgraph Docker["Docker Stack (dev/test)"]
+        subgraph Web["Container: zwembad_web (Apache + mod_php, PHP 8.0)"]
+            Slim["Slim 4\npublic/index.php\n• PHP-DI container\n• bin/init-db.php (schema)\n• luistert op :8080"]
         end
         subgraph DB["Container: zwembad_db (MySQL 8)"]
             MySQL[("MySQL\nzwembad_status")]
         end
-        Web -->|"mysql2 pool"| DB
+        Web -->|"PDO (per request)"| DB
     end
 
     Browser["Browser\n(Waterbeheerder / Coördinator / Administrator)"]
@@ -43,21 +44,21 @@ graph TB
 Elk domein (metingen, verbruik, coordinatoren, …) volgt dezelfde lagen. Een
 controller hangt alleen van een **service-interface** af; een service alleen van
 **repository-interfaces**. Afhankelijkheden wijzen naar binnen (Dependency
-Inversion); concrete klassen worden in de route-factory samengesteld.
+Inversion); concrete klassen worden in de PHP-DI-container samengesteld.
 
 ```mermaid
 graph LR
     Req["HTTP-request"] --> MW
 
-    subgraph MW["Middleware"]
-        Auth["checkAuth\n(401 indien geen sessie)"]
-        Val["valideerBody(schema)\n(400 bij ongeldige body)"]
+    subgraph MW["Middleware (PSR-15)"]
+        Auth["AuthMiddleware\n(401 indien geen sessie)"]
+        Val["RechtenMiddleware(domein, recht)\n(403 zonder recht)"]
     end
 
     MW --> Ctrl
 
     subgraph Ctrl["Controller (HTTP)"]
-        C["rolcontrole (403)\nrequest → service\nresponse-opmaak\nnext(err)"]
+        C["Validator (400 bij ongeldige body)\nrequest → service\nresponse-opmaak\nthrow AppError"]
     end
 
     Ctrl -->|"IXxxService"| Svc
@@ -69,12 +70,12 @@ graph LR
     Svc -->|"IXxxRepository"| Repo
 
     subgraph Repo["Repository (SQL)"]
-        R["mysql2-queries"]
+        R["PDO prepared statements"]
     end
 
-    Repo -->|"pool"| DB[("MySQL")]
+    Repo -->|"PDO"| DB[("MySQL")]
 
-    Ctrl -.->|"AppError / throw"| EH["errorHandler\n(centrale 4xx/5xx-respons)"]
+    Ctrl -.->|"AppError / throw"| EH["JsonErrorHandler\n(centrale 4xx/5xx-respons)"]
     Svc  -.->|"AppError"| EH
     Repo -.->|"AppError"| EH
 ```
@@ -83,10 +84,12 @@ graph LR
 
 - **SRP** — controller doet HTTP, service doet logica, repository doet SQL.
 - **DIP** — hogere lagen hangen van interfaces af, niet van implementaties.
-- **Centrale foutafhandeling** — handlers roepen `next(err)`; `errorHandler`
-  bepaalt de statuscode (uit `AppError`, anders 500) en de JSON-respons.
-- **Validatie aan de rand** — `valideerBody` (Zod) valideert `req.body` vóór de
-  controller; de service ontvangt gevalideerde data.
+- **Centrale foutafhandeling** — lagen werpen `AppError`; de `JsonErrorHandler`
+  (Slim error-middleware) bepaalt de statuscode (uit `AppError`, anders 500) en de
+  JSON-respons.
+- **Validatie aan de rand** — de `Validator` controleert de body vóór de
+  bedrijfslogica; de service ontvangt gevalideerde data.
+- **Toegangscontrole** — `AuthMiddleware` (401) + `RechtenMiddleware(domein, 'lezen'|'schrijven')` (403) op de routes.
 
 ---
 
@@ -94,19 +97,21 @@ graph LR
 
 ```
 backend/
-  server.ts                 # opstarten: pool, runInitSql, routes, listen
-  errors.ts                 # AppError(message, status)
-  auteur.ts                 # bepaalAuteur(gebruiker) — gedeelde helper
-  types/index.ts            # domeintypes + express-session augmentatie
-  middleware/
-    auth.ts                 # checkAuth + rol-helpers
-    valideer.ts             # valideerBody(schema)
-    errorHandler.ts         # centrale foutafhandeling
-  validation/schemas.ts     # Zod-schema's per domein
-  routes/<domein>.ts        # factory: repos → service → controller
-  controllers/<X>Controller.ts
-  services/I<X>Service.ts + <X>Service.ts
-  repositories/I<X>Repository.ts + <X>Repository.ts + db.ts
+  public/index.php          # entry: container → AppFactory → run
+  config/
+    dependencies.php        # PHP-DI bindings (enige koppelpunt)
+    routes.php              # HTTP-routes → controllers, met middleware
+    settings.php            # runtime-instellingen (DB-env)
+  bin/init-db.php           # schema provisioneren (runInitSql) — eenmalig
+  src/
+    Controllers/<X>Controller.php
+    Services/I<X>Service.php + <X>Service.php
+    Repositories/I<X>Repository.php + <X>Repository.php   (PDO)
+    Middleware/             # AuthMiddleware · RechtenMiddleware · SessionMiddleware
+    Errors/                 # AppError + JsonErrorHandler
+    Validation/Validator.php
+    Support/                # Optimistisch · Historie · Wachtwoord · Auteur · Frontend · Json
+  composer.json             # PSR-4 (Zwembad\ → src/); platform php 8.0
 ```
 
 Zie [Backend](architecture/backend.md) voor de details.
@@ -155,6 +160,6 @@ graph LR
 > Administrator); **Limieten/Actie-teksten/Configuratie** lezen mag elke ingelogde
 > rol, bewerken is **Administrator**.
 
-De rolcontrole zit in de controllers (`isWaterbeheerder`,
-`isWaterbeheerderOrCoordinator`, `isAdminOrWaterbeheerder` uit
-`middleware/auth.ts`); `checkAuth` dwingt eerst een geldige sessie af.
+De rolcontrole zit op de routes via `RechtenMiddleware(domein, 'lezen'|'schrijven')`
+(`src/Middleware/`); `AuthMiddleware` dwingt eerst een geldige sessie af (401),
+daarna geeft `RechtenMiddleware` 403 zonder het juiste recht.
