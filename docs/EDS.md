@@ -70,6 +70,7 @@ spoelbeurt, etc.).
 | ID      | Title                                                                                     | Version       |
 | ------- | ----------------------------------------------------------------------------------------- | ------------- |
 | EPS-DDZ | Element Performance Specification                                                         | 0.6           |
+| TPS-DDZ | Test Plan & Specification (verifies the EPS requirements)                                 | 0.1           |
 | —       | `docs/architecture.md` + `docs/architecture/{backend,frontend,flows,database,testing}.md` | current (PHP) |
 | —       | `CLAUDE.md` — project conventions                                                         | current (PHP) |
 | —       | `backend/README.md` — PHP backend run/deploy notes                                        | current       |
