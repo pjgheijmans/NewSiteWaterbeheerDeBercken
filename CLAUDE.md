@@ -14,6 +14,7 @@ Living specification + architecture notes, kept in sync with the PHP backend:
 
 - **`docs/EPS.md`** — Element Performance Specification (the requirements: functional + non-functional, grouped per role; Appendix A is the per-field input-value catalogue).
 - **`docs/EDS.md`** — Element Design Specification (how the design meets the EPS: design decisions `DD-…`, interfaces, data model, deployment, test strategy, traceability).
+- **`docs/TPS.md`** — Test Plan & Specification (test cases `TC-…` per requirement, referencing the automated suites, plus the manual/Demonstration procedures `MP-…`). Doesn't duplicate the test code — CI is the live evidence.
 - **`docs/architecture.md`** + **`docs/architecture/{backend,frontend,flows,database,testing}.md`** — architecture overview with Mermaid diagrams (request lifecycle, layering, ER diagram, sequence flows).
 
 Update these when you change behaviour, the HTTP API, the schema or the stack (bump the version + revision-history row in EPS/EDS). The Mermaid blocks render on GitHub — keep them valid; in prose, avoid a mid-sentence `+`/`-` that can wrap to a line start (Prettier turns it into a list bullet).
