@@ -33,7 +33,12 @@ docker logs -f zwembad_web        # stream app logs
 docker exec -it zwembad_db mysql -u root -pgeheim_wachtwoord zwembad_status  # DB shell
 ```
 
-On first start the `web` container runs `composer install` (if `vendor/` is missing) and `php bin/init-db.php` to provision the schema. On the slow OneDrive bind-mount that first `composer install` can exceed Composer's 300 s process-timeout while extracting; if it half-installs, finish it with `docker compose exec -e COMPOSER_PROCESS_TIMEOUT=0 web composer install`.
+On first start the `web` container runs `composer install` (when `vendor/autoload.php` is missing) and `php bin/init-db.php` to provision the schema.
+
+**Performance — `vendor/` volume + opcache**: `vendor/` is a named volume (`vendor_data`, container-ext4), **not** on the bind-mount. Serving the ~1300 dependency files per request off the OneDrive bind-mount cost seconds of bootstrap per request; on the volume it's milliseconds. `opcache` is enabled (`backend/docker/opcache.ini`, `validate_timestamps=1`/`revalidate_freq=2` so live edits still reload). Consequences:
+- The install-guard checks `vendor/autoload.php`, not the `vendor/` dir (the volume mount-point always exists), so don't revert it.
+- `docker compose down -v` wipes `vendor_data` too → next `up` reinstalls it. Reinstall just deps: `docker volume rm nieuwe_site_tryout_vendor_data`.
+- Install extracts onto the fast volume, so the old 300 s Composer process-timeout problem is largely gone; if it ever half-installs, finish with `docker compose exec -e COMPOSER_PROCESS_TIMEOUT=0 web composer install`.
 
 **Local (no Docker; requires a reachable MySQL with `init.sql` loaded):**
 
