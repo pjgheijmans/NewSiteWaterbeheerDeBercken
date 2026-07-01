@@ -99,6 +99,13 @@ class MetingenModule {
         const datum = document.getElementById('centraleDatum').value;
         if (!datum) return;
 
+        // Elke laad-/paginawissel bumpt een token. Een trage backend-respons die
+        // binnenkomt nadat de gebruiker al van tab/datum/rol is gewisseld, hoort niet
+        // meer gerenderd te worden (anders klopt de weergave op de logboek-tab dat
+        // _bouwTabelOp de meetwaardentabel eroverheen tekent). Na de await checken we
+        // of dit nog de meest recente aanroep is.
+        const token = (this.app.state.laadToken = (this.app.state.laadToken || 0) + 1);
+
         // Dienstbalk (wie was op dienst) hoort bij de hele waterbeheer-weergave,
         // dus laden vóór de logboek-afsplitsing hieronder.
         if (huidigeRol === 'waterbeheer') this.app.dienst.laadDienst(datum);
@@ -110,7 +117,10 @@ class MetingenModule {
         const endpoint = huidigeRol === 'waterbeheer' ? '/api/metingen' : '/api/coordinatoren';
         try {
             const res = await this.app.api.call(`${endpoint}?datum=${datum}`);
-            this.app.state.gecachteData = await res.json();
+            const data = await res.json();
+            // Verouderde respons (gebruiker is intussen naar een andere tab/datum): niet renderen.
+            if (token !== this.app.state.laadToken) return;
+            this.app.state.gecachteData = data;
             this._bouwTabelOp(this.app.state.gecachteData);
             if (huidigeRol === 'waterbeheer') {
                 this._onthoudMetingVersies(this.app.state.gecachteData);
@@ -513,6 +523,11 @@ class MetingenModule {
             huidigePeuterbadSubtab,
             huidigeCoordSubtab,
         } = this.app.state;
+        // De logboek-tab heeft geen meetwaardentabel; laadMetingen splitst die af en
+        // rendert 'm via LogboekModule. Mocht _bouwTabelOp hier toch belanden, dan niets
+        // tekenen — anders valt de logboek-pagina door naar de generieke tabel-fallback
+        // (de Peuterbad-rij) en overschrijft die de logboekweergave.
+        if (huidigeRol === 'waterbeheer' && huidigeBadPagina === 'logboek') return;
         const categorieContent = document.getElementById('waterbeheer-grote-baden-content');
         const tabelContent = document.getElementById('tables-content');
         const tKop = document.getElementById('tabelKop');
