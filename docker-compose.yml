@@ -43,13 +43,20 @@ services:
             - DB_PASSWORD=geheim_wachtwoord
             - DB_NAME=zwembad_status
         volumes:
-            # Hele repo gemount: backend/ (app + vendor), frontend/ (assets) en init.sql.
-            # Codewijzigingen zijn meteen actief; vendor/ wordt bij start geïnstalleerd
-            # als die ontbreekt (zie backend/Dockerfile).
+            # Hele repo gemount: backend/ (app), frontend/ (assets) en init.sql.
+            # Codewijzigingen zijn meteen actief.
             - .:/var/www/html
+            # vendor/ staat NIET op de (trage) bind-mount maar op een lokaal
+            # named volume (container-ext4). Het lezen van de ~1300 dependency-
+            # bestanden per request ging van seconden naar milliseconden. vendor/
+            # wordt bij de eerste start in dit lege volume geïnstalleerd
+            # (zie backend/Dockerfile). Herinstalleren: `docker compose down -v`
+            # of `docker volume rm nieuwe_site_tryout_vendor_data`.
+            - vendor_data:/var/www/html/backend/vendor
         depends_on:
             db:
                 condition: service_healthy
 
 volumes:
     db_data:
+    vendor_data:
