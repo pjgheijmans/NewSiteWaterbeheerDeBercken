@@ -13,7 +13,7 @@ class ConfiguratieModule {
         if (!el) return;
         const states = {
             pending: ['Wijzigingen niet opgeslagen...', '#888'],
-            saving: ['Bewaren…', '#fd7e14'],
+            saving: ['Opslaan', '#fd7e14'],
             saved: ['✓ Opgeslagen', '#28a745'],
             error: ['✕ Fout bij opslaan', '#dc3545'],
         };
