@@ -1,13 +1,13 @@
 # Element Design Specification (EDS)
 
-**Document ID:** EDS-DDZ-0.5
+**Document ID:** EDS-DDZ-0.6
 **Element:** Digitale Dagstaat Zwembad — full web application
-**Version:** 0.5
+**Version:** 0.6
 **Status:** DRAFT
-**Date:** 2026-06-28
+**Date:** 2026-07-04
 **Author:** P. Heijmans
 **Approver:**
-**Parent EPS:** EPS-DDZ-0.6
+**Parent EPS:** EPS-DDZ-0.7
 
 > This EDS records _how_ the application is designed to satisfy the requirements in
 > EPS-DDZ-0.6. It is descriptive of the current implementation (not aspirational):
@@ -26,6 +26,7 @@
 | 0.3     | 2026-06-16 | P. Heijmans | Generic `configuratie` store + Configuratie domain/screen (DD-019); configurable sliding session time-out (DD-005 revised) with live config + global 401→login UX; optimistic concurrency on waterbeheer meetwaarden/verbruik via shared `optimistischOpslaan` helper (DD-020); passive completeness indicators + version label (DD-021); `/api/versie` endpoint; added §5.5 sequence diagrams                                                                                                                                                                                                                                                                                       |
 | 0.4     | 2026-06-23 | P. Heijmans | §5.4 now cross-references the new **EPS Appendix A — Input Value Catalogue** (per-field definition, unit, decimal precision and default min/max) and notes the schema `DECIMAL` precision is the authoritative fraction; parent EPS → 0.5                                                                                                                                                                                                                                                                                                                                                                                                                                            |
 | 0.5     | 2026-06-28 | P. Heijmans | **Backend re-platformed from Node/Express/TypeScript to PHP 8.0 (Slim 4 + PHP-DI)** for shared Apache/MySQL hosting (DD-022). Re-described the server-side design throughout: Slim+PSR-15 middleware, PHP-DI container wiring (`config/dependencies.php`/`routes.php`), PDO-per-request (DD-012), native `$_SESSION` via `SessionMiddleware` (DD-005/017), `JsonErrorHandler`+`AppError` (DD-008), `Validator` instead of Zod (DD-007), bcrypt instead of scrypt (DD-018), `bin/init-db.php` for schema bootstrap (DD-006). Updated §1.3, §2, §3, §5, §7, §8 (8080; CI now exists), §9 (PHPUnit; tooling) and §10/§11. Frontend, data model and HTTP API unchanged; parent EPS → 0.6 |
+| 0.6     | 2026-07-04 | P. Heijmans | Read-only UI reworked: `AuthModule.actualiseerLeesmodus` now sets fields truly `readonly`/`disabled` (computed fields untouched) and the CSS gives a "boxed see-through" look (border kept, transparent fill); the standalone leesmodus-banner is removed and the "Laatst gewijzigd" line replaced by a conflict popup (`behandelConflict` → reload + `ui.meld` from `_laatstGewijzigdTekst`, DD-020). The derived gebonden-chloor day-max fields on the Waterbeheer meetwaarden pages are hidden by default and shown only when a `filter_spoelen_gebonden` action exists for the bath (`MetingenModule._toonGebondenChloorVelden`). Updated §5.5.3/§5.5.4 (popup i.p.v. toast; geen last-edited-tekst meer), §6.2; parent EPS → 0.7 |
 
 ---
 
@@ -361,6 +362,12 @@ chip under the date selector records the two-person duty (WB-009).
 - **Meetwaarden:** per bath (Diep, Ondiep) pH, chloor, temp, flow, filterdruk in/out,
   kathodische bescherming (responsive grid: parameters as rows on mobile, transposed
   to columns ≥900px).
+- **Gebonden chloor (dagmax):** a read-only, coordinator-derived combined-chlorine
+  day-max per bath. It exists only to carry the `filter_spoelen_gebonden` action's
+  `⚠`/`✓` marker, so `MetingenModule._toonGebondenChloorVelden` (called from
+  `laadActies`) keeps the block hidden unless such an action exists for the bath (open
+  or resolved); Diep and Ondiep share one block, Peuterbad is its own row. The fields
+  default to `display:none` in the partial so they don't flash before the actions load.
 - **Verbruik:** water (diep/ondiep/totaal), electricity (night/day), gas, flocculant,
   chemicals; each with a read-only daily-consumption (today − previous) cell.
 - **Verwarmingssysteem:** status/inspection checkboxes.
@@ -702,7 +709,7 @@ sequenceDiagram
     VS-->>S1: response
     VS-->>S2: response
     A-->>V: both responses
-    V->>UI: refresh consumption deltas and last-edited text
+    V->>UI: refresh consumption deltas
 ```
 
 #### 5.5.4 Concurrent edit conflict on the same Waterbeheer page
@@ -736,7 +743,7 @@ sequenceDiagram
         R-->>S: AppError(409, "Iemand anders heeft deze gegevens ondertussen gewijzigd.")
         S-->>A: 409
         A-->>F1: 409
-        F1->>F1: show conflict toast and reload current values
+        F1->>F1: reload current values, then show a conflict popup naming who last saved
     end
 
     U2->>F2: edit same record at nearly the same time
@@ -757,7 +764,7 @@ sequenceDiagram
         R-->>S: AppError(409, "Iemand anders heeft deze gegevens ondertussen gewijzigd.")
         S-->>A: 409
         A-->>F2: 409
-        F2->>F2: show conflict toast and reload current values
+        F2->>F2: reload current values, then show a conflict popup naming who last saved
     end
 ```
 
@@ -894,6 +901,14 @@ save and update it from the response; a **409** triggers `MetingenModule.behande
 version meta by `_laatstGewijzigdTekst()`). `MetingenModule.werkVolledigheidBij()` sets
 the passive completeness dots; `ApiClient` routes a 401 to
 `AuthModule.sessieVerlopen()` (back to login).
+
+`AuthModule.actualiseerLeesmodus()` decides per active section whether saving is
+allowed (`magNuOpslaan()`: write right + — for dagstaats — the chosen date within the
+history window) and, when not, sets that section's fields to `readonly`/`disabled`
+(fields already read-only by design are left untouched) and tags an em-dash placeholder
+on empty ones. The presentation is CSS-only via the `.alleen-lezen` class: fields keep
+their box/border and relief but get a transparent (see-through) fill — there is no
+separate read-only banner.
 
 ### 6.3 Data Fetching Strategy
 
