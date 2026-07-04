@@ -305,8 +305,9 @@ PHP's process-per-request model).
   `categorie-tabel` (data table), `subtab-nav` / `subtab-btn`, `btn-centraal-opslaan`
   (primary), `btn-wissen-gevaar` (destructive), `actie-indicator` (⚠/✓ field marker),
   `tab-actie-indicator` (⚠ tab badge), `tab-onvolledig-indicator` (subdued ● "fields
-  incomplete" dot, DD-021), `laatst-gewijzigd` ("last edited by …" line, DD-020),
-  `status-melding` (toast), autosave-status text.
+  incomplete" dot, DD-021), `modal-overlay`/`modal-dialog` (the info/confirm popup,
+  reused for the concurrent-edit conflict message, DD-020), `status-melding` (toast),
+  autosave-status text.
 - **Status colours:** pending `#888`, saving `#fd7e14`, saved `#28a745`, error
   `#dc3545`. (The former post-save "warning" status is replaced by the passive
   completeness dot, DD-021.)
@@ -366,8 +367,8 @@ chip under the date selector records the two-person duty (WB-009).
 - **Bezoekers:** today's count and cumulative-since-backwash (from coordinator data).
   Action `⚠`/`✓` markers attach to the relevant inputs; a ⚠ badge appears on the
   page tab, the Taken subtab and the subtab that holds a field with an open action.
-  A subdued ● dot marks a subtab/page tab whose fields are still incomplete (DD-021),
-  and a "Laatst gewijzigd door … om …" line shows who last saved (DD-020).
+  A subdued ● dot marks a subtab/page tab whose fields are still incomplete (DD-021);
+  on a save conflict a popup names who last saved (DD-020).
 
 #### Waterbeheer → Peuterbad (UI-003)
 
@@ -889,9 +890,10 @@ graph TB
 Cross-cutting client behaviour added in 0.3: `OpslaanModule`/`MetingenModule`/
 `VerbruikModule` track a per-record `versie` in `AppState.versies`, send it on each
 save and update it from the response; a **409** triggers `MetingenModule.behandelConflict()`
-(reload + explain). `MetingenModule.werkVolledigheidBij()` sets the passive
-completeness dots and `toonLaatstGewijzigd()` the "last edited by" line; `ApiClient`
-routes a 401 to `AuthModule.sessieVerlopen()` (back to login).
+(reload + a popup that explains the conflict and names who last saved, built from the
+version meta by `_laatstGewijzigdTekst()`). `MetingenModule.werkVolledigheidBij()` sets
+the passive completeness dots; `ApiClient` routes a 401 to
+`AuthModule.sessieVerlopen()` (back to login).
 
 ### 6.3 Data Fetching Strategy
 

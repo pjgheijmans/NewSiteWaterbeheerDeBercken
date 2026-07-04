@@ -156,9 +156,9 @@ sequenceDiagram
 
     alt geen conflict
         Svc-->>Save: 200 { versie, auteur, bijgewerkt_op }
-        Save->>Save: versie onthouden, setAutoSaveStatus('saved')<br/>'laatst gewijzigd' / volledigheids-bolletjes bijwerken
+        Save->>Save: versie onthouden, setAutoSaveStatus('saved')<br/>volledigheids-bolletjes bijwerken
     else versieconflict (iemand anders wijzigde de gegevens)
         Svc-->>Save: 409
-        Save->>Save: behandelConflict() — melding + laadMetingen() (herladen)
+        Save->>Save: behandelConflict() — laadMetingen() (herladen) + popup (wie wijzigde het laatst)
     end
 ```

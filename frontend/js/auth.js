@@ -239,32 +239,61 @@ class AuthModule {
         document
             .querySelectorAll('.alleen-lezen')
             .forEach((el) => el.classList.remove('alleen-lezen'));
+        // Herstel altijd eerst de velden die wij eerder op alleen-lezen zetten (bv.
+        // bij een tabwissel of nadat de gekozen datum weer op vandaag staat).
+        this._herstelLeesmodusVelden();
         const leesmodus = !this.magNuOpslaan();
         const sectie = document.getElementById(sectieId);
-        if (sectie) sectie.classList.toggle('alleen-lezen', leesmodus);
-        this._toonLeesmodusBanner(leesmodus, rol);
+        if (sectie) {
+            sectie.classList.toggle('alleen-lezen', leesmodus);
+            if (leesmodus) this._zetVeldenReadonly(sectie);
+        }
     }
 
-    /** @private Toon/verberg de uitleg-banner boven de actieve sectie. */
-    _toonLeesmodusBanner(leesmodus, rol) {
-        let banner = document.getElementById('leesmodus-banner');
-        if (!leesmodus) {
-            if (banner) banner.style.display = 'none';
-            return;
-        }
-        if (!banner) {
-            banner = document.createElement('div');
-            banner.id = 'leesmodus-banner';
-            banner.className = 'leesmodus-banner';
-            const appBar = document.querySelector('.app-bar');
-            if (appBar && appBar.parentNode)
-                appBar.parentNode.insertBefore(banner, appBar.nextSibling);
-        }
-        const geenSchrijf = !this._heeftRecht(AuthModule.DOMEIN_VAN_ROL[rol], 'schrijven');
-        banner.textContent = geenSchrijf
-            ? '👁 Alleen-lezen: je hebt geen bewerkrechten voor dit onderdeel.'
-            : '👁 Alleen-lezen: deze datum ligt in het verleden; je mag de historie niet bewerken.';
-        banner.style.display = 'block';
+    /**
+     * @private Maak de bewerkbare velden in een sectie onbewerkbaar. Tekstachtige
+     * velden krijgen `readonly` (blijven focus-/selecteerbaar om waarden te kopiëren);
+     * `select`/checkbox/radio honoreren `readonly` niet, dus die gaan op `disabled`.
+     * Velden die van zichzelf al op slot staan (bv. berekende cellen) laten we met
+     * rust, en we onthouden per veld wat we aanpasten zodat _herstelLeesmodusVelden
+     * precies dat terugdraait.
+     */
+    _zetVeldenReadonly(sectie) {
+        sectie.querySelectorAll('input, select, textarea').forEach((veld) => {
+            const viaDisabled =
+                veld.tagName === 'SELECT' || veld.type === 'checkbox' || veld.type === 'radio';
+            if (viaDisabled) {
+                if (veld.disabled) return;
+                veld.disabled = true;
+                veld.setAttribute('data-leesmodus-disabled', '');
+            } else {
+                if (veld.readOnly) return;
+                veld.readOnly = true;
+                veld.setAttribute('data-leesmodus-readonly', '');
+                // Leeg veld: toon een em-dash zodat een lege cel niet als 'gat' oogt.
+                // Alleen als het veld nog geen eigen placeholder heeft.
+                if (veld.value === '' && !veld.placeholder) {
+                    veld.placeholder = '—';
+                    veld.setAttribute('data-leesmodus-placeholder', '');
+                }
+            }
+        });
+    }
+
+    /** @private Draai de door _zetVeldenReadonly aangepaste velden weer terug. */
+    _herstelLeesmodusVelden() {
+        document.querySelectorAll('[data-leesmodus-readonly]').forEach((veld) => {
+            veld.readOnly = false;
+            veld.removeAttribute('data-leesmodus-readonly');
+        });
+        document.querySelectorAll('[data-leesmodus-disabled]').forEach((veld) => {
+            veld.disabled = false;
+            veld.removeAttribute('data-leesmodus-disabled');
+        });
+        document.querySelectorAll('[data-leesmodus-placeholder]').forEach((veld) => {
+            veld.removeAttribute('placeholder');
+            veld.removeAttribute('data-leesmodus-placeholder');
+        });
     }
 
     // ── Gebruikersmenu (naam → submenu) ──────────────────────────────────────

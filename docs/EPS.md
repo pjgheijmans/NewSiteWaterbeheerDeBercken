@@ -387,8 +387,9 @@ table, clear a table, or reset the database (double confirmation). _(ADM-002..00
   it was required; it no longer counts toward the open total or the ⚠ badge.
 - The Meetwaarden/Verbruik subtabs (and the page tab) carry a subdued **● dot** when
   fields on that page are still incomplete (GEN-008), and a small **⚠** on the subtab
-  that contains a field with an open action. A _"Laatst gewijzigd door … om …"_ line
-  shows who last saved that section (GEN-007).
+  that contains a field with an open action. On a concurrent-edit conflict (GEN-007) a
+  popup reports that someone else changed the data and names who last saved it (there is
+  no longer a persistent _"Laatst gewijzigd door … om …"_ line, to save screen space).
 
 ### 3.12 Modes of Operation
 

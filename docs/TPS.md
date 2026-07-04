@@ -114,7 +114,7 @@ CI runs all of the above on every push/PR (`php-tests.yml`, `frontend-tests.yml`
 | TC-AUTH-02 | AUTH-003 (RBAC)       | T + D  | `RechtenMiddleware` via the controller tests (401/403); access matrix demo `MP-7`                                                               |
 | TC-AUTH-03 | AUTH-005              | T      | `Unit/Support/WachtwoordTest` (bcrypt, verify, legacy upgrade); `Integration/GebruikersRepositoryTest` (hash on write)                          |
 | TC-AUTH-04 | AUTH-006/007, CFG-001 | T + D  | `Unit/Controllers/ConfiguratieControllerTest` (validate 1–1440); `auth-sessie.dom.test`, `configuratie.dom.test`; idle demo `MP-9`              |
-| TC-RBAC-05 | AUTH-003 (read-only)  | T      | `test/unit/frontend/leesmodus-knoppen.dom.test` — write-action buttons disabled without `schrijven`                                             |
+| TC-RBAC-05 | AUTH-003 (read-only)  | T      | `test/unit/frontend/leesmodus-knoppen.dom.test` — write-action buttons disabled without `schrijven`; `actualiseerLeesmodus` flips section fields to `readonly`/`disabled` (computed fields untouched) with the `.alleen-lezen` styling |
 | TC-GEN-01  | GEN-001/002/005       | T + D  | `Integration/MetingenRepositoryTest` (date-keyed upserts); season/date scoping demo in `MP-1`                                                   |
 | TC-GEN-02  | GEN-003/004           | T      | frontend save-flow + validation: `grotebaden.dom.test`, `peuterbad.dom.test`, `verbruik.dom.test`, `Unit/Validation/ValidatorTest`              |
 | TC-GEN-03  | GEN-006 (author)      | T      | `Unit/Support/AuteurTest`; attribution asserted in repo/integration tests                                                                       |

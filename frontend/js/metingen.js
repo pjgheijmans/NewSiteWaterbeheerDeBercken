@@ -147,7 +147,6 @@ class MetingenModule {
                     await this.app.verbruik.laadWaterbeheerVelden();
                 else await this.app.verbruik.cacheGroteBadenVerbruik();
                 this.werkVolledigheidBij(); // passieve "niet alle velden ingevuld"-markering
-                this.toonLaatstGewijzigd(); // "laatst gewijzigd door … om …"
             }
         } catch {
             this.app.ui.toonBericht('Fout bij het ophalen van de gegevens.', 'fout');
@@ -169,42 +168,48 @@ class MetingenModule {
 
     /**
      * Optimistische concurrency: de server gaf 409 omdat iemand anders de gegevens
-     * ondertussen wijzigde. Herlaad met de actuele waarden en leg uit wat er gebeurde.
+     * ondertussen wijzigde. Herlaad met de actuele waarden en toon in een popup wat
+     * er gebeurde, inclusief wie er als laatste wijzigde (die "laatst gewijzigd"-info
+     * stond vroeger als vaste regel in beeld; nu alleen hier waar hij ertoe doet).
      */
-    behandelConflict() {
-        this.app.ui.toonBericht(
-            'Iemand anders heeft deze gegevens ondertussen gewijzigd. De pagina is opnieuw geladen met de actuele waarden.',
-            'fout',
-        );
-        this.laadMetingen();
+    async behandelConflict() {
+        await this.laadMetingen(); // verse versie-meta ophalen (incl. wie het wijzigde)
+        const wie = this._laatstGewijzigdTekst();
+        await this.app.ui.meld({
+            titel: 'Gegevens gewijzigd',
+            tekst:
+                'Iemand anders heeft deze gegevens ondertussen gewijzigd. ' +
+                'De pagina is opnieuw geladen met de actuele waarden.' +
+                (wie ? ` (${wie}.)` : ''),
+        });
     }
 
-    /** Vul de "laatst gewijzigd door … om …"-regels uit de bewaarde versie-meta. */
-    toonLaatstGewijzigd() {
+    /**
+     * @private Bouw de meest recente "Laatst gewijzigd door … om …"-tekst uit de
+     * bewaarde versie-meta (leeg als er niets bekend is). Alleen gebruikt in de
+     * conflict-popup.
+     */
+    _laatstGewijzigdTekst() {
         const v = this.app.state.versies;
-        const fmt = (meta) => {
-            if (!meta || !meta.auteur) return '';
-            let tijd = '';
-            if (meta.bijgewerkt_op) {
-                const d = new Date(meta.bijgewerkt_op);
-                if (!isNaN(d))
-                    tijd =
-                        ' om ' +
-                        d.toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' });
-            }
-            return `Laatst gewijzigd door ${meta.auteur}${tijd}`;
-        };
         const recentste = (...ms) =>
             ms
                 .filter((m) => m && m.bijgewerkt_op)
                 .sort((a, b) => (a.bijgewerkt_op < b.bijgewerkt_op ? 1 : -1))[0] || null;
-        const zet = (id, tekst) => {
-            const el = document.getElementById(id);
-            if (el) el.textContent = tekst;
-        };
-        zet('meetwaarden-gewijzigd', fmt(recentste(v['meting:Diep'], v['meting:Ondiep'])));
-        zet('verbruik-gewijzigd', fmt(v['verbruik']));
-        zet('peuterbad-gewijzigd', fmt(v['meting:Peuterbad']));
+        const meta = recentste(
+            v['meting:Diep'],
+            v['meting:Ondiep'],
+            v['meting:Peuterbad'],
+            v['verbruik'],
+            v['verwarming'],
+        );
+        if (!meta || !meta.auteur) return '';
+        let tijd = '';
+        if (meta.bijgewerkt_op) {
+            const d = new Date(meta.bijgewerkt_op);
+            if (!isNaN(d))
+                tijd = ' om ' + d.toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' });
+        }
+        return `Laatst gewijzigd door ${meta.auteur}${tijd}`;
     }
 
     async laadBezoekers() {
@@ -352,9 +357,34 @@ class MetingenModule {
                     input.parentElement.appendChild(ind);
                 });
             });
+
+            // De gebonden-chloorvelden dienen enkel om de bijbehorende actie te tonen;
+            // zonder actie voegen de berekende waarden niets toe → verbergen.
+            this._toonGebondenChloorVelden(acties);
         } catch (f) {
             console.error('Fout bij laden veldindicatoren:', f);
         }
+    }
+
+    /**
+     * Toon de gebonden-chloorvelden alleen wanneer er een `filter_spoelen_gebonden`-
+     * actie voor het bad bestaat (open óf afgehandeld). Diep en Ondiep vormen één blok:
+     * bij een actie op Diep of Ondiep tonen we beide waarden; Peuterbad is een losse rij.
+     * @param {Array<{actie_type?:string, bad_naam?:string}>} acties
+     * @private
+     */
+    _toonGebondenChloorVelden(acties) {
+        const badenMetActie = new Set(
+            (Array.isArray(acties) ? acties : [])
+                .filter((a) => a.actie_type === 'filter_spoelen_gebonden')
+                .map((a) => a.bad_naam),
+        );
+        const blok = document.querySelector('.meet-gebonden');
+        if (blok)
+            blok.style.display =
+                badenMetActie.has('Diep') || badenMetActie.has('Ondiep') ? '' : 'none';
+        const peuterRij = document.getElementById('peuterbad-gebonden-rij');
+        if (peuterRij) peuterRij.style.display = badenMetActie.has('Peuterbad') ? '' : 'none';
     }
 
     // ── Volledigheid (passieve "niet alle velden ingevuld"-markering) ────────

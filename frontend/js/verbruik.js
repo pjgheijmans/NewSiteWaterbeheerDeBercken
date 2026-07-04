@@ -160,7 +160,6 @@ class VerbruikModule {
             if (r1.status === 409 || r2.status === 409) return { ok: false, conflict: true };
             if (r1.ok) this._onthoudVersie('verbruik', await r1.json().catch(() => null));
             if (r2.ok) this._onthoudVersie('verwarming', await r2.json().catch(() => null));
-            this.app.metingen.toonLaatstGewijzigd();
             return { ok: r1.ok && r2.ok, conflict: false };
         } catch (f) {
             console.error('Fout bij opslaan algemene gegevens:', f);

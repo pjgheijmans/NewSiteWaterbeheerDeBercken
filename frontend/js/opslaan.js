@@ -76,7 +76,6 @@ class OpslaanModule {
             auteur: meta.auteur ?? null,
             bijgewerkt_op: meta.bijgewerkt_op ?? null,
         };
-        this.app.metingen.toonLaatstGewijzigd();
     }
 
     // ── Centrale auto-save ────────────────────────────────────────────────
