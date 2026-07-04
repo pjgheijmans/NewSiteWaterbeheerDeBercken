@@ -164,12 +164,13 @@ class UIManager {
 
     /**
      * Update de auto-save statusindicator.
-     * @param {'pending'|'saving'|'saved'|'warning'|'error'} status
+     * @param {'idle'|'pending'|'saving'|'saved'|'warning'|'error'} status
      */
     setAutoSaveStatus(status) {
         const el = document.getElementById('autoSaveStatus');
         if (!el) return;
         const states = {
+            idle: ['', '#333'],
             pending: ['Wijzigingen niet opgeslagen...', '#888'],
             saving: ['Bewaren…', '#fd7e14'],
             saved: ['✓ Opgeslagen', '#28a745'],

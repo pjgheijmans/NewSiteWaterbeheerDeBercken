@@ -174,6 +174,9 @@ class MetingenModule {
      */
     async behandelConflict() {
         await this.laadMetingen(); // verse versie-meta ophalen (incl. wie het wijzigde)
+        // De mislukte save liet de status op "Bewaren…" staan; de lokale wijziging is
+        // verworpen en de serverwaarden staan weer in beeld, dus die status wissen.
+        this.app.ui.setAutoSaveStatus('idle');
         const meta = this._recentsteWijziging();
         const naam = meta && meta.auteur ? meta.auteur : 'Iemand anders';
         let datum = '';
