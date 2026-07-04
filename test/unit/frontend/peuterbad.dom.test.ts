@@ -25,7 +25,6 @@ function maakApp(overrides: any = {}) {
             laadMetingen: jest.fn(),
             laadActies: jest.fn(),
             werkVolledigheidBij: jest.fn(),
-            toonLaatstGewijzigd: jest.fn(),
             behandelConflict: jest.fn(),
         },
         taken: { werkBadgeBij: jest.fn() },

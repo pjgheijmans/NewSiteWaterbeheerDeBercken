@@ -44,7 +44,6 @@ function maakModule(app: any) {
     m.laadGebondenChloor = jest.fn().mockResolvedValue(undefined);
     m.laadActies = jest.fn();
     m.werkVolledigheidBij = jest.fn();
-    m.toonLaatstGewijzigd = jest.fn();
     return m;
 }
 

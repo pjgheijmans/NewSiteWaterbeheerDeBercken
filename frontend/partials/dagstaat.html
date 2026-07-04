@@ -39,7 +39,6 @@
                 </div>
 
                 <div id="subtab-meetwaarden-content">
-                    <div id="meetwaarden-gewijzigd" class="laatst-gewijzigd"></div>
                     <div class="categorie-box" id="categorie-opname-meetwaarden">
                         <h3>Opname meetwaarden</h3>
                         <div class="meet-grid">
@@ -70,7 +69,9 @@
                             <div class="meet-cel" style="grid-area:kbo;"><input type="number" id="kath-ondiep" step="0.01" data-param="kathodische_bescherming" oninput="valideerVeld(this, 'kathodische_bescherming')"></div>
                         </div>
 
-                        <div class="meet-gebonden">
+                        <!-- Alleen zichtbaar bij een openstaande/afgehandelde gebonden-chloor-actie
+                             (zie MetingenModule._toonGebondenChloorVelden); standaard verborgen. -->
+                        <div class="meet-gebonden" style="display: none;">
                             <span class="meet-gebonden-label">Gebonden chloor (dagmax)</span>
                             <span class="meet-gebonden-veld"><span class="meet-gebonden-bad">Diep</span><input type="text" id="gebonden-chloor-diep" disabled></span>
                             <span class="meet-gebonden-veld"><span class="meet-gebonden-bad">Ondiep</span><input type="text" id="gebonden-chloor-ondiep" disabled></span>
@@ -79,7 +80,6 @@
                 </div>
 
                 <div id="subtab-verbruik-content" style="display: none;">
-                    <div id="verbruik-gewijzigd" class="laatst-gewijzigd"></div>
                     <div class="verbruik-groepen">
                     <div class="categorie-box" id="categorie-water">
                         <h3>Water (m³)</h3>
@@ -221,7 +221,6 @@
                 </div>
 
                 <div id="peuterbad-meetwaarden-content">
-                    <div id="peuterbad-gewijzigd" class="laatst-gewijzigd"></div>
                     <div class="categorie-box">
                         <h3>Opname meetwaarden</h3>
                         <table class="categorie-tabel">
@@ -245,9 +244,11 @@
                                     <td>Flow</td>
                                     <td><input type="number" step="1" id="peuterbad-flow" data-param="flow_peuterbad" oninput="valideerVeld(this,'flow_peuterbad')"></td>
                                 </tr>
-                                <tr>
+                                <!-- Alleen zichtbaar bij een gebonden-chloor-actie voor Peuterbad
+                                     (zie MetingenModule._toonGebondenChloorVelden); standaard verborgen. -->
+                                <tr id="peuterbad-gebonden-rij" style="display: none;">
                                     <td>Gebonden chloor (dagmax)</td>
-                                    <td><input type="text" id="gebonden-chloor-peuterbad" disabled style="background-color:#f0f0f0; cursor:not-allowed;"></td>
+                                    <td><input type="text" id="gebonden-chloor-peuterbad" disabled style="cursor:not-allowed;"></td>
                                 </tr>
                             </tbody>
                         </table>

@@ -501,6 +501,29 @@ td select {
     font-size: 14px;
 }
 
+/* Alleen-lezen modus: de velden in de actieve sectie krijgen dezelfde vorm als de
+   bewerkbare velden (rand + reliëf blijven staan), maar met een doorzichtige vulling
+   zodat de pagina-achtergrond doorschijnt — het veld ziet er dus 'leeg/uit' uit maar
+   houdt zijn kader. De velden blijven readonly/disabled in de DOM (zie auth.js →
+   actualiseerLeesmodus) zodat gedrag/toegankelijkheid intact blijven; dit is puur
+   visueel. opacity:1 overschrijft de UA-dimming van een disabled <select>. */
+.alleen-lezen input,
+.alleen-lezen select,
+.alleen-lezen textarea {
+    background: transparent;
+    color: var(--tekst);
+    cursor: default;
+    opacity: 1;
+}
+
+/* De em-dash die _zetVeldenReadonly in lege velden zet, leest als 'geen waarde':
+   dof maar volledig zichtbaar (browsers dimmen placeholders standaard). */
+.alleen-lezen input::placeholder,
+.alleen-lezen textarea::placeholder {
+    color: var(--tekst-dof);
+    opacity: 1;
+}
+
 .actie-container {
     display: flex;
     justify-content: flex-end;
@@ -815,7 +838,9 @@ input[type='text'].buiten-limiet {
     grid-template-columns: var(--meet-label-w) var(--meet-val-w) var(--meet-val-w);
 }
 .meet-gebonden-label {
-    font-weight: 600;
+    /* Normaal gewicht, gelijk aan de rijlabels in de peuterbad-tabel en de overige
+       parameterlabels — anders oogt "Gebonden chloor (dagmax)" hier vet/zwaarder. */
+    font-weight: normal;
 }
 .meet-gebonden-veld {
     gap: 6px;
@@ -823,9 +848,12 @@ input[type='text'].buiten-limiet {
 .meet-gebonden-bad {
     display: none;
 } /* badnaam staat al in de kolomkop */
+/* De gebonden-chloorvelden zijn altijd read-only (berekend dagmaximum). Ze volgen
+   dezelfde look als de andere alleen-lezen velden: doorzichtige vulling, maar rand +
+   reliëf blijven staan. Verder identiek aan de gewone .meet-cel-invoervelden. */
 .meet-gebonden-veld input {
-    background: rgba(255, 255, 255, 0.5);
-    cursor: not-allowed;
+    background: transparent;
+    cursor: default;
 }
 
 @media (min-width: 900px) {
@@ -1178,16 +1206,6 @@ input[type='text'].buiten-limiet {
     background: var(--kleur-succes);
 }
 
-/* "Laatst gewijzigd door … om …" — gedempte awareness-regel boven een sectie,
-   zodat je ziet wie de gegevens als laatste aanraakte (bij meerdere gebruikers). */
-.laatst-gewijzigd {
-    font-size: 12px;
-    color: #888;
-    font-style: italic;
-    margin-bottom: 8px;
-    min-height: 16px;
-}
-
 /* Passieve "nog niet alle velden ingevuld"-markering op een subtab. Bewust
    gedempt en amberkleurig — informatief, geen alarm zoals de rode ⚠-indicator. */
 .tab-onvolledig-indicator {
@@ -1462,7 +1480,8 @@ td select,
        parameter-labels van de Diep/Ondiep-meetwaarden-grid (.meet-col-kop). */
     .categorie-tabel td,
     .checkbox-item,
-    .meet-col-kop {
+    .meet-col-kop,
+    .meet-gebonden-label {
         font-size: 13px;
     }
 
