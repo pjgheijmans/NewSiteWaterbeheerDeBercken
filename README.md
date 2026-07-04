@@ -234,7 +234,7 @@ Wijzigingen worden automatisch opgeslagen met een debounce van 1,2 seconden. Een
 | Status                      | Kleur  |
 | --------------------------- | ------ |
 | Wijzigingen niet opgeslagen | grijs  |
-| Bewaren…                    | oranje |
+| Opslaan                    | oranje |
 | ✓ Opgeslagen                | groen  |
 | ✕ Fout bij opslaan          | rood   |
 

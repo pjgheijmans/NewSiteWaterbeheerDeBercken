@@ -173,25 +173,39 @@ class MetingenModule {
      * stond vroeger als vaste regel in beeld; nu alleen hier waar hij ertoe doet).
      */
     async behandelConflict() {
-        await this.laadMetingen(); // verse versie-meta ophalen (incl. wie het wijzigde)
-        // De mislukte save liet de status op "Bewaren…" staan; de lokale wijziging is
-        // verworpen en de serverwaarden staan weer in beeld, dus die status wissen.
-        this.app.ui.setAutoSaveStatus('idle');
-        const meta = this._recentsteWijziging();
-        const naam = meta && meta.auteur ? meta.auteur : 'Iemand anders';
-        let datum = '';
-        if (meta && meta.bijgewerkt_op) {
-            const d = new Date(meta.bijgewerkt_op);
-            if (!isNaN(d))
-                datum = d.toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' });
+        // Onderdruk autosave-herplanning tijdens het herstel: het opnieuw vullen van de
+        // velden én de focuswissel naar de popup triggeren anders een change-event dat
+        // een overbodige "phantom" terugschrijf-save inplant (zie scheduleAutoSave).
+        this.app.state.conflictHerstel = true;
+        try {
+            await this.laadMetingen(); // verse versie-meta ophalen (incl. wie het wijzigde)
+            // De mislukte save liet de status op "Opslaan" staan; de lokale wijziging is
+            // verworpen en de serverwaarden staan weer in beeld, dus die status wissen.
+            this.app.ui.setAutoSaveStatus('idle');
+            const meta = this._recentsteWijziging();
+            const naam = meta && meta.auteur ? meta.auteur : 'Iemand anders';
+            let datum = '';
+            if (meta && meta.bijgewerkt_op) {
+                const d = new Date(meta.bijgewerkt_op);
+                if (!isNaN(d))
+                    datum = d.toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' });
+            }
+            await this.app.ui.meld({
+                titel: 'Gegevens gewijzigd',
+                tekst:
+                    `${naam} heeft deze gegevens ondertussen gewijzigd` +
+                    (datum ? ` (${datum})` : '') +
+                    '. Pagina is opnieuw geladen met laatste opgeslagen waarden.',
+            });
+        } finally {
+            this.app.state.conflictHerstel = false;
+            // Ruim een eventueel toch nog ingeplande autosave op en houd de status schoon.
+            if (this.app.state.autoSaveTimer) {
+                clearTimeout(this.app.state.autoSaveTimer);
+                this.app.state.autoSaveTimer = null;
+            }
+            this.app.ui.setAutoSaveStatus('idle');
         }
-        await this.app.ui.meld({
-            titel: 'Gegevens gewijzigd',
-            tekst:
-                `${naam} heeft deze gegevens ondertussen gewijzigd` +
-                (datum ? ` (${datum})` : '') +
-                '. Pagina is opnieuw geladen met laatste opgeslagen waarden.',
-        });
     }
 
     /**

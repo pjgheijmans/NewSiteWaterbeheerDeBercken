@@ -81,6 +81,9 @@ class OpslaanModule {
     // ── Centrale auto-save ────────────────────────────────────────────────
 
     scheduleAutoSave() {
+        // Tijdens conflict-herstel (herladen + popup) geen nieuwe autosave inplannen: het
+        // herladen/focuswissel triggert anders een overbodige terugschrijf-save.
+        if (this.app.state.conflictHerstel) return;
         // Niets opslaan in alleen-lezen modus (geen schrijfrecht of historie-slot).
         if (this.app.auth && !this.app.auth.magNuOpslaan()) return;
         const state = this.app.state;

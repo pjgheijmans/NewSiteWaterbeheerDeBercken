@@ -1,6 +1,6 @@
 {
     "name": "zwembad-status",
-    "version": "1.0.0",
+    "version": "1.0",
     "description": "Frontend-tests (jsdom) + lint/format. De backend is gepoort naar PHP (zie backend/).",
     "scripts": {
         "test": "jest",

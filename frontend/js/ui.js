@@ -172,7 +172,7 @@ class UIManager {
         const states = {
             idle: ['', '#333'],
             pending: ['Wijzigingen niet opgeslagen...', '#888'],
-            saving: ['Bewaren…', '#fd7e14'],
+            saving: ['Opslaan', '#fd7e14'],
             saved: ['✓ Opgeslagen', '#28a745'],
             warning: ['⚠ Opgeslagen met waarschuwing', '#fd7e14'],
             error: ['✗ Fout bij opslaan', '#dc3545'],
