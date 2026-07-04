@@ -174,42 +174,40 @@ class MetingenModule {
      */
     async behandelConflict() {
         await this.laadMetingen(); // verse versie-meta ophalen (incl. wie het wijzigde)
-        const wie = this._laatstGewijzigdTekst();
+        const meta = this._recentsteWijziging();
+        const naam = meta && meta.auteur ? meta.auteur : 'Iemand anders';
+        let datum = '';
+        if (meta && meta.bijgewerkt_op) {
+            const d = new Date(meta.bijgewerkt_op);
+            if (!isNaN(d))
+                datum = d.toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' });
+        }
         await this.app.ui.meld({
             titel: 'Gegevens gewijzigd',
             tekst:
-                'Iemand anders heeft deze gegevens ondertussen gewijzigd. ' +
-                'De pagina is opnieuw geladen met de actuele waarden.' +
-                (wie ? ` (${wie}.)` : ''),
+                `${naam} heeft deze gegevens ondertussen gewijzigd` +
+                (datum ? ` (${datum})` : '') +
+                '. Pagina is opnieuw geladen met laatste opgeslagen waarden.',
         });
     }
 
     /**
-     * @private Bouw de meest recente "Laatst gewijzigd door … om …"-tekst uit de
-     * bewaarde versie-meta (leeg als er niets bekend is). Alleen gebruikt in de
-     * conflict-popup.
+     * @private De meest recente versie-meta (auteur/bijgewerkt_op) over de baden en
+     * het verbruik/verwarming, of null. Alleen gebruikt in de conflict-popup.
      */
-    _laatstGewijzigdTekst() {
+    _recentsteWijziging() {
         const v = this.app.state.versies;
-        const recentste = (...ms) =>
-            ms
+        return (
+            [
+                v['meting:Diep'],
+                v['meting:Ondiep'],
+                v['meting:Peuterbad'],
+                v['verbruik'],
+                v['verwarming'],
+            ]
                 .filter((m) => m && m.bijgewerkt_op)
-                .sort((a, b) => (a.bijgewerkt_op < b.bijgewerkt_op ? 1 : -1))[0] || null;
-        const meta = recentste(
-            v['meting:Diep'],
-            v['meting:Ondiep'],
-            v['meting:Peuterbad'],
-            v['verbruik'],
-            v['verwarming'],
+                .sort((a, b) => (a.bijgewerkt_op < b.bijgewerkt_op ? 1 : -1))[0] || null
         );
-        if (!meta || !meta.auteur) return '';
-        let tijd = '';
-        if (meta.bijgewerkt_op) {
-            const d = new Date(meta.bijgewerkt_op);
-            if (!isNaN(d))
-                tijd = ' om ' + d.toLocaleString('nl-NL', { dateStyle: 'short', timeStyle: 'short' });
-        }
-        return `Laatst gewijzigd door ${meta.auteur}${tijd}`;
     }
 
     async laadBezoekers() {

@@ -164,7 +164,7 @@ classDiagram
 > `VerbruikModule` houden per record een `versie` bij in `AppState.versies`, sturen die
 > mee bij elke save en tellen door op het antwoord; een **409** roept
 > `MetingenModule.behandelConflict()` aan (herladen + een popup die uitlegt wat er
-> gebeurde en wie er als laatste wijzigde, via `_laatstGewijzigdTekst()`).
+> gebeurde en wie er als laatste wijzigde, via `_recentsteWijziging()`).
 > `werkVolledigheidBij()` zet de passieve volledigheids-bolletjes. `ApiClient` stuurt
 > een 401 naar `AuthModule.sessieVerlopen()`
 > (terug naar het loginscherm met uitleg). De kop toont een app-versielabel uit
