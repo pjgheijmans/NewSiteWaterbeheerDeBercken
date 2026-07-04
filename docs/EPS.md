@@ -1,10 +1,10 @@
 # Element Performance Specification (EPS)
 
-**Document ID:** EPS-DDZ-0.6
+**Document ID:** EPS-DDZ-0.7
 **Element:** Digitale Dagstaat Zwembad — full web application
-**Version:** 0.6
+**Version:** 0.7
 **Status:** DRAFT
-**Date:** 2026-06-28
+**Date:** 2026-07-04
 **Author:** P. Heijmans
 **Approver:**
 
@@ -28,6 +28,7 @@
 | 0.4     | 2026-06-16 | P. Heijmans | Configurable sliding session time-out + generic configuration block (CFG-001, UI-014, AUTH-006/007); concurrent-edit conflict detection and author stamping on waterbeheer data (GEN-007, GEN-006 upgraded); passive "fields incomplete" indicators replacing the autosave warning (GEN-003/GEN-008); app version label (GEN-009)                                                                                                                                                                                                                    |
 | 0.5     | 2026-06-23 | P. Heijmans | Added **Appendix A — Input Value Catalogue**: per-field definition, unit, decimal precision (fraction) and default valid range (min/max) for every input value across Waterbeheer, Coördinatoren, Limieten, Configuratie and Gebruikers, plus the free-text logboek entries (now hard-capped at 500 chars, client + server) and duty fields (A.13); §4.4 now points to it                                                                                                                                                                            |
 | 0.6     | 2026-06-28 | P. Heijmans | **Backend ported from Node/Express/TypeScript to PHP 8.0 (Slim 4 + PHP-DI)** so the app runs on shared Apache + MySQL hosting (the host offers no Node). The HTTP API, JSON shapes, data model and frontend are unchanged — requirements are unaffected; only the implementation/deployment statements change. Password hashing is now bcrypt; sessions use native PHP `$_SESSION` (no `SESSION_SECRET`); CI added (PHPUnit backend + Jest/ESLint frontend). Updated §2.3, §5.1/5.3, §6.1, §7.2/7.3, §8.1, §9 R-002/R-003 and Appendix A accordingly |
+| 0.7     | 2026-07-04 | P. Heijmans | Read-only presentation reworked (GEN-007/AUTH-003): fields in read-only mode are set truly `readonly`/`disabled` and rendered "boxed see-through" (border kept, page shows through); the standalone "Alleen-lezen" banner is removed and the persistent "Laatst gewijzigd door … om …" line is replaced by a popup shown on a 409 concurrent-edit conflict (§3.11). The derived combined-chlorine day-max (gebonden chloor) is now surfaced on the Waterbeheer Meetwaarden/Peuterbad pages **only when its `filter_spoelen_gebonden` action is active** for that bath, otherwise hidden (§3.11, §3.5). |
 
 ---
 
@@ -390,6 +391,15 @@ table, clear a table, or reset the database (double confirmation). _(ADM-002..00
   that contains a field with an open action. On a concurrent-edit conflict (GEN-007) a
   popup reports that someone else changed the data and names who last saved it (there is
   no longer a persistent _"Laatst gewijzigd door … om …"_ line, to save screen space).
+- The **derived combined-chlorine day-max** ("Gebonden chloor (dagmax)", read-only,
+  computed from coordinator data) is shown on the Meetwaarden/Peuterbad pages **only
+  when a `filter_spoelen_gebonden` action exists** for that bath — so the ⚠/✓ marker has
+  context; when no such action exists the values add nothing and are hidden. For the
+  large baths Diep and Ondiep are shown together (a single block) as soon as either has
+  such an action.
+- **Read-only fields** (no write right, or a past date without history rights) keep the
+  same box/border as editable fields but with a see-through fill; they are genuinely
+  non-editable and empty ones show an em-dash. There is no separate "read-only" banner.
 
 ### 3.12 Modes of Operation
 
