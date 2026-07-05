@@ -1,7 +1,7 @@
 /**
  * Waterbeheer-dienst — wie was er vandaag op dienst (twee personen).
- * Persoon 1 wordt voorgevuld met de ingelogde gebruiker; beide velden zijn een
- * keuzelijst (geregistreerde waterbeheerders) met vrije tekst als terugval.
+ * Beide velden zijn keuzelijsten (<select>) met de geregistreerde waterbeheerders:
+ * vrije tekst is niet mogelijk en op mobiel verschijnt de native keuzelijst.
  */
 class DienstModule {
     /** @param {Application} app */
@@ -9,79 +9,27 @@ class DienstModule {
         this.app = app;
         this._waterbeheerdersGeladen = false;
         this._listenersAttached = false;
+        this._namen = [];
     }
 
     setStatus(status) {
-        const el = document.getElementById('dienstSaveStatus');
-        if (!el) return;
-        const states = {
-            pending: ['Wijzigingen niet opgeslagen...', '#888'],
-            saving: ['Opslaan', '#fd7e14'],
-            saved: ['✓ Opgeslagen', '#28a745'],
-            error: ['✕ Fout bij opslaan', '#dc3545'],
-        };
-        const [text, color] = states[status] || ['', '#333'];
-        el.textContent = text;
-        el.style.color = color;
-        if (status === 'saved')
-            setTimeout(() => {
-                if (el.textContent.startsWith('✓')) el.textContent = '';
-            }, 4000);
+        this.app.ui.zetBlokStatus(document.getElementById('waterbeheer-dienst-bar'), status);
     }
 
-    /** Klap het bewerkvak open/dicht (de samenvattingschip blijft altijd zichtbaar). */
-    toggleBewerk() {
-        const box = document.getElementById('dienst-bewerk');
-        const icoon = document.getElementById('dienst-toggle-icoon');
-        if (!box) return;
-        const tonen = box.style.display === 'none' || box.style.display === '';
-        box.style.display = tonen ? 'flex' : 'none';
-        if (icoon) icoon.textContent = tonen ? '▴' : '▾';
-        // Vul de ingelogde gebruiker pas in als persoon 1 wanneer het bewerkvak
-        // wordt geopend en er nog niemand is ingevuld.
-        if (tonen) this._vulIngelogdeIndienLeeg();
+    /** @private HTML-escape voor optie-waarden. */
+    _esc(s) {
+        return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
     }
 
-    /** Zet de ingelogde gebruiker als persoon 1 zolang beide velden leeg zijn. */
-    _vulIngelogdeIndienLeeg() {
-        const veld1 = document.getElementById('dienst-1');
-        const veld2 = document.getElementById('dienst-2');
-        if (!veld1 || !veld2) return;
-        if (!veld1.value.trim() && !veld2.value.trim()) {
-            veld1.value = this._ingelogdeNaam();
-            this._updateSamenvatting();
-        }
-    }
-
-    /** Werk de samengevatte chiptekst bij op basis van de huidige veldwaarden. */
-    _updateSamenvatting() {
-        const el = document.getElementById('dienst-samenvatting-tekst');
-        if (!el) return;
-        const veld1 = document.getElementById('dienst-1');
-        const veld2 = document.getElementById('dienst-2');
-        const namen = [veld1 && veld1.value, veld2 && veld2.value]
-            .map((v) => (v || '').trim())
-            .filter(Boolean);
-        el.textContent = namen.length ? namen.join(' + ') : '— vul in';
-    }
-
-    /** Weergavenaam van de ingelogde gebruiker. */
-    _ingelogdeNaam() {
-        const g = this.app.state.ingelogdeGebruiker;
-        return g ? [g.voornaam, g.achternaam].filter(Boolean).join(' ').trim() || g.inlognaam : '';
-    }
-
-    /** Vul de datalist met de geregistreerde waterbeheerders (één keer). */
+    /** Haal de geregistreerde waterbeheerders op en vul beide keuzelijsten (één keer). */
     async _laadWaterbeheerders() {
         if (this._waterbeheerdersGeladen) return;
         try {
             const res = await this.app.api.call('/api/dienst/waterbeheerders');
             const namen = await res.json();
-            const lijst = document.getElementById('waterbeheerders-lijst');
-            if (lijst && Array.isArray(namen)) {
-                lijst.innerHTML = namen
-                    .map((n) => `<option value="${String(n).replace(/"/g, '&quot;')}">`)
-                    .join('');
+            if (Array.isArray(namen)) {
+                this._namen = namen.map(String);
+                this._vulSelects();
                 this._waterbeheerdersGeladen = true;
             }
         } catch (f) {
@@ -89,7 +37,37 @@ class DienstModule {
         }
     }
 
-    /** Laad de dienst van een dag; persoon 1 voorvullen met de ingelogde gebruiker indien leeg. */
+    /** @private Vul beide dienst-selects met een lege optie + de waterbeheerders. */
+    _vulSelects() {
+        const opties =
+            '<option value="">— kies —</option>' +
+            this._namen.map((n) => `<option value="${this._esc(n)}">${this._esc(n)}</option>`).join('');
+        ['dienst-1', 'dienst-2'].forEach((id) => {
+            const sel = document.getElementById(id);
+            if (!sel) return;
+            const huidige = sel.value;
+            sel.innerHTML = opties;
+            if (huidige) this._zetWaarde(sel, huidige);
+        });
+    }
+
+    /**
+     * @private Zet de waarde van een select; voeg de opgeslagen naam als optie toe als
+     * die (bv. een verwijderde/oud-medewerker) niet meer in de lijst voorkomt, zodat de
+     * historische keuze zichtbaar blijft.
+     */
+    _zetWaarde(sel, waarde) {
+        if (!sel) return;
+        if (waarde && !Array.from(sel.options).some((o) => o.value === waarde)) {
+            const opt = document.createElement('option');
+            opt.value = waarde;
+            opt.textContent = waarde;
+            sel.appendChild(opt);
+        }
+        sel.value = waarde || '';
+    }
+
+    /** Laad de dienst van een dag in de twee keuzelijsten. */
     async laadDienst(datum) {
         if (!datum) return;
         await this._laadWaterbeheerders();
@@ -99,24 +77,19 @@ class DienstModule {
         try {
             const res = await this.app.api.call(`/api/dienst?datum=${datum}`);
             const d = await res.json();
-            veld1.value = d.dienst_1 || '';
-            veld2.value = d.dienst_2 || '';
+            this._zetWaarde(veld1, d.dienst_1 || '');
+            this._zetWaarde(veld2, d.dienst_2 || '');
         } catch (f) {
             console.error('Fout bij laden dienst:', f);
         }
-        this._updateSamenvatting();
 
         if (this._listenersAttached) return;
         this._listenersAttached = true;
-        [veld1, veld2].forEach((veld) => {
-            veld.addEventListener('input', () => this._scheduleAutoSave());
-            veld.addEventListener('change', () => this._scheduleAutoSave());
-        });
+        [veld1, veld2].forEach((veld) => veld.addEventListener('change', () => this._scheduleAutoSave()));
     }
 
     _scheduleAutoSave() {
         const state = this.app.state;
-        this._updateSamenvatting(); // chip live meelopen met het typen
         if (state.dienstAutoSaveTimer) clearTimeout(state.dienstAutoSaveTimer);
         this.setStatus('pending');
         state.dienstAutoSaveTimer = setTimeout(async () => {

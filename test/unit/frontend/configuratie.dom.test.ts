@@ -25,7 +25,7 @@ function maakApp() {
                 return { ok: true, json: async () => ({}) };
             }),
         },
-        ui: { toonBericht: jest.fn() },
+        ui: { toonBericht: jest.fn(), zetOpslaanStatus: jest.fn() },
         state: { configuratieSaveTimers: {} as Record<string, any> },
     };
 }
@@ -104,6 +104,7 @@ describe('Configuratie — autosave (geen knop)', () => {
             'Sessie-time-out moet 1–1440 zijn.',
             'fout',
         );
-        expect(document.getElementById('configuratieSaveStatus')!.textContent).toContain('Fout');
+        // De status wordt nu als icoon getoond via ui.zetOpslaanStatus (per-blok/formulier).
+        expect(app.ui.zetOpslaanStatus).toHaveBeenCalledWith(expect.anything(), 'error');
     });
 });

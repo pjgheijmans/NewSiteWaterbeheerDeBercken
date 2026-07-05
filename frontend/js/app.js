@@ -90,8 +90,6 @@ window.scheduleAutoSaveLimieten = () => app.limieten.scheduleAutoSaveLimieten();
 
 window.laadStandaardActieTeksten = () => app.actieteksten.laadStandaardActieTeksten();
 
-window.toggleDienst = () => app.dienst.toggleBewerk();
-
 window.voegGebruikerToe = () => app.gebruikers.voegGebruikerToe();
 window.verwijderGebruiker = (id) => app.gebruikers.verwijderGebruiker(id);
 

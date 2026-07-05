@@ -54,7 +54,12 @@ class OpslaanModule {
             // Naast het inplannen van de opslag ook direct de volledigheids-markeringen
             // op de subtabs bijwerken, zodat de indicatie live meeloopt met het typen
             // (i.p.v. een waarschuwing na elke opslag).
-            const opInvoer = () => {
+            const opInvoer = (e) => {
+                // Onthoud het bewerkte blok, zodat de opslaan-status alleen dáár getoond
+                // wordt en niet in alle blokken van de subtab (de centrale save slaat wel
+                // alles op, maar visueel hoort de status bij het aangeraakte blok).
+                this.app.ui._actiefOpslaanBlok =
+                    e && e.target && e.target.closest ? e.target.closest('.categorie-box') : null;
                 this.scheduleAutoSave();
                 this.app.metingen.werkVolledigheidBij();
             };
@@ -84,6 +89,12 @@ class OpslaanModule {
         // Tijdens conflict-herstel (herladen + popup) geen nieuwe autosave inplannen: het
         // herladen/focuswissel triggert anders een overbodige terugschrijf-save.
         if (this.app.state.conflictHerstel) return;
+        // De centrale save is uitsluitend voor de waterbeheer-dagstaat (meetwaarden/
+        // verbruik/peuterbad). Bij de coördinatoren (blokken/checklist/daggegevens) en op
+        // de "Dienst en Logboek"-tab slaan de blokken zichzelf op met een eigen
+        // statusicoon; hier niets doen, anders krijgt een blok een tweede status.
+        if (this.app.state.huidigeRol !== 'waterbeheer' || this.app.state.huidigeBadPagina === 'logboek')
+            return;
         // Niets opslaan in alleen-lezen modus (geen schrijfrecht of historie-slot).
         if (this.app.auth && !this.app.auth.magNuOpslaan()) return;
         const state = this.app.state;
@@ -101,12 +112,14 @@ class OpslaanModule {
     scheduleAutoSaveBlok(tijdstip) {
         if (this.app.auth && !this.app.auth.magNuOpslaan()) return;
         const state = this.app.state;
+        // Per-blok status: het icoon in de kop van dít meetblok (op tijdstip gezocht).
+        const icoon = () => document.querySelector(`[data-blok-tijdstip="${tijdstip}"] .blok-status`);
         if (state.blokTimers[tijdstip]) clearTimeout(state.blokTimers[tijdstip]);
-        this.app.ui.setAutoSaveStatus('pending');
+        this.app.ui.zetOpslaanStatus(icoon(), 'pending');
         state.blokTimers[tijdstip] = setTimeout(async () => {
-            this.app.ui.setAutoSaveStatus('saving');
+            this.app.ui.zetOpslaanStatus(icoon(), 'saving');
             const ok = await this._slaCoordinatorenBlokOp(tijdstip);
-            this.app.ui.setAutoSaveStatus(ok ? 'saved' : 'error');
+            this.app.ui.zetOpslaanStatus(icoon(), ok ? 'saved' : 'error');
             if (!ok) this.app.ui.toonBericht('Fout bij opslaan van blok.', 'fout');
         }, 1200);
     }

@@ -548,12 +548,22 @@ td select {
 }
 
 .categorie-box {
+    position: relative;
     border: 1px solid rgba(255, 255, 255, 0.6);
     border-radius: var(--radius);
     background: rgba(255, 255, 255, 0.22);
     padding: 20px;
     margin-bottom: 20px;
     overflow-x: auto;
+}
+
+/* Autosave-icoon rechtsboven in een blok (voor de centrale save van meetwaarden/
+   verbruik e.d.); per-blok-pagina's zetten hun icoon in de blokkop zelf. */
+.blok-status-hoek {
+    position: absolute;
+    top: 12px;
+    right: 14px;
+    z-index: 1;
 }
 
 .categorie-box h3 {
@@ -646,6 +656,51 @@ td select {
 .checkbox-item input {
     width: auto;
     margin: 0;
+}
+
+/* Dienst-invoer ("Dienst en Logboek"-tab): twee naamvelden in een categorie-box,
+   in dezelfde stijl als de overige invoervelden. */
+.dienst-velden {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 16px;
+}
+.dienst-veld {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    font-size: 13px;
+    color: var(--tekst-dof);
+}
+.dienst-veld input,
+.dienst-veld select {
+    width: 220px;
+    max-width: 100%;
+    padding: 8px;
+    border: 1px solid var(--rand-sterk);
+    border-radius: var(--radius-sm);
+    font-size: 14px;
+    background: var(--opp);
+}
+.dienst-status {
+    font-size: 14px;
+    font-style: italic;
+    align-self: flex-end;
+    padding-bottom: 8px;
+}
+
+/* Compacte autosave-status als icoon (⌛ bezig, ✓ opgeslagen, ⚠ fout). Gedeeld door
+   alle blokken/formulieren via ui.zetOpslaanStatus. In blok-koppen staat het icoon
+   naast de titel/verwijderknop. */
+.opslaan-status {
+    font-style: normal;
+    font-size: 16px;
+    line-height: 1;
+    flex-shrink: 0;
+}
+.blok-status {
+    margin-left: auto;
 }
 
 /* Gevaar / Database wissen knop */
@@ -914,10 +969,11 @@ input[type='text'].buiten-limiet {
     }
 }
 
-/* Alleen mobiel (verticale weergave): compacter — verberg de groepskop en
-   krimp de celruimte rond de invoervelden. */
+/* Alleen mobiel (verticale weergave): compacter — krimp de celruimte rond de
+   invoervelden en kort de app-titel in om ruimte te winnen. */
 @media (max-width: 899.98px) {
-    #categorie-opname-meetwaarden h3 {
+    /* App-titel "Zwembad Dagstaat" → "Dagstaat" op mobiel. */
+    .app-bar h1 .titel-zwembad {
         display: none;
     }
     .meet-grid > *,

@@ -5,28 +5,12 @@
                     <input type="date" id="centraleDatum" onchange="pasSeizoenAan(); laadMetingen(); actualiseerLeesmodus()">
                     <button onclick="veranderDatum(1)"><span class="nav-label">Volgende Dag </span>▶</button>
                 </div>
-
-                <div id="waterbeheer-dienst-bar" style="display:none;">
-                <button type="button" id="dienst-samenvatting" onclick="toggleDienst()"
-                    style="display:inline-flex; align-items:center; gap:8px; background:#f1f5f9; border:1px solid #cbd5e1; border-radius:16px; padding:6px 14px; cursor:pointer; font-size:14px; color:#334155;">
-                    <span>👥 Dienst:</span>
-                    <span id="dienst-samenvatting-tekst" style="font-weight:600;">—</span>
-                    <span id="dienst-toggle-icoon" style="opacity:.6;">▾</span>
-                </button>
-                <div id="dienst-bewerk" style="display:none; flex-wrap:wrap; align-items:center; gap:10px; margin-top:8px;">
-                    <input list="waterbeheerders-lijst" id="dienst-1" placeholder="Persoon 1" autocomplete="off" style="max-width:180px;">
-                    <span style="color:#888;">en</span>
-                    <input list="waterbeheerders-lijst" id="dienst-2" placeholder="Persoon 2" autocomplete="off" style="max-width:180px;">
-                    <datalist id="waterbeheerders-lijst"></datalist>
-                    <span id="dienstSaveStatus" style="font-size:14px; font-style:italic;"></span>
-                </div>
-            </div>
             </div>
 
             <div class="menu-tabs" id="waterbeheer-tabs">
                 <button class="tab-btn actief" id="tab-grote-baden" onclick="wisselBadPagina('grote-baden')">Diep / Ondiep</button>
                 <button class="tab-btn" id="tab-peuterbad" onclick="wisselBadPagina('peuterbad')">Peuterbad</button>
-                <button class="tab-btn" id="tab-logboek" onclick="wisselBadPagina('logboek')">Logboek</button>
+                <button class="tab-btn" id="tab-logboek" onclick="wisselBadPagina('logboek')">Dienst en Logboek</button>
             </div>
 
             <div id="waterbeheer-grote-baden-content" style="display: none;">
@@ -300,10 +284,23 @@
             </div>
 
             <div id="waterbeheer-logboek-content" style="display:none;">
+                <!-- Dienst-invoer als eigen categorie-box bovenaan de "Dienst en Logboek"-tab.
+                     Zichtbaarheid volgt de tab (parent); auth.js zet display per rol, ids
+                     blijven gelijk zodat laadDienst/opslaan werken. -->
+                <div class="categorie-box" id="waterbeheer-dienst-bar" style="margin-bottom:16px;">
+                    <h3>Dienst</h3>
+                    <div class="dienst-velden">
+                        <label class="dienst-veld">Persoon 1
+                            <select id="dienst-1"><option value="">— kies —</option></select>
+                        </label>
+                        <label class="dienst-veld">Persoon 2
+                            <select id="dienst-2"><option value="">— kies —</option></select>
+                        </label>
+                    </div>
+                </div>
                 <div id="logboek-blokken"></div>
                 <div class="actie-container" style="justify-content:flex-start; margin-top:12px;">
                     <button class="btn-centraal-opslaan schrijf-actie" onclick="voegLogboekBlokToe()">+ Nieuw tekstblok</button>
-                    <span id="logboekSaveStatus" style="font-size:14px; font-style:italic; margin-left:12px;"></span>
                 </div>
             </div>
 
@@ -360,7 +357,4 @@
                 </table>
             </div>
 
-            <div class="actie-container" style="justify-content: flex-start; min-height: 28px;">
-                <span id="autoSaveStatus" style="font-size:14px; font-style:italic;"></span>
-            </div>
         </div>
