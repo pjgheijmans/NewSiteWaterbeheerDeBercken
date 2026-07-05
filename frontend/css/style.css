@@ -566,6 +566,31 @@ td select {
     z-index: 1;
 }
 
+/* Peuterbad "Meetwaarden en Verbruik": twee kolommen naast elkaar — links de
+   meetwaarden, rechts de verbruik-blokken (Chemicaliën boven Water) onder elkaar
+   gestapeld. Elke content-wrapper is zelf een verticale flex-kolom; bij krappe
+   schermen wrappen de kolommen automatisch onder elkaar (flex-wrap). */
+.peuterbad-blokken {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 20px;
+    align-items: flex-start;
+}
+.peuterbad-blokken #peuterbad-meetwaarden-content,
+.peuterbad-blokken #peuterbad-verbruik-content {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    flex: 0 1 auto;
+}
+.peuterbad-blokken .categorie-box {
+    margin-bottom: 0;
+    flex: 0 1 auto;
+}
+.peuterbad-blokken .categorie-tabel {
+    width: auto;
+}
+
 .categorie-box h3 {
     margin-top: 0;
     margin-bottom: 16px;
