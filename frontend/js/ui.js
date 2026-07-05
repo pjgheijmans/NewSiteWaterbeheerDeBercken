@@ -163,28 +163,70 @@ class UIManager {
     }
 
     /**
-     * Update de auto-save statusindicator.
+     * Toon de autosave-status compact als icoon in `el`: saving = ⌛ (bezig),
+     * saved = ✓ (vervaagt na 3 s), warning/error = ⚠. Idle/pending/onbekend = leeg.
+     * Een title-tooltip geeft de tekstuele betekenis. Gedeeld door alle modules:
+     * per-blok (logboek/coördinator/dienst) of per-formulier (meetwaarden/beheer).
+     * @param {HTMLElement|null} el
      * @param {'idle'|'pending'|'saving'|'saved'|'warning'|'error'} status
      */
-    setAutoSaveStatus(status) {
-        const el = document.getElementById('autoSaveStatus');
+    zetOpslaanStatus(el, status) {
         if (!el) return;
         const states = {
-            idle: ['', '#333'],
-            pending: ['Wijzigingen niet opgeslagen...', '#888'],
-            saving: ['Opslaan', '#fd7e14'],
-            saved: ['✓ Opgeslagen', '#28a745'],
-            warning: ['⚠ Opgeslagen met waarschuwing', '#fd7e14'],
-            error: ['✗ Fout bij opslaan', '#dc3545'],
+            saving: ['⌛', '#fd7e14', 'Bezig met opslaan…'],
+            saved: ['✓', '#28a745', 'Opgeslagen'],
+            warning: ['⚠', '#fd7e14', 'Opgeslagen met waarschuwing'],
+            error: ['⚠', '#dc3545', 'Fout bij opslaan'],
         };
-        const [text, color] = states[status] || ['', '#333'];
-        el.textContent = text;
-        el.style.color = color;
+        const [icoon, kleur, titel] = states[status] || ['', '#333', ''];
+        el.classList.add('opslaan-status');
+        el.textContent = icoon;
+        el.style.color = kleur;
+        el.title = titel;
         if (status === 'saved') {
+            const token = (el._opslaanToken || 0) + 1;
+            el._opslaanToken = token;
             setTimeout(() => {
-                if (el.textContent.startsWith('✓')) el.textContent = '';
-            }, 4000);
+                if (el._opslaanToken === token && el.textContent === '✓') {
+                    el.textContent = '';
+                    el.title = '';
+                }
+            }, 3000);
         }
+    }
+
+    /**
+     * Zorg voor een autosave-icoon rechtsboven in `box` (een .categorie-box) en zet
+     * de status erin. Het icoon wordt aangemaakt als het nog niet bestaat.
+     */
+    zetBlokStatus(box, status) {
+        if (!box) return;
+        let icoon = box.querySelector(':scope > .blok-status-hoek');
+        if (!icoon) {
+            icoon = document.createElement('span');
+            icoon.className = 'blok-status-hoek opslaan-status';
+            box.appendChild(icoon);
+        }
+        this.zetOpslaanStatus(icoon, status);
+    }
+
+    /**
+     * Centrale dagstaat-save (meetwaarden/verbruik/peuterbad/checklist/daggegevens):
+     * toon de status als icoon rechtsboven in elk zichtbaar blok van de actieve sectie,
+     * i.p.v. één melding onderaan de pagina.
+     */
+    setAutoSaveStatus(status) {
+        // Toon de status in het zojuist bewerkte blok (indien bekend en zichtbaar);
+        // val anders terug op elk zichtbaar blok — bv. formulieren met één blok, of
+        // subtabs waarvan de invoer niet via de centrale sectie-listener loopt.
+        const blok = this._actiefOpslaanBlok;
+        if (blok && blok.offsetParent !== null) {
+            this.zetBlokStatus(blok, status);
+            return;
+        }
+        document.querySelectorAll('#sectie-dagstaat .categorie-box').forEach((box) => {
+            if (box.offsetParent !== null) this.zetBlokStatus(box, status);
+        });
     }
 }
 

@@ -10,21 +10,7 @@ class LimietenModule {
     // ── Statusbalk ────────────────────────────────────────────────────────
 
     setLimietenSaveStatus(status) {
-        const el = document.getElementById('limietenSaveStatus');
-        if (!el) return;
-        const states = {
-            pending: ['Wijzigingen niet opgeslagen...', '#888'],
-            saving: ['Opslaan', '#fd7e14'],
-            saved: ['✓ Opgeslagen', '#28a745'],
-            error: ['✕ Fout bij opslaan', '#dc3545'],
-        };
-        const [text, color] = states[status] || ['', '#333'];
-        el.textContent = text;
-        el.style.color = color;
-        if (status === 'saved')
-            setTimeout(() => {
-                if (el.textContent.startsWith('✓')) el.textContent = '';
-            }, 4000);
+        this.app.ui.zetOpslaanStatus(document.getElementById('limietenSaveStatus'), status);
     }
 
     // ── Auto-save ─────────────────────────────────────────────────────────

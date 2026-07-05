@@ -9,21 +9,7 @@ class ConfiguratieModule {
     }
 
     _setStatus(status) {
-        const el = document.getElementById('configuratieSaveStatus');
-        if (!el) return;
-        const states = {
-            pending: ['Wijzigingen niet opgeslagen...', '#888'],
-            saving: ['Opslaan', '#fd7e14'],
-            saved: ['✓ Opgeslagen', '#28a745'],
-            error: ['✕ Fout bij opslaan', '#dc3545'],
-        };
-        const [tekst, kleur] = states[status] || ['', '#333'];
-        el.textContent = tekst;
-        el.style.color = kleur;
-        if (status === 'saved')
-            setTimeout(() => {
-                if (el.textContent.startsWith('✓')) el.textContent = '';
-            }, 4000);
+        this.app.ui.zetOpslaanStatus(document.getElementById('configuratieSaveStatus'), status);
     }
 
     /** @private Plan een autosave in voor één instelling (debounce 1,2 s). */

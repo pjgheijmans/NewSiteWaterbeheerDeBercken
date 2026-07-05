@@ -915,7 +915,10 @@ class MetingenModule {
                                background:transparent;cursor:text;padding:0 2px;color:inherit;width:auto;">
                     ${auteurLabel}
                 </h3>
-                <button class="blok-verwijder-btn" style="background:#dc3545;color:white;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:13px;">Verwijderen</button>
+                <span style="display:flex;align-items:center;gap:10px;">
+                    <span class="blok-status opslaan-status"></span>
+                    <button class="blok-verwijder-btn" style="background:#dc3545;color:white;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:13px;">Verwijderen</button>
+                </span>
             </div>
             <table class="categorie-tabel coord-tabel">
                 <thead>
@@ -1019,7 +1022,6 @@ class MetingenModule {
         }
         const el = document.querySelector(`[data-blok-tijdstip="${tijdstip}"]`);
         if (el) el.remove();
-        this.app.ui.setAutoSaveStatus('saved');
     }
 
     voegNieuwBlokToe() {

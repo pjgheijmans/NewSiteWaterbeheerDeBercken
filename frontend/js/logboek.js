@@ -7,22 +7,9 @@ class LogboekModule {
         this.app = app;
     }
 
-    _setSaveStatus(status) {
-        const el = document.getElementById('logboekSaveStatus');
-        if (!el) return;
-        const states = {
-            pending: ['Wijzigingen niet opgeslagen...', '#888'],
-            saving: ['Opslaan', '#fd7e14'],
-            saved: ['✓ Opgeslagen', '#28a745'],
-            error: ['✕ Fout bij opslaan', '#dc3545'],
-        };
-        const [text, color] = states[status] || ['', '#333'];
-        el.textContent = text;
-        el.style.color = color;
-        if (status === 'saved')
-            setTimeout(() => {
-                if (el.textContent.startsWith('✓')) el.textContent = '';
-            }, 4000);
+    /** @private Toon de opslaan-status als icoon in de kop van blok `el`. */
+    _setSaveStatus(el, status) {
+        this.app.ui.zetOpslaanStatus(el && el.querySelector('.logboek-status'), status);
     }
 
     /**
@@ -64,7 +51,10 @@ class LogboekModule {
         el.innerHTML = `
             <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
                 <span style="font-weight:600;color:#555;">${displayTijd}${auteurLabel}</span>
-                <button class="logboek-verwijder-btn" style="background:#dc3545;color:white;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:13px;">Verwijderen</button>
+                <span style="display:flex;align-items:center;gap:10px;">
+                    <span class="logboek-status opslaan-status"></span>
+                    <button class="logboek-verwijder-btn" style="background:#dc3545;color:white;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-size:13px;">Verwijderen</button>
+                </span>
             </div>
             <textarea maxlength="500" rows="4"
                 placeholder="Voer hier een logboekaantekening in…"
@@ -95,9 +85,9 @@ class LogboekModule {
         const apiBase = el.getAttribute('data-logboek-api') || '/api/logboek';
         const timers = this.app.state.logboekTimers;
         if (timers[tijdstip]) clearTimeout(timers[tijdstip]);
-        this._setSaveStatus('pending');
+        this._setSaveStatus(el, 'pending');
         timers[tijdstip] = setTimeout(async () => {
-            this._setSaveStatus('saving');
+            this._setSaveStatus(el, 'saving');
             try {
                 const datum = document.getElementById('centraleDatum')?.value;
                 const tekst = el.querySelector('textarea')?.value ?? '';
@@ -111,14 +101,14 @@ class LogboekModule {
                     const data = await res.json();
                     if (data.id && !el.getAttribute('data-logboek-id'))
                         el.setAttribute('data-logboek-id', data.id);
-                    this._setSaveStatus('saved');
+                    this._setSaveStatus(el, 'saved');
                 } else {
-                    this._setSaveStatus('error');
+                    this._setSaveStatus(el, 'error');
                     this.app.ui.toonBericht('Fout bij opslaan logboek.', 'fout');
                 }
             } catch (e) {
                 console.error(e);
-                this._setSaveStatus('error');
+                this._setSaveStatus(el, 'error');
             }
         }, 1200);
     }
@@ -182,7 +172,6 @@ class LogboekModule {
             }
         }
         el.remove();
-        this._setSaveStatus('saved');
     }
 }
 
