@@ -1,0 +1,18 @@
+# Normaliseer regeleindes. De repository slaat tekst op als LF en checkt LF uit,
+# op zowel Linux als Windows. Zo ontstaat er geen CRLF/LF-ruis meer (git config
+# core.autocrlf=true op Windows zorgde anders voor "phantom"-wijzigingen), en de
+# app draait op Linux/Apache/PHP waar LF de norm is.
+* text=auto eol=lf
+
+# Binaire bestanden nooit als tekst behandelen / normaliseren.
+*.png  binary
+*.jpg  binary
+*.jpeg binary
+*.gif  binary
+*.ico  binary
+*.webp binary
+*.pdf  binary
+*.woff  binary
+*.woff2 binary
+*.ttf  binary
+*.eot  binary
