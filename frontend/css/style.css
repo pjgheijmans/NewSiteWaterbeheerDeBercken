@@ -488,6 +488,7 @@ th {
     font-size: 13px;
     letter-spacing: 0.02em;
     text-transform: uppercase;
+    text-align: center;
 }
 
 td input[type='number'],
@@ -499,6 +500,22 @@ td select {
     border: 1px solid var(--rand-sterk);
     border-radius: var(--radius-sm);
     font-size: 14px;
+}
+
+/* Permanent alleen-lezen velden (berekende/afgeleide waarden: Verbruik, bezoekers-
+   tellingen, gebonden chloor) zijn altijd disabled/readonly in de DOM. Geef ze
+   dezelfde 'leeg/uit'-look als de alleen-lezen modus en de gebonden-chloorvelden:
+   rand + reliëf blijven staan, doorzichtige vulling zodat de achtergrond doorschijnt.
+   Vervangt de oude losse grijze #f0f0f0-vulling per veld. text-fill overschrijft de
+   UA-dimming van een disabled input zodat de waarde volledig leesbaar blijft. */
+td input:disabled,
+td input[readonly],
+td select:disabled {
+    background: transparent;
+    color: var(--tekst);
+    -webkit-text-fill-color: var(--tekst);
+    cursor: default;
+    opacity: 1;
 }
 
 /* Alleen-lezen modus: de velden in de actieve sectie krijgen dezelfde vorm als de
@@ -634,6 +651,10 @@ td select {
     padding: 12px;
     text-align: left;
     vertical-align: middle;
+}
+/* Kopcellen overal gecentreerd (de td's blijven links). */
+.categorie-tabel th {
+    text-align: center;
 }
 
 .veld-grid {

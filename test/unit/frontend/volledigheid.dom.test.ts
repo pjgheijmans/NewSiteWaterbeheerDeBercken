@@ -155,19 +155,17 @@ describe('Peuterbad — volledigheids-markering op subtabs', () => {
     beforeEach(() => {
         document.body.innerHTML = `
             <button id="tab-peuterbad">Peuterbad</button>
-            <button id="subtab-peuterbad-meetwaarden">Meetwaarden</button>
-            <button id="subtab-peuterbad-verbruik">Verbruik</button>
+            <button id="subtab-peuterbad-meetwaarden">Meetwaarden en Verbruik</button>
             ${PEUTER_IDS.map((id) => `<input id="${id}">`).join('')}`;
     });
 
-    it('alles leeg → markering op beide peuterbad-subtabs én de Peuterbad-pagina-tab', () => {
+    it('alles leeg → markering op de gecombineerde subtab én de Peuterbad-pagina-tab', () => {
         new MetingenModule(maakApp('peuterbad')).werkVolledigheidBij();
         expect(heeftMarker('subtab-peuterbad-meetwaarden')).toBe(true);
-        expect(heeftMarker('subtab-peuterbad-verbruik')).toBe(true);
         expect(heeftMarker('tab-peuterbad')).toBe(true);
     });
 
-    it('alleen Meetwaarden-velden (pH/chloor/flow/filterdruk) → Meetwaarden schoon, Verbruik gemarkeerd', () => {
+    it('alleen Meetwaarden-velden ingevuld → gecombineerde subtab nog gemarkeerd (Verbruik onvolledig)', () => {
         vul({
             'peuterbad-ph': '7.2',
             'peuterbad-chloor': '1.0',
@@ -175,8 +173,7 @@ describe('Peuterbad — volledigheids-markering op subtabs', () => {
             'peuterbad-filterdruk': '0.3',
         });
         new MetingenModule(maakApp('peuterbad')).werkVolledigheidBij();
-        expect(heeftMarker('subtab-peuterbad-meetwaarden')).toBe(false);
-        expect(heeftMarker('subtab-peuterbad-verbruik')).toBe(true);
+        expect(heeftMarker('subtab-peuterbad-meetwaarden')).toBe(true);
     });
 
     it('alle peuterbad-velden ingevuld → geen markeringen (ook niet op de pagina-tab)', () => {

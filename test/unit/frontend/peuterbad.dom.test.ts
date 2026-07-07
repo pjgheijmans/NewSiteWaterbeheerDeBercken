@@ -106,17 +106,18 @@ describe('Fix #2 — autosave waarschuwt niet meer (passieve markering i.p.v. na
     });
 });
 
-describe('Fix #3 — Verbruik-subtab berekent peuterbad-verbruik', () => {
-    it('wisselPeuterbadSubtab("verbruik") roept de peuterbad-berekening aan, niet de Diep/Ondiep-versie', () => {
+describe('Peuterbad — Meetwaarden en Verbruik-subtab berekent peuterbad-verbruik', () => {
+    it('wisselPeuterbadSubtab("meetwaarden") roept de peuterbad-berekening aan, niet de Diep/Ondiep-versie', () => {
         document.body.innerHTML = `
             <button id="subtab-peuterbad-meetwaarden"></button>
-            <button id="subtab-peuterbad-verbruik"></button>
             <button id="subtab-peuterbad-taken"></button>
-            <div id="peuterbad-meetwaarden-content"></div>
-            <div id="peuterbad-verbruik-content"></div>
+            <div id="peuterbad-mv">
+                <div id="peuterbad-meetwaarden-content"></div>
+                <div id="peuterbad-verbruik-content"></div>
+            </div>
             <div id="peuterbad-taken-content"></div>`;
         const app = maakApp();
-        new MetingenModule(app).wisselPeuterbadSubtab('verbruik');
+        new MetingenModule(app).wisselPeuterbadSubtab('meetwaarden');
 
         expect(app.verbruik.laadEnBerekenPeuterbadVerbruik).toHaveBeenCalledTimes(1);
         expect(app.verbruik.laadEnBerekenVerbruik).not.toHaveBeenCalled();
