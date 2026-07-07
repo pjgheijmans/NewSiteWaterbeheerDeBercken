@@ -110,7 +110,10 @@ class MetingenModule {
         if (huidigeRol === 'waterbeheer') this.app.dienst.laadDienst(datum);
 
         if (huidigeRol === 'waterbeheer' && huidigeBadPagina === 'logboek') {
-            this.app.logboek.laadLogboek(datum);
+            await this.app.logboek.laadLogboek(datum);
+            // Read-only pas toepassen nadat de logboek-DOM (her)opgebouwd is; anders
+            // mist een dag in het verleden zijn slot op de net gerenderde velden.
+            this.app.auth.actualiseerLeesmodus();
             return;
         }
         const endpoint = huidigeRol === 'waterbeheer' ? '/api/metingen' : '/api/coordinatoren';
@@ -147,6 +150,10 @@ class MetingenModule {
                 else await this.app.verbruik.cacheGroteBadenVerbruik();
                 this.werkVolledigheidBij(); // passieve "niet alle velden ingevuld"-markering
             }
+            // Read-only pas toepassen nadat de tabel (her)opgebouwd is: bij een dag in
+            // het verleden (zonder historie-recht) moeten de zojuist gerenderde velden
+            // op slot. Geldt voor waterbeheer én coördinatoren.
+            this.app.auth.actualiseerLeesmodus();
         } catch {
             this.app.ui.toonBericht('Fout bij het ophalen van de gegevens.', 'fout');
         }

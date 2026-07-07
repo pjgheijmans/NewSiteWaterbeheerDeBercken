@@ -29,7 +29,7 @@ final class CoordinatorenControllerTest extends AppTestCase
 
         $res = $this->dispatch('POST', '/api/coordinatoren/logboek', [
             'gebruiker' => $this->gebruiker(['coordinator' => 'schrijven']),
-            'body' => ['datum' => '2999-01-01', 'tijdstip' => '2999-01-01 10:00:00', 'tekst' => 'controle ok'],
+            'body' => ['datum' => '2020-01-01', 'tijdstip' => '2020-01-01 10:00:00', 'tekst' => 'controle ok'],
         ]);
 
         self::assertSame(200, $res->getStatusCode());
@@ -44,7 +44,7 @@ final class CoordinatorenControllerTest extends AppTestCase
 
         $res = $this->dispatch('POST', '/api/coordinatoren', [
             'gebruiker' => $this->gebruiker(['coordinator' => 'lezen']),
-            'body' => ['datum' => '2999-01-01', 'bad_naam' => 'Diep'],
+            'body' => ['datum' => '2020-01-01', 'bad_naam' => 'Diep'],
         ]);
 
         self::assertSame(403, $res->getStatusCode());

@@ -17,7 +17,7 @@ final class LogboekControllerTest extends AppTestCase
 
         $res = $this->dispatch('POST', '/api/logboek', [
             'gebruiker' => $this->gebruiker(['waterbeheer' => 'schrijven']),
-            'body' => ['datum' => '2999-01-01', 'tijdstip' => '2999-01-01 09:00:00', 'tekst' => 'ronde gedaan'],
+            'body' => ['datum' => '2020-01-01', 'tijdstip' => '2020-01-01 09:00:00', 'tekst' => 'ronde gedaan'],
         ]);
 
         self::assertSame(200, $res->getStatusCode());

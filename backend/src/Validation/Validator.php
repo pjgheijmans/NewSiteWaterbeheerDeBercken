@@ -246,6 +246,8 @@ final class Validator
 
     /**
      * Valideer een ISO-datum YYYY-MM-DD (zoals een <input type="date"> levert).
+     * Datums in de toekomst worden geweigerd: een dagstaat kan alleen over vandaag
+     * of eerder gaan (spiegelt de `max`-begrenzing van het datumveld in de frontend).
      * @param string[] $fouten
      */
     private static function datum(array $body, string $sleutel, array &$fouten): void
@@ -253,6 +255,10 @@ final class Validator
         $v = isset($body[$sleutel]) && is_string($body[$sleutel]) ? $body[$sleutel] : '';
         if (preg_match('/^\d{4}-\d{2}-\d{2}$/', $v) !== 1) {
             $fouten[] = "$sleutel: moet formaat YYYY-MM-DD hebben";
+            return;
+        }
+        if ($v > date('Y-m-d')) {
+            $fouten[] = "$sleutel: mag niet in de toekomst liggen";
         }
     }
 

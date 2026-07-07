@@ -256,10 +256,12 @@ class AuthModule {
      * `select`/checkbox/radio honoreren `readonly` niet, dus die gaan op `disabled`.
      * Velden die van zichzelf al op slot staan (bv. berekende cellen) laten we met
      * rust, en we onthouden per veld wat we aanpasten zodat _herstelLeesmodusVelden
-     * precies dat terugdraait.
+     * precies dat terugdraait. De datumnavigatie slaan we over: die dient juist om
+     * naar (alleen-lezen) historie te bladeren en moet dus bruikbaar blijven.
      */
     _zetVeldenReadonly(sectie) {
         sectie.querySelectorAll('input, select, textarea').forEach((veld) => {
+            if (veld.closest('.datum-navigatie')) return;
             const viaDisabled =
                 veld.tagName === 'SELECT' || veld.type === 'checkbox' || veld.type === 'radio';
             if (viaDisabled) {

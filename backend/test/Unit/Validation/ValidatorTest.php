@@ -56,6 +56,20 @@ final class ValidatorTest extends TestCase
         $this->assertOngeldig(fn () => Validator::meting(['datum' => '2026-06-26']));
     }
 
+    public function testMetingDatumMagNietInToekomstLiggen(): void
+    {
+        $morgen = date('Y-m-d', strtotime('+1 day'));
+        $e = $this->assertOngeldig(fn () => Validator::meting(['datum' => $morgen, 'bad_naam' => 'Diep']));
+        self::assertStringContainsString('mag niet in de toekomst liggen', $e->getMessage());
+    }
+
+    public function testMetingDatumVandaagIsToegestaan(): void
+    {
+        $vandaag = date('Y-m-d');
+        $body = ['datum' => $vandaag, 'bad_naam' => 'Diep'];
+        self::assertSame($body, Validator::meting($body));
+    }
+
     // ── logboek (incl. harde 500-tekens cap) ───────────────────────────────────
     public function testLogboekGeldig(): void
     {

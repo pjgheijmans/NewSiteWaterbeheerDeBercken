@@ -74,6 +74,8 @@ window.wisselRol = (rol) => app.auth.wisselRol(rol);
 window.actualiseerLeesmodus = () => app.auth.actualiseerLeesmodus();
 
 window.veranderDatum = (dagen) => app.nav.veranderDatum(dagen);
+window.pasSeizoenAan = () => app.nav.pasSeizoenAan();
+window.laadMetingen = () => app.metingen.laadMetingen();
 
 window.wisselBadPagina = (pagina) => app.metingen.wisselBadPagina(pagina);
 window.wisselSubtab = (subtab) => app.metingen.wisselSubtab(subtab);

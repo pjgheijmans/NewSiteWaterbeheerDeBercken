@@ -55,6 +55,12 @@ class OpslaanModule {
             // op de subtabs bijwerken, zodat de indicatie live meeloopt met het typen
             // (i.p.v. een waarschuwing na elke opslag).
             const opInvoer = (e) => {
+                // De datumkiezer (en de Vorige/Volgende Dag-knoppen) zitten óók binnen
+                // #sectie-dagstaat. Hun change-event mag géén autosave triggeren — dat zou
+                // de zojuist geladen dag meteen terugschrijven. De datumwissel laadt zelf
+                // al opnieuw via het onchange op #centraleDatum.
+                if (e && e.target && e.target.closest && e.target.closest('.datum-navigatie'))
+                    return;
                 // Onthoud het bewerkte blok, zodat de opslaan-status alleen dáár getoond
                 // wordt en niet in alle blokken van de subtab (de centrale save slaat wel
                 // alles op, maar visueel hoort de status bij het aangeraakte blok).

@@ -45,7 +45,11 @@ class AppState {
     /** Schrijf de begindatum naar het datum-invoerveld in de pagina. */
     initDatumInput() {
         const el = document.getElementById('centraleDatum');
-        if (el) el.value = this.centraleDatum;
+        if (el) {
+            el.value = this.centraleDatum;
+            // Datums in de toekomst hebben geen zin: begrens de kiezer op vandaag.
+            el.max = this.centraleDatum;
+        }
     }
 }
 

@@ -22,6 +22,7 @@ function maakApp() {
             versies: {},
         },
         api: { call: jest.fn() },
+        auth: { actualiseerLeesmodus: jest.fn() },
         dienst: { laadDienst: jest.fn() },
         taken: { laadBadTaken: jest.fn(), werkBadgeBij: jest.fn() },
         logboek: { laadLogboek: jest.fn() },

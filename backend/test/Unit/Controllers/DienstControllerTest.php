@@ -41,7 +41,7 @@ final class DienstControllerTest extends AppTestCase
 
         $res = $this->dispatch('POST', '/api/dienst', [
             'gebruiker' => $this->gebruiker(['waterbeheer' => 'schrijven']),
-            'body' => ['datum' => '2999-01-01', 'dienst_1' => 'Paul'],
+            'body' => ['datum' => '2020-01-01', 'dienst_1' => 'Paul'],
         ]);
 
         self::assertSame(200, $res->getStatusCode());
