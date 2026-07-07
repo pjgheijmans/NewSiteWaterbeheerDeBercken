@@ -53,19 +53,18 @@ class MetingenModule {
 
     wisselPeuterbadSubtab(subtab) {
         this.app.state.huidigePeuterbadSubtab = subtab;
-        ['meetwaarden', 'verbruik', 'taken'].forEach((s) => {
-            document
-                .getElementById(`subtab-peuterbad-${s}`)
-                .classList.toggle('actief', s === subtab);
-            document.getElementById(`peuterbad-${s}-content`).style.display =
-                s === subtab ? 'block' : 'none';
-        });
-        if (subtab === 'verbruik') this.app.verbruik.laadEnBerekenPeuterbadVerbruik();
-        if (subtab === 'taken')
-            this.app.taken.laadBadTaken(
-                'peuterbad',
-                document.getElementById('centraleDatum').value,
-            );
+        // Meetwaarden en Verbruik zijn samengevoegd tot één subtab; Taken blijft apart.
+        const taken = subtab === 'taken';
+        document.getElementById('subtab-peuterbad-meetwaarden').classList.toggle('actief', !taken);
+        document.getElementById('subtab-peuterbad-taken').classList.toggle('actief', taken);
+        // Meetwaarden + Verbruik zitten in één flex-wrapper (#peuterbad-mv) die als geheel
+        // getoond/verborgen wordt; de content-divs erin lopen via display:contents mee.
+        const mv = document.getElementById('peuterbad-mv');
+        if (mv) mv.style.display = taken ? 'none' : '';
+        document.getElementById('peuterbad-taken-content').style.display = taken ? 'block' : 'none';
+        if (taken)
+            this.app.taken.laadBadTaken('peuterbad', document.getElementById('centraleDatum').value);
+        else this.app.verbruik.laadEnBerekenPeuterbadVerbruik();
     }
 
     wisselCoordSubtab(subtab) {
@@ -300,7 +299,7 @@ class MetingenModule {
             'subtab-verbruik-content': 'subtab-verbruik',
             'subtab-bezoekers-content': 'subtab-bezoekers',
             'peuterbad-meetwaarden-content': 'subtab-peuterbad-meetwaarden',
-            'peuterbad-verbruik-content': 'subtab-peuterbad-verbruik',
+            'peuterbad-verbruik-content': 'subtab-peuterbad-meetwaarden',
         };
     }
 
@@ -428,8 +427,12 @@ class MetingenModule {
             this._zetVolledigheidMarker('subtab-meetwaarden', grote.meet);
             this._zetVolledigheidMarker('subtab-verbruik', grote.verbruik);
         } else if (huidigeBadPagina === 'peuterbad') {
-            this._zetVolledigheidMarker('subtab-peuterbad-meetwaarden', peuter.meet);
-            this._zetVolledigheidMarker('subtab-peuterbad-verbruik', peuter.verbruik);
+            // Meetwaarden en Verbruik zitten nu in één subtab: bolletje als één van beide
+            // nog onvolledig is.
+            this._zetVolledigheidMarker(
+                'subtab-peuterbad-meetwaarden',
+                peuter.meet || peuter.verbruik,
+            );
         }
         // Pagina-tabs voor beide baden — net als de actie-⚠ altijd actueel.
         this._zetVolledigheidMarker('tab-grote-baden', grote.meet || grote.verbruik);
@@ -741,8 +744,7 @@ class MetingenModule {
         const chloorCellen = `
             <td><input type="number" class="c-chloor-vrij"     step="0.01" value="${vrij}"     data-param="chloor_vrij"     oninput="valideerVeld(this,'chloor_vrij')"></td>
             <td><input type="number" class="c-chloor-totaal"   step="0.01" value="${totaal}"   data-param="chloor_totaal"   oninput="valideerVeld(this,'chloor_totaal')"></td>
-            <td><input type="number" class="c-chloor-gebonden" step="0.01" value="${gebonden}" data-param="chloor_gebonden" readonly
-                style="background-color:#f0f0f0;cursor:not-allowed;" tabindex="-1"></td>`;
+            <td><input type="number" class="c-chloor-gebonden" step="0.01" value="${gebonden}" data-param="chloor_gebonden" readonly tabindex="-1"></td>`;
 
         const isPeuterbad = badNaam === 'Peuterbad';
         const extraCel = isPeuterbad
