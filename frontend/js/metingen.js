@@ -239,12 +239,15 @@ class MetingenModule {
         try {
             const res = await this.app.api.call(`/api/bezoekers?datum=${datum}`);
             const data = await res.json();
+            // Ontbrekende waarde → em-dash, net als andere alleen-lezen velden (zie
+            // de leesmodus-placeholder in auth.js), zodat een lege cel niet als 'gat' oogt.
+            const toon = (v) => (v === null || v === undefined || v === '' ? '—' : v);
             const el = document.getElementById('bezoekers-vandaag-display');
             const elDiep = document.getElementById('bezoekers-spoelbeurt-diep-display');
             const elOndiep = document.getElementById('bezoekers-spoelbeurt-ondiep-display');
-            if (el) el.value = data.bezoekers_vandaag ?? '';
-            if (elDiep) elDiep.value = data.bezoekers_totaal_diep ?? '';
-            if (elOndiep) elOndiep.value = data.bezoekers_totaal_ondiep ?? '';
+            if (el) el.value = toon(data.bezoekers_vandaag);
+            if (elDiep) elDiep.value = toon(data.bezoekers_totaal_diep);
+            if (elOndiep) elOndiep.value = toon(data.bezoekers_totaal_ondiep);
         } catch (f) {
             console.error('Fout bij laden bezoekers:', f);
         }
