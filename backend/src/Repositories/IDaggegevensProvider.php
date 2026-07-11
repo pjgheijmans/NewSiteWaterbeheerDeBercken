@@ -10,6 +10,6 @@ namespace Zwembad\Repositories;
  */
 interface IDaggegevensProvider
 {
-    /** @return array<string,mixed> lucht_temperatuur, bezoekers_vandaag, bezoekers_totaal_spoelbeurt, auteur */
+    /** @return array<string,mixed> lucht_temperatuur, bezoekers_vandaag, auteur */
     public function getDaggegevens(string $datum): array;
 }

@@ -221,16 +221,24 @@ CREATE TABLE IF NOT EXISTS coordinatoren_logboek (
     INDEX idx_coord_logboek_datum (datum)
 );
 
--- Dagelijkse temperatuur en bezoekers voor coördinatoren
+-- Dagelijkse temperatuur en bezoekers voor coördinatoren. Het cumulatieve
+-- bezoekersaantal sinds de laatste spoelbeurt wordt op aanvraag berekend
+-- (ActiesRepository::berekenSpoelbeurt, som van bezoekers_vandaag) en niet
+-- opgeslagen; er is dus géén kolom bezoekers_totaal_spoelbeurt.
 CREATE TABLE IF NOT EXISTS coordinatoren_daggegevens (
     id INT AUTO_INCREMENT PRIMARY KEY,
     datum DATE NOT NULL UNIQUE,
     lucht_temperatuur DECIMAL(4,1) NULL,
     bezoekers_vandaag INT NULL,
-    bezoekers_totaal_spoelbeurt INT NULL,
     auteur VARCHAR(100) NULL,
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
+
+-- Migratie: verwijder de ongebruikte kolom bezoekers_totaal_spoelbeurt uit
+-- bestaande databases (werd nooit gevuld; de waarde is berekend, niet opgeslagen).
+-- Kale DROP COLUMN — op een DB zonder de kolom faalt dit onschadelijk
+-- ("Can't DROP"), wat runInitSql opvangt.
+ALTER TABLE coordinatoren_daggegevens DROP COLUMN bezoekers_totaal_spoelbeurt;
 
 -- Wie was er op dienst bij waterbeheer (altijd 2 personen; één logt in, de ander
 -- wordt handmatig ingevuld). Eén record per dag.

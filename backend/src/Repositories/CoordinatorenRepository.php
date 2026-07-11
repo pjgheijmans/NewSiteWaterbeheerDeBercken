@@ -139,7 +139,7 @@ class CoordinatorenRepository implements ICoordinatorenRepository
     public function getDaggegevens(string $datum): array
     {
         $stmt = $this->pdo->prepare(
-            'SELECT lucht_temperatuur, bezoekers_vandaag, bezoekers_totaal_spoelbeurt, auteur
+            'SELECT lucht_temperatuur, bezoekers_vandaag, auteur
              FROM coordinatoren_daggegevens WHERE datum = ?',
         );
         $stmt->execute([$datum]);
@@ -148,7 +148,6 @@ class CoordinatorenRepository implements ICoordinatorenRepository
         return $rij !== false ? $rij : [
             'lucht_temperatuur' => null,
             'bezoekers_vandaag' => null,
-            'bezoekers_totaal_spoelbeurt' => null,
             'auteur' => null,
         ];
     }
@@ -156,18 +155,16 @@ class CoordinatorenRepository implements ICoordinatorenRepository
     public function saveDaggegevens(string $datum, array $data, ?string $auteur): void
     {
         $this->pdo->prepare(
-            'INSERT INTO coordinatoren_daggegevens (datum, lucht_temperatuur, bezoekers_vandaag, bezoekers_totaal_spoelbeurt, auteur)
-             VALUES (?, ?, ?, ?, ?)
+            'INSERT INTO coordinatoren_daggegevens (datum, lucht_temperatuur, bezoekers_vandaag, auteur)
+             VALUES (?, ?, ?, ?)
              ON DUPLICATE KEY UPDATE
-               lucht_temperatuur           = VALUES(lucht_temperatuur),
-               bezoekers_vandaag           = VALUES(bezoekers_vandaag),
-               bezoekers_totaal_spoelbeurt = VALUES(bezoekers_totaal_spoelbeurt),
-               auteur                      = VALUES(auteur)',
+               lucht_temperatuur = VALUES(lucht_temperatuur),
+               bezoekers_vandaag = VALUES(bezoekers_vandaag),
+               auteur            = VALUES(auteur)',
         )->execute([
             $datum,
             $data['lucht_temperatuur'] ?? null,
             $data['bezoekers_vandaag'] ?? null,
-            $data['bezoekers_totaal_spoelbeurt'] ?? null,
             $auteur,
         ]);
     }

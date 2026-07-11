@@ -67,7 +67,6 @@ erDiagram
         date datum
         decimal lucht_temperatuur
         int bezoekers_vandaag
-        int bezoekers_totaal_spoelbeurt
     }
     COORDINATOREN_LOGBOEK {
         int id PK
