@@ -20,8 +20,41 @@ class ConfiguratieModule {
         timers[sleutel] = setTimeout(() => this._opslaan(sleutel), 1200);
     }
 
+    /** @private Lees de huidige tracing-voorkeur uit localStorage. */
+    _tracingAan() {
+        try {
+            return window.localStorage.getItem('trace') === '1';
+        } catch {
+            return false;
+        }
+    }
+
+    /** @private Weerspiegel de tracing-status in de checkbox (indien aanwezig). */
+    _reflecteerTracing() {
+        const cb = document.getElementById('cfg-tracing');
+        if (cb) cb.checked = this._tracingAan();
+    }
+
+    /**
+     * Zet frontend-functietracing aan/uit (localStorage) en herlaad, zodat de tracer
+     * bij het opstarten van de app (de)geïnstalleerd wordt. Een eventuele ?trace=… in
+     * de URL wordt verwijderd zodat de checkbox-keuze leidend blijft.
+     * @param {boolean} aan
+     */
+    wisselTracing(aan) {
+        try {
+            window.localStorage.setItem('trace', aan ? '1' : '0');
+        } catch {
+            /* localStorage niet beschikbaar: negeer */
+        }
+        const url = new URL(window.location.href);
+        url.searchParams.delete('trace');
+        window.location.replace(url.toString());
+    }
+
     /** Laad alle configuratie-instellingen en render de beheertabel. */
     async laad() {
+        this._reflecteerTracing();
         try {
             const res = await this.app.api.call('/api/configuratie');
             const items = await res.json();

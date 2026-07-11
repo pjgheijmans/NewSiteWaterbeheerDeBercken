@@ -42,7 +42,7 @@ class VerbruikRepository implements IVerbruikRepository
             'verbruik_diep_ondiep',
             ['datum' => $data['datum']],
             [
-                'floculant' => $data['floculant'] ?? null,
+                'Flocculant' => $data['Flocculant'] ?? null,
                 'water_diep' => $data['water_diep'] ?? null,
                 'water_ondiep' => $data['water_ondiep'] ?? null,
                 'water_totaal' => $data['water_totaal'] ?? null,

@@ -44,7 +44,7 @@ final class MetingenControllerTest extends AppTestCase
 
         $res = $this->dispatch('POST', '/api/metingen', [
             'gebruiker' => $this->gebruiker(['waterbeheer' => 'schrijven']),
-            'body' => ['datum' => '2999-01-01', 'bad_naam' => 'Diep', 'ph_waarde' => 7.1],
+            'body' => ['datum' => '2020-01-01', 'bad_naam' => 'Diep', 'ph_waarde' => 7.1],
         ]);
 
         self::assertSame(200, $res->getStatusCode());
@@ -77,7 +77,7 @@ final class MetingenControllerTest extends AppTestCase
 
         $res = $this->dispatch('POST', '/api/metingen', [
             'gebruiker' => $this->gebruiker(['waterbeheer' => 'schrijven']),
-            'body' => ['datum' => '2999-01-01'], // bad_naam ontbreekt
+            'body' => ['datum' => '2020-01-01'], // bad_naam ontbreekt
         ]);
 
         self::assertSame(400, $res->getStatusCode());

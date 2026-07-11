@@ -12,12 +12,12 @@ final class RondetakenControllerTest extends AppTestCase
     public function testVoltooi(): void
     {
         $svc = $this->createMock(IRondetakenService::class);
-        $svc->expects(self::once())->method('voltooi')->with('diep_filter', '2999-01-01', self::isType('array'));
+        $svc->expects(self::once())->method('voltooi')->with('diep_filter', '2020-01-01', self::isType('array'));
         $this->override(IRondetakenService::class, $svc);
 
         $res = $this->dispatch('POST', '/api/rondetaken/diep_filter/voltooi', [
             'gebruiker' => $this->gebruiker(['waterbeheer' => 'schrijven']),
-            'body' => ['datum' => '2999-01-01'],
+            'body' => ['datum' => '2020-01-01'],
         ]);
 
         self::assertSame(200, $res->getStatusCode());

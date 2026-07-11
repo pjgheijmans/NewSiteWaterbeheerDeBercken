@@ -442,8 +442,17 @@ h1 {
     cursor: pointer;
 }
 
-.datum-navigatie button:hover {
+.datum-navigatie button:hover:not(:disabled) {
     background-color: var(--kleur-primair-donker);
+}
+
+/* Op de seizoensgrens (Vorige Dag) resp. vandaag/seizoenseinde (Volgende Dag)
+   is er geen dag om naartoe te navigeren: grijs de knop uit. */
+.datum-navigatie button:disabled {
+    background-color: #9ca3af;
+    opacity: 0.5;
+    cursor: not-allowed;
+    box-shadow: none;
 }
 
 .datum-navigatie input[type='date'] {

@@ -25,7 +25,7 @@ class ActiesRepository implements IActiesRepository
         'actie_bezoekers_max' => 750.0,
         'actie_spoelbeurt_max' => 1500.0,
         'actie_spoelbeurt_dagen' => 7.0,
-        'actie_floculant_min' => 10.0,
+        'actie_Flocculant_min' => 10.0,
         'actie_gebonden_chloor_max' => 1.0,
         'actie_chloor_peuterbad_min' => 10.0,
         'actie_zwavelzuur_peuterbad_min' => 5.0,
@@ -189,11 +189,11 @@ class ActiesRepository implements IActiesRepository
                 $zwavelzuur < $d['actie_zwavelzuur_min']);
         }
 
-        $floculant = self::num($body['floculant'] ?? null);
-        if (!is_nan($floculant)) {
-            $this->stelIn($badId, $datum, 'floculant_bijvullen',
-                $this->tekst($t, 'floculant_bijvullen', ['waarde' => $floculant, 'drempel' => $d['actie_floculant_min']]),
-                $floculant < $d['actie_floculant_min']);
+        $Flocculant = self::num($body['Flocculant'] ?? null);
+        if (!is_nan($Flocculant)) {
+            $this->stelIn($badId, $datum, 'Flocculant_bijvullen',
+                $this->tekst($t, 'Flocculant_bijvullen', ['waarde' => $Flocculant, 'drempel' => $d['actie_Flocculant_min']]),
+                $Flocculant < $d['actie_Flocculant_min']);
         }
     }
 
@@ -275,8 +275,8 @@ class ActiesRepository implements IActiesRepository
                 $this->stelIn(
                     (int) $bad['id'],
                     $datum,
-                    'peuterbad_aftappen',
-                    $this->tekst($t, 'peuterbad_aftappen', []),
+                    'peuterbad_leeglaten',
+                    $this->tekst($t, 'peuterbad_leeglaten', []),
                     (int) ($rij['gebruikt'] ?? 0) === 1,
                 );
             }

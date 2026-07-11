@@ -36,7 +36,7 @@ const VERBRUIK_IDS = [
     'elektriciteit-nacht',
     'elektriciteit-dag',
     'gas',
-    'floculant',
+    'Flocculant',
     'chemicalien-chloor',
     'chemicalien-zwavelzuur',
 ];
@@ -219,7 +219,7 @@ describe('Andere pagina-tab uit gecachte data (correct vanaf het laden)', () => 
         elektriciteit_nacht: 1,
         elektriciteit_dag: 1,
         gas: 1,
-        floculant: '1',
+        Flocculant: '1',
         chemicalien_chloor: '1',
         chemicalien_zwavelzuur: '1',
     };

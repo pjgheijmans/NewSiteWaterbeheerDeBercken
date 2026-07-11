@@ -16,7 +16,7 @@ use Zwembad\Repositories\RondetakenRepository;
 class TakenService implements ITakenService
 {
     /** Acties die facility-breed zijn (niet aan één bad) → groep 'Algemeen'. */
-    private const ALGEMEEN_TYPES = ['chloor_bestellen', 'zwavelzuur_bestellen', 'floculant_bijvullen'];
+    private const ALGEMEEN_TYPES = ['chloor_bestellen', 'zwavelzuur_bestellen', 'Flocculant_bijvullen'];
 
     /** Scheidingsteken oorzaak ↔ handeling in een actiebeschrijving (" — "). */
     private const SEP = ' — ';

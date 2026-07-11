@@ -28,7 +28,7 @@ class FrontendController
     private const JS_FILES = [
         'state', 'api', 'ui', 'limieten', 'actieteksten', 'dienst', 'auth', 'metingen', 'taken',
         'verbruik', 'opslaan', 'logboek', 'gebruikers', 'rollen', 'database', 'configuratie',
-        'nav', 'trend', 'app',
+        'nav', 'trend', 'tracer', 'app',
     ];
 
     private const CONTENT_TYPES = [

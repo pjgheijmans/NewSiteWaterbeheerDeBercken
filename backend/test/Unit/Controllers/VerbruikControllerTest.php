@@ -33,7 +33,7 @@ final class VerbruikControllerTest extends AppTestCase
 
         $res = $this->dispatch('POST', '/api/verbruik/diep-ondiep', [
             'gebruiker' => $this->gebruiker(['waterbeheer' => 'schrijven']),
-            'body' => ['datum' => '2999-01-01', 'water_diep' => 100],
+            'body' => ['datum' => '2020-01-01', 'water_diep' => 100],
         ]);
 
         self::assertSame(200, $res->getStatusCode());

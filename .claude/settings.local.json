@@ -71,7 +71,24 @@
       "Bash(curl -s http://localhost:8080/js/opslaan.js)",
       "Bash(git --no-pager diff --stat)",
       "Bash(git restore *)",
-      "Bash(git *)"
+      "Bash(git *)",
+      "Bash(cd \"C:/Users/User/OneDrive/Documenten - Waterbeheer/Software/Digital Dagstaat/nieuwe_site_tryout\")",
+      "Bash(sed -i s/2999-01-01/2020-01-01/g backend/test/Unit/Controllers/__TRACKED_VAR__.php)",
+      "Bash(grep -rn \"2999\\\\|2020-01-01\" backend/test/Unit/Controllers)",
+      "Bash(export NODE_PATH=\"/c/Users/User/AppData/Local/npm-cache/_npx/e41f203b7505f1fb/node_modules\")",
+      "Bash(cd \"C:\\\\Users\\\\User\\\\OneDrive\\\\Documenten - Waterbeheer\\\\Software\\\\Digital Dagstaat\\\\nieuwe_site_tryout\")",
+      "Bash(node /tmp/pw-verify.js)",
+      "Bash(cat docker-compose.yml)",
+      "Bash(cat compose.yaml)",
+      "Bash(TRACE=1 docker compose up -d web)",
+      "Bash(curl -s -o /dev/null -w \"HTTP %{http_code}\\\\n\" http://localhost:8080/api/versie)",
+      "Bash(TRACE=1 docker compose up -d --force-recreate web)",
+      "Bash(curl -s -o /dev/null -w \"request1 HTTP %{http_code}\\\\n\" http://localhost:8080/api/versie)",
+      "Bash(curl -s -o /dev/null -w \"request2 HTTP %{http_code}\\\\n\" http://localhost:8080/)",
+      "Bash(curl -s -o /dev/null -w \"app HTTP %{http_code}\\\\n\" http://localhost:8080/)",
+      "Bash(grep -vE \"^$|potentially fixable|problems\")",
+      "Bash(sed -n '1,40p' frontend/partials/configuratie.html)",
+      "Bash(sed -n '1,40p' frontend/js/configuratie.js)"
     ]
   }
 }

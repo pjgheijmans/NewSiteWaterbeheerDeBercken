@@ -861,14 +861,14 @@
                                 "
                             >
                                 <div class="veld-item">
-                                    <label for="floculant">Floculant</label>
-                                    <input type="text" id="floculant" />
+                                    <label for="Flocculant">Flocculant</label>
+                                    <input type="text" id="Flocculant" />
                                     <label style="font-size: 12px; color: #888; margin-top: 4px"
                                         >Verbruik</label
                                     >
                                     <input
                                         type="text"
-                                        id="floculant-verbruik"
+                                        id="Flocculant-verbruik"
                                         disabled
                                         style="background-color: #f0f0f0; cursor: not-allowed"
                                     />
@@ -1894,7 +1894,7 @@
                     const data = { ...verbruikData, ...warmteData };
 
                     // Laad algemene velden van database — altijd schrijven zodat lege datums velden leegmaken
-                    document.getElementById('floculant').value = data.floculant || '';
+                    document.getElementById('Flocculant').value = data.Flocculant || '';
                     document.getElementById('water-diep').value = data.water_diep || '';
                     document.getElementById('water-ondiep').value = data.water_ondiep || '';
                     document.getElementById('water-totaal').value = data.water_totaal || '';
@@ -1928,7 +1928,7 @@
                 const datum = document.getElementById('centraleDatum').value;
                 const verbruikPayload = {
                     datum: datum,
-                    floculant: document.getElementById('floculant').value || null,
+                    Flocculant: document.getElementById('Flocculant').value || null,
                     water_diep: parseNumberValue('water-diep'),
                     water_ondiep: parseNumberValue('water-ondiep'),
                     water_totaal: parseNumberValue('water-totaal'),
@@ -2323,7 +2323,7 @@
                     berekenEnZet('elektriciteit-nacht', 'elektriciteit_nacht');
                     berekenEnZet('elektriciteit-dag', 'elektriciteit_dag');
                     berekenEnZet('gas', 'gas');
-                    berekenEnZet('floculant', 'floculant');
+                    berekenEnZet('Flocculant', 'Flocculant');
                     berekenEnZet('chemicalien-chloor', 'chemicalien_chloor');
                     berekenEnZet('chemicalien-zwavelzuur', 'chemicalien_zwavelzuur');
                 } catch (fout) {

@@ -107,7 +107,7 @@ INSERT IGNORE INTO limieten (parameter_naam, min_waarde, max_waarde) VALUES
 ('actie_bezoekers_max', 0.00, 750.00),
 ('actie_spoelbeurt_max', 0.00, 1500.00),
 ('actie_spoelbeurt_dagen', 0.00, 7.00),
-('actie_floculant_min', 0.00, 10.00),
+('actie_Flocculant_min', 0.00, 10.00),
 ('actie_gebonden_chloor_max', 0.00, 1.00),
 ('actie_chloor_peuterbad_min', 0.00, 10.00),
 ('actie_zwavelzuur_peuterbad_min', 0.00, 5.00),
@@ -291,12 +291,12 @@ INSERT IGNORE INTO actie_teksten (actie_sleutel, sjabloon, omschrijving) VALUES
 ('zwavelzuur_peuterbad_bijvullen','Zwavelzuurvoorraad Peuterbad {waarde} < {drempel} — Vat bijvullen','Peuterbad: zwavelzuurvat bijna leeg'),
 ('chloor_bestellen',            'Chloorvoorraad onder {drempel} liter — Chloor bestellen',    'Verbruik: chloorvoorraad te laag'),
 ('zwavelzuur_bestellen',        'Zwavelzuurvoorraad onder {drempel} liter — Zwavelzuur bestellen','Verbruik: zwavelzuurvoorraad te laag'),
-('floculant_bijvullen',         'Floculant {waarde} < {drempel} — Vul floculant bij',         'Verbruik: floculant bijna op'),
-('filter_spoelen_bezoekers',    'Aantal bezoekers {waarde} > {drempel} — Filter spoelen',     'Dagbezoek boven de drempel'),
+('Flocculant_bijvullen',         'Flocculant {waarde} < {drempel} — Vul Flocculant bij',         'Verbruik: Flocculant bijna op'),
+('filter_spoelen_bezoekers',    'Aantal bezoekers op een dag {waarde} > {drempel} — Filter spoelen',     'Dagbezoek boven de drempel'),
 ('filter_spoelen_spoelbeurt',   'Aantal bezoekers sinds spoelbeurt {bad} {waarde} > {drempel} — Filter spoelen', 'Cumulatief bezoek sinds laatste spoelbeurt'),
 ('filter_spoelen_dagen',        'Laatste spoelbeurt {bad} {waarde} dagen geleden > {drempel} dagen — Filter spoelen', 'Te lang geleden sinds laatste spoelbeurt'),
 ('filter_spoelen_gebonden',     'Gebonden chloor {bad} {waarde} > {drempel} mg/l — Filter spoelen', 'Coördinator: gebonden chloor te hoog'),
-('peuterbad_aftappen',          'Peuterbad is vandaag gebruikt — Peuterbad water aftappen',   'Peuterbad na gebruik aftappen');
+('peuterbad_leeglaten',          'Peuterbad is vandaag gebruikt — Peuterbad water leeglaten',   'Peuterbad na gebruik leeglaten');
 
 -- Tabel voor rondetaken (dagelijkse onderhoudstaken tijdens een ronde).
 -- De takencatalogus zelf staat in code (RondetakenRepository); hier worden
@@ -316,7 +316,7 @@ CREATE TABLE IF NOT EXISTS rondetaken_voltooid (
 CREATE TABLE IF NOT EXISTS verbruik_diep_ondiep (
     id INT AUTO_INCREMENT PRIMARY KEY,
     datum DATE NOT NULL UNIQUE,
-    floculant INT NULL,
+    Flocculant INT NULL,
     water_diep INT NULL,
     water_ondiep INT NULL,
     water_totaal INT NULL,
@@ -373,7 +373,7 @@ ALTER TABLE coordinatoren_checklist DROP COLUMN opmerkingen;
 
 -- Migratie: verbruik velden naar INT (meters geven gehele getallen, geen decimalen)
 ALTER TABLE verbruik_diep_ondiep
-    MODIFY floculant          INT NULL,
+    MODIFY Flocculant          INT NULL,
     MODIFY water_diep         INT NULL,
     MODIFY water_ondiep       INT NULL,
     MODIFY water_totaal       INT NULL,

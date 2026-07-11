@@ -1,9 +1,9 @@
 <div id="sectie-dagstaat">
             <div class="dagstaat-kop">
                 <div class="datum-navigatie">
-                    <button onclick="veranderDatum(-1)">◀<span class="nav-label"> Vorige Dag</span></button>
-                    <input type="date" id="centraleDatum" onchange="pasSeizoenAan(); laadMetingen(); actualiseerLeesmodus()">
-                    <button onclick="veranderDatum(1)"><span class="nav-label">Volgende Dag </span>▶</button>
+                    <button id="nav-vorige-dag" onclick="veranderDatum(-1)">◀<span class="nav-label"> Vorige Dag</span></button>
+                    <input type="date" id="centraleDatum" onchange="pasSeizoenAan(); laadMetingen()">
+                    <button id="nav-volgende-dag" onclick="veranderDatum(1)"><span class="nav-label">Volgende Dag </span>▶</button>
                 </div>
             </div>
 
@@ -125,9 +125,9 @@
                             </thead>
                             <tbody>
                                 <tr>
-                                    <td><b>Floculant</b></td>
-                                    <td><input type="number" step="1" id="floculant" oninput="valideerVeld(this, null)"></td>
-                                    <td><input type="text" id="floculant-verbruik" disabled></td>
+                                    <td><b>Flocculant</b></td>
+                                    <td><input type="number" step="1" id="Flocculant" oninput="valideerVeld(this, null)"></td>
+                                    <td><input type="text" id="Flocculant-verbruik" disabled></td>
                                 </tr>
                                 <tr>
                                     <td><b>Chloor</b></td>

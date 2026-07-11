@@ -17,7 +17,7 @@ describe('VerbruikModule.laadEnBerekenVerbruik (Diep/Ondiep)', () => {
             'elektriciteit-nacht',
             'elektriciteit-dag',
             'gas',
-            'floculant',
+            'Flocculant',
             'chemicalien-chloor',
             'chemicalien-zwavelzuur',
         ];
@@ -32,7 +32,7 @@ describe('VerbruikModule.laadEnBerekenVerbruik (Diep/Ondiep)', () => {
             elektriciteit_nacht: 200,
             elektriciteit_dag: 300,
             gas: 80,
-            floculant: 12,
+            Flocculant: 12,
             chemicalien_chloor: 40,
             chemicalien_zwavelzuur: 15,
         };
@@ -43,7 +43,7 @@ describe('VerbruikModule.laadEnBerekenVerbruik (Diep/Ondiep)', () => {
             elektriciteit_nacht: 180,
             elektriciteit_dag: 250,
             gas: 70,
-            floculant: 10,
+            Flocculant: 10,
             chemicalien_chloor: 50,
             chemicalien_zwavelzuur: 20,
         };

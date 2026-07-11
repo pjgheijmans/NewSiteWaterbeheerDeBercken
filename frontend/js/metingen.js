@@ -110,7 +110,10 @@ class MetingenModule {
         if (huidigeRol === 'waterbeheer') this.app.dienst.laadDienst(datum);
 
         if (huidigeRol === 'waterbeheer' && huidigeBadPagina === 'logboek') {
-            this.app.logboek.laadLogboek(datum);
+            await this.app.logboek.laadLogboek(datum);
+            // Read-only pas toepassen nadat de logboek-DOM (her)opgebouwd is; anders
+            // mist een dag in het verleden zijn slot op de net gerenderde velden.
+            this.app.auth.actualiseerLeesmodus();
             return;
         }
         const endpoint = huidigeRol === 'waterbeheer' ? '/api/metingen' : '/api/coordinatoren';
@@ -147,6 +150,10 @@ class MetingenModule {
                 else await this.app.verbruik.cacheGroteBadenVerbruik();
                 this.werkVolledigheidBij(); // passieve "niet alle velden ingevuld"-markering
             }
+            // Read-only pas toepassen nadat de tabel (her)opgebouwd is: bij een dag in
+            // het verleden (zonder historie-recht) moeten de zojuist gerenderde velden
+            // op slot. Geldt voor waterbeheer én coördinatoren.
+            this.app.auth.actualiseerLeesmodus();
         } catch {
             this.app.ui.toonBericht('Fout bij het ophalen van de gegevens.', 'fout');
         }
@@ -286,7 +293,7 @@ class MetingenModule {
             'filter_spoelen_spoelbeurt|Ondiep': ['bezoekers-spoelbeurt-ondiep-display'],
             'chloor_bestellen|Diep': ['chemicalien-chloor'],
             'zwavelzuur_bestellen|Diep': ['chemicalien-zwavelzuur'],
-            'floculant_bijvullen|Diep': ['floculant'],
+            'Flocculant_bijvullen|Diep': ['Flocculant'],
             'chloor_peuterbad_bijvullen|Peuterbad': ['peuterbad-chemicalien-chloor'],
             'zwavelzuur_peuterbad_bijvullen|Peuterbad': ['peuterbad-chemicalien-zwavelzuur'],
         };
@@ -466,7 +473,7 @@ class MetingenModule {
             elektriciteit_nacht: api.parseNumberValue('elektriciteit-nacht'),
             elektriciteit_dag: api.parseNumberValue('elektriciteit-dag'),
             gas: api.parseNumberValue('gas'),
-            floculant: tekst('floculant'),
+            Flocculant: tekst('Flocculant'),
             chemicalien_chloor: tekst('chemicalien-chloor'),
             chemicalien_zwavelzuur: tekst('chemicalien-zwavelzuur'),
         });
@@ -497,7 +504,7 @@ class MetingenModule {
             elektriciteit_nacht: L(v.elektriciteit_nacht),
             elektriciteit_dag: L(v.elektriciteit_dag),
             gas: L(v.gas),
-            floculant: L(v.floculant),
+            Flocculant: L(v.Flocculant),
             chemicalien_chloor: L(v.chemicalien_chloor),
             chemicalien_zwavelzuur: L(v.chemicalien_zwavelzuur),
         });

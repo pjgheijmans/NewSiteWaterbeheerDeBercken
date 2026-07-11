@@ -38,7 +38,7 @@ class VerbruikModule {
             this._onthoudVersie('verbruik', verbruikData);
             this._onthoudVersie('verwarming', warmteData);
 
-            document.getElementById('floculant').value = data.floculant || '';
+            document.getElementById('Flocculant').value = data.Flocculant || '';
             document.getElementById('water-diep').value = data.water_diep || '';
             document.getElementById('water-ondiep').value = data.water_ondiep || '';
             document.getElementById('water-totaal').value = data.water_totaal || '';
@@ -90,9 +90,9 @@ class VerbruikModule {
     /**
      * Bepaal of de Diep/Ondiep Verbruik-standen onvolledig zijn.
      * Pure functie: alle door de gebruiker in te vullen standen tellen mee
-     * (water diep/ondiep/totaal, elektriciteit nacht/dag, gas, floculant,
+     * (water diep/ondiep/totaal, elektriciteit nacht/dag, gas, Flocculant,
      * chloor, zwavelzuur). Een waarde is "leeg" als ze null is (0 telt als ingevuld).
-     * @param {{water_diep:?number, water_ondiep:?number, water_totaal:?number, elektriciteit_nacht:?number, elektriciteit_dag:?number, gas:?number, floculant:?(number|string), chemicalien_chloor:?(number|string), chemicalien_zwavelzuur:?(number|string)}} payload
+     * @param {{water_diep:?number, water_ondiep:?number, water_totaal:?number, elektriciteit_nacht:?number, elektriciteit_dag:?number, gas:?number, Flocculant:?(number|string), chemicalien_chloor:?(number|string), chemicalien_zwavelzuur:?(number|string)}} payload
      * @returns {boolean}
      */
     static verbruikOnvolledig(payload) {
@@ -103,7 +103,7 @@ class VerbruikModule {
             payload.elektriciteit_nacht,
             payload.elektriciteit_dag,
             payload.gas,
-            payload.floculant,
+            payload.Flocculant,
             payload.chemicalien_chloor,
             payload.chemicalien_zwavelzuur,
         ].some((v) => v == null);
@@ -122,7 +122,7 @@ class VerbruikModule {
 
         const verbruikPayload = {
             datum,
-            floculant: document.getElementById('floculant').value || null,
+            Flocculant: document.getElementById('Flocculant').value || null,
             water_diep: api.parseNumberValue('water-diep'),
             water_ondiep: api.parseNumberValue('water-ondiep'),
             water_totaal: api.parseNumberValue('water-totaal'),
@@ -192,7 +192,7 @@ class VerbruikModule {
                 'elektriciteit-nacht',
                 'elektriciteit-dag',
                 'gas',
-                'floculant',
+                'Flocculant',
                 'chemicalien-chloor',
                 'chemicalien-zwavelzuur',
             ].forEach((id) => berekenEnZet(id, id.replace(/-/g, '_')));
