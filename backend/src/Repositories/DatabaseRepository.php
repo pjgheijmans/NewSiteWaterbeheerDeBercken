@@ -31,7 +31,7 @@ class DatabaseRepository implements IDatabaseRepository
         'coordinatoren_checklist' => 'SELECT datum, proef_waterspeel, proef_spraypark, proef_douches, proef_glijbaan, auteur FROM coordinatoren_checklist ORDER BY datum DESC',
         'coordinatoren_daggegevens' => 'SELECT datum, lucht_temperatuur, bezoekers_vandaag, bezoekers_totaal_spoelbeurt, auteur FROM coordinatoren_daggegevens ORDER BY datum DESC',
         'waterbeheer_dienst' => 'SELECT datum, dienst_1, dienst_2 FROM waterbeheer_dienst ORDER BY datum DESC',
-        'verbruik_diep_ondiep' => 'SELECT datum, floculant, water_diep, water_ondiep, water_totaal, elektriciteit_nacht, elektriciteit_dag, gas, chemicalien_chloor, chemicalien_zwavelzuur FROM verbruik_diep_ondiep ORDER BY datum DESC',
+        'verbruik_diep_ondiep' => 'SELECT datum, Flocculant, water_diep, water_ondiep, water_totaal, elektriciteit_nacht, elektriciteit_dag, gas, chemicalien_chloor, chemicalien_zwavelzuur FROM verbruik_diep_ondiep ORDER BY datum DESC',
         'verwarmings_systeem_diep_ondiep' => 'SELECT datum, verwarming_status_1, verwarming_status_2, verwarming_status_3, verwarming_status_4, verwarming_druk_ok, verwarming_visuele_controle FROM verwarmings_systeem_diep_ondiep ORDER BY datum DESC',
         'acties' => 'SELECT a.id, b.naam AS bad_naam, a.datum, a.beschrijving, a.actie_type, a.opgelost, a.opgelost_op, a.created_at FROM acties a JOIN baden b ON a.bad_id = b.id ORDER BY a.datum DESC',
     ];

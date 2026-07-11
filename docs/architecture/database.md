@@ -86,7 +86,7 @@ erDiagram
     VERBRUIK_DIEP_ONDIEP {
         int id PK
         date datum
-        int floculant
+        int Flocculant
         int water_diep
         int water_ondiep
         int water_totaal

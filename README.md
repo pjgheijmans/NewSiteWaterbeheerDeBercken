@@ -65,7 +65,7 @@ diagrammen.
 | `coordinatoren_daggegevens`       | Luchttemperatuur en bezoekersaantal per dag (+ auteur)                                                          |
 | `coordinatoren_logboek`           | Vrij-tekst logboek coördinatoren (aparte tabel van waterbeheerder)                                              |
 | `logboek`                         | Vrij-tekst logboek waterbeheerders                                                                              |
-| `verbruik_diep_ondiep`            | Verbruik: water, elektriciteit, gas, chemicaliën, floculant                                                     |
+| `verbruik_diep_ondiep`            | Verbruik: water, elektriciteit, gas, chemicaliën, Flocculant                                                     |
 | `verwarmings_systeem_diep_ondiep` | Ketelstatus per dag: 4 ketels, druk ok, visuele inspectie                                                       |
 | `limieten`                        | Min/max richtwaarden + actie-drempelwaarden per parameter                                                       |
 | `gebruikers`                      | Inlogaccounts: waterbeheerder, coordinator, Administrator                                                       |
@@ -178,7 +178,7 @@ Acties (drempelalarmen) worden automatisch aangemaakt of verwijderd na het opsla
 | `filter_spoelen_spoelbeurt` Ondiep     | Cumulatief bezoekers Ondiep > drempelwaarde sinds laatste spoelbeurt |
 | `chloor_bestellen`                     | Chloorvoorraad < minimumdrempelwaarde                                |
 | `zwavelzuur_bestellen`                 | Zwavelzuurvoorraad < minimumdrempelwaarde                            |
-| `floculant_bijvullen`                  | Floculant < minimumdrempelwaarde                                     |
+| `Flocculant_bijvullen`                  | Flocculant < minimumdrempelwaarde                                     |
 
 **Instelbare drempelwaarden** (via Limieten-pagina, groep "Actie-drempelwaarden"):
 
@@ -191,7 +191,7 @@ Acties (drempelalarmen) worden automatisch aangemaakt of verwijderd na het opsla
 | `actie_flow_peuterbad` | 4 m³/h    | Min flow Peuterbad                                |
 | `actie_chloor_min`     | 200 L     | Min chloorvoorraad                                |
 | `actie_zwavelzuur_min` | 50 L      | Min zwavelzuurvoorraad                            |
-| `actie_floculant_min`  | 10        | Min floculant                                     |
+| `actie_Flocculant_min`  | 10        | Min Flocculant                                     |
 | `actie_bezoekers_max`  | 750       | Max aantal bezoekers per dag                      |
 | `actie_spoelbeurt_max` | 1500      | Max cumulatief bezoekers sinds laatste spoelbeurt |
 

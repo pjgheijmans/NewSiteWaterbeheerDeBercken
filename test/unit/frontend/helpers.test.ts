@@ -44,7 +44,7 @@ describe('VerbruikModule.verbruikOnvolledig (Diep/Ondiep Verbruik-standen)', () 
         elektriciteit_nacht: 10,
         elektriciteit_dag: 20,
         gas: 5,
-        floculant: '3',
+        Flocculant: '3',
         chemicalien_chloor: '8',
         chemicalien_zwavelzuur: '7',
     };

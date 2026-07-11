@@ -45,7 +45,7 @@ class LimietenRepository implements ILimietenRepository
         ['parameter_naam' => 'actie_bezoekers_max', 'min_waarde' => 0.0, 'max_waarde' => 750.0],
         ['parameter_naam' => 'actie_spoelbeurt_max', 'min_waarde' => 0.0, 'max_waarde' => 1500.0],
         ['parameter_naam' => 'actie_spoelbeurt_dagen', 'min_waarde' => 0.0, 'max_waarde' => 7.0],
-        ['parameter_naam' => 'actie_floculant_min', 'min_waarde' => 0.0, 'max_waarde' => 10.0],
+        ['parameter_naam' => 'actie_Flocculant_min', 'min_waarde' => 0.0, 'max_waarde' => 10.0],
         ['parameter_naam' => 'actie_gebonden_chloor_max', 'min_waarde' => 0.0, 'max_waarde' => 1.0],
         ['parameter_naam' => 'actie_chloor_peuterbad_min', 'min_waarde' => 0.0, 'max_waarde' => 10.0],
         ['parameter_naam' => 'actie_zwavelzuur_peuterbad_min', 'min_waarde' => 0.0, 'max_waarde' => 5.0],

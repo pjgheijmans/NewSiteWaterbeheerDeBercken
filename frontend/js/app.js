@@ -30,6 +30,9 @@ class Application {
 // ── Opstarten ──────────────────────────────────────────────────────────────────
 
 const app = new Application();
+// Ontwikkel-functietracing (alleen actief met ?trace=1 / localStorage.trace='1').
+// Vóór de opstartaanroepen hieronder zodat ook die getraced worden.
+if (typeof window !== 'undefined' && window.installTracer) window.installTracer(app);
 app.state.initDatumInput();
 app.opslaan.wireAutoSave();
 app.auth.start();
@@ -111,3 +114,5 @@ window.scheduleAutoSave = () => app.opslaan.scheduleAutoSave();
 window.scheduleAutoSaveBlok = (tijdstip) => app.opslaan.scheduleAutoSaveBlok(tijdstip);
 
 window.valideerVeld = (el, param) => app.ui.valideerVeld(el, param);
+
+window.toggleTracing = (aan) => app.configuratie.wisselTracing(aan);

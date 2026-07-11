@@ -293,7 +293,7 @@ class MetingenModule {
             'filter_spoelen_spoelbeurt|Ondiep': ['bezoekers-spoelbeurt-ondiep-display'],
             'chloor_bestellen|Diep': ['chemicalien-chloor'],
             'zwavelzuur_bestellen|Diep': ['chemicalien-zwavelzuur'],
-            'floculant_bijvullen|Diep': ['floculant'],
+            'Flocculant_bijvullen|Diep': ['Flocculant'],
             'chloor_peuterbad_bijvullen|Peuterbad': ['peuterbad-chemicalien-chloor'],
             'zwavelzuur_peuterbad_bijvullen|Peuterbad': ['peuterbad-chemicalien-zwavelzuur'],
         };
@@ -473,7 +473,7 @@ class MetingenModule {
             elektriciteit_nacht: api.parseNumberValue('elektriciteit-nacht'),
             elektriciteit_dag: api.parseNumberValue('elektriciteit-dag'),
             gas: api.parseNumberValue('gas'),
-            floculant: tekst('floculant'),
+            Flocculant: tekst('Flocculant'),
             chemicalien_chloor: tekst('chemicalien-chloor'),
             chemicalien_zwavelzuur: tekst('chemicalien-zwavelzuur'),
         });
@@ -504,7 +504,7 @@ class MetingenModule {
             elektriciteit_nacht: L(v.elektriciteit_nacht),
             elektriciteit_dag: L(v.elektriciteit_dag),
             gas: L(v.gas),
-            floculant: L(v.floculant),
+            Flocculant: L(v.Flocculant),
             chemicalien_chloor: L(v.chemicalien_chloor),
             chemicalien_zwavelzuur: L(v.chemicalien_zwavelzuur),
         });

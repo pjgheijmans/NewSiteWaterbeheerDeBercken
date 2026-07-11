@@ -593,7 +593,7 @@ TypeScript build). Representative JSON shapes:
 // Drempelwaarden (action thresholds, loaded from LIMIETEN) — numeric keys:
 // actie_druk_verschil, actie_druk_peuterbad, actie_flow_{diep,ondiep,peuterbad},
 // actie_chloor_min, actie_zwavelzuur_min, actie_bezoekers_max,
-// actie_spoelbeurt_max, actie_spoelbeurt_dagen, actie_floculant_min,
+// actie_spoelbeurt_max, actie_spoelbeurt_dagen, actie_Flocculant_min,
 // actie_gebonden_chloor_max, actie_chloor_peuterbad_min, actie_zwavelzuur_peuterbad_min
 ```
 
@@ -1004,7 +1004,7 @@ erDiagram
     METINGEN_COORDINATOREN { int id PK  int bad_id FK  date datum  time tijdstip  varchar auteur  decimal ph_waarde  decimal chloor_vrij  decimal chloor_totaal  decimal watertemperatuur  varchar helderheid  tinyint bad_gebruikt }
     COORDINATOREN_CHECKLIST { int id PK  date datum  tinyint proef_waterspeel  tinyint proef_spraypark  tinyint proef_douches  tinyint proef_glijbaan  varchar auteur }
     COORDINATOREN_DAGGEGEVENS { int id PK  date datum  decimal lucht_temperatuur  int bezoekers_vandaag  int bezoekers_totaal_spoelbeurt  varchar auteur }
-    VERBRUIK_DIEP_ONDIEP { int id PK  date datum  int floculant  int water_diep  int water_ondiep  int water_totaal  int elektriciteit_nacht  int elektriciteit_dag  int gas  int chemicalien_chloor  int chemicalien_zwavelzuur  int versie  varchar auteur  timestamp bijgewerkt_op }
+    VERBRUIK_DIEP_ONDIEP { int id PK  date datum  int Flocculant  int water_diep  int water_ondiep  int water_totaal  int elektriciteit_nacht  int elektriciteit_dag  int gas  int chemicalien_chloor  int chemicalien_zwavelzuur  int versie  varchar auteur  timestamp bijgewerkt_op }
     VERWARMINGS_SYSTEEM { int id PK  date datum  bool verwarming_status_1  bool verwarming_status_2  bool verwarming_status_3  bool verwarming_status_4  bool verwarming_druk_ok  bool verwarming_visuele_controle  int versie  varchar auteur  timestamp bijgewerkt_op }
     ACTIES { int id PK  int bad_id FK  date datum  varchar beschrijving  varchar actie_type  bool opgelost  datetime opgelost_op  varchar opgelost_door }
     RONDETAKEN_VOLTOOID { int id PK  varchar taak_sleutel  date datum  datetime voltooid_op  varchar voltooid_door }

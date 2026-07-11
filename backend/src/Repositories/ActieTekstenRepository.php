@@ -23,12 +23,12 @@ class ActieTekstenRepository implements IActieTekstenRepository
         ['actie_sleutel' => 'zwavelzuur_peuterbad_bijvullen', 'sjabloon' => 'Zwavelzuurvoorraad Peuterbad {waarde} < {drempel} — Vat bijvullen', 'omschrijving' => 'Peuterbad: zwavelzuurvat bijna leeg'],
         ['actie_sleutel' => 'chloor_bestellen', 'sjabloon' => 'Chloorvoorraad onder {drempel} liter — Chloor bestellen', 'omschrijving' => 'Verbruik: chloorvoorraad te laag'],
         ['actie_sleutel' => 'zwavelzuur_bestellen', 'sjabloon' => 'Zwavelzuurvoorraad onder {drempel} liter — Zwavelzuur bestellen', 'omschrijving' => 'Verbruik: zwavelzuurvoorraad te laag'],
-        ['actie_sleutel' => 'floculant_bijvullen', 'sjabloon' => 'Floculant {waarde} < {drempel} — Vul floculant bij', 'omschrijving' => 'Verbruik: floculant bijna op'],
-        ['actie_sleutel' => 'filter_spoelen_bezoekers', 'sjabloon' => 'Aantal bezoekers {waarde} > {drempel} — Filter spoelen', 'omschrijving' => 'Dagbezoek boven de drempel'],
+        ['actie_sleutel' => 'Flocculant_bijvullen', 'sjabloon' => 'Flocculant {waarde} < {drempel} — Vul Flocculant bij', 'omschrijving' => 'Verbruik: Flocculant bijna op'],
+        ['actie_sleutel' => 'filter_spoelen_bezoekers', 'sjabloon' => 'Aantal bezoekers op een dag {waarde} > {drempel} — Filter spoelen', 'omschrijving' => 'Dagbezoek boven de drempel'],
         ['actie_sleutel' => 'filter_spoelen_spoelbeurt', 'sjabloon' => 'Aantal bezoekers sinds spoelbeurt {bad} {waarde} > {drempel} — Filter spoelen', 'omschrijving' => 'Cumulatief bezoek sinds laatste spoelbeurt'],
         ['actie_sleutel' => 'filter_spoelen_dagen', 'sjabloon' => 'Laatste spoelbeurt {bad} {waarde} dagen geleden > {drempel} dagen — Filter spoelen', 'omschrijving' => 'Te lang geleden sinds laatste spoelbeurt'],
         ['actie_sleutel' => 'filter_spoelen_gebonden', 'sjabloon' => 'Gebonden chloor {bad} {waarde} > {drempel} mg/l — Filter spoelen', 'omschrijving' => 'Coördinator: gebonden chloor te hoog'],
-        ['actie_sleutel' => 'peuterbad_aftappen', 'sjabloon' => 'Peuterbad is vandaag gebruikt — Peuterbad water aftappen', 'omschrijving' => 'Peuterbad na gebruik aftappen'],
+        ['actie_sleutel' => 'peuterbad_leeglaten', 'sjabloon' => 'Peuterbad is vandaag gebruikt — Peuterbad water leeglaten', 'omschrijving' => 'Peuterbad na gebruik leeglaten'],
     ];
 
     public function __construct(private PDO $pdo)

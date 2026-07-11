@@ -51,6 +51,13 @@ DB_HOST=127.0.0.1 DB_USER=root DB_PASSWORD=geheim_wachtwoord DB_NAME=zwembad_sta
 
 Note: the PHP built-in server short-circuits requests for known extensions (`.js`/`.css`/…) and never hits Slim, so `/js/*.js` 404s there. That's a built-in-server limitation, not an app bug — on Apache `.htaccess` routes those to `FrontendController::serveAsset`. See `backend/README.md` for the workaround.
 
+## Function tracing (opt-in, dev only)
+
+Both layers can log every function call with its input arguments and return value. **Off by default** (no overhead); turn it on only while debugging.
+
+- **Backend — Xdebug function trace.** Xdebug 3.3 is baked into the image (`backend/docker/xdebug.ini`, `xdebug.mode=off`). Enable per run without editing files: `TRACE=1 docker compose up -d web` (the CMD translates `TRACE=1` → `XDEBUG_MODE=trace` and prepares a writable `backend/logs/xdebug/`). One human-readable `.xt` trace file per request lands there (args shown as `func($a = 2)`, returns as `>=> 5`); traces are `.gitignore`d. Turn off again with `docker compose up -d web` (default `TRACE=0`). Note: Xdebug segfaults if it can't open the trace dir, hence the CMD's `chmod 777` on the bind-mounted `logs/xdebug`.
+- **Frontend — `frontend/js/tracer.js`.** Wraps every `app.*` module method and logs `→ module.method(args)` / `← … => return` (async-aware) to the browser console. Enable via the **Configuratie (admin) page → "Functietracing" checkbox** (sets `localStorage.trace` and reloads), or directly via `?trace=1` in the URL (persists in `localStorage`; `?trace=0` clears) / `localStorage.trace='1'`. Loaded just before `app.js` and installed in `app.js` right after the container is built, so startup calls are traced too.
+
 ## Architecture
 
 ### Backend (PHP 8.0, `backend/`)

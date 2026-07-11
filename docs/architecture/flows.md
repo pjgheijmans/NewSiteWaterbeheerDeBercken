@@ -89,11 +89,11 @@ sequenceDiagram
     Repo->>DB: INSERT/DELETE acties (filter_spoelen_druk / _flow)
 
     Note over WB,Svc: Trigger via verbruik
-    WB->>FE: Chemicaliën / floculant invullen
+    WB->>FE: Chemicaliën / Flocculant invullen
     FE->>Ctrl: POST /api/verbruik/diep-ondiep
     Ctrl->>Svc: VerbruikService.saveVerbruik(body)
     Svc->>Repo: saveVerbruik() + ActiesRepository.genereerVerbruik()
-    Repo->>DB: INSERT/DELETE acties (chloor_bestellen / zwavelzuur / floculant)
+    Repo->>DB: INSERT/DELETE acties (chloor_bestellen / zwavelzuur / Flocculant)
 
     Note over WB,Svc: Trigger via bezoekers (coördinator-daggegevens)
     Note over Svc: CoordinatorenService.saveDaggegevens()<br/>→ genereerBezoekers() + genereerSpoelbeurt() (fire-and-forget)<br/>spoelbeurt → filter_spoelen_spoelbeurt (bezoekers) + filter_spoelen_dagen (dagen sinds reiniging)

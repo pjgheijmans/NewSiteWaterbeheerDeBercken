@@ -23,7 +23,7 @@ describe('ActieTekstenModule.vulPlaatshouders', () => {
     });
 
     it('laat tekst zonder plaatshouders ongewijzigd', () => {
-        expect(mod.vulPlaatshouders('Peuterbad aftappen', {})).toBe('Peuterbad aftappen');
+        expect(mod.vulPlaatshouders('Peuterbad leeglaten', {})).toBe('Peuterbad leeglaten');
     });
 
     it('rendert het voorbeeld met de standaard voorbeeldwaarden', () => {

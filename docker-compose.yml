@@ -42,6 +42,11 @@ services:
             - DB_USER=root
             - DB_PASSWORD=geheim_wachtwoord
             - DB_NAME=zwembad_status
+            # Xdebug-functietracing: zet op 1 om álle functieaanroepen met argumenten
+            # + retourwaarden naar backend/logs/xdebug/ te schrijven. Standaard uit
+            # (geen overhead). Aanzetten zonder dit bestand te wijzigen kan ook met
+            # de shell: TRACE=1 docker compose up -d web.
+            - TRACE=${TRACE:-0}
         volumes:
             # Hele repo gemount: backend/ (app), frontend/ (assets) en init.sql.
             # Codewijzigingen zijn meteen actief.
