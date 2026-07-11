@@ -29,7 +29,7 @@ class DatabaseRepository implements IDatabaseRepository
         'metingen_peuterbad' => 'SELECT m.id, b.naam AS bad_naam, m.datum, m.ph_waarde, m.chloor_waarde, m.flow, m.filter_druk_in, m.water, m.chemicalien_chloor, m.chemicalien_zwavelzuur FROM metingen_peuterbad m JOIN baden b ON m.bad_id = b.id ORDER BY m.datum DESC',
         'metingen_coordinatoren' => 'SELECT mc.id, b.naam AS bad_naam, mc.datum, mc.tijdstip, mc.ph_waarde, mc.chloor_vrij, mc.chloor_totaal, mc.watertemperatuur, mc.helderheid, mc.bad_gebruikt FROM metingen_coordinatoren mc JOIN baden b ON mc.bad_id = b.id ORDER BY mc.datum DESC, mc.tijdstip ASC',
         'coordinatoren_checklist' => 'SELECT datum, proef_waterspeel, proef_spraypark, proef_douches, proef_glijbaan, auteur FROM coordinatoren_checklist ORDER BY datum DESC',
-        'coordinatoren_daggegevens' => 'SELECT datum, lucht_temperatuur, bezoekers_vandaag, bezoekers_totaal_spoelbeurt, auteur FROM coordinatoren_daggegevens ORDER BY datum DESC',
+        'coordinatoren_daggegevens' => 'SELECT datum, lucht_temperatuur, bezoekers_vandaag, auteur FROM coordinatoren_daggegevens ORDER BY datum DESC',
         'waterbeheer_dienst' => 'SELECT datum, dienst_1, dienst_2 FROM waterbeheer_dienst ORDER BY datum DESC',
         'verbruik_diep_ondiep' => 'SELECT datum, Flocculant, water_diep, water_ondiep, water_totaal, elektriciteit_nacht, elektriciteit_dag, gas, chemicalien_chloor, chemicalien_zwavelzuur FROM verbruik_diep_ondiep ORDER BY datum DESC',
         'verwarmings_systeem_diep_ondiep' => 'SELECT datum, verwarming_status_1, verwarming_status_2, verwarming_status_3, verwarming_status_4, verwarming_druk_ok, verwarming_visuele_controle FROM verwarmings_systeem_diep_ondiep ORDER BY datum DESC',
