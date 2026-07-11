@@ -1,3 +1,15 @@
+-- Schema-definitie voor de Digitale Dagstaat. Wordt idempotent toegepast via
+-- runInitSql() (per statement, met try/catch) — zie bin/init-db.php.
+--
+-- De tabellen staan hier in hun definitieve vorm: eerdere per-kolom-migraties
+-- (ALTER TABLE) zijn opgenomen in de CREATE-definities. Voor een BESTAANDE
+-- database met een oudere structuur voegt "CREATE TABLE IF NOT EXISTS" geen
+-- ontbrekende kolommen toe; zulke databases moeten éénmalig los worden
+-- bijgewerkt. Nieuwe schema-wijzigingen: pas de CREATE aan én, waar een
+-- bestaande database mee moet, voeg tijdelijk een kale ALTER toe (GEEN
+-- "IF NOT EXISTS" — dat is MariaDB-syntax en een harde fout op MySQL 8;
+-- runInitSql vangt de onschadelijke "Duplicate column" op).
+
 CREATE TABLE IF NOT EXISTS baden (
     id INT AUTO_INCREMENT PRIMARY KEY,
     naam VARCHAR(50) NOT NULL UNIQUE
@@ -33,17 +45,12 @@ CREATE TABLE IF NOT EXISTS metingen_diep_ondiep (
     filter_druk_uit DECIMAL(4,2) NULL,
     kathodische_bescherming DECIMAL(4,2) NULL,
     water DECIMAL(10,2) NULL,
+    versie INT NOT NULL DEFAULT 0,
+    auteur VARCHAR(100) NULL,
+    bijgewerkt_op TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (bad_id) REFERENCES baden(id),
     UNIQUE KEY unieke_meting_diep_ondiep (bad_id, datum)
 );
-
--- Migratie: kathodische bescherming (Diep/Ondiep).
--- NB: GEEN "IF NOT EXISTS" — dat is MariaDB-syntax en geeft op MySQL 8 een
--- syntaxfout, waardoor de kolom op bestaande databases niet werd toegevoegd.
--- Een kale ADD COLUMN voegt de kolom toe als die ontbreekt en faalt onschadelijk
--- ("Duplicate column") als die al bestaat; runInitSql vangt die fout op. Idem
--- voor de overige migraties hieronder.
-ALTER TABLE metingen_diep_ondiep ADD COLUMN kathodische_bescherming DECIMAL(4,2) NULL AFTER filter_druk_uit;
 
 CREATE TABLE IF NOT EXISTS metingen_peuterbad (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -56,23 +63,23 @@ CREATE TABLE IF NOT EXISTS metingen_peuterbad (
     water INT NULL,
     chemicalien_chloor INT NULL,
     chemicalien_zwavelzuur INT NULL,
+    versie INT NOT NULL DEFAULT 0,
+    auteur VARCHAR(100) NULL,
+    bijgewerkt_op TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (bad_id) REFERENCES baden(id),
     UNIQUE KEY unieke_meting_peuterbad (bad_id, datum)
 );
 
 INSERT IGNORE INTO baden (naam) VALUES ('Diep'), ('Ondiep'), ('Peuterbad');
 
--- Tabel voor de centrale limieten
+-- Tabel voor de centrale limieten. min/max zijn DECIMAL(10,2) zodat grote
+-- meterstanden passen.
 CREATE TABLE IF NOT EXISTS limieten (
     id INT AUTO_INCREMENT PRIMARY KEY,
     parameter_naam VARCHAR(50) NULL UNIQUE,
-    min_waarde DECIMAL(5,2) NULL,
-    max_waarde DECIMAL(5,2) NULL
+    min_waarde DECIMAL(10,2) NULL,
+    max_waarde DECIMAL(10,2) NULL
 );
-
--- Widen limit columns to support large meter readings
-ALTER TABLE limieten MODIFY min_waarde DECIMAL(10,2) NULL;
-ALTER TABLE limieten MODIFY max_waarde DECIMAL(10,2) NULL;
 
 -- Standaard limieten invoeren bij de eerste start
 INSERT IGNORE INTO limieten (parameter_naam, min_waarde, max_waarde) VALUES
@@ -114,14 +121,16 @@ INSERT IGNORE INTO limieten (parameter_naam, min_waarde, max_waarde) VALUES
 ('seizoen_begin', 0.00, 20260425.00),
 ('seizoen_eind', 0.00, 20260901.00);
 
+-- taak is vervangen door rollen (zie hieronder); mag daarom leeg zijn en blijft
+-- alleen behouden voor backfill/legacy.
 CREATE TABLE IF NOT EXISTS gebruikers (
-    id INT AUTO_INCREMENT PRIMARY KEY, 
-    voornaam VARCHAR(50) NOT NULL, 
-    achternaam VARCHAR(50) NOT NULL, 
-    inlognaam VARCHAR(50) NOT NULL UNIQUE, 
-    wachtwoord VARCHAR(255) NOT NULL, 
-    taak ENUM('waterbeheerder', 'coordinator', 'Administrator') NOT NULL);
-    
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    voornaam VARCHAR(50) NOT NULL,
+    achternaam VARCHAR(50) NOT NULL,
+    inlognaam VARCHAR(50) NOT NULL UNIQUE,
+    wachtwoord VARCHAR(255) NOT NULL,
+    taak ENUM('waterbeheerder', 'coordinator', 'Administrator') NULL);
+
 INSERT IGNORE INTO gebruikers (voornaam, achternaam, inlognaam, wachtwoord, taak) VALUES ('Admin', '', 'Admin', 'lpphw', 'Administrator');
 INSERT IGNORE INTO gebruikers (voornaam, achternaam, inlognaam, wachtwoord, taak) VALUES ('Paul', 'Heijmans', 'pheijmans', 'Paul', 'waterbeheerder');
 
@@ -150,9 +159,6 @@ CREATE TABLE IF NOT EXISTS gebruiker_rollen (
     FOREIGN KEY (gebruiker_id) REFERENCES gebruikers(id) ON DELETE CASCADE,
     FOREIGN KEY (rol_id) REFERENCES rollen(id) ON DELETE CASCADE
 );
-
--- taak is vervangen door rollen; mag voortaan leeg zijn (behouden voor backfill/legacy).
-ALTER TABLE gebruikers MODIFY taak ENUM('waterbeheerder', 'coordinator', 'Administrator') NULL;
 
 -- Standaardrollen (idempotent).
 INSERT IGNORE INTO rollen (naam, mag_historie_bewerken) VALUES ('Beheer', 1);
@@ -226,9 +232,6 @@ CREATE TABLE IF NOT EXISTS coordinatoren_daggegevens (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Migratie: registreer wie de temperatuur & bezoekers invulde
-ALTER TABLE coordinatoren_daggegevens ADD COLUMN auteur VARCHAR(100) NULL AFTER bezoekers_totaal_spoelbeurt;
-
 -- Wie was er op dienst bij waterbeheer (altijd 2 personen; één logt in, de ander
 -- wordt handmatig ingevuld). Eén record per dag.
 CREATE TABLE IF NOT EXISTS waterbeheer_dienst (
@@ -250,9 +253,6 @@ CREATE TABLE IF NOT EXISTS coordinatoren_checklist (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
--- Migratie: registreer wie de checklijst invulde
-ALTER TABLE coordinatoren_checklist ADD COLUMN auteur VARCHAR(100) NULL AFTER proef_glijbaan;
-
 -- Tabel voor acties/alarmen
 CREATE TABLE IF NOT EXISTS acties (
     id INT AUTO_INCREMENT PRIMARY KEY,
@@ -267,9 +267,6 @@ CREATE TABLE IF NOT EXISTS acties (
     FOREIGN KEY (bad_id) REFERENCES baden(id),
     UNIQUE KEY unieke_actie (bad_id, datum, actie_type)
 );
-
--- Migratie: voeg opgelost_door toe aan acties
-ALTER TABLE acties ADD COLUMN opgelost_door VARCHAR(100) NULL AFTER opgelost_op;
 
 -- Tabel voor de tekst-sjablonen van acties. De waterbeheerder kan de
 -- formulering van een actie aanpassen zonder code te wijzigen. Plaatshouders
@@ -326,7 +323,10 @@ CREATE TABLE IF NOT EXISTS verbruik_diep_ondiep (
     chemicalien_chloor INT NULL,
     chemicalien_zwavelzuur INT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    versie INT NOT NULL DEFAULT 0,
+    auteur VARCHAR(100) NULL,
+    bijgewerkt_op TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
 
 -- Verwarmingssysteem: ketelstatus en inspecties
@@ -340,51 +340,8 @@ CREATE TABLE IF NOT EXISTS verwarmings_systeem_diep_ondiep (
     verwarming_druk_ok BOOLEAN DEFAULT FALSE,
     verwarming_visuele_controle BOOLEAN DEFAULT FALSE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+    versie INT NOT NULL DEFAULT 0,
+    auteur VARCHAR(100) NULL,
+    bijgewerkt_op TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
 );
-
--- Migratie: optimistische concurrency + attributie voor de waterbeheer
--- meetwaarden/verbruik-tabellen. `versie` (optimistisch slot), `auteur` (wie sloeg
--- als laatste op) en `bijgewerkt_op` (wanneer). Kale ADD COLUMN — geen IF NOT
--- EXISTS (MySQL 8); op een up-to-date DB geeft dit een onschadelijke
--- "Duplicate column"-waarschuwing die runInitSql opvangt.
-ALTER TABLE metingen_diep_ondiep ADD COLUMN versie INT NOT NULL DEFAULT 0;
-ALTER TABLE metingen_diep_ondiep ADD COLUMN auteur VARCHAR(100) NULL;
-ALTER TABLE metingen_diep_ondiep ADD COLUMN bijgewerkt_op TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
-ALTER TABLE metingen_peuterbad ADD COLUMN versie INT NOT NULL DEFAULT 0;
-ALTER TABLE metingen_peuterbad ADD COLUMN auteur VARCHAR(100) NULL;
-ALTER TABLE metingen_peuterbad ADD COLUMN bijgewerkt_op TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
-ALTER TABLE verbruik_diep_ondiep ADD COLUMN versie INT NOT NULL DEFAULT 0;
-ALTER TABLE verbruik_diep_ondiep ADD COLUMN auteur VARCHAR(100) NULL;
-ALTER TABLE verbruik_diep_ondiep ADD COLUMN bijgewerkt_op TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
-ALTER TABLE verwarmings_systeem_diep_ondiep ADD COLUMN versie INT NOT NULL DEFAULT 0;
-ALTER TABLE verwarmings_systeem_diep_ondiep ADD COLUMN auteur VARCHAR(100) NULL;
-ALTER TABLE verwarmings_systeem_diep_ondiep ADD COLUMN bijgewerkt_op TIMESTAMP NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP;
-
--- Migratie: voeg auteur toe aan metingen_coordinatoren
-ALTER TABLE metingen_coordinatoren ADD COLUMN auteur VARCHAR(100) NULL AFTER tijdstip;
-
--- Migratie: voeg auteur toe aan logboek tabellen
-ALTER TABLE logboek ADD COLUMN auteur VARCHAR(100) NULL AFTER tijdstip;
-ALTER TABLE coordinatoren_logboek ADD COLUMN auteur VARCHAR(100) NULL AFTER tijdstip;
-
--- Migratie: verwijder opmerkingen kolom uit coordinatoren_checklist
-ALTER TABLE coordinatoren_checklist DROP COLUMN opmerkingen;
-
--- Migratie: verbruik velden naar INT (meters geven gehele getallen, geen decimalen)
-ALTER TABLE verbruik_diep_ondiep
-    MODIFY Flocculant          INT NULL,
-    MODIFY water_diep         INT NULL,
-    MODIFY water_ondiep       INT NULL,
-    MODIFY water_totaal       INT NULL,
-    MODIFY elektriciteit_nacht INT NULL,
-    MODIFY elektriciteit_dag  INT NULL,
-    MODIFY gas                INT NULL,
-    MODIFY chemicalien_chloor INT NULL,
-    MODIFY chemicalien_zwavelzuur INT NULL;
-
--- Migratie: peuterbad water en chemicaliën naar INT
-ALTER TABLE metingen_peuterbad
-    MODIFY water               INT NULL,
-    MODIFY chemicalien_chloor  INT NULL,
-    MODIFY chemicalien_zwavelzuur INT NULL;
