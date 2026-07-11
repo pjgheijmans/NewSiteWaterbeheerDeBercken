@@ -88,7 +88,15 @@
       "Bash(curl -s -o /dev/null -w \"app HTTP %{http_code}\\\\n\" http://localhost:8080/)",
       "Bash(grep -vE \"^$|potentially fixable|problems\")",
       "Bash(sed -n '1,40p' frontend/partials/configuratie.html)",
-      "Bash(sed -n '1,40p' frontend/js/configuratie.js)"
+      "Bash(sed -n '1,40p' frontend/js/configuratie.js)",
+      "Bash(docker info *)",
+      "Bash(docker volume *)",
+      "Bash(docker rm *)",
+      "Bash(tail -3)",
+      "Bash(seq 1 40)",
+      "Bash(break)",
+      "Bash(sleep 1)",
+      "Bash(echo \"--- init-db ---\")"
     ]
   }
 }
